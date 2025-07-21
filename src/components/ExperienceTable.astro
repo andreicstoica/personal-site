@@ -1,0 +1,164 @@
+---
+import type { Experience } from "../../lib/types.ts";
+import { experiences } from "../../lib/experience.ts";
+
+// Get unique types for the filter dropdown
+const allTypes = [...new Set(experiences.map(exp => exp.type))].sort();
+
+// Color mapping for different experience types
+const typeColors = {
+  personal: 'bg-secondary-500',
+  work: 'bg-primary-500',
+  school: 'bg-accent-500',
+  other: 'bg-warning-500'
+};
+
+// Format date range
+const formatDateRange = (startDate: string, endDate?: string) => {
+  if (endDate && endDate !== 'Present') {
+    return `${startDate}-${endDate}`;
+  }
+  return endDate === 'Present' ? `${startDate}-Present` : startDate;
+};
+---
+
+<section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
+  <!-- Table Header -->
+  <div class="hidden lg:grid lg:grid-cols-10 gap-4 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm uppercase tracking-wider">
+    <div class="col-span-1">Experience</div>
+    <div class="col-span-2">Role</div>
+    <div class="col-span-2">
+      <select id="typeFilter" class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-transparent">
+        <option value="">All</option>
+        {allTypes.map(type => (
+          <option value={type}>{type}</option>
+        ))}
+      </select>
+    </div>
+    <div class="col-span-1">Date</div>
+    <div class="col-span-4">Media</div>
+  </div>
+
+  <!-- Table Body -->
+  <div class="space-y-6">
+    {experiences.map((experience, index) => (
+      <div class="experience-row border-b border-gray-100 dark:border-gray-800 pb-6" data-type={experience.type}>
+        <!-- Desktop Layout -->
+        <div class="hidden lg:grid lg:grid-cols-10 gap-4 items-start">
+          <!-- Experience Name (1 col) -->
+          <div class="col-span-1">
+            <div class={`inline-bloc text-md bg-${typeColors[experience.type]}`}>
+              {experience.name}
+            </div>
+          </div>
+
+          <!-- Role (2 cols) -->
+          <div class="col-span-2">
+            <div class="">{experience.role}</div>
+          </div>
+
+          <!-- Tags (2 cols) -->
+          <div class="col-span-2">
+            <div class="font-serif">
+              {experience.tags.join(', ')}
+            </div>
+          </div>
+
+          <!-- Date (1 col) -->
+          <div class="col-span-1">
+            <div class="font-mono">
+              {formatDateRange(experience.startDate, experience.endDate)}
+            </div>
+          </div>
+
+          <!-- Media (4 cols) -->
+          <div class="col-span-4">
+            {experience.images && experience.images.length > 0 && (
+              <div class="flex gap-2 overflow-x-auto">
+                {experience.images.map((image, imgIndex) => (
+                  <img
+                    src={`/images/${image}`}
+                    alt={`${experience.name} ${imgIndex + 1}`}
+                    class="h-16 w-24 object-cover rounded border border-gray-200 dark:border-gray-700 flex-shrink-0"
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Description (spans 4 cols, starting at col 2) -->
+        {experience.description && (
+          <div class="hidden lg:grid lg:grid-cols-10 gap-4">
+            <div class="col-span-1"></div> <!-- Empty space for experience column -->
+            <div class="col-span-5"> <!-- Spans 4 columns starting from role column -->
+              <p class="text-sm leading-relaxed">
+                {experience.description}
+              </p>
+            </div>
+            <div class="col-span-6"></div> <!-- Empty space for date and media columns -->
+          </div>
+        )}
+
+        <!-- Mobile Layout -->
+        <div class="lg:hidden">
+          <div class="mb-3">
+            <div class={`inline-block text-md font-medium mb-2 bg-${typeColors[experience.type]}`}>
+              {experience.name}
+            </div>
+            <h3 class="text-lg font-semibold">{experience.role}</h3>
+            <p class="text-sm">
+              {formatDateRange(experience.startDate, experience.endDate)}
+            </p>
+          </div>
+
+          <div class="text-sm mb-3">
+            {experience.tags.join(', ')}
+          </div>
+
+          {experience.description && (
+            <p class="leading-relaxed">
+              {experience.description}
+            </p>
+          )}
+
+          {experience.images && experience.images.length > 0 && (
+            <div class="flex gap-2 overflow-x-auto">
+              {experience.images.map((image, imgIndex) => (
+                <img
+                  src={`/images/${image}`}
+                  alt={`${experience.name} ${imgIndex + 1}`}
+                  class="h-20 w-28 object-cover rounded border border-gray-200 dark:border-gray-700 flex-shrink-0"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  // Filter functionality
+  const filterSelect = document.getElementById('typeFilter') as HTMLSelectElement;
+  const experienceRows = document.querySelectorAll('.experience-row');
+
+  if (filterSelect) {
+    filterSelect.addEventListener('change', (e) => {
+      const selectedType = (e.target as HTMLSelectElement).value;
+
+      experienceRows.forEach((row) => {
+        const rowType = (row as HTMLElement).dataset.type;
+
+        if (selectedType === '' || rowType === selectedType) {
+          (row as HTMLElement).style.display = 'block';
+        } else {
+          (row as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  }
+</script>
