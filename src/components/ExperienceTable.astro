@@ -56,13 +56,13 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   </div>
 
   <!-- Table Body -->
-  <div class="space-y-6">
+  <div class="space-y-4">
     {experiences.map((experience, index) => (
       <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
         <!-- Desktop Layout -->
         <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
           <!-- Experience Name (1 col) -->
-          <div class="col-span-1">
+          <div class="col-span-1 -mt-0.25">
             <span class="line-clamp-2" style={getTypeStyles(experience.type)}>
               {experience.name}
             </span>
@@ -78,10 +78,10 @@ const formatDateRange = (startDate: string, endDate?: string) => {
               </div>
 
               <!-- Tags (2 cols) -->
-              <div class="col-span-2">
-                <div class="font-serif text-sm">
+              <div class="col-span-2 -mt-0.5">
+                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.5">
                   {experience.tags.join(', ')}
-                </div>
+                </span>
               </div>
 
               <!-- Date (1 col) -->
@@ -119,12 +119,12 @@ const formatDateRange = (startDate: string, endDate?: string) => {
             </span>
 
             <!-- Role -->
-            <div class="text-sm flex-1">
+            <div class="text-sm flex-1 mt-1">
               {experience.role}
             </div>
 
             <!-- Date -->
-            <div class="font-mono text-sm flex-shrink-0">
+            <div class="font-mono text-sm flex-shrink-0 mt-1">
               {formatDateRange(experience.startDate, experience.endDate)}
             </div>
           </div>
