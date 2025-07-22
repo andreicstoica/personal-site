@@ -1,0 +1,29 @@
+---
+import MarkdownPage from "./MarkdownPage.astro";
+import MediaGallery from "./MediaGallery.astro";
+import colophonContent from "../md-pages/colophon.md?raw";
+
+// Old site images
+const oldSiteImages = [
+  "old-site-2021.png",
+  "old-site-2023.png",
+  "old-site-2025.gif",
+];
+---
+
+<div class="space-y-8">
+  <MarkdownPage content={colophonContent} />
+
+  <!-- Old Sites Gallery Section -->
+  <section class="max-w-4xl px-8 pb-8">
+    <h2 class="text-2xl font-bold text-[--color-text-primary] mb-6">
+      Memorial to my old sites (rip)
+    </h2>
+    <MediaGallery
+      images={oldSiteImages}
+      experienceName="Old Website Designs"
+      variant="desktop"
+      basePath="old-sites"
+    />
+  </section>
+</div>
