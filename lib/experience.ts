@@ -70,7 +70,7 @@ export const experiences: Experience[] = [
     role: "Product Manager",
     startDate: "2021",
     description:
-      "Developed a personal project using React and TypeScript. The project is a simple todo list application.",
+      "a16z internship placement. I was charged with improving the top of funnel click-through rate. After conducting a full-site UX audit with Hotjar and pinpointing drop-offs, I designed an end-to-end website overhaul that segmented landing pages by newly identified customer types. To prove the concept, I built three pillar pages in Webflow; they out-performed the legacy site. I distilled the results into a detailed product specification that enabled the Head of Product to secure CEO approval and budget for a full agency-built relaunch. I also collaborated with Growth Marketing to launch HubSpot-integrated, campaign-specific landing pages supporting nationwide ads. Following a new funding round in March 2023, BlocPower rolled out the new design language, marketing assets, and full website—work that began with my internship.",
     images: ["blocpower-1.png"],
   },
   {

@@ -74,19 +74,19 @@ const formatDateRange = (startDate: string, endDate?: string) => {
             <div class="grid grid-cols-5 gap-3 mb-2">
               <!-- Role (2 cols) -->
               <div class="col-span-2">
-                <div class="text-sm">{experience.role}</div>
+                <div class="text-[.92rem]">{experience.role}</div>
               </div>
 
               <!-- Tags (2 cols) -->
-              <div class="col-span-2 -mt-0.5">
-                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.5">
+              <div class="col-span-2 -mt-0.25">
+                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75">
                   {experience.tags.join(', ')}
                 </span>
               </div>
 
               <!-- Date (1 col) -->
               <div class="col-span-1">
-                <div class="font-mono text-sm">
+                <div class="font-mono text-[.92rem]">
                   {formatDateRange(experience.startDate, experience.endDate)}
                 </div>
               </div>
@@ -95,7 +95,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
             <!-- Description below -->
             {experience.description && (
               <div>
-                <p class="text-sm leading-relaxed text-pretty">
+                <p class="text-sm leading-relaxed text-pretty pr-1.5">
                   {experience.description}
                 </p>
               </div>
