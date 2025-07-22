@@ -3,9 +3,15 @@ interface Props {
   images?: string[];
   experienceName: string;
   variant?: "desktop" | "mobile";
+  basePath?: string; // Add this new prop
 }
 
-const { images, experienceName, variant = "desktop" } = Astro.props;
+const {
+  images,
+  experienceName,
+  variant = "desktop",
+  basePath = "experience-images",
+} = Astro.props;
 
 if (!images || images.length === 0) {
   return null;
@@ -18,7 +24,7 @@ if (!images || images.length === 0) {
       <div class="flex gap-2 overflow-x-auto h-full max-h-40 scrollbar-always-visible">
         {images.map((image) => (
           <img
-            src={`/experience-images/${image}`}
+            src={`/${basePath}/${image}`}
             alt={`${experienceName}`}
             class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
             loading="lazy"
@@ -30,7 +36,7 @@ if (!images || images.length === 0) {
     <div class="flex gap-2 overflow-x-auto scrollbar-always-visible">
       {images.map((image, imgIndex) => (
         <img
-          src={`/experience-images/${image}`}
+          src={`/${basePath}/${image}`}
           alt={`${experienceName}`}
           class="h-40 w-auto object-cover flex-shrink-0"
           loading="lazy"
