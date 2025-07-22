@@ -1,18 +1,37 @@
 ---
-// You can add data here later, for now I'll use some example structure
-const inspiringPeople = [
-  {
-    name: "Example Person 1",
-    description: "Brief description of why they inspire you",
-    link: "#",
-  },
-  {
-    name: "Example Person 2",
-    description: "Brief description of why they inspire you",
-    link: "#",
-  },
-  // Add more people as needed
-];
+import canonContent from "../../lib/canon.md?raw";
+
+// Parse the markdown content
+function parseCanonContent(content: string) {
+  const sections = content.split(/^# /m).filter(Boolean);
+  return sections.map((section) => {
+    const lines = section.trim().split("\n");
+    const title = lines[0];
+    const items = lines
+      .slice(2)
+      .filter((line) => line.startsWith("- "))
+      .map((line) => {
+        const text = line.substring(2);
+        // Check if it's a markdown link
+        const linkMatch = text.match(/\[([^\]]+)\]\(([^)]+)\)(.*)/);
+        if (linkMatch) {
+          return {
+            name: linkMatch[1],
+            description: linkMatch[3].trim(),
+            link: linkMatch[2],
+          };
+        }
+        return {
+          name: text,
+          description: "",
+          link: null,
+        };
+      });
+    return { title, items };
+  });
+}
+
+const canonSections = parseCanonContent(canonContent);
 ---
 
 <div class="flex flex-col gap-12 p-8">
@@ -27,41 +46,45 @@ const inspiringPeople = [
   </nav>
 
   <section>
-    <p class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-8">
-      People who inspire me and shape how I think about the world.
+    <p class="text-md max-w-3xl text-pretty text-[--color-text-primary] mb-8">
+      People, things, and ideas that inspire me and shape how I think about the
+      world. This is a living document that grows as I discover new voices and
+      perspectives.
     </p>
-  </section>
 
-  <section class="grid gap-6 max-w-4xl">
-    {
-      inspiringPeople.map((person) => (
-        <div class="border border-[--color-bg-tertiary] rounded-lg p-6 hover:shadow-md transition-shadow">
-          <h3 class="text-xl font-semibold mb-2">
-            {person.link !== "#" ? (
-              <a
-                href={person.link}
-                class="text-[--color-primary] hover:text-[--color-primary-hover] hover:underline"
-                target="_blank"
-                rel="noopener"
-              >
-                {person.name}
-              </a>
-            ) : (
-              <span class="text-[--color-text-primary]">{person.name}</span>
-            )}
-          </h3>
-          <p class="text-[--color-text-secondary]">{person.description}</p>
-        </div>
-      ))
-    }
-  </section>
-
-  <section class="max-w-2xl">
-    <div class="bg-[--color-bg-secondary] rounded-lg p-6">
-      <p class="text-sm text-[--color-text-muted] italic">
-        This is a living document that grows as I discover new voices and
-        perspectives.
-      </p>
+    <div class="grid lg:grid-cols-2 gap-6 lg:gap-8 max-w-6xl">
+      {
+        canonSections.map((section) => (
+          <section>
+            <h2 class="text-xl font-medium mb-2 text-[--color-text-primary] capitalize">
+              {section.title}
+            </h2>
+            <ul class="list-disc list-inside space-y-1.5 capitalize">
+              {section.items.map((item) => (
+                <li class="text-[--color-text-primary]">
+                  {item.link ? (
+                    <a
+                      href={item.link}
+                      class="text-(--color-secondary) hover:text-(--color-secondary-hover) hover:underline"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {item.name}
+                    </a>
+                  ) : (
+                    <span>{item.name}</span>
+                  )}
+                  {item.description && (
+                    <span class="text-[--color-text-secondary] ml-1">
+                      {item.description}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
     </div>
   </section>
 </div>
