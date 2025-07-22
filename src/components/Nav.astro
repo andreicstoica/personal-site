@@ -17,10 +17,7 @@ import bulb from "../assets/link-images/bulb.png";
   </div>
 
   <!-- Icons container -->
-  <div
-    id="icons-container"
-    class="flex space-x-4 items-center ml-2 lg:absolute lg:inset-0 lg:top-20 lg:space-x-0"
-  >
+  <div id="icons-container" class="flex space-x-4 items-center ml-2">
     <a
       href="https://www.linkedin.com/in/andrei-c-stoica/"
       class="icon-link"
@@ -31,7 +28,7 @@ import bulb from "../assets/link-images/bulb.png";
     <a href="https://x.com/andreistoica_" class="icon-link" data-tooltip="X">
       <img src={chat.src} alt="X" class="icon" />
     </a>
-    <a href="#" class="icon-link" data-tooltip="Canon">
+    <a href="/canon" class="icon-link" data-tooltip="Canon">
       <img src={bulb.src} alt="Canon" class="icon" />
     </a>
     <a
@@ -55,10 +52,6 @@ import bulb from "../assets/link-images/bulb.png";
   .icon {
     width: 32px;
     height: 32px;
-  }
-
-  .icon-link {
-    position: relative;
   }
 
   .icon-link:hover .icon {
@@ -94,15 +87,42 @@ import bulb from "../assets/link-images/bulb.png";
       position: absolute;
       transition: all 0.3s ease;
     }
+
+    #icons-container {
+      position: absolute;
+      inset: 0;
+      top: 5rem;
+    }
   }
 
-  /* Mobile styles */
+  /* Mobile/tablet styles - ensure normal flow */
   @media (max-width: 1023px) {
     nav {
       height: auto !important;
       display: flex;
       flex-direction: column;
       padding: 1rem;
+      position: relative;
+    }
+
+    .icon-link {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+    }
+
+    #icons-container {
+      display: flex !important;
+      flex-direction: row;
+      gap: 1rem;
+      position: static !important;
+      inset: auto !important;
+      top: auto !important;
+      margin-left: 0.5rem;
+    }
+
+    .icon-link::after {
+      display: none; /* Hide tooltips on mobile */
     }
   }
 </style>
@@ -110,19 +130,19 @@ import bulb from "../assets/link-images/bulb.png";
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("icons-container");
+    // Only run random positioning on large screens
     if (container && window.innerWidth >= 1024) {
       const icons = Array.from(container.children) as HTMLElement[];
       const nav = container.closest("nav")!;
 
       // Get container dimensions (subtract padding and header space)
-      const containerHeight = nav.clientHeight - 120; // Account for header + padding
-      const containerWidth = nav.clientWidth - 80; // Account for padding
+      const containerHeight = nav.clientHeight - 120;
+      const containerWidth = nav.clientWidth - 80;
       const iconSize = 32;
-      const minDistance = 60; // Minimum distance between icon centers
+      const minDistance = 60;
 
       const placedPositions: { x: number; y: number }[] = [];
 
-      // Function to check if position is too close to existing icons
       const isTooClose = (x: number, y: number) => {
         return placedPositions.some((pos) => {
           const distance = Math.sqrt(
@@ -132,7 +152,6 @@ import bulb from "../assets/link-images/bulb.png";
         });
       };
 
-      // Function to find a valid position for an icon
       const findValidPosition = () => {
         let attempts = 0;
         const maxAttempts = 100;
@@ -147,7 +166,6 @@ import bulb from "../assets/link-images/bulb.png";
           attempts++;
         }
 
-        // Fallback: return a position even if not ideal
         return {
           x: Math.random() * (containerWidth - iconSize),
           y: Math.random() * (containerHeight - iconSize),
@@ -160,7 +178,6 @@ import bulb from "../assets/link-images/bulb.png";
         icon.style.left = `${position.x}px`;
         icon.style.top = `${position.y}px`;
 
-        // Store the center position for collision detection
         placedPositions.push({
           x: position.x + iconSize / 2,
           y: position.y + iconSize / 2,
