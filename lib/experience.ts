@@ -36,7 +36,7 @@ Selected Projects:
     endDate: "...",
     description:
       "Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique ‘special’ drink I create. Profits are donated to charity.",
-    images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png", "sfant-4.gif"],
+    images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png"],
   },
   {
     type: "work",
