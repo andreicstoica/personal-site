@@ -26,7 +26,7 @@ const textColors = {
 const getTypeStyles = (type: string) => {
   const colorVar = typeColors[type as keyof typeof typeColors] || '--tag-other';
   const textColorVar = textColors[type as keyof typeof textColors] || '272727';
-  return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 500; display: inline; padding: 0.2rem 0.2rem;`
+  return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.2rem;`
 };
 
 // Format date range

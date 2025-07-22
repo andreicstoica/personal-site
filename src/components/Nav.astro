@@ -10,7 +10,9 @@ import bulb from "../assets/link-images/bulb.png";
   class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative lg:pl-2"
 >
   <!-- Name header -->
-  <div class="text-[#fefefe] text-2xl font-black mb-4 lg:mb-12 lg:z-10 ml-4">
+  <div
+    class="text-(--color-text-inverse) text-2xl font-black mb-4 lg:mb-12 lg:z-10 ml-4"
+  >
     Andrei Stoica
   </div>
 
@@ -20,10 +22,16 @@ import bulb from "../assets/link-images/bulb.png";
       href="https://www.linkedin.com/in/andrei-c-stoica/"
       class="icon-link"
       data-tooltip="LinkedIn"
+      target="_blank"
     >
       <img src={linkedin.src} alt="LinkedIn" class="icon" />
     </a>
-    <a href="https://x.com/andreistoica_" class="icon-link" data-tooltip="X">
+    <a
+      href="https://x.com/andreistoica_"
+      class="icon-link"
+      data-tooltip="X"
+      target="_blank"
+    >
       <img src={chat.src} alt="X" class="icon" />
     </a>
     <a href="/canon" class="icon-link" data-tooltip="Canon">
@@ -33,6 +41,7 @@ import bulb from "../assets/link-images/bulb.png";
       href="https://andreisthoughts.substack.com/"
       class="icon-link"
       data-tooltip="Blog"
+      target="_blank"
     >
       <img src={tablet.src} alt="Blog" class="icon" />
     </a>
@@ -40,6 +49,7 @@ import bulb from "../assets/link-images/bulb.png";
       href="https://github.com/andreicstoica/"
       class="icon-link"
       data-tooltip="GitHub"
+      target="_blank"
     >
       <img src={code.src} alt="GitHub" class="icon" />
     </a>
