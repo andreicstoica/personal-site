@@ -43,13 +43,13 @@ if (!images || images.length === 0) {
 <!-- Lightbox Modal -->
 <div
   id="lightbox-modal"
-  class="fixed inset-0 flex items-center justify-center z-50 hidden transition-opacity duration-300"
+  class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300"
 >
   <div class="relative max-w-4xl max-h-screen p-4 flex flex-col items-center">
     <!-- Close Button -->
     <button
       id="close-lightbox"
-      class="absolute -top-2 -right-2 text-(--color-accent) bg-(--color-warning) text-2xl font-bold hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
+      class="absolute -top-2 -right-2 text-(--color-accent) bg-(--color-warning) text-2xl font-bold cursor-pointer hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
     >
       ×
     </button>
@@ -59,7 +59,7 @@ if (!images || images.length === 0) {
       id="lightbox-image"
       src=""
       alt=""
-      class="max-w-full max-h-[80vh] object-contain transition-transform duration-250 ease-out transform"
+      class="max-w-full max-h-[80vh] object-contain transition-transform duration-300 ease-out transform"
     />
   </div>
 </div>
@@ -114,17 +114,23 @@ if (!images || images.length === 0) {
   const isMobile = () => {
     return (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
+        navigator.userAgent
       ) || window.innerWidth <= 768
     );
   };
 
   document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("lightbox-modal");
-    const lightboxImage = document.getElementById("lightbox-image");
+    const lightboxImage = document.getElementById(
+      "lightbox-image"
+    ) as HTMLImageElement | null;
     const closeButton = document.getElementById("close-lightbox");
 
-    let currentClickedImage = null;
+    if (!modal || !lightboxImage || !closeButton) {
+      return; // Exit early if elements don't exist
+    }
+
+    let currentClickedImage: HTMLImageElement | null = null;
     let originalPosition = { x: 0, y: 0, scale: 0.1 }; // Store original position
 
     // Only add click listeners to desktop images
@@ -160,9 +166,8 @@ if (!images || images.length === 0) {
         // Set initial transform (small and at original position)
         lightboxImage.style.transform = `translate(${initialX}px, ${initialY}px) scale(${initialScale})`;
 
-        // Show modal (hidden but in DOM for positioning)
-        modal.classList.remove("hidden");
-        modal.style.opacity = "0";
+        // Show modal (make visible and enable interactions)
+        modal.classList.remove("opacity-0", "pointer-events-none");
 
         // Force reflow
         modal.offsetHeight;
@@ -188,7 +193,7 @@ if (!images || images.length === 0) {
 
       // Hide modal after animation
       setTimeout(() => {
-        modal.classList.add("hidden");
+        modal.classList.add("opacity-0", "pointer-events-none");
         modal.classList.remove("lightbox-closing");
         lightboxImage.style.transform = "";
         document.body.style.overflow = "";
@@ -210,7 +215,7 @@ if (!images || images.length === 0) {
 
       // Close with Escape key
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+        if (e.key === "Escape" && !modal.classList.contains("opacity-0")) {
           closeModal();
         }
       });
