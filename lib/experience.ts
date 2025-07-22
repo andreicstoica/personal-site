@@ -8,7 +8,12 @@ export const experiences: Experience[] = [
     role: "Software Engineer",
     startDate: "2025",
     description:
-      "Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc.",
+      `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc.
+<br><br>
+Selected Projects:
+- [Blob Game](https://blob-must-grow.netlify.app/) – clicker game built with TS/React
+- [Courtly](https://github.com/andreicstoica/tennis-coach-mobile?tab=readme-ov-file#readme) – tennis practice session (AI generated) React Native and web app
+- [Algos, Visualized](https://algos-visualized.vercel.app/) – visualizer for algorithms using Framer Motion and CSS animations`,
     images: ["blob-game.gif", "fractal-2.png", "fractal-1.jpeg"],
   },
   {
@@ -46,7 +51,7 @@ export const experiences: Experience[] = [
   },
   {
     type: "school",
-    name: "Undergrad Rationale",
+    name: "Rationale",
     tags: ["writing"],
     role: "Writer & Researcher",
     startDate: "2023",
@@ -55,7 +60,7 @@ export const experiences: Experience[] = [
   },
   {
     type: "school",
-    name: "Runchuck",
+    name: "RunChuck",
     tags: ["personal"],
     role: "Developer, Designer",
     startDate: "2022",
