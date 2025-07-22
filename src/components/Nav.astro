@@ -1,0 +1,185 @@
+---
+import chat from "../assets/link-images/chat.png";
+import code from "../assets/link-images/code.png";
+import linkedin from "../assets/link-images/linkedin.png";
+import tablet from "../assets/link-images/tablet.png";
+import bulb from "../assets/link-images/bulb.png";
+---
+
+<nav
+  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative lg:pl-2"
+>
+  <!-- Name header -->
+  <div class="text-[#fefefe] text-2xl font-black mb-4 lg:mb-12 lg:z-10 ml-4">
+    Andrei Stoica
+  </div>
+
+  <!-- Icons container -->
+  <div id="icons-container" class="flex space-x-4 items-center ml-4">
+    <a
+      href="https://www.linkedin.com/in/andrei-c-stoica/"
+      class="icon-link"
+      data-tooltip="LinkedIn"
+    >
+      <img src={linkedin.src} alt="LinkedIn" class="icon" />
+    </a>
+    <a href="https://x.com/andreistoica_" class="icon-link" data-tooltip="X">
+      <img src={chat.src} alt="X" class="icon" />
+    </a>
+    <a href="/canon" class="icon-link" data-tooltip="Canon">
+      <img src={bulb.src} alt="Canon" class="icon" />
+    </a>
+    <a
+      href="https://andreisthoughts.substack.com/"
+      class="icon-link"
+      data-tooltip="Blog"
+    >
+      <img src={tablet.src} alt="Blog" class="icon" />
+    </a>
+    <a
+      href="https://github.com/andreicstoica/"
+      class="icon-link"
+      data-tooltip="GitHub"
+    >
+      <img src={code.src} alt="GitHub" class="icon" />
+    </a>
+  </div>
+</nav>
+
+<style>
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon-link:hover .icon {
+    opacity: 1;
+  }
+
+  /* Custom tooltip styles */
+  .icon-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 20;
+  }
+
+  .icon-link:hover::after {
+    opacity: 1;
+  }
+
+  /* Large screen random positioning */
+  @media (min-width: 1024px) {
+    .icon-link {
+      position: absolute;
+      transition: all 0.3s ease;
+    }
+
+    #icons-container {
+      position: absolute;
+      inset: 0;
+      top: 5rem;
+    }
+  }
+
+  /* Mobile/tablet styles - ensure normal flow */
+  @media (max-width: 1023px) {
+    nav {
+      height: auto !important;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .icon-link {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+    }
+
+    #icons-container {
+      display: flex !important;
+      flex-direction: row;
+      gap: 1rem;
+      position: static !important;
+      inset: auto !important;
+      top: auto !important;
+    }
+
+    .icon-link::after {
+      display: none; /* Hide tooltips on mobile */
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("icons-container");
+    // Only run random positioning on large screens
+    if (container && window.innerWidth >= 1024) {
+      const icons = Array.from(container.children) as HTMLElement[];
+      const nav = container.closest("nav")!;
+
+      // Get container dimensions (subtract padding and header space)
+      const containerHeight = nav.clientHeight - 120;
+      const containerWidth = nav.clientWidth - 80;
+      const iconSize = 32;
+      const minDistance = 60;
+
+      const placedPositions: { x: number; y: number }[] = [];
+
+      const isTooClose = (x: number, y: number) => {
+        return placedPositions.some((pos) => {
+          const distance = Math.sqrt(
+            Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
+          );
+          return distance < minDistance;
+        });
+      };
+
+      const findValidPosition = () => {
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (attempts < maxAttempts) {
+          const x = Math.random() * (containerWidth - iconSize);
+          const y = Math.random() * (containerHeight - iconSize);
+
+          if (!isTooClose(x + iconSize / 2, y + iconSize / 2)) {
+            return { x, y };
+          }
+          attempts++;
+        }
+
+        return {
+          x: Math.random() * (containerWidth - iconSize),
+          y: Math.random() * (containerHeight - iconSize),
+        };
+      };
+
+      icons.forEach((icon) => {
+        const position = findValidPosition();
+
+        icon.style.left = `${position.x}px`;
+        icon.style.top = `${position.y}px`;
+
+        placedPositions.push({
+          x: position.x + iconSize / 2,
+          y: position.y + iconSize / 2,
+        });
+      });
+    }
+  });
+</script>

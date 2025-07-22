@@ -2,39 +2,36 @@
 import "../styles/global.css";
 
 interface Props {
-	title: string;
-	description?: string;
+  title: string;
+  description?: string;
 }
 
-const { title, description = "A modern personal website built with Astro" } =
-	Astro.props as Props;
+const {
+  title,
+  description = "Andrei Stoica's personal website and portfolio",
+} = Astro.props as Props;
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="description" content={description} />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<title>{title}</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="author" content="Andrei Stoica" />
+    <meta name="image" content="/cover.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="m-0 p-0 min-h-[100vh] grid grid-cols-12">
+    <slot />
+  </body>
 </html>
 
 <style is:global>
-	html {
-		font-family: var(--font-sans);
-		color: var(--color-text-primary);
-		background-color: var(--color-bg-primary);
-	}
-
-	body {
-		margin: 0;
-		padding: 0;
-		line-height: 1.6;
-		min-height: 100vh;
-	}
+  html {
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+  }
 </style>
