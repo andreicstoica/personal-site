@@ -112,3 +112,14 @@ body {
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+
+/* Global link styles */
+a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-secondary-hover);
+}
