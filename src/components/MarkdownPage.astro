@@ -24,17 +24,7 @@ function parseContent(content: string) {
 const parsedContent = parseContent(content);
 ---
 
-<div class="flex flex-col gap-4 p-8">
-  <!-- Breadcrumb -->
-  <nav class="text-sm">
-    <a
-      href="/"
-      class="text-[--color-secondary] hover:underline hover:text-[--color-secondary-hover] flex items-center gap-2"
-    >
-      ← Home
-    </a>
-  </nav>
-
+<div class="flex flex-col gap-2">
   {
     (title || description) && (
       <section>
@@ -80,7 +70,7 @@ const parsedContent = parseContent(content);
                 )
                 .replace(
                   /^(?!<[hd])(.+)$/gm,
-                  '<p class="text-[--color-text-primary] leading-relaxed mb-2">$1</p>'
+                  '<p class="text-[--color-text-primary] leading-relaxed">$1</p>'
                 )}
             />
           </div>

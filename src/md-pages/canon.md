@@ -29,15 +29,22 @@
 - [OTR Food & History](https://www.youtube.com/@OTRontheroad)
 - [Kenji López-Alt](https://www.youtube.com/@JKenjiLopezAlt)
 
-# books
+# non-fiction
 
-- zen and the art of motorcycle maintenance, robert pirsig
-- demian, herman hesse
 - the power broker, robert caro
+- the power law, sebastian mallaby
+- an engine, not a camera, donald alexander mackenzie
+- capitalizing on crisis, greta krippner
+- lo-tek: design by radical indigenism, julia watson
 - the inner game of tennis, timothy gallwey
+
+# fiction
+
+- demian, herman hesse
 - the paper menagerie and other stories, ken liu
 - the dark forest (three body problem), cixin liu
 - the god of small things, arundhati roy
+- zen and the art of motorcycle maintenance, robert pirsig
 
 # architects
 

@@ -19,12 +19,22 @@ if (!images || images.length === 0) {
 }
 
 // Import images for optimization
-const experienceImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/public/experience-images/*.{jpeg,jpg,png}"
-);
-const oldSiteImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/public/old-sites/*.{jpeg,jpg,png}"
-);
+const imageGlobs: Record<
+  string,
+  Record<string, () => Promise<{ default: ImageMetadata }>>
+> = {
+  "experience-images": import.meta.glob<{ default: ImageMetadata }>(
+    "/public/experience-images/*.{jpeg,jpg,png}"
+  ),
+  "old-sites": import.meta.glob<{ default: ImageMetadata }>(
+    "/public/old-sites/*.{jpeg,jpg,png}"
+  ),
+  fitness: import.meta.glob<{ default: ImageMetadata }>(
+    "/public/fitness/*.{jpeg,jpg,png}"
+  ),
+};
+
+const imagesGlob = imageGlobs[basePath] || imageGlobs["experience-images"];
 ---
 
 {
@@ -48,10 +58,7 @@ const oldSiteImages = import.meta.glob<{ default: ImageMetadata }>(
           }
 
           // For static images, use Astro optimization
-          const imageModule =
-            basePath === "old-sites"
-              ? oldSiteImages[`/public${fullResPath}`]
-              : experienceImages[`/public${fullResPath}`];
+          const imageModule = imagesGlob[`/public/${basePath}/${imageName}`];
 
           if (!imageModule) {
             // Fallback to regular img if module not found

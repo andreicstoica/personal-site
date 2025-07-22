@@ -4,6 +4,6 @@
   "exclude": ["dist"],
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {}
+    "paths": {},
   }
 }

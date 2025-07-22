@@ -31,7 +31,7 @@ export const experiences: Experience[] = [
     endDate: "...",
     description:
       "Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique ‘special’ drink I create. Profits are donated to charity.",
-    images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png"],
+    images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png", "sfant-4.gif"],
   },
   {
     type: "work",
@@ -46,7 +46,7 @@ export const experiences: Experience[] = [
   },
   {
     type: "school",
-    name: "Undergrad Rationale",
+    name: "Rationale",
     tags: ["writing"],
     role: "Writer & Researcher",
     startDate: "2023",
@@ -55,7 +55,7 @@ export const experiences: Experience[] = [
   },
   {
     type: "school",
-    name: "Runchuck",
+    name: "RunChuck",
     tags: ["personal"],
     role: "Developer, Designer",
     startDate: "2022",
