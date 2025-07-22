@@ -25,7 +25,7 @@ const textColors = {
 const getTypeStyles = (type: string) => {
   const colorVar = typeColors[type as keyof typeof typeColors] || '--tag-other';
   const textColorVar = textColors[type as keyof typeof textColors] || '272727';
-  return `background-color: var(${colorVar}); color: #${textColorVar}; display: inline; line-height: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 500;`;
+  return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 500;`;
 };
 
 // Format date range
@@ -39,12 +39,12 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
 <section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
   <!-- Table Header -->
-  <div class="hidden lg:grid lg:grid-cols-10 gap-4 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm uppercase tracking-wider">
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm uppercase tracking-wider">
     <div class="col-span-1 text-sm">Experience</div>
     <div class="col-span-2 text-sm">Role</div>
     <div class="col-span-2 text-sm">
-      <select id="typeFilter" class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-transparent">
-        <option value="">All</option>
+      <select id="typeFilter" class="w-full border max-w-30 border-gray-300 dark:border-gray-600 px-2 text-sm bg-transparent uppercase">
+        <option value="">all</option>
         {allTypes.map(type => (
           <option value={type}>{type}</option>
         ))}
@@ -55,13 +55,13 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   </div>
 
   <!-- Table Body -->
-  <div class="space-y-6">
+  <div class="-space-y-0">
     {experiences.map((experience, index) => (
-      <div class="experience-row border-b border-gray-100 dark:border-gray-800 pb-6" data-type={experience.type}>
+      <div class="experience-row border-b border-gray-200 dark:border-gray-700" data-type={experience.type}>
         <!-- Desktop Layout -->
-        <div class="hidden lg:grid lg:grid-cols-10 gap-4 items-start">
+        <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
           <!-- Experience Name (1 col) -->
-          <div class="col-span-1">
+          <div class="col-span-1 -mt-1">
             <span style={getTypeStyles(experience.type)}>
               {experience.name}
             </span>
@@ -94,7 +94,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
                   <img
                     src={`/images/${image}`}
                     alt={`${experience.name} ${imgIndex + 1}`}
-                    class="h-16 w-24 object-cover rounded border border-gray-200 dark:border-gray-700 flex-shrink-0"
+                    class="w-24 object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
                     loading="lazy"
                   />
                 ))}
@@ -105,7 +105,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
         <!-- Description (spans 4 cols, starting at col 2) -->
         {experience.description && (
-          <div class="hidden lg:grid lg:grid-cols-10 gap-4">
+          <div class="hidden lg:grid lg:grid-cols-10">
             <div class="col-span-1"></div> <!-- Empty space for experience column -->
             <div class="col-span-5"> <!-- Spans 4 columns starting from role column -->
               <p class="text-sm leading-relaxed">
