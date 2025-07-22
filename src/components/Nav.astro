@@ -7,31 +7,46 @@ import bulb from "../assets/link-images/bulb.png";
 ---
 
 <nav
-  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4"
+  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative"
 >
   <!-- Name header -->
-  <div class="text-[#fefefe] text-2xl lg:text-2xl font-black mb-4 lg:mb-8 ml-3">
+  <div
+    class="text-[#fefefe] text-2xl lg:text-2xl font-black mb-4 lg:mb-8 ml-3 lg:relative lg:z-10"
+  >
     Andrei Stoica
   </div>
 
   <!-- Icons container -->
   <div
-    class="flex lg:flex-col lg:space-y-4 lg:space-x-0 space-x-4 space-y-0 items-center lg:items-start ml-2"
+    id="icons-container"
+    class="flex space-x-4 items-center ml-2 lg:absolute lg:inset-0 lg:top-20 lg:space-x-0"
   >
-    <a href="#" class="icon-link">
+    <a
+      href="https://www.linkedin.com/in/andrei-c-stoica/"
+      class="icon-link"
+      data-tooltip="LinkedIn"
+    >
       <img src={linkedin.src} alt="LinkedIn" class="icon" />
     </a>
-    <a href="#" class="icon-link">
-      <img src={chat.src} alt="Chat" class="icon" />
+    <a href="https://x.com/andreistoica_" class="icon-link" data-tooltip="X">
+      <img src={chat.src} alt="X" class="icon" />
     </a>
-    <a href="#" class="icon-link">
-      <img src={bulb.src} alt="Ideas" class="icon" />
+    <a href="#" class="icon-link" data-tooltip="Canon">
+      <img src={bulb.src} alt="Canon" class="icon" />
     </a>
-    <a href="#" class="icon-link">
-      <img src={tablet.src} alt="Portfolio" class="icon" />
+    <a
+      href="https://andreisthoughts.substack.com/"
+      class="icon-link"
+      data-tooltip="Blog"
+    >
+      <img src={tablet.src} alt="Blog" class="icon" />
     </a>
-    <a href="#" class="icon-link">
-      <img src={code.src} alt="Code" class="icon" />
+    <a
+      href="https://github.com/andreicstoica/"
+      class="icon-link"
+      data-tooltip="GitHub"
+    >
+      <img src={code.src} alt="GitHub" class="icon" />
     </a>
   </div>
 </nav>
@@ -42,8 +57,43 @@ import bulb from "../assets/link-images/bulb.png";
     height: 32px;
   }
 
+  .icon-link {
+    position: relative;
+  }
+
   .icon-link:hover .icon {
     opacity: 1;
+  }
+
+  /* Custom tooltip styles */
+  .icon-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 20;
+  }
+
+  .icon-link:hover::after {
+    opacity: 1;
+  }
+
+  /* Large screen random positioning */
+  @media (min-width: 1024px) {
+    .icon-link {
+      position: absolute;
+      transition: all 0.3s ease;
+    }
   }
 
   /* Mobile styles */
@@ -56,3 +106,66 @@ import bulb from "../assets/link-images/bulb.png";
     }
   }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("icons-container");
+    if (container && window.innerWidth >= 1024) {
+      const icons = Array.from(container.children) as HTMLElement[];
+      const nav = container.closest("nav")!;
+
+      // Get container dimensions (subtract padding and header space)
+      const containerHeight = nav.clientHeight - 120; // Account for header + padding
+      const containerWidth = nav.clientWidth - 80; // Account for padding
+      const iconSize = 32;
+      const minDistance = 60; // Minimum distance between icon centers
+
+      const placedPositions: { x: number; y: number }[] = [];
+
+      // Function to check if position is too close to existing icons
+      const isTooClose = (x: number, y: number) => {
+        return placedPositions.some((pos) => {
+          const distance = Math.sqrt(
+            Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
+          );
+          return distance < minDistance;
+        });
+      };
+
+      // Function to find a valid position for an icon
+      const findValidPosition = () => {
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (attempts < maxAttempts) {
+          const x = Math.random() * (containerWidth - iconSize);
+          const y = Math.random() * (containerHeight - iconSize);
+
+          if (!isTooClose(x + iconSize / 2, y + iconSize / 2)) {
+            return { x, y };
+          }
+          attempts++;
+        }
+
+        // Fallback: return a position even if not ideal
+        return {
+          x: Math.random() * (containerWidth - iconSize),
+          y: Math.random() * (containerHeight - iconSize),
+        };
+      };
+
+      icons.forEach((icon) => {
+        const position = findValidPosition();
+
+        icon.style.left = `${position.x}px`;
+        icon.style.top = `${position.y}px`;
+
+        // Store the center position for collision detection
+        placedPositions.push({
+          x: position.x + iconSize / 2,
+          y: position.y + iconSize / 2,
+        });
+      });
+    }
+  });
+</script>
