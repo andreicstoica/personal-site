@@ -45,17 +45,6 @@ export const experiences: Experience[] = [
     images: ["wb-1.jpeg", "wb-2.jpeg"],
   },
   {
-    type: "work",
-    name: "Warner Bros. Discovery",
-    tags: ["product", "media"],
-    role: "Product Manager",
-    startDate: "2023",
-    endDate: "2024",
-    description:
-      "I helped create WBD's first APM cohort and served as the lead PM for the digital properties of legacy Turner (TNT, TBS, truTV), Discovery (TLC, Food Network, HGTV, etc.), and WarnerMedia (Cartoon Network, TCM, etc.) networks. I led projects from start to finish across all platforms (Roku, iOS, web) and helped rebase all legacy techstacks onto a new platform. Additionally, I contributed to a tiger team focused on developing a competitor in the FAST market and helped reimagine how users interact with streaming interfaces.",
-    images: ["wb-1.jpeg", "wb-2.jpeg"],
-  },
-  {
     type: "school",
     name: "Undergrad Rationale",
     tags: ["writing"],
@@ -82,7 +71,7 @@ export const experiences: Experience[] = [
     startDate: "2021",
     description:
       "Developed a personal project using React and TypeScript. The project is a simple todo list application.",
-    images: ["project-1.png", "project-2.jpeg", "project-3.png"],
+    images: ["blocpower-1.png"],
   },
   {
     type: "work",
@@ -92,7 +81,6 @@ export const experiences: Experience[] = [
     startDate: "2021",
     description:
       "Led site-wide UX audit using Hotjar; uncovered high drop-off on homepage and intake funnel. Designed end-to-end website overhaul (wireframes & mockups) that segmented landing-pages by customer type. Faced initial hesitation but built 3 proof-of-concept pillar pages in Webflow; pages out-performed existing site and lifted funnel conversion 20%. Converted these results into a product spec, enabling Head of Product to secure CEO approval and budget for a full agency-built relaunch that is now live. I also Partnered with Growth Marketing to spin up HubSpot-integrated, campaign-specific landing pages supporting nationwide ads.",
-    images: ["blocpower-1.png"],
   },
   {
     type: "personal",

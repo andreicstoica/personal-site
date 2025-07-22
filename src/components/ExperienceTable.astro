@@ -1,6 +1,7 @@
 ---
 import type { Experience } from "../../lib/types.ts";
 import { experiences } from "../../lib/experience.ts";
+import MediaGallery from "./MediaGallery.astro";
 
 // Get unique types for the filter dropdown
 const allTypes = [...new Set(experiences.map(exp => exp.type))].sort();
@@ -39,7 +40,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
 <section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
   <!-- Table Header -->
-  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm uppercase tracking-wider">
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider">
     <div class="col-span-1 text-sm">Experience</div>
     <div class="col-span-2 text-sm">Role</div>
     <div class="col-span-2 text-sm">
@@ -55,102 +56,92 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   </div>
 
   <!-- Table Body -->
-  <div class="-space-y-0">
+  <div class="space-y-6">
     {experiences.map((experience, index) => (
-      <div class="experience-row border-b border-gray-200 dark:border-gray-700" data-type={experience.type}>
+      <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
         <!-- Desktop Layout -->
         <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
           <!-- Experience Name (1 col) -->
-          <div class="col-span-1 -mt-1">
-            <span style={getTypeStyles(experience.type)}>
+          <div class="col-span-1">
+            <span class="line-clamp-2" style={getTypeStyles(experience.type)}>
               {experience.name}
             </span>
           </div>
 
-          <!-- Role (2 cols) -->
-          <div class="col-span-2">
-            <div class="text-sm">{experience.role}</div>
-          </div>
+          <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
+          <div class="col-span-5">
+            <!-- Top row: Role, Tags, Date -->
+            <div class="grid grid-cols-5 gap-3 mb-2">
+              <!-- Role (2 cols) -->
+              <div class="col-span-2">
+                <div class="text-sm">{experience.role}</div>
+              </div>
 
-          <!-- Tags (2 cols) -->
-          <div class="col-span-2">
-            <div class="font-serif text-sm">
-              {experience.tags.join(', ')}
+              <!-- Tags (2 cols) -->
+              <div class="col-span-2">
+                <div class="font-serif text-sm">
+                  {experience.tags.join(', ')}
+                </div>
+              </div>
+
+              <!-- Date (1 col) -->
+              <div class="col-span-1">
+                <div class="font-mono text-sm">
+                  {formatDateRange(experience.startDate, experience.endDate)}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Date (1 col) -->
-          <div class="col-span-1">
-            <div class="font-mono text-sm">
-              {formatDateRange(experience.startDate, experience.endDate)}
-            </div>
-          </div>
-
-          <!-- Media (4 cols) -->
-          <div class="col-span-4">
-            {experience.images && experience.images.length > 0 && (
-              <div class="flex gap-2 overflow-x-auto">
-                {experience.images.map((image, imgIndex) => (
-                  <img
-                    src={`/images/${image}`}
-                    alt={`${experience.name} ${imgIndex + 1}`}
-                    class="w-24 object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
-                    loading="lazy"
-                  />
-                ))}
+            <!-- Description below -->
+            {experience.description && (
+              <div>
+                <p class="text-sm leading-relaxed text-pretty">
+                  {experience.description}
+                </p>
               </div>
             )}
           </div>
-        </div>
 
-        <!-- Description (spans 4 cols, starting at col 2) -->
-        {experience.description && (
-          <div class="hidden lg:grid lg:grid-cols-10">
-            <div class="col-span-1"></div> <!-- Empty space for experience column -->
-            <div class="col-span-5"> <!-- Spans 4 columns starting from role column -->
-              <p class="text-sm leading-relaxed">
-                {experience.description}
-              </p>
-            </div>
-            <div class="col-span-6"></div> <!-- Empty space for date and media columns -->
-          </div>
-        )}
+          <!-- Media (4 cols) -->
+          <MediaGallery
+            images={experience.images}
+            experienceName={experience.name}
+            variant="desktop"
+          />
+        </div>
 
         <!-- Mobile Layout -->
         <div class="lg:hidden">
-          <div class="mb-3">
-            <span class="mb-2" style={getTypeStyles(experience.type)}>
+          <div class="flex items-start gap-4 mb-3">
+            <!-- Experience Name -->
+            <span style={getTypeStyles(experience.type)}>
               {experience.name}
             </span>
-            <h3 class="text-sm font-semibold">{experience.role}</h3>
-            <p class="text-sm">
-              {formatDateRange(experience.startDate, experience.endDate)}
-            </p>
-          </div>
 
-          <div class="text-sm mb-3">
-            {experience.tags.join(', ')}
+            <!-- Role -->
+            <div class="text-sm flex-1">
+              {experience.role}
+            </div>
+
+            <!-- Date -->
+            <div class="font-mono text-sm flex-shrink-0">
+              {formatDateRange(experience.startDate, experience.endDate)}
+            </div>
           </div>
 
           {experience.description && (
-            <p class="text-sm leading-relaxed">
+            <p class="text-sm leading-relaxed mb-3">
               {experience.description}
             </p>
           )}
 
-          {experience.images && experience.images.length > 0 && (
-            <div class="flex gap-2 overflow-x-auto">
-              {experience.images.map((image, imgIndex) => (
-                <img
-                  src={`/images/${image}`}
-                  alt={`${experience.name} ${imgIndex + 1}`}
-                  class="h-20 w-28 object-cover rounded border border-gray-200 dark:border-gray-700 flex-shrink-0"
-                  loading="lazy"
-                />
-              ))}
-            </div>
-          )}
+          <MediaGallery
+            images={experience.images}
+            experienceName={experience.name}
+            variant="mobile"
+          />
         </div>
+
       </div>
     ))}
   </div>

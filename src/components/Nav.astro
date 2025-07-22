@@ -7,16 +7,16 @@ import bulb from "../assets/link-images/bulb.png";
 ---
 
 <nav
-  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 p-4"
+  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4"
 >
   <!-- Name header -->
-  <div class="text-white text-2xl lg:text-3xl font-black mb-4 lg:mb-8">
+  <div class="text-[#fefefe] text-2xl lg:text-2xl font-black mb-4 lg:mb-8 ml-3">
     Andrei Stoica
   </div>
 
   <!-- Icons container -->
   <div
-    class="flex lg:flex-col lg:space-y-4 lg:space-x-0 space-x-4 space-y-0 items-center lg:items-start"
+    class="flex lg:flex-col lg:space-y-4 lg:space-x-0 space-x-4 space-y-0 items-center lg:items-start ml-2"
   >
     <a href="#" class="icon-link">
       <img src={linkedin.src} alt="LinkedIn" class="icon" />
@@ -40,8 +40,6 @@ import bulb from "../assets/link-images/bulb.png";
   .icon {
     width: 32px;
     height: 32px;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
   }
 
   .icon-link:hover .icon {

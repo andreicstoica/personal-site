@@ -1,0 +1,219 @@
+---
+interface Props {
+  images?: string[];
+  experienceName: string;
+  variant?: "desktop" | "mobile";
+}
+
+const { images, experienceName, variant = "desktop" } = Astro.props;
+
+if (!images || images.length === 0) {
+  return null;
+}
+---
+
+{
+  variant === "desktop" ? (
+    <div class="col-span-4">
+      <div class="flex gap-2 overflow-x-auto h-full max-h-40 scrollbar-always-visible">
+        {images.map((image) => (
+          <img
+            src={`/experience-images/${image}`}
+            alt={`${experienceName}`}
+            class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+            loading="lazy"
+          />
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div class="flex gap-2 overflow-x-auto scrollbar-always-visible">
+      {images.map((image, imgIndex) => (
+        <img
+          src={`/experience-images/${image}`}
+          alt={`${experienceName}`}
+          class="h-40 w-auto object-cover flex-shrink-0"
+          loading="lazy"
+        />
+      ))}
+    </div>
+  )
+}
+
+<!-- Lightbox Modal -->
+<div
+  id="lightbox-modal"
+  class="fixed inset-0 flex items-center justify-center z-50 hidden transition-opacity duration-300"
+>
+  <div class="relative max-w-4xl max-h-screen p-4 flex flex-col items-center">
+    <!-- Close Button -->
+    <button
+      id="close-lightbox"
+      class="absolute -top-2 -right-2 text-(--color-accent) bg-(--color-warning) text-2xl font-bold hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
+    >
+      ×
+    </button>
+
+    <!-- Image -->
+    <img
+      id="lightbox-image"
+      src=""
+      alt=""
+      class="max-w-full max-h-[80vh] object-contain transition-transform duration-250 ease-out transform"
+    />
+  </div>
+</div>
+
+<style>
+  .scrollbar-always-visible {
+    /* Always show scrollbar */
+    overflow-x: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af transparent;
+  }
+
+  /* Webkit browsers (Chrome, Safari, etc.) */
+  .scrollbar-always-visible::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .scrollbar-always-visible::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-always-visible::-webkit-scrollbar-thumb {
+    background-color: #9ca3af;
+    border-radius: 4px;
+  }
+
+  .scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
+  }
+
+  /* Dark mode */
+  .dark .scrollbar-always-visible::-webkit-scrollbar-thumb {
+    background-color: #6b7280;
+  }
+
+  .dark .scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af;
+  }
+
+  /* Animation classes */
+  .lightbox-opening {
+    opacity: 1 !important;
+  }
+
+  .lightbox-closing {
+    opacity: 0 !important;
+  }
+</style>
+
+<script>
+  // Mobile detection function
+  const isMobile = () => {
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      ) || window.innerWidth <= 768
+    );
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("lightbox-modal");
+    const lightboxImage = document.getElementById("lightbox-image");
+    const closeButton = document.getElementById("close-lightbox");
+
+    let currentClickedImage = null;
+    let originalPosition = { x: 0, y: 0, scale: 0.1 }; // Store original position
+
+    // Only add click listeners to desktop images
+    const galleryImages = document.querySelectorAll(".desktop-only-lightbox");
+
+    galleryImages.forEach((img) => {
+      img.addEventListener("click", (e) => {
+        // Double-check mobile detection on click
+        if (isMobile()) {
+          return; // Exit early on mobile
+        }
+
+        const imgElement = e.target as HTMLImageElement;
+        currentClickedImage = imgElement;
+
+        // Get the position and size of the clicked image
+        const rect = imgElement.getBoundingClientRect();
+
+        // Calculate and store initial position and scale
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const initialX = rect.left + rect.width / 2 - centerX;
+        const initialY = rect.top + rect.height / 2 - centerY;
+        const initialScale = Math.min(rect.width / 400, rect.height / 300, 0.2);
+
+        // Store for close animation
+        originalPosition = { x: initialX, y: initialY, scale: initialScale };
+
+        // Set the lightbox image
+        lightboxImage.src = imgElement.src;
+        lightboxImage.alt = imgElement.alt;
+
+        // Set initial transform (small and at original position)
+        lightboxImage.style.transform = `translate(${initialX}px, ${initialY}px) scale(${initialScale})`;
+
+        // Show modal (hidden but in DOM for positioning)
+        modal.classList.remove("hidden");
+        modal.style.opacity = "0";
+
+        // Force reflow
+        modal.offsetHeight;
+
+        // Animate to center
+        requestAnimationFrame(() => {
+          modal.classList.add("lightbox-opening");
+          lightboxImage.style.transform = "translate(0, 0) scale(1)";
+        });
+
+        document.body.style.overflow = "hidden";
+      });
+    });
+
+    // Close modal with animation
+    const closeModal = () => {
+      if (!currentClickedImage) return;
+
+      // Animate back to stored original position
+      modal.classList.remove("lightbox-opening");
+      modal.classList.add("lightbox-closing");
+      lightboxImage.style.transform = `translate(${originalPosition.x}px, ${originalPosition.y}px) scale(${originalPosition.scale})`;
+
+      // Hide modal after animation
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        modal.classList.remove("lightbox-closing");
+        lightboxImage.style.transform = "";
+        document.body.style.overflow = "";
+        currentClickedImage = null;
+        originalPosition = { x: 0, y: 0, scale: 0.1 }; // Reset
+      }, 500);
+    };
+
+    // Only add close listeners if not mobile
+    if (!isMobile()) {
+      closeButton.addEventListener("click", closeModal);
+
+      // Close when clicking outside image
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close with Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+          closeModal();
+        }
+      });
+    }
+  });
+</script>
