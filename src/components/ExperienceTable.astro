@@ -5,29 +5,44 @@ import { experiences } from "../../lib/experience.ts";
 // Get unique types for the filter dropdown
 const allTypes = [...new Set(experiences.map(exp => exp.type))].sort();
 
-// Color mapping for different experience types
+// Color mapping for different experience types using CSS custom properties
 const typeColors = {
-  personal: 'bg-secondary-500',
-  work: 'bg-primary-500',
-  school: 'bg-accent-500',
-  other: 'bg-warning-500'
+  personal: '--tag-personal',
+  work: '--tag-work',
+  school: '--tag-school',
+  other: '--tag-other'
+};
+
+// Text color mapping for better contrast with each background, irrespective of theme
+const textColors = {
+  personal: '272727',    // Dark text on bright green
+  work: 'fefefe',        // White text on blue
+  school: '272727',      // Dark text on yellow
+  other: 'fefefe'        // White text on pink
+};
+
+// Helper function to get inline styles for a given type
+const getTypeStyles = (type: string) => {
+  const colorVar = typeColors[type as keyof typeof typeColors] || '--tag-other';
+  const textColorVar = textColors[type as keyof typeof textColors] || '272727';
+  return `background-color: var(${colorVar}); color: #${textColorVar}; display: inline; line-height: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 500;`;
 };
 
 // Format date range
 const formatDateRange = (startDate: string, endDate?: string) => {
-  if (endDate && endDate !== 'Present') {
+  if (endDate && endDate !== '...') {
     return `${startDate}-${endDate}`;
   }
-  return endDate === 'Present' ? `${startDate}-Present` : startDate;
+  return endDate === '...' ? `${startDate}-...` : startDate;
 };
 ---
 
 <section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
   <!-- Table Header -->
   <div class="hidden lg:grid lg:grid-cols-10 gap-4 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 font-semibold text-sm uppercase tracking-wider">
-    <div class="col-span-1">Experience</div>
-    <div class="col-span-2">Role</div>
-    <div class="col-span-2">
+    <div class="col-span-1 text-sm">Experience</div>
+    <div class="col-span-2 text-sm">Role</div>
+    <div class="col-span-2 text-sm">
       <select id="typeFilter" class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-transparent">
         <option value="">All</option>
         {allTypes.map(type => (
@@ -35,8 +50,8 @@ const formatDateRange = (startDate: string, endDate?: string) => {
         ))}
       </select>
     </div>
-    <div class="col-span-1">Date</div>
-    <div class="col-span-4">Media</div>
+    <div class="col-span-1 text-sm">Date</div>
+    <div class="col-span-4 text-sm">Media</div>
   </div>
 
   <!-- Table Body -->
@@ -47,26 +62,26 @@ const formatDateRange = (startDate: string, endDate?: string) => {
         <div class="hidden lg:grid lg:grid-cols-10 gap-4 items-start">
           <!-- Experience Name (1 col) -->
           <div class="col-span-1">
-            <div class={`inline-bloc text-md bg-${typeColors[experience.type]}`}>
+            <span style={getTypeStyles(experience.type)}>
               {experience.name}
-            </div>
+            </span>
           </div>
 
           <!-- Role (2 cols) -->
           <div class="col-span-2">
-            <div class="">{experience.role}</div>
+            <div class="text-sm">{experience.role}</div>
           </div>
 
           <!-- Tags (2 cols) -->
           <div class="col-span-2">
-            <div class="font-serif">
+            <div class="font-serif text-sm">
               {experience.tags.join(', ')}
             </div>
           </div>
 
           <!-- Date (1 col) -->
           <div class="col-span-1">
-            <div class="font-mono">
+            <div class="font-mono text-sm">
               {formatDateRange(experience.startDate, experience.endDate)}
             </div>
           </div>
@@ -104,10 +119,10 @@ const formatDateRange = (startDate: string, endDate?: string) => {
         <!-- Mobile Layout -->
         <div class="lg:hidden">
           <div class="mb-3">
-            <div class={`inline-block text-md font-medium mb-2 bg-${typeColors[experience.type]}`}>
+            <span class="mb-2" style={getTypeStyles(experience.type)}>
               {experience.name}
-            </div>
-            <h3 class="text-lg font-semibold">{experience.role}</h3>
+            </span>
+            <h3 class="text-sm font-semibold">{experience.role}</h3>
             <p class="text-sm">
               {formatDateRange(experience.startDate, experience.endDate)}
             </p>
@@ -118,7 +133,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
           </div>
 
           {experience.description && (
-            <p class="leading-relaxed">
+            <p class="text-sm leading-relaxed">
               {experience.description}
             </p>
           )}

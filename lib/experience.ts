@@ -28,7 +28,7 @@ export const experiences: Experience[] = [
     tags: ["personal", "coffee"],
     role: "Founder & Barista",
     startDate: "2024",
-    endDate: "Present",
+    endDate: "...",
     description:
       "Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique ‘special’ drink I create. Profits are donated to charity.",
     images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png"],
@@ -80,7 +80,6 @@ export const experiences: Experience[] = [
     tags: ["product", "growth"],
     role: "Product Manager",
     startDate: "2021",
-    endDate: "Present",
     description:
       "Developed a personal project using React and TypeScript. The project is a simple todo list application.",
     images: ["project-1.png", "project-2.jpeg", "project-3.png"],
