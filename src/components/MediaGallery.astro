@@ -107,8 +107,14 @@ if (!images || images.length === 0) {
   .lightbox-closing {
     opacity: 0 !important;
   }
-</style>
 
+  #lightbox-image {
+    box-shadow:
+      0 0 50px rgba(0, 0, 0, 0.3),
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+</style>
 <script>
   // Mobile detection function
   const isMobile = () => {
