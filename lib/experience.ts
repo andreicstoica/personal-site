@@ -9,7 +9,7 @@ export const experiences: Experience[] = [
     startDate: "2025",
     description:
       "Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc.",
-    images: ["fractal-1.jpeg", "fractal-2.png"],
+    images: ["blob-game.gif", "fractal-2.png", "fractal-1.jpeg"],
   },
   {
     type: "work",
