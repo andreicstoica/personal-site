@@ -8,3 +8,4 @@ export type Experience = {
   description?: string;
   images?: string[];
 };
+
