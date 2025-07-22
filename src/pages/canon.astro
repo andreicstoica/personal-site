@@ -1,16 +1,19 @@
 ---
-import Home from "../components/Home.astro";
+import CanonPage from "../components/CanonPage.astro";
 import Layout from "../layouts/Layout.astro";
 import Nav from "../components/Nav.astro";
 ---
 
-<Layout title="Andrei Stoica Portfolio">
+<Layout
+  title="Canon - Andrei Stoica Portfolio"
+  description="Andrei Stoica's Canon"
+>
   <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
   <div class="col-span-12 lg:col-span-2 lg:h-screen">
     <Nav />
   </div>
-  <!-- Home takes remaining 10 columns on desktop, full width on mobile -->
+  <!-- Canon takes remaining 10 columns on desktop, full width on mobile -->
   <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <Home />
+    <CanonPage />
   </div>
 </Layout>
