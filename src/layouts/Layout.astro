@@ -34,4 +34,88 @@ const {
     color: var(--color-text-primary);
     background-color: var(--color-bg-primary);
   }
+
+  .cursor-pixel {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.5;
+    transition: opacity 0.5s ease-out;
+  }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Cursor trail colors
+    const colors = [
+      "var(--color-primary)",
+      "var(--color-secondary)",
+      "var(--color-accent)",
+      "var(--color-warning)",
+    ];
+
+    // Create custom cursor
+    const cursor = document.createElement("div");
+    cursor.className = "custom-cursor";
+    document.body.appendChild(cursor);
+
+    let mouseX = 0;
+    let mouseY = 0;
+    let lastTime = 0;
+    const throttleMs = 25;
+
+    const MAX_PIXELS = 30; // Limit active pixels
+    const activePixels: HTMLElement[] = [];
+
+    const createPixel = (x: number, y: number) => {
+      // Remove oldest pixel if at limit
+      if (activePixels.length >= MAX_PIXELS) {
+        const oldest = activePixels.shift();
+        oldest?.remove();
+      }
+
+      const pixel = document.createElement("div");
+      pixel.className = "cursor-pixel";
+
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      pixel.style.backgroundColor = randomColor;
+
+      // Random size between 2px and 8px
+      const size = Math.floor(Math.random() * 7) + 2; // 2-8px
+      pixel.style.width = `${size}px`;
+      pixel.style.height = `${size}px`;
+
+      // Center the pixel based on its size
+      pixel.style.left = `${x - size / 2}px`;
+      pixel.style.top = `${y - size / 2}px`;
+
+      activePixels.push(pixel);
+      document.body.appendChild(pixel);
+
+      setTimeout(() => {
+        pixel.style.opacity = "0";
+        setTimeout(() => {
+          const index = activePixels.indexOf(pixel);
+          if (index > -1) activePixels.splice(index, 1);
+          pixel.remove();
+        }, 500);
+      }, 300);
+    };
+
+    document.addEventListener("mousemove", (e) => {
+      const now = Date.now();
+      if (now - lastTime < throttleMs) return;
+      lastTime = now;
+
+      // Check if we're over nav element
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      if (element && element.closest("nav")) {
+        return; // Skip if over nav
+      }
+
+      createPixel(e.clientX, e.clientY);
+    });
+  });
+</script>

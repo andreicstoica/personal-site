@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 interface Props {
   images?: string[];
   experienceName: string;
@@ -16,24 +17,73 @@ const {
 if (!images || images.length === 0) {
   return null;
 }
+
+// Import images for optimization
+const experienceImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/public/experience-images/*.{jpeg,jpg,png}"
+);
+const oldSiteImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/public/old-sites/*.{jpeg,jpg,png}"
+);
 ---
 
 {
   variant === "desktop" ? (
     <div class="col-span-4">
-      <div class="flex gap-2 overflow-x-auto h-full max-h-40 scrollbar-always-visible">
-        {images.map((image) => (
-          <img
-            src={`/${basePath}/${image}`}
-            alt={`${experienceName}`}
-            class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
-            loading="lazy"
-          />
-        ))}
+      <div class="flex gap-2 h-full max-h-40 scrollbar-always-visible">
+        {images.map(async (imageName) => {
+          const fullResPath = `/${basePath}/${imageName}`;
+          const isGif = imageName.toLowerCase().endsWith(".gif");
+
+          if (isGif) {
+            return (
+              <img
+                src={fullResPath}
+                alt={experienceName}
+                class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+                loading="lazy"
+                data-fullres={fullResPath}
+              />
+            );
+          }
+
+          // For static images, use Astro optimization
+          const imageModule =
+            basePath === "old-sites"
+              ? oldSiteImages[`/public${fullResPath}`]
+              : experienceImages[`/public${fullResPath}`];
+
+          if (!imageModule) {
+            // Fallback to regular img if module not found
+            return (
+              <img
+                src={fullResPath}
+                alt={experienceName}
+                class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+                loading="lazy"
+                data-fullres={fullResPath}
+              />
+            );
+          }
+
+          const image = await imageModule();
+
+          return (
+            <Image
+              src={image.default}
+              alt={experienceName}
+              loading="lazy"
+              width={400}
+              densities={[1.5, 2]}
+              class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+              data-fullres={fullResPath}
+            />
+          );
+        })}
       </div>
     </div>
   ) : (
-    <div class="flex gap-2 overflow-x-auto scrollbar-always-visible">
+    <div class="flex gap-2 scrollbar-always-visible">
       {images.map((image, imgIndex) => (
         <img
           src={`/${basePath}/${image}`}
@@ -73,7 +123,7 @@ if (!images || images.length === 0) {
 <style>
   .scrollbar-always-visible {
     /* Always show scrollbar */
-    overflow-x: scroll;
+    overflow-x: scroll !important;
     scrollbar-width: thin;
     scrollbar-color: #9ca3af transparent;
   }
@@ -81,6 +131,7 @@ if (!images || images.length === 0) {
   /* Webkit browsers (Chrome, Safari, etc.) */
   .scrollbar-always-visible::-webkit-scrollbar {
     height: 8px;
+    display: block;
   }
 
   .scrollbar-always-visible::-webkit-scrollbar-track {
@@ -171,8 +222,9 @@ if (!images || images.length === 0) {
         // Store for close animation
         originalPosition = { x: initialX, y: initialY, scale: initialScale };
 
-        // Set the lightbox image
-        lightboxImage.src = imgElement.src;
+        // Use full resolution path from data attribute
+        const fullResPath = imgElement.dataset.fullres || imgElement.src;
+        lightboxImage.src = fullResPath; // Use full res version
         lightboxImage.alt = imgElement.alt;
 
         // Set initial transform (small and at original position)

@@ -20,7 +20,7 @@
 - [yi yi](https://letterboxd.com/film/yi-yi/) dir. edward yang
 - [inglourious basterds](https://letterboxd.com/film/inglourious-basterds/) dir. tarantino
 
-# youtube
+# YouTube
 
 - [Internet Shaquille ](https://www.youtube.com/@internetshaquille)
 - [Mark Rober](https://www.youtube.com/channel/UCY1kMZp36IQSyNx_9h4mpCg)
