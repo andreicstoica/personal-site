@@ -105,13 +105,26 @@ export class ModalManager {
         document.body.style.width = '100%';
 
         // Show modal
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        modal.classList.add('show');
         // Debug: log modal state after opening
         setTimeout(() => {
             console.log('[ModalManager] Modal classes after:', modal.className);
             console.log('[ModalManager] Modal bounding rect after:', modal.getBoundingClientRect());
-            console.log('[ModalManager] Modal computed style:', window.getComputedStyle(modal));
+            const computedStyle = window.getComputedStyle(modal);
+            console.log('[ModalManager] Modal computed style:', computedStyle);
+            console.log('[ModalManager] Modal display:', computedStyle.display);
+            console.log('[ModalManager] Modal visibility:', computedStyle.visibility);
+            console.log('[ModalManager] Modal opacity:', computedStyle.opacity);
+            console.log('[ModalManager] Has .show class:', modal.classList.contains('show'));
+
+            // Force a style recalculation
+            modal.offsetHeight;
+
+            // Check if modal is actually visible
+            const rect = modal.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                console.error('[ModalManager] Modal has zero dimensions!');
+            }
         }, 50);
 
         // Set up focus trap
@@ -134,8 +147,7 @@ export class ModalManager {
         // Wait for animation to complete
         setTimeout(() => {
             // Hide modal
-            modal.classList.add('hidden');
-            modal.classList.remove('flex', 'closing');
+            modal.classList.remove('show', 'closing');
 
             // Restore body scroll
             document.body.style.position = '';
@@ -186,12 +198,33 @@ export function initializeModalSystem(): void {
 
         if (projectLink) {
             event.preventDefault();
+
+            // Check if on mobile screen
+            if (window.innerWidth < 768) {
+                console.log('[ModalManager] Modal disabled on mobile screens');
+                return; // Exit early on mobile
+            }
+
+            console.log('[ModalManager] Project link clicked:', projectLink);
             const projectId = projectLink.dataset.projectId;
+            console.log('[ModalManager] Project ID from dataset:', projectId);
+            console.log('[ModalManager] Project ID from getAttribute:', projectLink.getAttribute('data-project-id'));
 
             if (projectId) {
                 const modal = document.querySelector(`[data-project-id="${projectId}"].project-modal`) as HTMLElement;
+                console.log('[ModalManager] Modal found:', modal);
+                console.log('[ModalManager] Modal selector used:', `[data-project-id="${projectId}"].project-modal`);
                 if (modal) {
+                    console.log('[ModalManager] Opening modal...');
                     modalManager.openModal(modal);
+                } else {
+                    console.error('[ModalManager] Modal not found for project:', projectId);
+                    // Try to find any modals
+                    const allModals = document.querySelectorAll('.project-modal');
+                    console.log('[ModalManager] All modals found:', allModals.length);
+                    allModals.forEach((m, i) => {
+                        console.log(`[ModalManager] Modal ${i}:`, m.getAttribute('data-project-id'));
+                    });
                 }
             }
         }

@@ -117,10 +117,10 @@ marked.setOptions({ renderer });
 
         <!-- Mobile Layout -->
         <div class="lg:hidden">
-          <div class="flex items-start gap-4 mb-3">
+          <div class="flex justify-between gap-4 mb-3">
             <!-- Experience Name -->
             <span
-              class="flex-1 min-w-0 break-words whitespace-normal"
+              class="line-clamp-2"
               style={getTypeStyles(experience.type)}
             >
               {experience.name}

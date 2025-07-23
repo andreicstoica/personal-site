@@ -107,51 +107,6 @@ const htmlContent = marked(processedDescription);
     } catch (error) {
       console.warn("Error initializing project links:", error);
     }
-
-    // --- Modal show/hide logic (robust for mobile) ---
-    function attachModalListeners() {
-      // Open modal on project-link click
-      document.querySelectorAll(".project-link").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const projectId = btn.getAttribute("data-project-id");
-          const modal = document.querySelector(
-            `.project-modal[data-project-id="${projectId}"]`
-          );
-          if (modal) {
-            modal.classList.remove("hidden");
-            document.body.style.overflow = "hidden";
-          }
-        });
-      });
-
-      // Close modal on close button click
-      document
-        .querySelectorAll(".project-modal .modal-close")
-        .forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation(); // Prevent bubbling to modal background
-            const modal = btn.closest(".project-modal");
-            if (modal) {
-              modal.classList.add("hidden");
-              document.body.style.overflow = "";
-            }
-          });
-        });
-
-      // Close modal on background click
-      document.querySelectorAll(".project-modal").forEach((modal) => {
-        modal.addEventListener("click", (e) => {
-          if (e.target === modal) {
-            modal.classList.add("hidden");
-            document.body.style.overflow = "";
-          }
-        });
-      });
-    }
-
-    // Attach listeners initially and after dynamic button creation
-    attachModalListeners();
-    // If you ever dynamically add more .project-link buttons, call attachModalListeners() again.
   });
 </script>
 
@@ -180,5 +135,20 @@ const htmlContent = marked(processedDescription);
     color: #3b82f6;
     text-decoration: underline;
     text-decoration-style: dotted;
+  }
+
+  /* Disable project links on mobile */
+  @media (max-width: 767px) {
+    .project-link {
+      cursor: default;
+      text-decoration: underline;
+      text-decoration-style: solid;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .project-link:hover {
+      text-decoration-thickness: 1px;
+    }
   }
 </style>

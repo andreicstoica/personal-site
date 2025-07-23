@@ -17,7 +17,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 ---
 
 <div
-  class="project-modal fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+  class="project-modal fixed inset-0 z-50 items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
   data-project-id={project.id}
   role="dialog"
   aria-modal="true"
@@ -214,27 +214,39 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 </div>
 
 <script>
-  document.addEventListener("click", function (e) {
-    const target = e.target as HTMLElement | null;
-    if (!target) return;
-    const btn = target.closest(".modal-close");
-    if (btn) {
-      const modal = btn.closest(".project-modal");
-      if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        window.scrollTo(0, 0);
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("[ProjectModal] DOM loaded, setting up close handlers");
+
+    document.addEventListener("click", function (e) {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const btn = target.closest(".modal-close");
+      if (btn) {
+        console.log("[ProjectModal] Close button clicked");
+        const modal = btn.closest(".project-modal");
+        if (modal) {
+          console.log("[ProjectModal] Removing show class from modal");
+          modal.classList.remove("show");
+          document.body.style.position = "";
+          document.body.style.top = "";
+          document.body.style.width = "";
+          document.body.style.overflow = "";
+          window.scrollTo(0, 0);
+        }
       }
-    }
+    });
   });
 </script>
 
 <style>
   .project-modal {
+    display: none !important;
     animation: fadeIn 0.2s ease-out;
+  }
+  .project-modal.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .project-modal.closing {
@@ -334,15 +346,22 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
   /* Mobile responsive adjustments */
   @media (max-width: 768px) {
     .project-modal {
+      display: none !important;
+    }
+    .project-modal.show {
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       z-index: 9999 !important;
       padding: 1rem !important;
+      position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
+      /* Force visibility */
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     .modal-content {
       width: 100vw !important;
@@ -384,5 +403,19 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
     .modal-content .p-6 {
       padding: 1rem;
     }
+  }
+</style>
+
+<!-- Override any conflicting styles with inline styles as a last resort -->
+<style is:inline>
+  .project-modal.show {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 </style>
