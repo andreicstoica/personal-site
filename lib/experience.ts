@@ -13,7 +13,7 @@ export const experiences: Experience[] = [
 Selected Projects:
 - {{project:blob-game}} – clicker game built with TS/React
 - {{project:courtly}} – tennis practice session (AI generated) React Native and web app
-- {{project:algos-visualized}} – visualizer for algorithms using Framer Motion and CSS animations
+- {{project:algos-visualized}} – visualized using Framer Motion and CSS animations
 - {{project:tarot-chat}} – daily tarot reading chat website`,
     images: ["blob-game.gif", "fractal-2.png", "fractal-1.jpeg"],
     projects: [
