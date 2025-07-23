@@ -1,4 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+
+@font-face {
+  font-family: "LumberSans";
+  src: url("/fonts/LumberSans.ttf") format("truetype");
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
+}
+
 @import "tailwindcss";
 
 /* CSS Custom Properties for global theming */
@@ -21,7 +30,7 @@
 
   /* Background colors */
   --color-bg-primary: #fefefe;
-  --color-bg-secondary: #C4C4C4;
+  --color-bg-secondary: #c4c4c4;
 
   /* Tag Colors */
   --tag-work: #3848ff;
@@ -66,7 +75,10 @@ html {
   font-family: var(--font-sans);
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
-  cursor: url("data:image/svg+xml,%3csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='8' height='8' fill='%23272727' stroke='%23fefefe' stroke-width='1'/%3e%3c/svg%3e") 8 8, auto;
+  cursor:
+    url("data:image/svg+xml,%3csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='8' height='8' fill='%23272727' stroke='%23fefefe' stroke-width='1'/%3e%3c/svg%3e")
+      8 8,
+    auto;
 }
 
 body {
