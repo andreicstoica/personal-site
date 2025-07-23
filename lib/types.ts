@@ -1,3 +1,21 @@
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  links: {
+    demo?: string;
+    github?: string;
+    website?: string;
+  };
+  images?: string[];
+}
+
+export interface ProjectReference {
+  projectId: string;
+  displayText: string;
+}
+
 export type Experience = {
   type: "personal" | "work" | "school" | "other";
   name: string;
@@ -7,4 +25,5 @@ export type Experience = {
   endDate?: string;
   description?: string;
   images?: string[];
+  projects?: ProjectReference[];
 };
