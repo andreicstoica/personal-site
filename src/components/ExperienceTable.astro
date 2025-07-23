@@ -119,12 +119,15 @@ marked.setOptions({ renderer });
         <div class="lg:hidden">
           <div class="flex items-start gap-4 mb-3">
             <!-- Experience Name -->
-            <span style={getTypeStyles(experience.type)}>
+            <span
+              class="flex-1 min-w-0 break-words whitespace-normal"
+              style={getTypeStyles(experience.type)}
+            >
               {experience.name}
             </span>
 
             <!-- Role -->
-            <div class="text-sm flex-1 mt-1">
+            <div class="text-sm flex-none mt-1">
               {experience.role}
             </div>
 

@@ -91,10 +91,6 @@ export class ModalManager {
     }
 
     public openModal(modal: HTMLElement): void {
-        // Debug: log modal state before opening
-        console.log('[ModalManager] Opening modal:', modal);
-        console.log('[ModalManager] Modal classes before:', modal.className);
-        console.log('[ModalManager] Modal bounding rect before:', modal.getBoundingClientRect());
         // Close any existing modal first
         if (this.activeModal) {
             this.closeModal();
