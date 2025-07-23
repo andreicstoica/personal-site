@@ -1,6 +1,6 @@
 ---
 import type { Experience } from "../../lib/types.ts";
-import { experiences } from "../../lib/experience.ts";
+import { experiences } from "../../lib/experience";
 import MediaGallery from "./MediaGallery.astro";
 import { marked } from 'marked';
 
@@ -48,10 +48,10 @@ marked.setOptions({ renderer });
 
 <section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
   <!-- Table Header -->
-  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider">
-    <div class="col-span-1 text-sm">Experience</div>
-    <div class="col-span-2 text-sm">Role</div>
-    <div class="col-span-2 text-sm">
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider" >
+    <div class="col-span-1 text-sm ">Experience</div>
+    <div class="col-span-2 text-sm ">Role</div>
+    <div class="col-span-2 text-sm ">
       <select id="typeFilter" class="w-full border max-w-30 border-gray-300 dark:border-gray-600 px-2 text-sm bg-transparent uppercase">
         <option value="">all</option>
         {allTypes.map(type => (
@@ -59,19 +59,19 @@ marked.setOptions({ renderer });
         ))}
       </select>
     </div>
-    <div class="col-span-1 text-sm">Date</div>
-    <div class="col-span-4 text-sm">Media</div>
+    <div class="col-span-1 text-sm ">Date</div>
+    <div class="col-span-4 text-sm ">Media</div>
   </div>
 
   <!-- Table Body -->
   <div class="space-y-4">
-    {experiences.map((experience, index) => (
+    {experiences.map((experience: Experience, index) => (
       <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
         <!-- Desktop Layout -->
         <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
           <!-- Experience Name (1 col) -->
           <div class="col-span-1 -mt-0.25">
-            <span class="line-clamp-2" style={getTypeStyles(experience.type)}>
+            <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
               {experience.name}
             </span>
           </div>
@@ -82,12 +82,12 @@ marked.setOptions({ renderer });
             <div class="grid grid-cols-5 gap-3 mb-2">
               <!-- Role (2 cols) -->
               <div class="col-span-2">
-                <div class="text-[.92rem]">{experience.role}</div>
+                <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
               </div>
 
               <!-- Tags (2 cols) -->
               <div class="col-span-2 -mt-0.25">
-                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75">
+                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
                   {experience.tags.join(', ')}
                 </span>
               </div>

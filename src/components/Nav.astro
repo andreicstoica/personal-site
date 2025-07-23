@@ -1,12 +1,12 @@
 ---
-import chat from "../assets/link-images/chat.png";
-import code from "../assets/link-images/code.png";
-import linkedin from "../assets/link-images/linkedin.png";
-import tablet from "../assets/link-images/tablet.png";
-import bulb from "../assets/link-images/bulb.png";
-import colophon from "../assets/link-images/colophon.png";
-import hike from "../assets/link-images/hike.png";
-import fitness from "../assets/link-images/fitness.png";
+import { Image } from "astro:assets";
+import chat from "../assets/images/chat.png";
+import code from "../assets/images/code.png";
+import linkedin from "../assets/images/linkedin.png";
+import tablet from "../assets/images/tablet.png";
+import bulb from "../assets/images/bulb.png";
+import colophon from "../assets/images/colophon.png";
+import hike from "../assets/images/hike.png";
 ---
 
 <nav
@@ -27,7 +27,7 @@ import fitness from "../assets/link-images/fitness.png";
       data-tooltip="LinkedIn"
       target="_blank"
     >
-      <img src={linkedin.src} alt="LinkedIn" class="icon" />
+      <Image src={linkedin} alt="LinkedIn" class="icon" />
     </a>
     <a
       href="https://x.com/andreistoica_"
@@ -35,10 +35,10 @@ import fitness from "../assets/link-images/fitness.png";
       data-tooltip="X"
       target="_blank"
     >
-      <img src={chat.src} alt="X" class="icon" />
+      <Image src={chat} alt="X" class="icon" />
     </a>
     <a href="/canon" class="icon-link" data-tooltip="Canon">
-      <img src={bulb.src} alt="Canon" class="icon" />
+      <Image src={bulb} alt="Canon" class="icon" />
     </a>
     <a
       href="https://andreisthoughts.substack.com/"
@@ -46,7 +46,7 @@ import fitness from "../assets/link-images/fitness.png";
       data-tooltip="Blog"
       target="_blank"
     >
-      <img src={tablet.src} alt="Blog" class="icon" />
+      <Image src={tablet} alt="Blog" class="icon" />
     </a>
     <a
       href="https://github.com/andreicstoica/"
@@ -54,13 +54,13 @@ import fitness from "../assets/link-images/fitness.png";
       data-tooltip="GitHub"
       target="_blank"
     >
-      <img src={code.src} alt="GitHub" class="icon" />
+      <Image src={code} alt="GitHub" class="icon" />
     </a>
     <a href="/colophon" class="icon-link" data-tooltip="Colophon">
-      <img src={colophon.src} alt="Colophon" class="icon" />
+      <Image src={colophon} alt="Colophon" class="icon" />
     </a>
     <a href="/fitness" class="icon-link" data-tooltip="Fitness">
-      <img src={hike.src} alt="Fitness" class="icon" />
+      <Image src={hike} alt="Fitness" class="icon" />
     </a>
   </div>
 
@@ -169,7 +169,7 @@ import fitness from "../assets/link-images/fitness.png";
         const isTooClose = (x: number, y: number) => {
           return placedPositions.some((pos) => {
             const distance = Math.sqrt(
-              Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2),
+              Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
             );
             return distance < minDistance;
           });
