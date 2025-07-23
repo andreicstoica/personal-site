@@ -2,6 +2,7 @@
 import type { Experience } from "../../lib/types.ts";
 import { experiences } from "../../lib/experience";
 import MediaGallery from "./MediaGallery.astro";
+import ProjectEnhancedDescription from "./ProjectEnhancedDescription.astro";
 import { marked } from 'marked';
 
 // Get unique types for the filter dropdown
@@ -102,9 +103,7 @@ marked.setOptions({ renderer });
 
             <!-- Description below -->
             {experience.description && (
-              <div class="prose prose-sm max-w-none text-pretty pr-1.5 text-sm">
-                <div set:html={marked(experience.description)} />
-              </div>
+              <ProjectEnhancedDescription description={experience.description} />
             )}
           </div>
 
@@ -136,9 +135,9 @@ marked.setOptions({ renderer });
           </div>
 
           {experience.description && (
-            <p class="text-sm leading-relaxed mb-3">
-              {experience.description}
-            </p>
+            <div class="text-sm leading-relaxed mb-3">
+              <ProjectEnhancedDescription description={experience.description} />
+            </div>
           )}
 
           <MediaGallery
@@ -154,6 +153,8 @@ marked.setOptions({ renderer });
 </section>
 
 <script>
+  import { initializeModalSystem } from '../utils/modalAccessibility';
+
   // Filter functionality
   const filterSelect = document.getElementById('typeFilter') as HTMLSelectElement;
   const experienceRows = document.querySelectorAll('.experience-row');
@@ -173,4 +174,9 @@ marked.setOptions({ renderer });
       });
     });
   }
+
+  // Initialize modal system
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeModalSystem();
+  });
 </script>

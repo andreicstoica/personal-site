@@ -22,7 +22,7 @@ if (!images || images.length === 0) {
 
 // A map of all possible images, to avoid dynamic imports
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/src/assets/images/**/*.{jpeg,jpg,png,gif}"
+  "/src/assets/images/**/*.{jpeg,jpg,png,gif}",
 );
 ---
 
@@ -118,7 +118,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
     <!-- Close Button -->
     <button
       id="close-lightbox"
-      class="absolute -top-2 -right-2 text-(--color-accent) bg-(--color-warning) text-2xl font-bold cursor-pointer hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
+      class="absolute -top-2 -right-2 text-(--tag-other) bg-(--tag-school) text-2xl font-bold cursor-pointer hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
     >
       ×
     </button>
@@ -190,7 +190,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
   const isMobile = () => {
     return (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
+        navigator.userAgent,
       ) || window.innerWidth <= 768
     );
   };
@@ -198,7 +198,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
   document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("lightbox-modal");
     const lightboxImage = document.getElementById(
-      "lightbox-image"
+      "lightbox-image",
     ) as HTMLImageElement | null;
     const closeButton = document.getElementById("close-lightbox");
 
