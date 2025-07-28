@@ -15,7 +15,7 @@ export const projects: Record<string, Project> = {
       "Netlify",
     ],
     links: {
-      demo: "https://blob-must-grow.netlify.app/",
+      demo: "https://sublobination.netlify.app/",
       github: "https://github.com/andreicstoica/blob-game",
     },
     images: ["blob-intro.jpeg", "blob-level.jpeg", "blob.gif"],
