@@ -4,8 +4,9 @@ import BackButton from "../components/BackButton.astro";
 const { title } = Astro.props;
 ---
 
-<BackButton />
-<main class="px-8 py-4">
-  <BackButton />
-  <slot />
+<main class="px-4 lg:px-8 py-4">
+  <div class="w-full lg:max-w-4xl">
+    <BackButton />
+    <slot />
+  </div>
 </main>

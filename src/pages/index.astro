@@ -1,16 +1,8 @@
 ---
 import Home from "../components/Home.astro";
-import Layout from "../layouts/Layout.astro";
-import Nav from "../components/Nav.astro";
+import PageLayout from "../layouts/PageLayout.astro";
 ---
 
-<Layout title="Andrei Stoica Portfolio">
-  <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
-  <div class="col-span-12 lg:col-span-2 lg:h-screen">
-    <Nav />
-  </div>
-  <!-- Home takes remaining 10 columns on desktop, full width on mobile -->
-  <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <Home />
-  </div>
-</Layout>
+<PageLayout title="Andrei Stoica Portfolio">
+  <Home />
+</PageLayout>

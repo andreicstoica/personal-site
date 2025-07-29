@@ -9,12 +9,7 @@ interface Props {
   basePath?: "experience-images" | "old-sites" | "fitness";
 }
 
-const {
-  images,
-  experienceName,
-  variant = "desktop",
-  basePath = "experience-images",
-} = Astro.props;
+const { images, experienceName, variant = "desktop" } = Astro.props;
 
 if (!images || images.length === 0) {
   return null;
@@ -29,7 +24,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 {
   variant === "desktop" ? (
     <div class="col-span-4">
-      <div class="flex gap-2 h-full max-h-40 scrollbar-always-visible">
+      <div class="flex gap-2 scrollbar-always-visible">
         {images.map(async (imageName) => {
           const imagePath = `/src/assets/images/${imageName}`;
           const isGif = imageName.toLowerCase().endsWith(".gif");
@@ -47,7 +42,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
               <img
                 src={image.default.src}
                 alt={experienceName}
-                class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+                class="h-50 w-auto object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
                 loading="lazy"
                 data-fullres={image.default.src}
               />
@@ -62,7 +57,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
               width={400}
               densities={[1.5, 2]}
               format="webp"
-              class="w-auto h-full max-h-40 object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
+              class="h-50 w-auto object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
               data-fullres={image.default.src}
             />
           );
@@ -88,7 +83,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
             <img
               src={image.default.src}
               alt={experienceName}
-              class="h-40 w-auto object-cover flex-shrink-0"
+              class="h-50 w-auto object-cover flex-shrink-0"
               loading="lazy"
               data-fullres={image.default.src}
             />
@@ -100,9 +95,10 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
             src={image.default}
             alt={experienceName}
             loading="lazy"
-            width={200}
+            width={400}
+            densities={[1.5, 2]}
             format="webp"
-            class="h-40 w-auto object-cover flex-shrink-0"
+            class="h-50 w-auto object-cover flex-shrink-0"
             data-fullres={image.default.src}
           />
         );

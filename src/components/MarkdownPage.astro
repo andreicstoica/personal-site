@@ -8,7 +8,13 @@ interface Props {
 const { title, description, content } = Astro.props;
 
 function parseContent(content: string): { title: string; content: string }[] {
-  const sections = content.split(/^# /m).filter(Boolean);
+  // Remove frontmatter if present
+  const contentWithoutFrontmatter = content.replace(
+    /^---\s*\n[\s\S]*?\n---\s*\n/,
+    ""
+  );
+
+  const sections = contentWithoutFrontmatter.split(/^# /m).filter(Boolean);
   return sections.map((section) => {
     const lines = section.trim().split("\n");
     const sectionTitle = lines[0];

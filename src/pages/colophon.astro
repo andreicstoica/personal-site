@@ -1,20 +1,15 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Nav from "../components/Nav.astro";
-import ColophonPage from "../components/ColophonPage.astro";
+import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import MarkdownPage from "../components/MarkdownPage.astro";
+import colophonContent from "../content/pages/colophon.md?raw";
 ---
 
-<Layout
-  title="Colophon - Andrei Stoica Portfolio"
-  description="Andrei Stoica's Colophon"
->
-  <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
-  <div class="col-span-12 lg:col-span-2 lg:h-screen">
-    <Nav />
-  </div>
-  <!-- Colophon takes remaining 10 columns on desktop, full width on mobile -->
-  <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <ColophonPage />
-  </div>
-</Layout>
+<PageLayout title="Colophon" description="Site design system and inspiration">
+  <MarkdownLayout title="Colophon">
+    <MarkdownPage
+      description="Site design system and inspiration"
+      content={colophonContent}
+    />
+  </MarkdownLayout>
+</PageLayout>
