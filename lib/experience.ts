@@ -15,7 +15,7 @@ Selected Projects:
 - {{project:courtly}} – tennis practice session (AI generated) React Native and web app
 - {{project:algos-visualized}} – visualized using Framer Motion and CSS animations
 - {{project:tarot-chat}} – daily tarot reading chat website`,
-    images: ["blob-game.gif", "fractal-2.png", "fractal-1.jpeg"],
+    images: ["blob-game.gif", "tarot-response.gif", "fractal-2.png", "courtly-ios-badge.png"],
     projects: [
       { projectId: 'blob-game', displayText: 'Blob Game' },
       { projectId: 'courtly', displayText: 'Courtly' },
@@ -52,7 +52,7 @@ Selected Projects:
     startDate: "2023",
     endDate: "2024",
     description:
-      "I helped create WBD's first APM cohort and served as the lead PM for the digital properties of legacy Turner (TNT, TBS, truTV), Discovery (TLC, Food Network, HGTV, etc.), and WarnerMedia (Cartoon Network, TCM, etc.) networks. I led projects from start to finish across all platforms (Roku, iOS, web) and helped rebase all legacy techstacks onto a new platform. Additionally, I contributed to a tiger team focused on developing a competitor in the FAST market and helped reimagine how users interact with streaming interfaces.",
+      "I helped create WBD's first APM cohort and served as the lead PM for the digital properties of legacy Turner (like TNT), Discovery (TLC, HGTV, etc.), and WarnerMedia (Cartoon Network) networks. I led projects from start to finish across all platforms and helped rebase all legacy techstacks onto a new platform. Additionally, I contributed to a tiger team focused on developing a competitor in the FAST market.",
     images: ["wb-1.jpeg", "wb-2.jpeg"],
   },
   {
@@ -81,7 +81,7 @@ Selected Projects:
     role: "Product Manager",
     startDate: "2021",
     description:
-      "a16z internship placement. I was charged with improving the top of funnel click-through rate. After conducting a full-site UX audit with Hotjar and pinpointing drop-offs, I designed an end-to-end website overhaul that segmented landing pages by newly identified customer types. To prove the concept, I built three pillar pages in Webflow; they out-performed the legacy site. I distilled the results into a detailed product specification that enabled the Head of Product to secure CEO approval and budget for a full agency-built relaunch. I also collaborated with Growth Marketing to launch HubSpot-integrated, campaign-specific landing pages supporting nationwide ads. Following a new funding round in March 2023, BlocPower rolled out the new design language, marketing assets, and full website—work that began with my internship.",
+      "a16z internship placement. Conducted full-site UX audit with Hotjar and found drop-offs. Redesigned an end-to-end website that segmented landing pages by newly identified customer types. I then distilled test results into a detailed product spec that enabled the Head of Product to secure CEO approval and budget for a full agency-built relaunch. I also collaborated with Growth Marketing to launch HubSpot-integrated, campaign-specific landing pages supporting nationwide ads.",
     images: ["blocpower-1.png"],
   },
   {
@@ -91,7 +91,7 @@ Selected Projects:
     role: "Venture Fellow",
     startDate: "2021",
     description:
-      "Led site-wide UX audit using Hotjar; uncovered high drop-off on homepage and intake funnel. Designed end-to-end website overhaul (wireframes & mockups) that segmented landing-pages by customer type. Faced initial hesitation but built 3 proof-of-concept pillar pages in Webflow; pages out-performed existing site and lifted funnel conversion 20%. Converted these results into a product spec, enabling Head of Product to secure CEO approval and budget for a full agency-built relaunch that is now live. I also Partnered with Growth Marketing to spin up HubSpot-integrated, campaign-specific landing pages supporting nationwide ads.",
+      "Built product research library for Anthos Capital's portfolio companies. Advised ESG product strategy.",
   },
   {
     type: "personal",
@@ -110,7 +110,7 @@ Selected Projects:
     role: "Product Manager",
     startDate: "2019",
     description:
-      "One of 12  interns maintaining Autodesk’s Synthesis simulator for FIRST Robotics teams. Owned all “non-dev” responsibilities: community marketing, user research, and product. Ran 4 multi-city “Autodesk Day” feedback events (Portland, MI, Montréal, + virtual); engaged 100+ students and mentors. Insights drove a full UI/UX refresh that I co-led with engineering leads. Side project: co-designed an interactive exhibit for Oregon Museum of Science & Industry (OMSI). Built a custom Tinkercad parts library for kids to drag-and-drop classroom furniture on iPads, encouraging exploration of collaborative spaces (featured on Tinkercad’s official blog).",
+      "Owned all “non-dev” responsibilities: community marketing, user research, and product. Ran 4 multi-city “Autodesk Day” feedback events globally and online; engaged 100+ students and mentors. Insights drove a full UI/UX refresh that I co-led with engineering leads. Side project: co-designed an interactive exhibit for Oregon Museum of Science & Industry (OMSI). Built a custom Tinkercad parts library for kids to drag-and-drop classroom furniture on iPads, encouraging exploration of collaborative spaces (featured on Tinkercad’s official blog).",
     images: ["autodesk-1.jpeg", "autodesk-2.jpeg"],
   },
   {
@@ -120,6 +120,8 @@ Selected Projects:
     role: "Writing & Ops Intern",
     startDate: "2018",
     images: ["xxcelerate-1.png"],
+    description:
+      "I was a writing intern for XXcelerate Women, a venture capital firm that invests in women-led startups. I wrote blog posts, researched companies, and helped organize events, securing Oregon Senator Ron Wyden as a speaker!",
   },
   {
     type: "other",

@@ -18,7 +18,7 @@ export const projects: Record<string, Project> = {
       demo: "https://sublobination.netlify.app/",
       github: "https://github.com/andreicstoica/blob-game",
     },
-    images: ["blob-intro.jpeg", "blob-level.jpeg", "blob.gif"],
+    images: ["fractal-1.jpeg", "blob.gif", "blob-end.jpeg", "blob-level.jpeg"],
   },
   courtly: {
     id: "courtly",
@@ -51,6 +51,7 @@ export const projects: Record<string, Project> = {
       "courtly-ios-prev.png",
       "courtly-ios-intro.png",
     ],
+    video: "https://youtube.com/shorts/HFRVCUYEce0",
   },
   "algos-visualized": {
     id: "algos-visualized",
@@ -81,7 +82,7 @@ export const projects: Record<string, Project> = {
       demo: "https://t3-chat-app-ho6w.vercel.app/",
       github: "https://github.com/andreicstoica/t3-chat-app",
     },
-    images: ["tarot-home.png", "tarot-chat.png", "tarot-img.png"],
+    images: ["tarot-home.png", "tarot-message.png", "tarot-response.gif"],
   },
 };
 

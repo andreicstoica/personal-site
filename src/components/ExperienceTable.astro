@@ -156,8 +156,6 @@ marked.setOptions({ renderer });
 </section>
 
 <script>
-  import { initializeModalSystem } from '../utils/modalAccessibility';
-
   // Filter functionality
   const filterSelect = document.getElementById('typeFilter') as HTMLSelectElement;
   const experienceRows = document.querySelectorAll('.experience-row');
@@ -177,9 +175,4 @@ marked.setOptions({ renderer });
       });
     });
   }
-
-  // Initialize modal system
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeModalSystem();
-  });
 </script>

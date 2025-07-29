@@ -71,8 +71,8 @@ export function replaceProjectReferencesWithHTML(description: string): string {
 
     for (const ref of references) {
         if (ref.project) {
-            // Create HTML for project link
-            const linkHTML = `<span class="project-link-placeholder" data-project-id="${ref.projectId}" data-display-text="${ref.project.title}">${ref.project.title}</span>`;
+            // Create HTML for project link that goes to the project page
+            const linkHTML = `<a href="/projects/${ref.projectId}" class="project-link" style="color: var(--color-primary); text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--color-primary); text-underline-offset: 2px; transition: all 0.2s ease;">${ref.project.title}</a>`;
 
             result = result.substring(0, ref.startIndex) +
                 linkHTML +

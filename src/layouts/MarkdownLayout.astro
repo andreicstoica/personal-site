@@ -1,10 +1,11 @@
 ---
+import BackButton from "../components/BackButton.astro";
+
 const { title } = Astro.props;
 ---
 
-<div class="pl-8 pt-8 mb-6">
-  <a href="/" class="text-green-600 hover:underline">&larr; Home</a>
-</div>
+<BackButton />
 <main class="px-8 py-4">
+  <BackButton />
   <slot />
 </main>

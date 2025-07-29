@@ -9,6 +9,7 @@ export interface Project {
     website?: string;
   };
   images?: string[];
+  video?: string; // Add this field for Vimeo embed URL
 }
 
 export interface ProjectReference {
