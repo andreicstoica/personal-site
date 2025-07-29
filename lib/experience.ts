@@ -15,7 +15,7 @@ Selected Projects:
 - {{project:courtly}} – tennis practice session (AI generated) React Native and web app
 - {{project:algos-visualized}} – visualized using Framer Motion and CSS animations
 - {{project:tarot-chat}} – daily tarot reading chat website`,
-    images: ["blob-game.gif", "tarot-response.gif", "fractal-2.png", "courtly-ios-badge.png"],
+    images: ["blob-game.gif", "tarot-response.gif", "fractal-2.png", "courtly-ios-home.png", "blob-end.png"],
     projects: [
       { projectId: 'blob-game', displayText: 'Blob Game' },
       { projectId: 'courtly', displayText: 'Courtly' },
