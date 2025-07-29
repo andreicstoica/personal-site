@@ -18,7 +18,7 @@ export const projects: Record<string, Project> = {
       demo: "https://sublobination.netlify.app/",
       github: "https://github.com/andreicstoica/blob-game",
     },
-    images: ["fractal-1.jpeg", "blob.gif", "blob-end.jpeg", "blob-level.jpeg"],
+    images: ["fractal-1.jpeg", "blob.gif", "blob-end.png", "blob-level.jpeg"],
   },
   courtly: {
     id: "courtly",

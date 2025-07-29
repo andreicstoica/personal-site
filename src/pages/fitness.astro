@@ -1,19 +1,18 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import Nav from "../components/Nav.astro";
-import FitnessPage from "../components/FitnessPage.astro";
+import PageLayout from "../layouts/PageLayout.astro";
+import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import MarkdownPage from "../components/MarkdownPage.astro";
+import fitnessContent from "../content/pages/race.md?raw";
 ---
 
-<Layout
-  title="Colophon - Andrei Stoica Portfolio"
-  description="Andrei Stoica's Colophon"
+<PageLayout
+  title="Running"
+  description="I've found a lot of value in running. It helps me clear my mind, see the world in new ways, and helps me be a better person."
 >
-  <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
-  <div class="col-span-12 lg:col-span-2 lg:h-screen">
-    <Nav />
-  </div>
-  <!-- Colophon takes remaining 10 columns on desktop, full width on mobile -->
-  <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <FitnessPage />
-  </div>
-</Layout>
+  <MarkdownLayout title="Running">
+    <MarkdownPage
+      description="I've found a lot of value in running. It helps me clear my mind, see the world in new ways, and helps me be a better person."
+      content={fitnessContent}
+    />
+  </MarkdownLayout>
+</PageLayout>

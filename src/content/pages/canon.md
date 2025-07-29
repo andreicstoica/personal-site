@@ -1,3 +1,8 @@
+---
+title: "Canon"
+description: "People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
+---
+
 # writers
 
 - ursula k le guin
@@ -18,7 +23,7 @@
 
 - [columbus](https://letterboxd.com/film/columbus-2017/) dir. kogonada
 - [yi yi](https://letterboxd.com/film/yi-yi/) dir. edward yang
-- [inglourious basterds](https://letterboxd.com/film/inglourious-basterds/) dir. tarantino
+- [inglourious basterds](https://letterboxd.com/film/inglourious-basterds/) dir. tarantino
 
 # YouTube
 

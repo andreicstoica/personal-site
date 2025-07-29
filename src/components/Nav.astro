@@ -10,15 +10,15 @@ import hike from "../assets/images/hike.png";
 ---
 
 <nav
-  class="bg-linear-to-t to-blue-600 from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative lg:pl-2"
+  class="bg-linear-to-t to-(--color-primary) from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative lg:pl-2 px-4"
 >
   <div
-    class="text-(--color-text-inverse) text-2xl font-black mb-4 lg:mb-12 lg:z-10 ml-4"
+    class="text-(--color-text-inverse) text-2xl font-black mb-3 lg:mb-12 lg:z-10 lg:pt-0 lg:px-4 pt-3"
   >
     Andrei Stoica
   </div>
 
-  <div id="icons-container" class="flex space-x-4 items-center ml-4">
+  <div id="icons-container" class="flex space-x-4 items-center pb-4">
     <a
       href="https://github.com/andreicstoica/"
       class="icon-link"
@@ -160,8 +160,9 @@ import hike from "../assets/images/hike.png";
         height: auto !important;
         display: flex;
         flex-direction: column;
-        padding: 1rem;
         position: relative;
+        width: 100%;
+        min-height: fit-content;
       }
 
       .icon {

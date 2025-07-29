@@ -1,19 +1,18 @@
 ---
-import CanonPage from "../components/CanonPage.astro";
-import Layout from "../layouts/Layout.astro";
-import Nav from "../components/Nav.astro";
+import PageLayout from "../layouts/PageLayout.astro";
+import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import MarkdownPage from "../components/MarkdownPage.astro";
+import canonContent from "../content/pages/canon.md?raw";
 ---
 
-<Layout
-  title="Canon - Andrei Stoica Portfolio"
-  description="Andrei Stoica's Canon"
+<PageLayout
+  title="Canon"
+  description="People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
 >
-  <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
-  <div class="col-span-12 lg:col-span-2 lg:h-screen">
-    <Nav />
-  </div>
-  <!-- Canon takes remaining 10 columns on desktop, full width on mobile -->
-  <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <CanonPage />
-  </div>
-</Layout>
+  <MarkdownLayout title="Canon">
+    <MarkdownPage
+      description="People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
+      content={canonContent}
+    />
+  </MarkdownLayout>
+</PageLayout>

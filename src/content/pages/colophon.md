@@ -1,3 +1,8 @@
+---
+title: "Colophon"
+description: "Site design system and inspiration"
+---
+
 # site design system
 
 - IBM Plex Font Family (sans, serif, and mono)
