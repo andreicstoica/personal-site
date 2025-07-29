@@ -4,7 +4,6 @@ import {
   replaceProjectReferencesWithHTML,
   getReferencedProjects,
 } from "../../lib/projectParser";
-import ProjectModal from "./ProjectModal.astro";
 
 interface Props {
   description: string;
@@ -14,9 +13,6 @@ const { description } = Astro.props;
 
 // Process the description to replace project references
 const processedDescription = replaceProjectReferencesWithHTML(description);
-
-// Get all referenced projects for modal generation
-const referencedProjects = getReferencedProjects(description);
 
 // Set up markdown renderer
 const renderer = new marked.Renderer();
@@ -35,84 +31,12 @@ const htmlContent = marked(processedDescription);
   </div>
 </div>
 
-<!-- Render modals for all referenced projects -->
-{referencedProjects.map((project) => <ProjectModal project={project} />)}
-
-<script>
-  // Replace project link placeholders with actual ProjectLink components
-  document.addEventListener("DOMContentLoaded", () => {
-    try {
-      const placeholders = document.querySelectorAll(
-        ".project-link-placeholder"
-      );
-
-      placeholders.forEach((placeholder) => {
-        try {
-          const projectId = placeholder.getAttribute("data-project-id");
-          const displayText = placeholder.getAttribute("data-display-text");
-
-          if (projectId && displayText) {
-            // Create a proper project link button
-            const button = document.createElement("button");
-            button.className =
-              "project-link inline-block text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-dotted underline-offset-2 hover:decoration-solid transition-all duration-200 cursor-pointer bg-transparent border-none p-0 font-inherit";
-            button.setAttribute("data-project-id", projectId);
-            button.setAttribute(
-              "aria-label",
-              `View details for ${displayText}`
-            );
-            button.setAttribute("type", "button");
-            button.textContent = displayText;
-
-            // Add hover effect styles
-            button.addEventListener("mouseenter", () => {
-              button.style.textDecorationThickness = "2px";
-            });
-            button.addEventListener("mouseleave", () => {
-              button.style.textDecorationThickness = "";
-            });
-
-            // Replace placeholder with button
-            if (placeholder.parentNode) {
-              placeholder.parentNode.replaceChild(button, placeholder);
-            }
-          } else {
-            // If missing data, convert to plain text
-            const textNode = document.createTextNode(
-              placeholder.textContent || projectId || "Unknown Project"
-            );
-            if (placeholder.parentNode) {
-              placeholder.parentNode.replaceChild(textNode, placeholder);
-            }
-          }
-        } catch (error) {
-          console.warn("Error processing project placeholder:", error);
-          // Fallback to plain text
-          const textNode = document.createTextNode(
-            placeholder.textContent || "Project"
-          );
-          if (placeholder.parentNode) {
-            placeholder.parentNode.replaceChild(textNode, placeholder);
-          }
-        }
-      });
-
-      // Style missing project indicators
-      const missingProjects = document.querySelectorAll(".project-missing");
-      missingProjects.forEach((element) => {
-        const el = element as HTMLElement;
-        el.style.color = "#6b7280"; // gray-500
-        el.style.fontStyle = "italic";
-      });
-    } catch (error) {
-      console.warn("Error initializing project links:", error);
-    }
-  });
-</script>
-
 <style>
-  .project-link:hover {
-    text-decoration-thickness: 2px;
+  /* Project link hover effects */
+  .project-enhanced-description .project-link:hover {
+    color: var(--color-primary-hover) !important;
+    text-decoration-style: solid !important;
+    text-decoration-thickness: 2px !important;
   }
 
   .project-link:focus {
@@ -132,23 +56,8 @@ const htmlContent = marked(processedDescription);
 
   /* Graceful degradation for no-JS */
   .no-js .project-link-placeholder {
-    color: #3b82f6;
+    color: var(--color-primary);
     text-decoration: underline;
     text-decoration-style: dotted;
-  }
-
-  /* Disable project links on mobile */
-  @media (max-width: 767px) {
-    .project-link {
-      cursor: default;
-      text-decoration: underline;
-      text-decoration-style: solid;
-      pointer-events: none;
-      opacity: 0.8;
-    }
-
-    .project-link:hover {
-      text-decoration-thickness: 1px;
-    }
   }
 </style>

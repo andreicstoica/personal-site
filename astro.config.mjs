@@ -7,8 +7,13 @@ import mdx from "@astrojs/mdx";
 export default defineConfig({
   output: "static",
   compressHTML: true,
+  image: {
+    // Sharp is automatically used when installed
+  },
   vite: {
     plugins: [tailwindcss()],
+    // Ensure GIFs are treated as assets
+    assetsInclude: ['**/*.gif']
   },
   integrations: [mdx()],
 });
