@@ -10,7 +10,7 @@ interface Props {
 const { project } = Astro.props;
 ---
 
-<div class="w-full px-4 lg:px-8 py-4">
+<div class="w-full p-4 lg:px-8 lg:mt-3.5">
   <BackButton />
 
   <!-- Project Header -->
@@ -126,7 +126,7 @@ const { project } = Astro.props;
               project.video.includes("youtube.com/shorts/")
                 ? project.video.replace(
                     "youtube.com/shorts/",
-                    "youtube.com/embed/"
+                    "youtube.com/embed/",
                   ) + "?autoplay=1"
                 : project.video
             }

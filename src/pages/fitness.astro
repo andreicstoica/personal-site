@@ -1,18 +1,125 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import MarkdownPage from "../components/MarkdownPage.astro";
-import fitnessContent from "../content/pages/race.md?raw";
+import MediaGallery from "../components/MediaGallery.astro";
+import { getEntry } from "astro:content";
+
+const raceEntry = await getEntry("pages", "race");
+const outdoorsEntry = await getEntry("pages", "outdoors");
+const { Content: RaceContent } = await raceEntry.render();
+const { Content: OutdoorsContent } = await outdoorsEntry.render();
 ---
 
-<PageLayout
-  title="Running"
-  description="I've found a lot of value in running. It helps me clear my mind, see the world in new ways, and helps me be a better person."
->
-  <MarkdownLayout title="Running">
-    <MarkdownPage
-      description="I've found a lot of value in running. It helps me clear my mind, see the world in new ways, and helps me be a better person."
-      content={fitnessContent}
-    />
+<PageLayout title="Fitness" description="Running and outdoor activities">
+  <MarkdownLayout title="Fitness">
+    <div class="flex flex-col gap-8">
+      <section>
+        <h1
+          class="text-2xl font-bold mb-4 text-[--color-text-primary] capitalize"
+        >
+          Fitness
+        </h1>
+        <p
+          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+        >
+          Running and outdoor activities
+        </p>
+      </section>
+
+      <div class="markdown-content">
+        <RaceContent />
+        <OutdoorsContent />
+      </div>
+
+      <section>
+        <h2 class="text-xl font-medium mb-4 text-[--color-text-primary]">
+          Races
+        </h2>
+        <MediaGallery
+          images={[
+            "queens.jpeg",
+            "bronx-1.jpg",
+            "bronx-2.jpg",
+            "newport.jpeg",
+            "staten-island.jpeg",
+          ]}
+          experienceName="Races"
+          variant="mobile"
+        />
+        <h2 class="text-xl font-medium mt-2 mb-4 text-[--color-text-primary]">
+          Outdoors
+        </h2>
+        <MediaGallery
+          images={[
+            "sister-1.jpeg",
+            "sister-2.jpeg",
+            "sister-3.jpeg",
+            "sister-4.png",
+          ]}
+          experienceName="Outdoors"
+          variant="mobile"
+        />
+      </section>
+    </div>
   </MarkdownLayout>
 </PageLayout>
+
+<style>
+  .markdown-content :global(h1) {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
+  }
+
+  .markdown-content :global(h2) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .markdown-content :global(h3) {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .markdown-content :global(ul) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .markdown-content :global(li) {
+    color: var(--color-text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .markdown-content :global(li::before) {
+    content: "* ";
+    display: inline-block;
+    position: relative;
+    top: 0.25rem;
+  }
+
+  .markdown-content :global(a) {
+    color: var(--color-secondary);
+    text-decoration: none;
+  }
+
+  .markdown-content :global(a:hover) {
+    color: var(--color-secondary-hover);
+    text-decoration: underline;
+  }
+
+  .markdown-content :global(p) {
+    color: var(--color-text-primary);
+    line-height: 1.625;
+    margin-bottom: 1rem;
+  }
+</style>

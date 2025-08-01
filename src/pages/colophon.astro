@@ -1,15 +1,101 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import MarkdownPage from "../components/MarkdownPage.astro";
-import colophonContent from "../content/pages/colophon.md?raw";
+import { getEntry } from "astro:content";
+
+const colophonEntry = await getEntry("pages", "colophon");
+const { Content } = await colophonEntry.render();
+
+// Parse the markdown content to extract sections
+function parseMarkdownContent(
+  content: string,
+): { title: string; content: string }[] {
+  // Split by # headers
+  const sections = content.split(/^# /m).filter(Boolean);
+  return sections.map((section) => {
+    const lines = section.trim().split("\n");
+    const sectionTitle = lines[0];
+    const remainingLines = lines.slice(1).filter((line) => line.trim());
+
+    return {
+      title: sectionTitle,
+      content: remainingLines.join("\n"),
+    };
+  });
+}
+
+// Get the raw markdown content
+const rawContent = `# Website design system
+
+- IBM Plex Font Family (sans, serif, and mono)
+- Astro framework
+- Hosted on Vercel
+- Designed in Figma (view WIP [here](https://www.figma.com/design/xWTp3sBNWIideHNi4UeQ0T/Personal-Site-v3--2025-?node-id=25-41&t=xoAPWl4EK625CsrC-1))
+- Icons from [Thiings](https://www.thiings.co/things)
+
+# Inspiration
+
+## Really my entire [cool site](https://sublime.app/collection/cool-sites-46ce) collection. In particular:
+
+- [Adam Ho](https://www.adamho.com/)
+- [Conor Davidson](https://www.conordavidson.com/)
+- [Spencer Chang](https://spencer.place/)
+- [Jacky Zhao](https://jzhao.xyz/), especially the background and theme toggle animation
+- [Solar Protocol](https://solarprotocol.net/)`;
+
+const parsedContent = parseMarkdownContent(rawContent);
 ---
 
-<PageLayout title="Colophon" description="Site design system and inspiration">
-  <MarkdownLayout title="Colophon">
-    <MarkdownPage
-      description="Site design system and inspiration"
-      content={colophonContent}
-    />
+<PageLayout
+  title={colophonEntry.data.title}
+  description={colophonEntry.data.description}
+>
+  <MarkdownLayout title={colophonEntry.data.title}>
+    <div class="flex flex-col gap-2">
+      <section>
+        <p
+          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+        >
+          {colophonEntry.data.description}
+        </p>
+      </section>
+
+      <div class="grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl">
+        {
+          parsedContent.map((section) => (
+            <section>
+              <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+                {section.title}
+              </h2>
+              <div class="space-y-2">
+                <div
+                  set:html={section.content
+                    .replace(
+                      /^## (.+)$/gm,
+                      '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>',
+                    )
+                    .replace(
+                      /### (.+)/g,
+                      '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>',
+                    )
+                    .replace(
+                      /^- (.+)$/gm,
+                      '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>',
+                    )
+                    .replace(
+                      /\[([^\]]+)\]\(([^)]+)\)/g,
+                      '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>',
+                    )
+                    .replace(
+                      /^(?!<[hd])(.+)$/gm,
+                      '<p class="text-[--color-text-primary] leading-relaxed">$1</p>',
+                    )}
+                />
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </div>
   </MarkdownLayout>
 </PageLayout>
