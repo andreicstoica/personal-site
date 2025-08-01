@@ -11,7 +11,7 @@ function parseContent(content: string): { title: string; content: string }[] {
   // Remove frontmatter if present
   const contentWithoutFrontmatter = content.replace(
     /^---\s*\n[\s\S]*?\n---\s*\n/,
-    ""
+    "",
   );
 
   const sections = contentWithoutFrontmatter.split(/^# /m).filter(Boolean);
@@ -30,7 +30,7 @@ function parseContent(content: string): { title: string; content: string }[] {
 const parsedContent = parseContent(content);
 ---
 
-<div class="flex flex-col gap-2">
+<div class="flex flex-col gap-8">
   {
     (title || description) && (
       <section>
@@ -60,23 +60,23 @@ const parsedContent = parseContent(content);
               set:html={section.content
                 .replace(
                   /^## (.+)$/gm,
-                  '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>'
+                  '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>',
                 )
                 .replace(
                   /### (.+)/g,
-                  '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>'
+                  '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>',
                 )
                 .replace(
                   /^- (.+)$/gm,
-                  '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>'
+                  '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>',
                 )
                 .replace(
                   /\[([^\]]+)\]\(([^)]+)\)/g,
-                  '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>'
+                  '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>',
                 )
                 .replace(
                   /^(?!<[hd])(.+)$/gm,
-                  '<p class="text-[--color-text-primary] leading-relaxed">$1</p>'
+                  '<p class="text-[--color-text-primary] leading-relaxed">$1</p>',
                 )}
             />
           </div>
