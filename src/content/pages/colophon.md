@@ -3,7 +3,7 @@ title: "Colophon"
 description: "Site design system and inspiration"
 ---
 
-# site design system
+# Website design system
 
 - IBM Plex Font Family (sans, serif, and mono)
 - Astro framework
@@ -11,9 +11,9 @@ description: "Site design system and inspiration"
 - Designed in Figma (view WIP [here](https://www.figma.com/design/xWTp3sBNWIideHNi4UeQ0T/Personal-Site-v3--2025-?node-id=25-41&t=xoAPWl4EK625CsrC-1))
 - Icons from [Thiings](https://www.thiings.co/things)
 
-# inspiration
+# Inspiration
 
-## Really my entire [cool site](https://sublime.app/collection/cool-sites-46ce) collection, but in particular:
+## Really my entire [cool site](https://sublime.app/collection/cool-sites-46ce) collection. In particular:
 
 - [Adam Ho](https://www.adamho.com/)
 - [Conor Davidson](https://www.conordavidson.com/)

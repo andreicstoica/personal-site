@@ -6,10 +6,7 @@ interface Props {
   description?: string;
 }
 
-const {
-  title,
-  description = "Andrei Stoica's personal website and portfolio",
-} = Astro.props as Props;
+const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
 ---
 
 <!doctype html>

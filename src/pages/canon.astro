@@ -1,18 +1,173 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import MarkdownPage from "../components/MarkdownPage.astro";
-import canonContent from "../content/pages/canon.md?raw";
+import { getEntry } from "astro:content";
+
+const canonEntry = await getEntry("pages", "canon");
+const { Content } = await canonEntry.render();
+
+// Parse the markdown content to extract sections
+function parseMarkdownContent(
+  content: string,
+): { title: string; content: string }[] {
+  // Split by # headers
+  const sections = content.split(/^# /m).filter(Boolean);
+  return sections.map((section) => {
+    const lines = section.trim().split("\n");
+    const sectionTitle = lines[0];
+    const remainingLines = lines.slice(1).filter((line) => line.trim());
+
+    return {
+      title: sectionTitle,
+      content: remainingLines.join("\n"),
+    };
+  });
+}
+
+// Get the raw markdown content
+const rawContent = `# writers
+
+- ursula k le guin
+- david foster wallace
+- robert caro
+- herman hesse
+
+# bloggers
+
+- blackbird spyplane
+- tyler cowen
+- paul graham
+- simon sarris
+- tina he
+- reggie james
+
+# movies
+
+- [columbus](https://letterboxd.com/film/columbus-2017/) dir. kogonada
+- [yi yi](https://letterboxd.com/film/yi-yi/) dir. edward yang
+- [inglourious basterds](https://letterboxd.com/film/inglourious-basterds/) dir. tarantino
+
+# YouTube
+
+- [Internet Shaquille ](https://www.youtube.com/@internetshaquille)
+- [Mark Rober](https://www.youtube.com/channel/UCY1kMZp36IQSyNx_9h4mpCg)
+- [Hank Green](https://www.youtube.com/@hankschannel)
+- [Branch Education](https://www.youtube.com/@BranchEducation)
+- [OTR Food & History](https://www.youtube.com/@OTRontheroad)
+- [Kenji López-Alt](https://www.youtube.com/@JKenjiLopezAlt)
+
+# non-fiction
+
+- the power broker, robert caro
+- the power law, sebastian mallaby
+- an engine, not a camera, donald alexander mackenzie
+- capitalizing on crisis, greta krippner
+- lo-tek: design by radical indigenism, julia watson
+- the inner game of tennis, timothy gallwey
+
+# fiction
+
+- demian, herman hesse
+- the paper menagerie and other stories, ken liu
+- the dark forest (three body problem), cixin liu
+- the god of small things, arundhati roy
+- zen and the art of motorcycle maintenance, robert pirsig
+
+# architects
+
+- james polshek
+- jeanne gang
+- luis barragán
+- marcel breuer
+
+# design
+
+- maya man
+- naoto fukasawa
+- dieter rams
+- teenage engineering
+- herbert bayer
+- adam ho
+- alexander rodchenko
+- lester beall
+
+# paint
+
+- jack whitten
+- robert longo
+
+# photography
+
+- william eggleston
+- ernst haas
+- luigi ghirri
+- willem verbeck
+
+# sculpture
+
+- lászló moholy-nagy
+- constantin brâncuși
+- larry bell
+
+# clothes
+
+- man-tle
+- outlier
+- evan kinori`;
+
+const parsedContent = parseMarkdownContent(rawContent);
 ---
 
 <PageLayout
-  title="Canon"
-  description="People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
+  title={canonEntry.data.title}
+  description={canonEntry.data.description}
 >
-  <MarkdownLayout title="Canon">
-    <MarkdownPage
-      description="People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
-      content={canonContent}
-    />
+  <MarkdownLayout title={canonEntry.data.title}>
+    <div class="flex flex-col gap-2">
+      <section>
+        <p
+          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+        >
+          {canonEntry.data.description}
+        </p>
+      </section>
+
+      <div class="grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl">
+        {
+          parsedContent.map((section) => (
+            <section>
+              <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+                {section.title}
+              </h2>
+              <div class="space-y-2">
+                <div
+                  set:html={section.content
+                    .replace(
+                      /^## (.+)$/gm,
+                      '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>',
+                    )
+                    .replace(
+                      /### (.+)/g,
+                      '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>',
+                    )
+                    .replace(
+                      /^- (.+)$/gm,
+                      '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>',
+                    )
+                    .replace(
+                      /\[([^\]]+)\]\(([^)]+)\)/g,
+                      '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>',
+                    )
+                    .replace(
+                      /^(?!<[hd])(.+)$/gm,
+                      '<p class="text-[--color-text-primary] leading-relaxed">$1</p>',
+                    )}
+                />
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </div>
   </MarkdownLayout>
 </PageLayout>

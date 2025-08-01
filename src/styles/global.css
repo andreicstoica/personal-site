@@ -19,7 +19,7 @@
   --color-secondary-hover: #008a3d;
   --color-accent: #c23b23;
   --color-accent-hover: #a12f1c;
-  --color-warning: #fcc404;
+  --color-warning: #fcc605;
   --color-warning-hover: #e6b003;
 
   /* Text colors */
@@ -76,7 +76,8 @@ html {
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
   cursor:
-    url("data:image/svg+xml,%3csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='8' height='8' fill='%23272727' stroke='%23fefefe' stroke-width='1'/%3e%3c/svg%3e") 8 8,
+    url("data:image/svg+xml,%3csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='8' height='8' fill='%23272727' stroke='%23fefefe' stroke-width='1'/%3e%3c/svg%3e")
+      8 8,
     auto;
 }
 

@@ -34,30 +34,20 @@ const htmlContent = marked(processedDescription);
 <style>
   /* Project link hover effects */
   .project-enhanced-description .project-link:hover {
-    color: var(--color-primary-hover) !important;
-    text-decoration-style: solid !important;
-    text-decoration-thickness: 2px !important;
-  }
-
-  .project-link:focus {
-    outline: 2px solid var(--color-accent, #3b82f6);
-    outline-offset: 2px;
-    border-radius: 2px;
+    color: #707fff;
+    text-decoration-style: solid;
+    text-decoration-thickness: 2px;
   }
 
   .project-link:focus:not(:focus-visible) {
     outline: none;
   }
 
-  .project-missing {
-    color: #6b7280;
-    font-style: italic;
-  }
-
-  /* Graceful degradation for no-JS */
-  .no-js .project-link-placeholder {
-    color: var(--color-primary);
+  /* Speed highlight styling */
+  .project-enhanced-description :global(.speed-highlight) {
     text-decoration: underline;
-    text-decoration-style: dotted;
+    text-decoration-color: var(--color-warning);
+    text-decoration-style: dashed;
+    text-underline-offset: 3px;
   }
 </style>

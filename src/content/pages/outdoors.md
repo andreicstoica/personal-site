@@ -1,6 +1,6 @@
 ---
 title: "Outdoors"
-description: "I love being outdoors. I feel a certain sense of sublime seeing beautiful landscapes and nature."
+description: "Being outside 🌲"
 ---
 
 # Outdoors

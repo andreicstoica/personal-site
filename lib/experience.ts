@@ -7,20 +7,25 @@ export const experiences: Experience[] = [
     tags: ["personal", "code"],
     role: "Software Engineer",
     startDate: "2025",
-    description:
-      `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc.
+    description: `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc. <span class="speed-highlight">All built within 6 days</span>.
 <br><br>
 Selected Projects:
 - {{project:blob-game}} – clicker game built with TS/React
 - {{project:courtly}} – tennis practice session (AI generated) React Native and web app
 - {{project:algos-visualized}} – visualized using Framer Motion and CSS animations
 - {{project:tarot-chat}} – daily tarot reading chat website`,
-    images: ["blob-game.gif", "tarot-response.gif", "fractal-2.png", "courtly-ios-home.png", "blob-end.png"],
+    images: [
+      "blob-game.gif",
+      "tarot-response.gif",
+      "fractal-2.png",
+      "courtly-ios-home.png",
+      "blob-end.png",
+    ],
     projects: [
-      { projectId: 'blob-game', displayText: 'Blob Game' },
-      { projectId: 'courtly', displayText: 'Courtly' },
-      { projectId: 'algos-visualized', displayText: 'Algos, Visualized' }
-    ]
+      { projectId: "blob-game", displayText: "Blob Game" },
+      { projectId: "courtly", displayText: "Courtly" },
+      { projectId: "algos-visualized", displayText: "Algos, Visualized" },
+    ],
   },
   {
     type: "work",
