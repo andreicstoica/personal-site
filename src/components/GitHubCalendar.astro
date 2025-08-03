@@ -1,0 +1,66 @@
+---
+import GitHubCalendarReact from "./GitHubCalendarReact";
+
+export interface Props {
+  username: string;
+  monthsBack?: number;
+}
+
+const { username, monthsBack = 3 } = Astro.props;
+---
+
+<GitHubCalendarReact username={username} monthsBack={monthsBack} client:load />
+
+<style>
+  .github-calendar-wrapper {
+    margin: 2rem 0;
+  }
+
+  .calendar {
+    min-height: 150px;
+    position: relative;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+  }
+
+  .loading-placeholder {
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+    font-family: var(--font-sans);
+  }
+
+  /* Override react-github-calendar styles to match your theme */
+  :global(.react-activity-calendar) {
+    background: transparent !important;
+  }
+
+  :global(.react-activity-calendar .react-activity-calendar__legend) {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  /* Dark mode adjustments */
+  @media (prefers-color-scheme: dark) {
+    .calendar {
+      background: var(--color-bg-primary);
+      border-color: var(--color-bg-tertiary);
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .github-calendar-wrapper {
+      margin: 1rem 0;
+    }
+
+    .calendar {
+      padding: var(--spacing-sm);
+      overflow-x: auto;
+    }
+  }
+</style>

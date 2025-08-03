@@ -1,6 +1,8 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import GitHubCalendar from "../components/GitHubCalendar.astro";
+import MediaGallery from "../components/MediaGallery.astro";
 import { getEntry } from "astro:content";
 
 const colophonEntry = await getEntry("pages", "colophon");
@@ -8,7 +10,7 @@ const { Content } = await colophonEntry.render();
 
 // Parse the markdown content to extract sections
 function parseMarkdownContent(
-  content: string,
+  content: string
 ): { title: string; content: string }[] {
   // Split by # headers
   const sections = content.split(/^# /m).filter(Boolean);
@@ -72,29 +74,50 @@ const parsedContent = parseMarkdownContent(rawContent);
                   set:html={section.content
                     .replace(
                       /^## (.+)$/gm,
-                      '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>',
+                      '<h2 class="text-lg font-semibold text-[--color-text-primary] mb-3 mt-6">$1</h2>'
                     )
                     .replace(
                       /### (.+)/g,
-                      '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>',
+                      '<h3 class="text-base font-medium text-[--color-text-primary] mb-2 mt-4">$1</h3>'
                     )
                     .replace(
                       /^- (.+)$/gm,
-                      '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>',
+                      '<div class="text-[--color-text-primary] mb-1"><span class="inline-block relative top-1">*</span> $1</div>'
                     )
                     .replace(
                       /\[([^\]]+)\]\(([^)]+)\)/g,
-                      '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>',
+                      '<a href="$2" class="text-[--color-secondary] hover:text-[--color-secondary-hover] hover:underline" target="_blank" rel="noopener">$1</a>'
                     )
                     .replace(
                       /^(?!<[hd])(.+)$/gm,
-                      '<p class="text-[--color-text-primary] leading-relaxed">$1</p>',
+                      '<p class="text-[--color-text-primary] leading-relaxed">$1</p>'
                     )}
                 />
               </div>
             </section>
           ))
         }
+      </div>
+
+      <!-- GitHub Contributions Calendar -->
+      <div class="mt-4">
+        <GitHubCalendar username="andreicstoica" />
+      </div>
+
+      <!-- Old Sites Gallery -->
+      <div class="mt-4 mb-4">
+        <h2 class="text-xl font-medium mb-3 text-[--color-text-primary]">
+          Memorial to my old sites (rip)
+        </h2>
+        <MediaGallery
+          images={[
+            "old-site-2021.png",
+            "old-site-2023.png",
+            "old-site-2025.gif",
+          ]}
+          experienceName="Previous site designs"
+          variant="desktop"
+        />
       </div>
     </div>
   </MarkdownLayout>
