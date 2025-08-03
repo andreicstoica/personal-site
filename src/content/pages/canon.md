@@ -1,6 +1,6 @@
 ---
 title: "Canon"
-description: "People, things, and ideas that inspire me and shape how I think about the world. This is a living document that grows as I discover new inspirations, voices, and perspectives."
+description: "People, things, and ideas that inspire me and shape how I think about the world. This is a living document. I’m less interested in single, isolated works; what draws to those listed is a kind of Midas touch to me around what they create."
 ---
 
 # writers

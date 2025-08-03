@@ -136,3 +136,46 @@ a {
 a:hover {
   color: var(--color-secondary-hover);
 }
+
+/* Markdown content styling */
+.markdown-h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.markdown-h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.markdown-list-item {
+  color: var(--color-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.markdown-bullet {
+  display: inline-block;
+  position: relative;
+  top: 0.25rem;
+}
+
+.markdown-link {
+  color: var(--color-secondary);
+  transition: color 0.2s ease;
+}
+
+.markdown-link:hover {
+  color: var(--color-secondary-hover);
+  text-decoration: underline;
+}
+
+.markdown-p {
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}

@@ -3,6 +3,7 @@ import type { Experience } from "../../lib/types.ts";
 import { experiences } from "../../lib/experience";
 import MediaGallery from "./MediaGallery.astro";
 import ProjectEnhancedDescription from "./ProjectEnhancedDescription.astro";
+import GitHubCalendar from "./GitHubCalendar.astro";
 import { marked } from 'marked';
 
 // Get unique types for the filter dropdown
@@ -149,6 +150,8 @@ marked.setOptions({ renderer });
             variant="mobile"
           />
         </div>
+
+
 
       </div>
     ))}

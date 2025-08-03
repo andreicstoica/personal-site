@@ -18,5 +18,5 @@ description: "Site design system and inspiration"
 - [Adam Ho](https://www.adamho.com/)
 - [Conor Davidson](https://www.conordavidson.com/)
 - [Spencer Chang](https://spencer.place/)
-- [Jacky Zhao](https://jzhao.xyz/), especially the background and theme toggle animation
+- [Jacky Zhao](https://jzhao.xyz/), especially the bg animation
 - [Solar Protocol](https://solarprotocol.net/)

@@ -6,8 +6,13 @@ import { getEntry } from "astro:content";
 
 const raceEntry = await getEntry("pages", "race");
 const outdoorsEntry = await getEntry("pages", "outdoors");
-const { Content: RaceContent } = await raceEntry.render();
-const { Content: OutdoorsContent } = await outdoorsEntry.render();
+let RaceContent, OutdoorsContent;
+if (raceEntry) {
+  ({ Content: RaceContent } = await raceEntry.render());
+}
+if (outdoorsEntry) {
+  ({ Content: OutdoorsContent } = await outdoorsEntry.render());
+}
 ---
 
 <PageLayout title="Fitness" description="Running and outdoor activities">
@@ -27,8 +32,8 @@ const { Content: OutdoorsContent } = await outdoorsEntry.render();
       </section>
 
       <div class="markdown-content">
-        <RaceContent />
-        <OutdoorsContent />
+        {RaceContent && <RaceContent />}
+        {OutdoorsContent && <OutdoorsContent />}
       </div>
 
       <section>
