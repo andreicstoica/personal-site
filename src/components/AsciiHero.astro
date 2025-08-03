@@ -3,11 +3,11 @@ import { personalStatement } from "../../lib/experience";
 ---
 
 <section
-  class="relative w-full min-h-[45vh] overflow-hidden flex items-center justify-center"
+  class="relative w-full min-h-[75vh] lg:min-h-[45vh] overflow-hidden flex items-center justify-center"
   style="background-color: var(--color-bg-primary);"
 >
   <div
-    class="absolute inset-0 flex items-end justify-end lg:items-center lg:justify-end overflow-hidden lg:-m-55 lg:pb-20"
+    class="absolute inset-0 flex items-end justify-center pb-4 lg:items-center lg:justify-end overflow-hidden lg:-m-55 lg:pb-25"
   >
     <div
       id="ascii-output"
@@ -17,12 +17,11 @@ import { personalStatement } from "../../lib/experience";
       Loading ASCII...
     </div>
   </div>
-  <div class="absolute top-4 left-4 z-10 lg:max-w-2xl">
+  <div class="absolute top-4 left-4 right-4 z-10 lg:max-w-2xl lg:right-auto">
     <p
-      class="text-base text-(--color-text-primary) lg:text-md md:text-md sm:text-sm font-normal leading-relaxed"
-    >
-      {personalStatement}
-    </p>
+      class="text-md mt-3.5 text-(--color-text-primary) font-normal leading-relaxed"
+      set:html={personalStatement}
+    />
   </div>
 </section>
 
@@ -71,11 +70,12 @@ import { personalStatement } from "../../lib/experience";
 
   @media (max-width: 768px) {
     .ascii-display {
-      font-size: 0.25rem;
+      font-size: 0.3rem;
       letter-spacing: 0.05em;
       width: 100%;
-      height: 50%;
-      line-height: 0.7;
+      height: 60%;
+      line-height: 0.8;
+      opacity: 0.3;
     }
   }
 
@@ -99,10 +99,22 @@ import { personalStatement } from "../../lib/experience";
   // Initialize ASCII video converter
   async function initAsciiVideo() {
     try {
-      console.log("🎬 Initializing ASCII video...");
+      // Check if mobile device
+      const isMobile = window.innerWidth <= 768;
+
       converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
-      await converter.start();
-      console.log("🎬 ASCII video started successfully");
+
+      if (isMobile) {
+        // On mobile, start but then pause after first frame for performance
+        await converter.start();
+        setTimeout(() => {
+          if (converter) {
+            converter.stop();
+          }
+        }, 100);
+      } else {
+        await converter.start();
+      }
     } catch (error) {
       console.error("Failed to initialize ASCII video:", error);
       // Show fallback message

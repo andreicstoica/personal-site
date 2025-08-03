@@ -12,7 +12,7 @@ export class AsciiVideoConverter {
   // ASCII character set for brightness mapping (from darkest to brightest)
   private readonly asciiChars =
     ".'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
-  private readonly brightnessThreshold = 0.15; // Only show ASCII for pixels brighter than this
+  private readonly brightnessThreshold = 0.12; // Only show ASCII for pixels brighter than this
   private readonly targetWidth = 160;
   private readonly targetHeight = 120;
 
@@ -53,8 +53,6 @@ export class AsciiVideoConverter {
 
   public async start(): Promise<void> {
     try {
-      console.log("Starting ASCII video...");
-
       // Wait for video to be ready
       if (this.video.readyState < 2) {
         await new Promise<void>((resolve) => {
@@ -157,7 +155,6 @@ export class AsciiVideoConverter {
   }
 
   private startFallbackAnimation(): void {
-    console.log("Starting fallback animation...");
     let frame = 0;
     const animate = () => {
       if (!this.isPlaying) return;
