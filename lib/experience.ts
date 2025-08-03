@@ -1,5 +1,8 @@
 import type { Experience } from "./types";
 
+export const personalStatement =
+  "Builder with a background in product, VC, design, and full-stack development. I'm especially interested in how AI can help people reflect, connect, express themselves, and build better habits. I work best when I can take a strong idea kernel and shape it by iterating quickly with others. Lately I've been exploring reflective AI tools with a focus on simple interfaces that feel intuitive and well-considered. I care about how things feel and the systems they create, not just how they function.";
+
 export const experiences: Experience[] = [
   {
     type: "personal",
