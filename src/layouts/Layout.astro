@@ -22,6 +22,14 @@ const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
   </head>
   <body class="m-0 p-0 min-h-[100vh] grid grid-cols-12">
     <slot />
+
+    <link
+      href="https://melonking.net/styles/flood.css"
+      rel="stylesheet"
+      type="text/css"
+      media="all"
+    />
+    <script src="https://melonking.net/scripts/flood.js" async></script>
   </body>
 </html>
 
@@ -40,6 +48,11 @@ const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
     z-index: 9999;
     opacity: 0.5;
     transition: opacity 0.5s ease-out;
+  }
+
+  #flood {
+    z-index: 1 !important;
+    pointer-events: auto;
   }
 </style>
 

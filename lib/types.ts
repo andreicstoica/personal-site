@@ -3,6 +3,11 @@ export interface Project {
   title: string;
   description: string;
   technologies: string[];
+  technicalDetails?: {
+    keyFeatures: string[];
+    challenges: string[];
+    implementation: string[];
+  };
   links: {
     demo?: string;
     github?: string;

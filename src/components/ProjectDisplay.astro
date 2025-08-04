@@ -154,6 +154,53 @@ const { project } = Astro.props;
       </div>
     )
   }
+
+  <!-- Technical Details -->
+  {
+    project.technicalDetails && (
+      <div class="mb-8">
+        <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
+          Technical Overview
+        </h2>
+
+        <!-- Key Features -->
+        <div class="mb-6">
+          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
+            Key Features
+          </h3>
+          <ul class="list-disc list-inside space-y-1">
+            {project.technicalDetails.keyFeatures.map((feature) => (
+              <li class="text-sm text-[--color-text-secondary]">{feature}</li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Technical Challenges -->
+        <div class="mb-6">
+          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
+            Technical Challenges
+          </h3>
+          <ul class="list-disc list-inside space-y-1">
+            {project.technicalDetails.challenges.map((challenge) => (
+              <li class="text-sm text-[--color-text-secondary]">{challenge}</li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Implementation Details -->
+        <div class="mb-6">
+          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
+            Implementation
+          </h3>
+          <ul class="list-disc list-inside space-y-1">
+            {project.technicalDetails.implementation.map((detail) => (
+              <li class="text-sm text-[--color-text-secondary]">{detail}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
 </div>
 
 <style>
