@@ -1,0 +1,149 @@
+---
+import { personalStatement } from "../../lib/experience";
+---
+
+<section
+  class="relative w-full min-h-[75vh] lg:min-h-[45vh] overflow-hidden flex items-center justify-center"
+  style="background-color: var(--color-bg-primary);"
+>
+  <div
+    class="absolute inset-0 flex items-end justify-center pb-4 lg:items-center lg:justify-end overflow-hidden lg:-ml-25 lg:-m-55 lg:pb-25"
+  >
+    <div
+      id="ascii-output"
+      class="font-mono text-xs leading-none tracking-wider m-0 p-0 overflow-hidden filter drop-shadow-sm ascii-display opacity-75 lg:opacity-90"
+      style="background-color: transparent;"
+    >
+      Loading ASCII...
+    </div>
+  </div>
+  <div class="absolute top-4 left-4 right-4 z-10 lg:max-w-2xl lg:right-auto">
+    <p
+      class="text-md mt-3.5 text-(--color-text-primary) font-normal leading-relaxed"
+      set:html={personalStatement}
+    />
+  </div>
+</section>
+
+<style>
+  .ascii-display {
+    font-size: clamp(0.2rem, 0.4vw, 0.35rem);
+    width: 85%;
+    height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    white-space: pre;
+    line-height: 0.7;
+    text-align: left;
+    animation: ascii-glow 3s ease-in-out infinite alternate;
+    overflow: hidden;
+    font-family: monospace;
+    letter-spacing: 0.08em;
+  }
+
+  #ascii-output {
+    color: var(--color-ascii-bright, #5a6aff);
+    text-shadow:
+      0 0 4px currentColor,
+      0 0 8px currentColor,
+      0 0 12px rgba(90, 106, 255, 0.4);
+  }
+
+  @keyframes ascii-glow {
+    0% {
+      filter: brightness(1) contrast(1);
+    }
+    100% {
+      filter: brightness(1.2) contrast(1.1);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ascii-display {
+      width: 75%;
+      height: 95%;
+      font-size: clamp(0.25rem, 0.45vw, 0.4rem);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .ascii-display {
+      font-size: 0.3rem;
+      letter-spacing: 0.05em;
+      width: 100%;
+      height: 60%;
+      line-height: 0.8;
+      opacity: 0.3;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .ascii-display {
+      color: var(--color-ascii-bright);
+      text-shadow:
+        0 0 6px currentColor,
+        0 0 12px currentColor,
+        0 0 18px rgba(90, 106, 255, 0.4);
+    }
+  }
+</style>
+
+<script>
+  import { AsciiVideoConverter } from "../../lib/asciiVideo";
+
+  const output = document.getElementById("ascii-output") as HTMLDivElement;
+  let converter: AsciiVideoConverter | null = null;
+
+  // Initialize ASCII video converter
+  async function initAsciiVideo() {
+    try {
+      // Check if mobile device
+      const isMobile = window.innerWidth <= 768;
+
+      converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
+
+      if (isMobile) {
+        // On mobile, start but then pause after first frame for performance
+        await converter.start();
+        setTimeout(() => {
+          if (converter) {
+            converter.stop();
+          }
+        }, 100);
+      } else {
+        await converter.start();
+      }
+    } catch (error) {
+      console.error("Failed to initialize ASCII video:", error);
+      // Show fallback message
+      output.innerHTML = "ASCII Video Error - Check Console";
+    }
+  }
+
+  // Start the ASCII video when the page loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAsciiVideo);
+  } else {
+    initAsciiVideo();
+  }
+
+  // Cleanup on page unload
+  window.addEventListener("beforeunload", () => {
+    if (converter) {
+      converter.destroy();
+    }
+  });
+
+  // Handle visibility changes for performance
+  document.addEventListener("visibilitychange", () => {
+    if (converter) {
+      if (document.hidden) {
+        converter.stop();
+      } else {
+        converter.start();
+      }
+    }
+  });
+</script>

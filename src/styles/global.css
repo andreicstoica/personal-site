@@ -38,6 +38,9 @@
   --tag-school: #ffe438;
   --tag-other: #ff39ac;
 
+  /* ASCII Art Colors */
+  --color-ascii-bright: #3848ff;
+
   /* Fonts */
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-serif: "IBM Plex Serif", serif;
@@ -67,6 +70,16 @@
     --color-bg-primary: #272727;
     --color-bg-secondary: #333333;
     --color-bg-tertiary: #404040;
+
+    /* ASCII Art Colors - Dark Mode */
+    --color-ascii-dark: #333333;
+    --color-ascii-medium: #888888;
+    --color-ascii-bright: #5a6aff;
+    --color-ascii-red: #ff6666;
+    --color-ascii-green: #66ff66;
+    --color-ascii-blue: #6666ff;
+    --color-ascii-yellow: #ffff66;
+    --color-ascii-purple: #ff66ff;
   }
 }
 
