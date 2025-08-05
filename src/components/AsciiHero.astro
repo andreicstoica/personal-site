@@ -3,33 +3,36 @@ import { personalStatement } from "../../lib/experience";
 ---
 
 <section
-  class="relative w-full min-h-[75vh] lg:min-h-[45vh] overflow-hidden flex items-center justify-center"
+  class="relative w-full min-h-[65vh] lg:min-h-[70vh] overflow-hidden flex flex-col md:flex-row items-center justify-between pt-6 md:pt-8 lg:pt-10"
   style="background-color: var(--color-bg-primary);"
 >
+  <!-- Personal statement on the left -->
+  <div class="z-20 md:max-w-2xl flex-shrink-0 relative md:pr-8">
+    <p
+      class="text-md text-(--color-text-primary) font-normal leading-relaxed text-pretty"
+      set:html={personalStatement}
+    />
+  </div>
+
+  <!-- ASCII image on the right for medium+ screens -->
   <div
-    class="absolute inset-0 flex items-end justify-center pb-4 lg:items-center lg:justify-end overflow-hidden lg:-ml-25 lg:-m-55 lg:pb-25"
+    class="w-full md:w-auto md:flex-shrink-0 pointer-events-none z-10 mt-8 md:mt-0"
   >
     <div
       id="ascii-output"
       class="font-mono text-xs leading-none tracking-wider m-0 p-0 overflow-hidden filter drop-shadow-sm ascii-display opacity-75 lg:opacity-90"
-      style="background-color: transparent;"
+      style="background-color: transparent; height: 500px;"
     >
       Loading ASCII...
     </div>
-  </div>
-  <div class="absolute top-4 left-4 right-4 z-10 lg:max-w-2xl lg:right-auto">
-    <p
-      class="text-md mt-3.5 text-(--color-text-primary) font-normal leading-relaxed"
-      set:html={personalStatement}
-    />
   </div>
 </section>
 
 <style>
   .ascii-display {
     font-size: clamp(0.2rem, 0.4vw, 0.35rem);
-    width: 85%;
-    height: 90%;
+    width: 100%;
+    height: 500px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,18 +65,30 @@ import { personalStatement } from "../../lib/experience";
 
   @media (min-width: 1024px) {
     .ascii-display {
-      width: 75%;
-      height: 95%;
+      width: 100%;
+      height: 650px;
       font-size: clamp(0.25rem, 0.45vw, 0.4rem);
+    }
+
+    section {
+      align-items: flex-start;
+      padding-top: 2rem;
+      padding-bottom: 2rem;
     }
   }
 
   @media (max-width: 768px) {
+    section {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2.5rem;
+    }
+
     .ascii-display {
       font-size: 0.3rem;
       letter-spacing: 0.05em;
       width: 100%;
-      height: 60%;
+      height: 350px;
       line-height: 0.8;
       opacity: 0.3;
     }
@@ -91,42 +106,57 @@ import { personalStatement } from "../../lib/experience";
 </style>
 
 <script>
-  import { AsciiVideoConverter } from "../../lib/asciiVideo";
+  import {
+    AsciiImageConverter,
+    AsciiVideoConverter,
+  } from "../../lib/asciiVideo";
 
   const output = document.getElementById("ascii-output") as HTMLDivElement;
-  let converter: AsciiVideoConverter | null = null;
+  let converter: AsciiImageConverter | AsciiVideoConverter | null = null;
 
-  // Initialize ASCII video converter
-  async function initAsciiVideo() {
+  // Initialize ASCII image converter
+  async function initAsciiImage() {
     try {
-      // Check if mobile device
-      const isMobile = window.innerWidth <= 768;
-
-      converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
-
-      if (isMobile) {
-        // On mobile, start but then pause after first frame for performance
-        await converter.start();
-        setTimeout(() => {
-          if (converter) {
-            converter.stop();
-          }
-        }, 100);
-      } else {
-        await converter.start();
-      }
+      converter = new AsciiImageConverter("/images/maple.webp", output, false);
+      await converter.start();
     } catch (error) {
-      console.error("Failed to initialize ASCII video:", error);
+      console.error("Failed to initialize ASCII image:", error);
       // Show fallback message
-      output.innerHTML = "ASCII Video Error - Check Console";
+      output.innerHTML = "ASCII Image Error - Check Console";
     }
   }
 
-  // Start the ASCII video when the page loads
+  // COMMENTED OUT - ASCII video converter (uncomment to switch back to video)
+  // async function initAsciiVideo() {
+  //   try {
+  //     // Check if mobile device
+  //     const isMobile = window.innerWidth <= 768;
+
+  //     converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
+
+  //     if (isMobile) {
+  //       // On mobile, start but then pause after first frame for performance
+  //       await converter.start();
+  //       setTimeout(() => {
+  //         if (converter) {
+  //           converter.stop();
+  //         }
+  //       }, 100);
+  //     } else {
+  //       await converter.start();
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to initialize ASCII video:", error);
+  //     // Show fallback message
+  //     output.innerHTML = "ASCII Video Error - Check Console";
+  //   }
+  // }
+
+  // Start the ASCII image when the page loads
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initAsciiVideo);
+    document.addEventListener("DOMContentLoaded", initAsciiImage);
   } else {
-    initAsciiVideo();
+    initAsciiImage();
   }
 
   // Cleanup on page unload
@@ -136,7 +166,7 @@ import { personalStatement } from "../../lib/experience";
     }
   });
 
-  // Handle visibility changes for performance
+  // Handle visibility changes for performance (mainly for video, but keeping for consistency)
   document.addEventListener("visibilitychange", () => {
     if (converter) {
       if (document.hidden) {

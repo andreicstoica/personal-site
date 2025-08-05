@@ -11,12 +11,14 @@ const { title, description } = Astro.props;
 ---
 
 <Layout title={title} description={description}>
-  <!-- Nav takes 2 columns on desktop (lg+), full width on mobile -->
-  <div class="col-span-12 lg:col-span-2 lg:h-screen w-full">
+  <!-- Full width layout with horizontal nav at top -->
+  <div class="col-span-12 flex flex-col min-h-screen">
+    <!-- Horizontal navigation at the top -->
     <Nav />
-  </div>
-  <!-- Content takes remaining 10 columns on desktop, full width on mobile -->
-  <div class="col-span-12 lg:col-span-10 lg:overflow-y-auto lg:h-screen">
-    <slot />
+
+    <!-- Content area takes remaining space -->
+    <div class="flex-1 overflow-y-auto px-6">
+      <slot />
+    </div>
   </div>
 </Layout>

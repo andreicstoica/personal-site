@@ -1,0 +1,47 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import { getEntry } from "astro:content";
+import {
+  parseMarkdownContent,
+  styleMarkdownContent,
+} from "../../lib/markdownUtils";
+
+const aboutEntry = await getEntry("pages", "about");
+if (!aboutEntry) throw new Error("About entry not found");
+
+const aboutContent = aboutEntry.body;
+const parsedContent = parseMarkdownContent(aboutContent);
+---
+
+<PageLayout
+  title={aboutEntry.data.title}
+  description={aboutEntry.data.description}
+>
+  <MarkdownLayout title={aboutEntry.data.title}>
+    <div class="flex flex-col gap-2">
+      <section>
+        <p
+          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+        >
+          {aboutEntry.data.description}
+        </p>
+      </section>
+
+      <div class="space-y-6 max-w-4xl">
+        {
+          parsedContent.map((section) => (
+            <section>
+              <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+                {section.title}
+              </h2>
+              <div class="space-y-2">
+                <div set:html={styleMarkdownContent(section.content)} />
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </MarkdownLayout>
+</PageLayout>

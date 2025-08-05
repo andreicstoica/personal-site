@@ -1,264 +1,229 @@
 ---
-import { Image } from "astro:assets";
-import chat from "../assets/images/chat.png";
-import code from "../assets/images/code.png";
-import linkedin from "../assets/images/linkedin.png";
-import pen from "../assets/images/pen.png";
-import bulb from "../assets/images/bulb.png";
-import colophon from "../assets/images/colophon.png";
-import hike from "../assets/images/hike.png";
+// No imports needed for this simple navigation
 ---
 
 <nav
-  class="bg-linear-to-t to-(--color-primary) from-(--color-bg-primary) h-screen lg:h-screen lg:flex lg:flex-col lg:justify-start lg:p-6 md:h-auto md:p-4 lg:relative lg:pl-2 px-4"
+  class="w-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] px-6 py-4 flex justify-between items-center"
+>
+  <!-- Name on the left -->
+  <div class="text-2xl text-[#fefefe] font-black">
+    <a href="/" class="hover:opacity-90 nav-name">Andrei Stoica</a>
+  </div>
+
+  <!-- Desktop Navigation -->
+  <div class="hidden md:flex items-end gap-2 text-end">
+    <!-- Internal page links -->
+    <a href="/" class="nav-box">
+      <span
+        class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >Home</span
+      >
+    </a>
+    <a href="/about" class="nav-box">
+      <span
+        class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >About</span
+      >
+    </a>
+
+    <!-- Social dropdown -->
+    <div class="relative group">
+      <button class="nav-box flex items-center gap-1">
+        <span
+          class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >Social</span
+        >
+        <span
+          class="text-sm transition-transform group-hover:rotate-180 translate-y-[1px]"
+          >⇣</span
+        >
+      </button>
+
+      <!-- Dropdown menu -->
+      <div
+        class="absolute bg-[var(--color-bg-primary)] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 min-w-[10vw]"
+      >
+        <a
+          href="https://github.com/andreicstoica/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://www.linkedin.com/in/andrei-c-stoica/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          LinkedIn
+        </a>
+        <a
+          href="https://andreisthoughts.substack.com/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          Substack
+        </a>
+        <a
+          href="https://x.com/andreistoica_"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          Twitter (X)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Hamburger Menu -->
+  <div class="md:hidden">
+    <button
+      id="hamburger-btn"
+      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity"
+      aria-label="Toggle menu"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu Overlay -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden md:hidden"
 >
   <div
-    class="text-(--color-text-inverse) text-2xl font-black mb-3 lg:mb-12 lg:z-10 lg:pt-0 lg:px-4 pt-3"
+    class="absolute top-0 right-0 h-full w-80 bg-[var(--color-bg-primary)] shadow-lg transform translate-x-full transition-transform duration-300"
   >
-    Andrei Stoica
+    <div class="p-6">
+      <!-- Close button -->
+      <button
+        id="close-menu"
+        class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70"
+        aria-label="Close menu"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <!-- Mobile menu items -->
+      <div class="mt-8 space-y-4">
+        <a
+          href="/"
+          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+        >
+          Home
+        </a>
+        <a
+          href="/about"
+          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+        >
+          About
+        </a>
+
+        <!-- Social submenu -->
+        <div class="relative">
+          <button
+            id="social-toggle"
+            class="w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded flex items-center justify-between"
+          >
+            Social
+            <span id="social-arrow" class="transition-transform">⇣</span>
+          </button>
+          <div id="social-submenu" class="hidden pl-4 space-y-2 mt-2">
+            <a
+              href="https://github.com/andreicstoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://www.linkedin.com/in/andrei-c-stoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://andreisthoughts.substack.com/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Substack
+            </a>
+            <a
+              href="https://x.com/andreistoica_"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Twitter (X)
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <div id="icons-container" class="flex space-x-4 items-center pb-4">
-    <a
-      href="https://github.com/andreicstoica/"
-      class="icon-link"
-      data-tooltip="GitHub"
-      target="_blank"
-    >
-      <Image src={code} alt="GitHub" class="icon" format="webp" />
-      <span class="icon-label">GitHub</span>
-    </a>
-    <a href="/canon" class="icon-link" data-tooltip="Canon">
-      <Image src={bulb} alt="Canon" class="icon" format="webp" />
-      <span class="icon-label">Canon</span>
-    </a>
-    <a
-      href="https://www.linkedin.com/in/andrei-c-stoica/"
-      class="icon-link"
-      data-tooltip="LinkedIn"
-      target="_blank"
-    >
-      <Image src={linkedin} alt="LinkedIn" class="icon" format="webp" />
-      <span class="icon-label">LinkedIn</span>
-    </a>
-    <a
-      href="https://andreisthoughts.substack.com/"
-      class="icon-link"
-      data-tooltip="Blog"
-      target="_blank"
-    >
-      <Image src={pen} alt="Blog" class="icon" format="webp" />
-      <span class="icon-label">Blog</span>
-    </a>
-    <a
-      href="https://x.com/andreistoica_"
-      class="icon-link"
-      data-tooltip="X"
-      target="_blank"
-    >
-      <Image src={chat} alt="X" class="icon" format="webp" />
-      <span class="icon-label">X</span>
-    </a>
-    <a href="/colophon" class="icon-link" data-tooltip="Colophon">
-      <Image src={colophon} alt="Colophon" class="icon" format="webp" />
-      <span class="icon-label">Colophon</span>
-    </a>
-    <a href="/fitness" class="icon-link" data-tooltip="Fitness">
-      <Image src={hike} alt="Fitness" class="icon" format="webp" />
-      <span class="icon-label">Fitness</span>
-    </a>
-  </div>
+<!-- Add this script block at the end of the file for menu toggling -->
+<script>
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const closeMenu = document.getElementById("close-menu");
+  const socialToggle = document.getElementById("social-toggle");
+  const socialSubmenu = document.getElementById("social-submenu");
+  const socialArrow = document.getElementById("social-arrow");
 
-  <style>
-    .icon {
-      width: 32px;
-      height: 32px;
-    }
+  if (hamburgerBtn && mobileMenu) {
+    hamburgerBtn.onclick = () => {
+      mobileMenu.classList.remove("hidden");
+      setTimeout(() => {
+        mobileMenu.querySelector("div")?.classList.remove("translate-x-full");
+      }, 10);
+    };
+  }
 
-    .icon-link {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.3s ease;
-    }
+  if (closeMenu && mobileMenu) {
+    closeMenu.onclick = () => {
+      mobileMenu.querySelector("div")?.classList.add("translate-x-full");
+      setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, 300);
+    };
+  }
 
-    .icon-label {
-      color: var(--color-text);
-      font-size: 12px;
-      font-weight: 500;
-      opacity: 0.9;
-      white-space: nowrap;
-    }
-
-    .icon-link:hover .icon,
-    .icon-link:hover .icon-label {
-      opacity: 1;
-    }
-
-    /* Tooltip styles */
-    .icon-link::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-      z-index: 20;
-    }
-
-    .icon-link:hover::after {
-      opacity: 1;
-    }
-
-    /* Large screens - random positioning */
-    @media (min-width: 1024px) {
-      .icon-link {
-        position: absolute;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        text-align: center;
+  if (socialToggle && socialSubmenu && socialArrow) {
+    socialToggle.onclick = () => {
+      const isOpen = !socialSubmenu.classList.contains("hidden");
+      if (isOpen) {
+        socialSubmenu.classList.add("hidden");
+        socialArrow.style.transform = "";
+      } else {
+        socialSubmenu.classList.remove("hidden");
+        socialArrow.style.transform = "rotate(180deg)";
       }
-
-      .icon-label {
-        font-size: 12px;
-      }
-
-      #icons-container {
-        position: absolute;
-        inset: 0;
-        top: 5rem;
-      }
-
-      /* Hide tooltips on large screens since labels are visible */
-      .icon-link::after {
-        display: none;
-      }
-    }
-
-    /* Medium screens - horizontal layout */
-    @media (min-width: 768px) and (max-width: 1023px) {
-      #icons-container {
-        flex-wrap: wrap;
-        gap: 1rem;
-      }
-    }
-
-    /* Mobile styles */
-    @media (max-width: 767px) {
-      nav {
-        height: auto !important;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        width: 100%;
-        min-height: fit-content;
-      }
-
-      .icon {
-        width: 24px;
-        height: 24px;
-      }
-
-      .icon-link {
-        position: static !important;
-        left: auto !important;
-        top: auto !important;
-        flex-shrink: 1;
-        min-width: 0;
-      }
-
-      #icons-container {
-        display: flex !important;
-        flex-direction: row;
-        gap: 0.5rem;
-        position: static !important;
-        inset: auto !important;
-        top: auto !important;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-right: 1rem;
-      }
-
-      .icon-label {
-        display: none;
-      }
-
-      .icon-link::after {
-        display: none;
-      }
-    }
-  </style>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const container = document.getElementById("icons-container");
-      if (!container || window.innerWidth < 1024) return;
-
-      const icons = Array.from(container.children) as HTMLElement[];
-      const nav = container.closest("nav")!;
-
-      const containerHeight = nav.clientHeight - 120;
-      const containerWidth = nav.clientWidth - 80;
-      const iconSize = 32;
-      const totalItemHeight = 60; // icon + label + gap
-      const minDistance = 80;
-
-      const placedPositions: { x: number; y: number }[] = [];
-
-      const isTooClose = (x: number, y: number) =>
-        placedPositions.some((pos) => {
-          const distance = Math.sqrt(
-            Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
-          );
-          return distance < minDistance;
-        });
-
-      icons.forEach((icon, i) => {
-        const bandHeight = containerHeight / icons.length;
-        const yMin = i * bandHeight;
-        const yMax = (i + 1) * bandHeight - totalItemHeight;
-
-        let position = null;
-        let attempts = 0;
-
-        while (attempts < 100) {
-          const x = Math.random() * (containerWidth - iconSize);
-          const y = yMin + Math.random() * Math.max(0, yMax - yMin);
-
-          if (!isTooClose(x + iconSize / 2, y + totalItemHeight / 2)) {
-            position = { x, y };
-            break;
-          }
-          attempts++;
-        }
-
-        // Fallback position
-        if (!position) {
-          position = {
-            x: Math.random() * (containerWidth - iconSize),
-            y: yMin + Math.random() * Math.max(0, yMax - yMin),
-          };
-        }
-
-        icon.style.left = `${position.x}px`;
-        icon.style.top = `${position.y}px`;
-
-        placedPositions.push({
-          x: position.x + iconSize / 2,
-          y: position.y + totalItemHeight / 2,
-        });
-      });
-    });
-  </script>
-</nav>
+    };
+  }
+</script>
