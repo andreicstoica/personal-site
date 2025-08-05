@@ -1,13 +1,7 @@
 ---
-title: "About"
-description: "About Andrei Stoica"
+title: "More About Me"
+description: "Product Engineer based in New York City"
 ---
-
-# TL;DR
-
-I'm Andrei Stoica, a software engineer based in New York City.
-
-## More About Me
 
 - [Canon](/canon) - Books, music, and media that have shaped my thinking
 - [Colophon](/colophon) - Technical details about this site and my setup
