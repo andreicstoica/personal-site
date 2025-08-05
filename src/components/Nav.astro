@@ -6,109 +6,224 @@
   class="w-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] px-6 py-4 flex justify-between items-center"
 >
   <!-- Name on the left -->
-  <div class="text-2xl text-[var(--text-primary)] font-black">
-    <a href="/" class="hover:opacity-90">Andrei Stoica</a>
+  <div class="text-2xl text-[#fefefe] font-black">
+    <a href="/" class="hover:opacity-90 nav-name">Andrei Stoica</a>
   </div>
 
-  <!-- Navigation boxes on the right -->
-  <div class="flex items-end gap-2 text-end">
+  <!-- Desktop Navigation -->
+  <div class="hidden md:flex items-end gap-2 text-end">
     <!-- Internal page links -->
     <a href="/" class="nav-box">
-      <span class="nav-text">About</span>
+      <span
+        class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >Home</span
+      >
     </a>
-    <a href="/canon" class="nav-box">
-      <span class="nav-text">Canon</span>
-    </a>
-    <a href="/colophon" class="nav-box">
-      <span class="nav-text">Colophon</span>
-    </a>
-    <a href="/fitness" class="nav-box">
-      <span class="nav-text">Fitness</span>
+    <a href="/about" class="nav-box">
+      <span
+        class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >About</span
+      >
     </a>
 
-    <!-- External links -->
-    <a href="https://github.com/andreicstoica/" target="_blank" class="nav-box">
-      <span class="nav-text">GitHub</span>
-    </a>
-    <a
-      href="https://www.linkedin.com/in/andrei-c-stoica/"
-      target="_blank"
-      class="nav-box"
+    <!-- Social dropdown -->
+    <div class="relative group">
+      <button class="nav-box flex items-center gap-1">
+        <span
+          class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >Social</span
+        >
+        <span
+          class="text-sm transition-transform group-hover:rotate-180 translate-y-[1px]"
+          >⇣</span
+        >
+      </button>
+
+      <!-- Dropdown menu -->
+      <div
+        class="absolute bg-[var(--color-bg-primary)] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 min-w-[10vw]"
+      >
+        <a
+          href="https://github.com/andreicstoica/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://www.linkedin.com/in/andrei-c-stoica/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          LinkedIn
+        </a>
+        <a
+          href="https://andreisthoughts.substack.com/"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          Substack
+        </a>
+        <a
+          href="https://x.com/andreistoica_"
+          target="_blank"
+          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        >
+          Twitter (X)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Hamburger Menu -->
+  <div class="md:hidden">
+    <button
+      id="hamburger-btn"
+      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity"
+      aria-label="Toggle menu"
     >
-      <span class="nav-text">LinkedIn</span>
-    </a>
-    <a
-      href="https://andreisthoughts.substack.com/"
-      target="_blank"
-      class="nav-box"
-    >
-      <span class="nav-text">Blog</span>
-    </a>
-    <a href="https://x.com/andreistoica_" target="_blank" class="nav-box">
-      <span class="nav-text">X</span>
-    </a>
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
   </div>
 </nav>
 
-<style>
-  .nav-box {
-    display: flex;
-    height: calc(2 * 1.5rem); /* 2 * line-height */
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-text-secondary);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    color: var(--color-text-primary);
+<!-- Mobile Menu Overlay -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden md:hidden"
+>
+  <div
+    class="absolute top-0 right-0 h-full w-80 bg-[var(--color-bg-primary)] shadow-lg transform translate-x-full transition-transform duration-300"
+  >
+    <div class="p-6">
+      <!-- Close button -->
+      <button
+        id="close-menu"
+        class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70"
+        aria-label="Close menu"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <!-- Mobile menu items -->
+      <div class="mt-8 space-y-4">
+        <a
+          href="/"
+          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+        >
+          Home
+        </a>
+        <a
+          href="/about"
+          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+        >
+          About
+        </a>
+
+        <!-- Social submenu -->
+        <div class="relative">
+          <button
+            id="social-toggle"
+            class="w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded flex items-center justify-between"
+          >
+            Social
+            <span id="social-arrow" class="transition-transform">⇣</span>
+          </button>
+          <div id="social-submenu" class="hidden pl-4 space-y-2 mt-2">
+            <a
+              href="https://github.com/andreicstoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://www.linkedin.com/in/andrei-c-stoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://andreisthoughts.substack.com/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Substack
+            </a>
+            <a
+              href="https://x.com/andreistoica_"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Twitter (X)
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this script block at the end of the file for menu toggling -->
+<script>
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const closeMenu = document.getElementById("close-menu");
+  const socialToggle = document.getElementById("social-toggle");
+  const socialSubmenu = document.getElementById("social-submenu");
+  const socialArrow = document.getElementById("social-arrow");
+
+  if (hamburgerBtn && mobileMenu) {
+    hamburgerBtn.onclick = () => {
+      mobileMenu.classList.remove("hidden");
+      setTimeout(() => {
+        mobileMenu.querySelector("div")?.classList.remove("translate-x-full");
+      }, 10);
+    };
   }
 
-  .nav-box:hover {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+  if (closeMenu && mobileMenu) {
+    closeMenu.onclick = () => {
+      mobileMenu.querySelector("div")?.classList.add("translate-x-full");
+      setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, 300);
+    };
   }
 
-  .nav-box:hover .nav-text {
-    color: var(--color-text-inverse);
+  if (socialToggle && socialSubmenu && socialArrow) {
+    socialToggle.onclick = () => {
+      const isOpen = !socialSubmenu.classList.contains("hidden");
+      if (isOpen) {
+        socialSubmenu.classList.add("hidden");
+        socialArrow.style.transform = "";
+      } else {
+        socialSubmenu.classList.remove("hidden");
+        socialArrow.style.transform = "rotate(180deg)";
+      }
+    };
   }
-
-  .nav-text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.5rem;
-    transition: color 0.2s ease;
-  }
-
-  /* Mobile responsive adjustments */
-  @media (max-width: 768px) {
-    nav {
-      flex-direction: column;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .nav-box {
-      height: calc(2 * 1.25rem);
-    }
-
-    .nav-text {
-      font-size: 0.75rem;
-      line-height: 1.25rem;
-    }
-
-    nav > div:last-child {
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .nav-box {
-      width: 60px;
-      height: calc(2 * 1.125rem);
-    }
-
-    .nav-text {
-      font-size: 0.6875rem;
-      line-height: 1.125rem;
-    }
-  }
-</style>
+</script>

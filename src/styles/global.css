@@ -57,6 +57,31 @@
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
+
+  /* Navigation box styles */
+  --nav-box-styles: flex items-end justify-end h-12 w-[10vw] bg-[var(--color-bg-primary)] border border-[var(--color-text-secondary)] no-underline transition-all duration-200 text-[var(--color-text-primary)] p-2 box-border hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)];
+}
+
+/* Navigation box utility class */
+.nav-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 3rem;
+  width: 10vw;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: var(--color-text-primary);
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.nav-box:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fefefe;
 }
 
 /* Dark mode support */
@@ -191,4 +216,13 @@ a:hover {
 .markdown-p {
   color: var(--color-text-primary);
   line-height: 1.6;
+}
+
+/* Navigation name link - override global link styles */
+.nav-name {
+  color: #fefefe !important;
+}
+
+.nav-name:hover {
+  color: #fefefe !important;
 }

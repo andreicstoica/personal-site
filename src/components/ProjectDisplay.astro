@@ -1,6 +1,5 @@
 ---
-import MediaGallery from "./MediaGallery.astro";
-import BackButton from "./BackButton.astro";
+import MediaGallery from "./MediaGallery.astro";  
 import type { Project } from "../../lib/types";
 
 interface Props {
@@ -11,8 +10,6 @@ const { project } = Astro.props;
 ---
 
 <div class="w-full p-4 lg:px-8 lg:mt-3.5">
-  <BackButton />
-
   <!-- Project Header -->
   <div class="mb-8 max-w-5xl">
     <h1 class="text-xl lg:text-xl font-bold text-[--color-text-primary] mb-1">

@@ -50,7 +50,7 @@ marked.setOptions({ renderer });
 
 <section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
   <!-- Table Header -->
-  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider" >
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
     <div class="col-span-1 text-sm ">Experience</div>
     <div class="col-span-2 text-sm ">Role</div>
     <div class="col-span-2 text-sm ">
@@ -81,7 +81,7 @@ marked.setOptions({ renderer });
           <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
           <div class="col-span-5">
             <!-- Top row: Role, Tags, Date -->
-            <div class="grid grid-cols-5 gap-3 mb-2">
+            <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
               <!-- Role (2 cols) -->
               <div class="col-span-2">
                 <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
