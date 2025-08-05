@@ -61,8 +61,8 @@ marked.setOptions({ renderer });
         ))}
       </select>
     </div>
-    <div class="col-span-1 text-sm ">Date</div>
-    <div class="col-span-4 text-sm ">Media</div>
+    <div class="col-span-1 text-sm text-end mr-2">Date</div>
+    <div class="col-span-4 text-sm">Media</div>
   </div>
 
   <!-- Table Body -->
@@ -96,7 +96,7 @@ marked.setOptions({ renderer });
 
               <!-- Date (1 col) -->
               <div class="col-span-1">
-                <div class="font-mono text-[.92rem]">
+                <div class="font-mono text-[.92rem] text-end mr-2">
                   {formatDateRange(experience.startDate, experience.endDate)}
                 </div>
               </div>

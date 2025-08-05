@@ -91,42 +91,57 @@ import { personalStatement } from "../../lib/experience";
 </style>
 
 <script>
-  import { AsciiVideoConverter } from "../../lib/asciiVideo";
+  import {
+    AsciiImageConverter,
+    AsciiVideoConverter,
+  } from "../../lib/asciiVideo";
 
   const output = document.getElementById("ascii-output") as HTMLDivElement;
-  let converter: AsciiVideoConverter | null = null;
+  let converter: AsciiImageConverter | AsciiVideoConverter | null = null;
 
-  // Initialize ASCII video converter
-  async function initAsciiVideo() {
+  // Initialize ASCII image converter
+  async function initAsciiImage() {
     try {
-      // Check if mobile device
-      const isMobile = window.innerWidth <= 768;
-
-      converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
-
-      if (isMobile) {
-        // On mobile, start but then pause after first frame for performance
-        await converter.start();
-        setTimeout(() => {
-          if (converter) {
-            converter.stop();
-          }
-        }, 100);
-      } else {
-        await converter.start();
-      }
+      converter = new AsciiImageConverter("/images/maple.webp", output, false);
+      await converter.start();
     } catch (error) {
-      console.error("Failed to initialize ASCII video:", error);
+      console.error("Failed to initialize ASCII image:", error);
       // Show fallback message
-      output.innerHTML = "ASCII Video Error - Check Console";
+      output.innerHTML = "ASCII Image Error - Check Console";
     }
   }
 
-  // Start the ASCII video when the page loads
+  // COMMENTED OUT - ASCII video converter (uncomment to switch back to video)
+  // async function initAsciiVideo() {
+  //   try {
+  //     // Check if mobile device
+  //     const isMobile = window.innerWidth <= 768;
+
+  //     converter = new AsciiVideoConverter("/videos/ascii-bg.mp4", output);
+
+  //     if (isMobile) {
+  //       // On mobile, start but then pause after first frame for performance
+  //       await converter.start();
+  //       setTimeout(() => {
+  //         if (converter) {
+  //           converter.stop();
+  //         }
+  //       }, 100);
+  //     } else {
+  //       await converter.start();
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to initialize ASCII video:", error);
+  //     // Show fallback message
+  //     output.innerHTML = "ASCII Video Error - Check Console";
+  //   }
+  // }
+
+  // Start the ASCII image when the page loads
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initAsciiVideo);
+    document.addEventListener("DOMContentLoaded", initAsciiImage);
   } else {
-    initAsciiVideo();
+    initAsciiImage();
   }
 
   // Cleanup on page unload
@@ -136,7 +151,7 @@ import { personalStatement } from "../../lib/experience";
     }
   });
 
-  // Handle visibility changes for performance
+  // Handle visibility changes for performance (mainly for video, but keeping for consistency)
   document.addEventListener("visibilitychange", () => {
     if (converter) {
       if (document.hidden) {
