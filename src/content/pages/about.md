@@ -3,6 +3,8 @@ title: "More About Me"
 description: "Product Engineer based in New York City"
 ---
 
+# Micropages
+
 - [Canon](/canon) - Books, music, and media that have shaped my thinking
 - [Colophon](/colophon) - Technical details about this site and my setup
 - [Fitness](/fitness) - My approach to health and physical well-being
