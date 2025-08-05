@@ -3,12 +3,19 @@ import { personalStatement } from "../../lib/experience";
 ---
 
 <section
-  class="relative w-full min-h-[75vh] lg:min-h-[85vh] overflow-hidden flex items-center justify-center"
+  class="relative w-full min-h-[75vh] lg:min-h-[85vh] overflow-hidden flex items-center justify-between p-4 lg:p-8"
   style="background-color: var(--color-bg-primary);"
 >
-  <div
-    class="absolute inset-0 flex items-end justify-center pb-4 lg:items-center lg:justify-end overflow-hidden lg:-ml-25 lg:-m-55"
-  >
+  <!-- Personal statement on the left -->
+  <div class="z-10 lg:max-w-2xl flex-shrink-0">
+    <p
+      class="text-md text-(--color-text-primary) font-normal leading-relaxed"
+      set:html={personalStatement}
+    />
+  </div>
+
+  <!-- ASCII image on the right -->
+  <div class="flex items-center justify-center flex-1 min-h-0">
     <div
       id="ascii-output"
       class="font-mono text-xs leading-none tracking-wider m-0 p-0 overflow-hidden filter drop-shadow-sm ascii-display opacity-75 lg:opacity-90"
@@ -17,19 +24,13 @@ import { personalStatement } from "../../lib/experience";
       Loading ASCII...
     </div>
   </div>
-  <div class="absolute top-4 left-4 right-4 z-10 lg:max-w-2xl lg:right-auto">
-    <p
-      class="text-md mt-3.5 text-(--color-text-primary) font-normal leading-relaxed"
-      set:html={personalStatement}
-    />
-  </div>
 </section>
 
 <style>
   .ascii-display {
     font-size: clamp(0.2rem, 0.4vw, 0.35rem);
-    width: 85%;
-    height: 90%;
+    width: 100%;
+    height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,18 +63,29 @@ import { personalStatement } from "../../lib/experience";
 
   @media (min-width: 1024px) {
     .ascii-display {
-      width: 75%;
-      height: 95%;
+      width: 100%;
+      height: 500px;
       font-size: clamp(0.25rem, 0.45vw, 0.4rem);
+    }
+
+    section {
+      align-items: flex-start;
+      padding-top: 2rem;
     }
   }
 
   @media (max-width: 768px) {
+    section {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+
     .ascii-display {
       font-size: 0.3rem;
       letter-spacing: 0.05em;
       width: 100%;
-      height: 60%;
+      height: 250px;
       line-height: 0.8;
       opacity: 0.3;
     }
