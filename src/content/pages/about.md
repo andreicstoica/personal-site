@@ -1,13 +1,13 @@
 ---
-title: "More About Me"
+title: "Introducing Myself"
 description: "Product Engineer based in New York City"
 ---
 
 # Micropages
 
-- [Canon](/canon) - Books, music, and media that have shaped my thinking
-- [Colophon](/colophon) - Technical details about this site and my setup
-- [Fitness](/fitness) - My approach to health and physical well-being
+- [Canon](/canon) - People, books, films, and other media that have majorly shaped my thinking
+- [Colophon](/colophon) - Technical details about this site and my inspiration
+- [Fitness](/fitness) - Logging some fun re: sports and the outdoors
 - I picked all of my classes in undergrad and got to name my degree, wrote about that [here](https://blog.andrei.bio/p/proposing-a-new-ethics-for-human).
 
 ## Current Focus
