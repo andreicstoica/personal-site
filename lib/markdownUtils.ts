@@ -24,7 +24,7 @@ export function styleMarkdownContent(content: string): string {
             '<h2 class="markdown-h2">$1</h2>'
         )
         .replace(
-            /### (.+)/g,
+            /^### (.+)$/gm,
             '<h3 class="markdown-h3">$1</h3>'
         )
         .replace(
