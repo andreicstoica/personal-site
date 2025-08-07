@@ -33,7 +33,7 @@ export function styleMarkdownContent(content: string): string {
         )
         .replace(
             /\[([^\]]+)\]\(([^)]+)\)/g,
-            '<a href="$2" class="markdown-link" target="_blank" rel="noopener">$1</a>'
+            '<a href="$2" class="markdown-link">$1</a>'
         )
         .replace(
             /^(?!<[hd])(.+)$/gm,

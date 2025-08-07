@@ -13,6 +13,7 @@ description: "People, things, and ideas that inspire me and shape how I think ab
 # bloggers
 
 - blackbird spyplane
+- ben thompson
 - tyler cowen
 - paul graham
 - simon sarris
