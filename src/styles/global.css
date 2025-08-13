@@ -10,6 +10,11 @@
 
 @import "tailwindcss";
 
+/* for Cambio */
+.root{
+  isolation: isolate;
+}
+
 /* CSS Custom Properties for global theming */
 :root {
   /* Colors */

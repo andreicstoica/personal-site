@@ -1,6 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import ImageGalleryReact from "./ImageGalleryReact";
 
 interface Props {
   images?: string[];
@@ -19,124 +20,65 @@ if (!images || images.length === 0) {
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
   "/src/assets/images/**/*.{jpeg,jpg,png,gif}"
 );
+
+// Process images for React component
+const processedImages = await Promise.all(
+  images.map(async (imageName) => {
+    const imagePath = `/src/assets/images/${imageName}`;
+    const isGif = imageName.toLowerCase().endsWith(".gif");
+    const imageModule = allImages[imagePath];
+
+    if (!imageModule) {
+      return null;
+    }
+
+    const image = await imageModule();
+
+    const out = {
+      src: image.default.src,
+      alt: experienceName,
+      isGif,
+      // Provide dimensions to stabilize first-open animation in React island
+      width: (image.default as any).width as number | undefined,
+      height: (image.default as any).height as number | undefined,
+    } satisfies {
+      src: string;
+      alt: string;
+      isGif: boolean;
+      width?: number;
+      height?: number;
+    };
+    return out;
+  })
+);
+
+// Narrow away nulls so the React island gets a precise type
+const validImages: {
+  src: string;
+  alt: string;
+  isGif: boolean;
+  width?: number;
+  height?: number;
+}[] = processedImages.filter(
+  (img): img is NonNullable<typeof img> => img !== null
+);
 ---
 
-{
-  variant === "desktop" ? (
-    <div class="col-span-4">
-      <div class="flex gap-2 scrollbar-always-visible">
-        {images.map(async (imageName) => {
-          const imagePath = `/src/assets/images/${imageName}`;
-          const isGif = imageName.toLowerCase().endsWith(".gif");
-
-          const imageModule = allImages[imagePath];
-
-          if (!imageModule) {
-            return null;
-          }
-
-          const image = await imageModule();
-
-          if (isGif) {
-            return (
-              <img
-                src={image.default.src}
-                alt={experienceName}
-                class="h-50 w-auto object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
-                loading="lazy"
-                data-fullres={image.default.src}
-              />
-            );
-          }
-
-          return (
-            <Image
-              src={image.default}
-              alt={experienceName}
-              loading="lazy"
-              width={400}
-              densities={[1.5, 2]}
-              format="webp"
-              class="h-50 w-auto object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity desktop-only-lightbox"
-              data-fullres={image.default.src}
-            />
-          );
-        })}
-      </div>
-    </div>
-  ) : (
-    <div class="flex gap-2 scrollbar-always-visible">
-      {images.map(async (imageName) => {
-        const imagePath = `/src/assets/images/${imageName}`;
-        const isGif = imageName.toLowerCase().endsWith(".gif");
-
-        const imageModule = allImages[imagePath];
-
-        if (!imageModule) {
-          return null;
-        }
-
-        const image = await imageModule();
-
-        if (isGif) {
-          return (
-            <img
-              src={image.default.src}
-              alt={experienceName}
-              class="h-50 w-auto object-cover flex-shrink-0"
-              loading="lazy"
-              data-fullres={image.default.src}
-            />
-          );
-        }
-
-        return (
-          <Image
-            src={image.default}
-            alt={experienceName}
-            loading="lazy"
-            width={400}
-            densities={[1.5, 2]}
-            format="webp"
-            class="h-50 w-auto object-cover flex-shrink-0"
-            data-fullres={image.default.src}
-          />
-        );
-      })}
-    </div>
-  )
-}
-
-<!-- Lightbox Modal -->
-<div
-  id="lightbox-modal"
-  class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300"
->
-  <div class="relative max-w-4xl max-h-screen p-4 flex flex-col items-center">
-    <!-- Close Button -->
-    <button
-      id="close-lightbox"
-      class="absolute -top-2 -right-2 text-(--tag-other) bg-(--tag-school) text-2xl font-bold cursor-pointer hover:text-(--color-accent-hover) z-10 w-6 h-6 flex items-center justify-center transition-colors"
-    >
-      ×
-    </button>
-
-    <!-- Image -->
-    <img
-      id="lightbox-image"
-      src=""
-      alt=""
-      class="max-w-full max-h-[80vh] object-contain transition-transform duration-300 ease-out transform"
-    />
-  </div>
-</div>
+<ImageGalleryReact
+  client:load
+  images={validImages}
+  experienceName={experienceName}
+  variant={variant}
+/>
 
 <style>
   .scrollbar-always-visible {
-    /* Always show scrollbar */
-    overflow-x: scroll !important;
+    /* Always show horizontal scrollbar */
+    overflow-x: auto !important;
+    overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: #9ca3af transparent;
+    white-space: nowrap;
   }
 
   /* Webkit browsers (Chrome, Safari, etc.) */
@@ -166,134 +108,4 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
   .dark .scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
     background-color: #9ca3af;
   }
-
-  /* Animation classes */
-  .lightbox-opening {
-    opacity: 1 !important;
-  }
-
-  .lightbox-closing {
-    opacity: 0 !important;
-  }
-
-  #lightbox-image {
-    box-shadow:
-      0 0 50px rgba(0, 0, 0, 0.3),
-      0 25px 50px -12px rgba(0, 0, 0, 0.25),
-      0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
 </style>
-<script>
-  // Mobile detection function
-  const isMobile = () => {
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) || window.innerWidth <= 768
-    );
-  };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const modal = document.getElementById("lightbox-modal");
-    const lightboxImage = document.getElementById(
-      "lightbox-image"
-    ) as HTMLImageElement | null;
-    const closeButton = document.getElementById("close-lightbox");
-
-    if (!modal || !lightboxImage || !closeButton) {
-      return; // Exit early if elements don't exist
-    }
-
-    let currentClickedImage: HTMLImageElement | null = null;
-    let originalPosition = { x: 0, y: 0, scale: 0.1 }; // Store original position
-
-    // Only add click listeners to desktop images
-    const galleryImages = document.querySelectorAll(".desktop-only-lightbox");
-
-    galleryImages.forEach((img) => {
-      img.addEventListener("click", (e) => {
-        // Double-check mobile detection on click
-        if (isMobile()) {
-          return; // Exit early on mobile
-        }
-
-        const imgElement = e.target as HTMLImageElement;
-        currentClickedImage = imgElement;
-
-        // Get the position and size of the clicked image
-        const rect = imgElement.getBoundingClientRect();
-
-        // Calculate and store initial position and scale
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        const initialX = rect.left + rect.width / 2 - centerX;
-        const initialY = rect.top + rect.height / 2 - centerY;
-        const initialScale = Math.min(rect.width / 400, rect.height / 300, 0.2);
-
-        // Store for close animation
-        originalPosition = { x: initialX, y: initialY, scale: initialScale };
-
-        // Use full resolution path from data attribute
-        const fullResPath = imgElement.dataset.fullres || imgElement.src;
-        lightboxImage.src = fullResPath; // Use full res version
-        lightboxImage.alt = imgElement.alt;
-
-        // Set initial transform (small and at original position)
-        lightboxImage.style.transform = `translate(${initialX}px, ${initialY}px) scale(${initialScale})`;
-
-        // Show modal (make visible and enable interactions)
-        modal.classList.remove("opacity-0", "pointer-events-none");
-
-        // Force reflow
-        modal.offsetHeight;
-
-        // Animate to center
-        requestAnimationFrame(() => {
-          modal.classList.add("lightbox-opening");
-          lightboxImage.style.transform = "translate(0, 0) scale(1)";
-        });
-
-        document.body.style.overflow = "hidden";
-      });
-    });
-
-    // Close modal with animation
-    const closeModal = () => {
-      if (!currentClickedImage) return;
-
-      // Animate back to stored original position
-      modal.classList.remove("lightbox-opening");
-      modal.classList.add("lightbox-closing");
-      lightboxImage.style.transform = `translate(${originalPosition.x}px, ${originalPosition.y}px) scale(${originalPosition.scale})`;
-
-      // Hide modal after animation
-      setTimeout(() => {
-        modal.classList.add("opacity-0", "pointer-events-none");
-        modal.classList.remove("lightbox-closing");
-        lightboxImage.style.transform = "";
-        document.body.style.overflow = "";
-        currentClickedImage = null;
-        originalPosition = { x: 0, y: 0, scale: 0.1 }; // Reset
-      }, 500);
-    };
-
-    // Only add close listeners if not mobile
-    if (!isMobile()) {
-      closeButton.addEventListener("click", closeModal);
-
-      // Close when clicking outside image
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          closeModal();
-        }
-      });
-
-      // Close with Escape key
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !modal.classList.contains("opacity-0")) {
-          closeModal();
-        }
-      });
-    }
-  });
-</script>
