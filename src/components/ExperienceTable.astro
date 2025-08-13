@@ -122,13 +122,13 @@ marked.setOptions({ renderer });
             <!-- Experience Name -->
             <span
               class="line-clamp-2"
-              style={getTypeStyles(experience.type)}
+              style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
             >
               {experience.name}
             </span>
 
             <!-- Role -->
-            <div class="text-sm flex-none mt-1">
+            <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
               {experience.role}
             </div>
 
