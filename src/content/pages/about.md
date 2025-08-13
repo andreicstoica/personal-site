@@ -3,7 +3,7 @@ title: "Introducing Myself"
 description: "Product minded software engineer based in New York City"
 ---
 
-# About Me
+# Outside of work
 
 When I'm not coding, you'll find me exploring NYC's art exhibits, cooking, running and playing tennis, reading way too many Substacks, and making coffee for my friends. <br><br>
 
