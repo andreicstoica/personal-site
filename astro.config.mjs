@@ -9,7 +9,9 @@ export default defineConfig({
   output: "static",
   compressHTML: true,
   image: {
-    // Sharp is automatically used when installed
+    service: {
+      entrypoint: 'astro/assets/services/sharp'
+    },
   },
   vite: {
     plugins: [tailwindcss()],

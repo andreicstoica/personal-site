@@ -21,34 +21,38 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
   "/src/assets/images/**/*.{jpeg,jpg,png,gif}"
 );
 
-// Process images for React component
+// Process images with optimization
 const processedImages = await Promise.all(
   images.map(async (imageName) => {
     const imagePath = `/src/assets/images/${imageName}`;
     const isGif = imageName.toLowerCase().endsWith(".gif");
     const imageModule = allImages[imagePath];
 
-    if (!imageModule) {
-      return null;
-    }
+    if (!imageModule) return null;
 
     const image = await imageModule();
 
-    const out = {
+    // For GIFs, keep original but add loading optimization
+    if (isGif) {
+      return {
+        src: image.default.src,
+        alt: experienceName,
+        isGif: true,
+        width: (image.default as any).width,
+        height: (image.default as any).height,
+        loading: "lazy" as const,
+      };
+    }
+
+    // For other images, use optimized versions
+    return {
       src: image.default.src,
       alt: experienceName,
-      isGif,
-      // Provide dimensions to stabilize first-open animation in React island
-      width: (image.default as any).width as number | undefined,
-      height: (image.default as any).height as number | undefined,
-    } satisfies {
-      src: string;
-      alt: string;
-      isGif: boolean;
-      width?: number;
-      height?: number;
+      isGif: false,
+      width: (image.default as any).width,
+      height: (image.default as any).height,
+      loading: "lazy" as const,
     };
-    return out;
   })
 );
 
