@@ -1,4 +1,3 @@
-import { getReferencedProjects } from "./projectParser";
 import type { Project } from "./types";
 
 export const projects: Record<string, Project> = {
@@ -155,6 +154,78 @@ export const projects: Record<string, Project> = {
       github: "https://github.com/andreicstoica/t3-chat-app",
     },
     images: ["tarot-home.png", "tarot-message.png", "tarot-response.gif"],
+  },
+  "stance-health": {
+    id: "stance-health",
+    title: "Stance Health",
+    description:
+      "Chronic health therapy med-tech startup.",
+    technologies: [
+      "React",
+      "TypeScript",
+      "Node.js",
+      "FastAPI",
+      "Google Cloud",
+      "GSAP",
+      "Chakra UI",
+    ],
+    technicalDetails: {
+      keyFeatures: [
+        "Simplified landing page with small animations",
+        "Hero form that acts as top-of-funnel - previously its own page",
+        "Improved results page load speed 3x by improving ranking algorithm"
+      ],
+      challenges: [
+        "Improving ranking algorithm",
+        "Making onboarding flow support dual entries (hero form and previous page)",
+        "Working around HIPAA regulations (form data sent to server as UUID)",
+        "Integrations with medical web services",
+      ],
+      implementation: [
+        "Central 'Onboarding' state management that accepts changes from various pages",
+        "Improved ranking algorithm by simplifying nearby zip code logic",
+        "Single page landing page with animations for each section"
+      ],
+    },
+    links: {
+      demo: "https://mystance.co/",
+    },
+    images: ["stance-health-1.jpeg"],
+  },
+  "holdfast-network": {
+    id: "holdfast-network",
+    title: "Holdfast Network",
+    description:
+      "A platform that helps acquaculture professionals collaborate on research, specifically for physical resources. Generates formatted PDFs to support NOAA requirements.",
+    technologies: [
+      "React",
+      "TypeScript",
+      "MapLibre",
+      "Tailwind CSS",
+      "Linear",
+    ],
+    technicalDetails: {
+      keyFeatures: [
+        "Performant regional maps that support clustering during zoom in/out",
+        "Authentication and variying authorization requirements",
+        "Document export feature to support continued funding",
+      ],
+      challenges: [
+        "Interface design for explaining research projects visually to other researchers",
+        "Easy to use interface for varying levels of tech saavy"
+      ],
+      implementation: [
+        "tRPC procedures with Zod validation",
+        "MapLibre maps",
+        "CI/CD pipeline with Husky, GitHub Actions"
+      ]
+    },
+    images: [
+      "holdfast-1.png"
+    ],
+    links: {
+      demo: "https://simpler.grants.gov/opportunity/0ebd10b9-141c-440d-ae26-9145e61fec39",
+    }
   },
 };
 

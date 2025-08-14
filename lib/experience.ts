@@ -5,6 +5,23 @@ export const personalStatement =
 
 export const experiences: Experience[] = [
   {
+    type: "work",
+    name: "Freelance Engineer",
+    tags: ["work", "code"],
+    role: "Full Stack Software Engineer",
+    startDate: "2025",
+    description: `Software engineering work across various industries including med-tech and research platforms. Focused on quickly shipping performant web applications and improving user experience.
+<br><br>
+Selected Projects:
+- {{project:stance-health}} – chronic health therapy med-tech startup
+- {{project:holdfast-network}} – NOAA aquaculture research platform`,
+    images: ["stance-health-1.jpeg", "holdfast-1.png"],
+    projects: [
+      { projectId: "stance-health", displayText: "Stance Health" },
+      { projectId: "holdfast-network", displayText: "Holdfast Network" },
+    ],
+  },
+  {
     type: "personal",
     name: "Fractal AI Accelerator",
     tags: ["personal", "code"],
@@ -38,7 +55,7 @@ Selected Projects:
     startDate: "2024",
     endDate: "2025",
     description:
-      "I led discovery and scoping of an AI-aided fact-checking tool for journalists, correspondents, and producers. This included technically defining what NBCU defined as a ‘fact’ in collaboration with Standards. I also spearheaded an NBCU News Group wide people, places, and things scheduling software vendor analysis and recommendation.",
+      "I led discovery and scoping of an AI-aided fact-checking tool for journalists, correspondents, and producers. This included technically defining what NBCU defined as a 'fact' in collaboration with Standards. I also spearheaded an NBCU News Group wide people, places, and things scheduling software vendor analysis and recommendation.",
     images: ["nbc-1.jpeg"],
   },
   {
@@ -49,7 +66,7 @@ Selected Projects:
     startDate: "2024",
     endDate: "...",
     description:
-      "Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique ‘special’ drink I create. Profits are donated to charity.",
+      "Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique 'special' drink I create. Profits are donated to charity.",
     images: ["sfant-1.png", "sfant-2.jpeg", "sfant-3.png"],
   },
   {
@@ -70,7 +87,7 @@ Selected Projects:
     role: "Writer & Researcher",
     startDate: "2023",
     description:
-      "To graduate, I wrote a ~8 page paper that bounded my studies (and self-named degree). This wasn't meant to be an argumentative essay, more so a laying out of topics that would be discussed in a multiple-hour-long ‘colloquium’ (read: discussion) with my primary faculty advisor and another professor. That is why my rationale moves rather quickly and in broad strokes.",
+      "To graduate, I wrote a ~8 page paper that bounded my studies (and self-named degree). This wasn't meant to be an argumentative essay, more so a laying out of topics that would be discussed in a multiple-hour-long 'colloquium' (read: discussion) with my primary faculty advisor and another professor. That is why my rationale moves rather quickly and in broad strokes.",
   },
   {
     type: "school",
@@ -108,7 +125,7 @@ Selected Projects:
     role: "Type Designer",
     startDate: "2020",
     description:
-      "Quarantine passion project: hand-built a bespoke all-caps typeface in Glyphs 3, drawing on wood-block printing heritage and Pacific Northwest timber culture. Features hand-carved curves; optimized for headings and posters. Deployed as the primary accent font across my personal site! Inspiration sources: National Park Service signage (Standards Manual “Parks” book) and avant-garde font archives.",
+      "Quarantine passion project: hand-built a bespoke all-caps typeface in Glyphs 3, drawing on wood-block printing heritage and Pacific Northwest timber culture. Features hand-carved curves; optimized for headings and posters. Deployed as the primary accent font across my personal site! Inspiration sources: National Park Service signage (Standards Manual 'Parks' book) and avant-garde font archives.",
     images: ["lumber-1.png"],
   },
   {
@@ -118,7 +135,7 @@ Selected Projects:
     role: "Product Manager",
     startDate: "2019",
     description:
-      "Owned all “non-dev” responsibilities: community marketing, user research, and product. Ran 4 multi-city “Autodesk Day” feedback events globally and online; engaged 100+ students and mentors. Insights drove a full UI/UX refresh that I co-led with engineering leads. Side project: co-designed an interactive exhibit for Oregon Museum of Science & Industry (OMSI). Built a custom Tinkercad parts library for kids to drag-and-drop classroom furniture on iPads, encouraging exploration of collaborative spaces (featured on Tinkercad’s official blog).",
+      "Owned all 'non-dev' responsibilities: community marketing, user research, and product. Ran 4 multi-city 'Autodesk Day' feedback events globally and online; engaged 100+ students and mentors. Insights drove a full UI/UX refresh that I co-led with engineering leads. Side project: co-designed an interactive exhibit for Oregon Museum of Science & Industry (OMSI). Built a custom Tinkercad parts library for kids to drag-and-drop classroom furniture on iPads, encouraging exploration of collaborative spaces (featured on Tinkercad's official blog).",
     images: ["autodesk-1.jpeg", "autodesk-2.jpeg"],
   },
   {
