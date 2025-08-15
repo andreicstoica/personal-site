@@ -66,7 +66,6 @@ export default function ImageGalleryReact({
           key={index}
           src={image.src}
           className="h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
-          loading="lazy"
           width={image.width}
           height={image.height}
           muted
@@ -139,13 +138,22 @@ export default function ImageGalleryReact({
                   <Cambio.Popup
                     motion="snappy"
                     className="z-[12001] p-0 bg-transparent flex items-center justify-center"
+                    onClick={(e) => {
+                      // Close modal when clicking anywhere on the popup
+                      e.stopPropagation();
+                      const closeButton = e.currentTarget.querySelector(
+                        "[data-cambio-close]"
+                      ) as HTMLElement | null;
+                      if (closeButton) {
+                        closeButton.click();
+                      }
+                    }}
                   >
                     <Cambio.Close asChild>
                       <div className="cursor-zoom-out shrink-0 min-w-fit">
                         {image.isVideo ? (
                           <video
                             src={image.src}
-                            alt={image.alt}
                             className="max-w-[90vw] max-h-[85vh] object-contain"
                             controls
                             autoPlay
@@ -158,15 +166,6 @@ export default function ImageGalleryReact({
                               0 25px 50px -12px rgba(0, 0, 0, 0.25),
                               0 20px 25px -5px rgba(0, 0, 0, 0.1)
                             `,
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const closeButton = e.currentTarget.closest(
-                                "[data-cambio-close]"
-                              ) as HTMLElement | null;
-                              if (closeButton) {
-                                closeButton.click();
-                              }
                             }}
                           />
                         ) : (
@@ -183,15 +182,6 @@ export default function ImageGalleryReact({
                               0 25px 50px -12px rgba(0, 0, 0, 0.25),
                               0 20px 25px -5px rgba(0, 0, 0, 0.1)
                             `,
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const closeButton = e.currentTarget.closest(
-                                "[data-cambio-close]"
-                              ) as HTMLElement | null;
-                              if (closeButton) {
-                                closeButton.click();
-                              }
                             }}
                           />
                         )}
