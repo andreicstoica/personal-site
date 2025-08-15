@@ -26,6 +26,33 @@ const processedImages = await Promise.all(
   images.map(async (imageName) => {
     const imagePath = `/src/assets/images/${imageName}`;
     const isGif = imageName.toLowerCase().endsWith(".gif");
+    const isWebm = imageName.toLowerCase().endsWith(".webm");
+    const isWebp = imageName.toLowerCase().endsWith(".webp");
+
+    // For WebM videos, use direct path
+    if (isWebm) {
+      return {
+        src: `/images/${imageName}`,
+        alt: experienceName,
+        isVideo: true,
+        width: 1920, // Default width for videos
+        height: 1080, // Default height for videos
+        loading: "lazy" as const,
+      };
+    }
+
+    // For WebP files, use direct path
+    if (isWebp) {
+      return {
+        src: `/images/${imageName}`,
+        alt: experienceName,
+        isGif: false,
+        width: 1920, // Default width
+        height: 1080, // Default height
+        loading: "lazy" as const,
+      };
+    }
+
     const imageModule = allImages[imagePath];
 
     if (!imageModule) return null;
@@ -60,7 +87,8 @@ const processedImages = await Promise.all(
 const validImages: {
   src: string;
   alt: string;
-  isGif: boolean;
+  isGif?: boolean;
+  isVideo?: boolean;
   width?: number;
   height?: number;
 }[] = processedImages.filter(

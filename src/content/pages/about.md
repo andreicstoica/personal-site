@@ -1,6 +1,6 @@
 ---
 title: "Introducing Myself"
-description: "Product minded software engineer based in New York City"
+description: "Product minded software engineer based in New York City."
 ---
 
 # Outside of work
