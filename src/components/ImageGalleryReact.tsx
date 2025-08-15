@@ -65,7 +65,7 @@ export default function ImageGalleryReact({
         <video
           key={index}
           src={image.src}
-          className="h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+          className="max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
           width={image.width}
           height={image.height}
           muted
@@ -82,7 +82,7 @@ export default function ImageGalleryReact({
       src: image.src,
       alt: image.alt,
       className:
-        "h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity",
+        "max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity",
       loading: "lazy" as const,
       width: image.width,
       height: image.height,
@@ -138,7 +138,7 @@ export default function ImageGalleryReact({
                   <Cambio.Popup
                     motion="snappy"
                     className="z-[12001] p-0 bg-transparent flex items-center justify-center"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                       // Close modal when clicking anywhere on the popup
                       e.stopPropagation();
                       const closeButton = e.currentTarget.querySelector(
