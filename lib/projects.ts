@@ -35,7 +35,7 @@ export const projects: Record<string, Project> = {
       demo: "https://sublobination.netlify.app/",
       github: "https://github.com/andreicstoica/blob-game",
     },
-    images: ["fractal-1.jpeg", "blob.gif", "blob-end.png", "blob-level.jpeg"],
+    images: ["fractal-1.webp", "blob.webm", "blob-end.webp", "blob-level.webp"],
   },
   courtly: {
     id: "courtly",
@@ -79,14 +79,14 @@ export const projects: Record<string, Project> = {
       demo: "https://courtly-xi.vercel.app/",
     },
     images: [
-      "courtly-form.png",
-      "courtly-home.png",
-      "courtly-settings.png",
-      "courtly-ios-home.png",
-      "courtly-ios-profile.png",
-      "courtly-ios-badge.png",
-      "courtly-ios-prev.png",
-      "courtly-ios-intro.png",
+      "courtly-form.webp",
+      "courtly-home.webp",
+      "courtly-settings.webp",
+      "courtly-ios-home.webp",
+      "courtly-ios-profile.webp",
+      "courtly-ios-badge.webp",
+      "courtly-ios-prev.webp",
+      "courtly-ios-intro.webp",
     ],
     video: "https://youtube.com/shorts/HFRVCUYEce0",
   },
@@ -115,7 +115,7 @@ export const projects: Record<string, Project> = {
       demo: "https://algos-visualized.vercel.app/",
       github: "https://github.com/andreicstoica/algos-visualized",
     },
-    images: ["algos-sort.png", "algos-dijkstra.png", "algos-hull.png"],
+    images: ["algos-sort.webp", "algos-dijkstra.webp", "algos-hull.webp"],
   },
   "tarot-chat": {
     id: "tarot-chat",
@@ -153,7 +153,7 @@ export const projects: Record<string, Project> = {
       demo: "https://t3-chat-app-ho6w.vercel.app/",
       github: "https://github.com/andreicstoica/t3-chat-app",
     },
-    images: ["tarot-home.png", "tarot-message.png", "tarot-response.gif"],
+    images: ["tarot-home.webp", "tarot-message.webp", "tarot-response.webm"],
   },
   "stance-health": {
     id: "stance-health",
@@ -190,7 +190,7 @@ export const projects: Record<string, Project> = {
     links: {
       demo: "https://mystance.co/",
     },
-    images: ["stance-health-1.jpeg"],
+    images: ["stance-health-1.webp"],
   },
   "holdfast-network": {
     id: "holdfast-network",
@@ -221,7 +221,7 @@ export const projects: Record<string, Project> = {
       ]
     },
     images: [
-      "holdfast-1.png"
+      "holdfast-1.webp"
     ],
     links: {
       demo: "https://simpler.grants.gov/opportunity/0ebd10b9-141c-440d-ae26-9145e61fec39",
