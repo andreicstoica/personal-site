@@ -159,7 +159,7 @@ export const projects: Record<string, Project> = {
     id: "stance-health",
     title: "Stance Health",
     description:
-      "Chronic health therapy med-tech startup.",
+      "Chronic health therapy med-tech startup. Stance helps patients find the right therapist for their needs by ranking therapists based on their location, availability, and other factors.",
     technologies: [
       "React",
       "TypeScript",
@@ -196,7 +196,7 @@ export const projects: Record<string, Project> = {
     id: "holdfast-network",
     title: "Holdfast Network",
     description:
-      "A platform that helps acquaculture professionals collaborate on research, specifically for physical resources. Generates formatted PDFs to support NOAA requirements.",
+      "A platform that helps acquaculture professionals collaborate on research, specifically for physical resources. Generates formatted PDFs to support NOAA requirements. The platform is mostly used by university researchers and their partners.",
     technologies: [
       "React",
       "TypeScript",
