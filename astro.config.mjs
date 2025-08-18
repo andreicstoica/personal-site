@@ -15,8 +15,8 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
-    // Ensure GIFs are treated as assets
-    assetsInclude: ['**/*.gif']
+    // Ensure GIFs and WebM files are treated as assets
+    assetsInclude: ['**/*.gif', '**/*.webm', '**/*.webp']
   },
   integrations: [mdx(), react()],
 });

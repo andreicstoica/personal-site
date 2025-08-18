@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "react";
 interface ImageData {
   src: string;
   alt: string;
-  isGif: boolean;
+  isGif?: boolean;
+  isVideo?: boolean;
   width?: number;
   height?: number;
 }
@@ -59,11 +60,29 @@ export default function ImageGalleryReact({
   };
 
   const renderImage = (image: ImageData, index: number) => {
+    if (image.isVideo) {
+      return (
+        <video
+          key={index}
+          src={image.src}
+          className="max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+          width={image.width}
+          height={image.height}
+          muted
+          loop
+          playsInline
+          autoPlay
+          style={{ opacity: 1 }}
+        />
+      );
+    }
+
     const commonProps = {
       key: index,
       src: image.src,
       alt: image.alt,
-      className: "h-50 w-auto object-contain",
+      className:
+        "max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity",
       loading: "lazy" as const,
       width: image.width,
       height: image.height,
@@ -119,34 +138,54 @@ export default function ImageGalleryReact({
                   <Cambio.Popup
                     motion="snappy"
                     className="z-[12001] p-0 bg-transparent flex items-center justify-center"
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                      // Close modal when clicking anywhere on the popup
+                      e.stopPropagation();
+                      const closeButton = e.currentTarget.querySelector(
+                        "[data-cambio-close]"
+                      ) as HTMLElement | null;
+                      if (closeButton) {
+                        closeButton.click();
+                      }
+                    }}
                   >
                     <Cambio.Close asChild>
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="max-w-[90vw] max-h-[85vh] object-contain cursor-zoom-out"
-                        decoding="async"
-                        fetchPriority="high"
-                        draggable={false}
-                        style={{
-                          boxShadow: `
-                          0 0 50px rgba(0, 0, 0, 0.3),
-                          0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                          0 20px 25px -5px rgba(0, 0, 0, 0.1)
-                        `,
-                        }}
-                        // Add click handler for better zoom out
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // The Cambio.Close should handle this, but let's make sure
-                          const closeButton = e.currentTarget.closest(
-                            "[data-cambio-close]"
-                          ) as HTMLElement | null;
-                          if (closeButton) {
-                            closeButton.click();
-                          }
-                        }}
-                      />
+                      <div className="cursor-zoom-out shrink-0 min-w-fit">
+                        {image.isVideo ? (
+                          <video
+                            src={image.src}
+                            className="max-w-[90vw] max-h-[85vh] object-contain"
+                            controls
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            style={{
+                              boxShadow: `
+                              0 0 50px rgba(0, 0, 0, 0.3),
+                              0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                              0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                            `,
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={image.src}
+                            alt={image.alt}
+                            className="max-w-[90vw] max-h-[85vh] object-contain"
+                            decoding="async"
+                            fetchPriority="high"
+                            draggable={false}
+                            style={{
+                              boxShadow: `
+                              0 0 50px rgba(0, 0, 0, 0.3),
+                              0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                              0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                            `,
+                            }}
+                          />
+                        )}
+                      </div>
                     </Cambio.Close>
                   </Cambio.Popup>
                 </Cambio.Portal>

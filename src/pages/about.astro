@@ -1,6 +1,7 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import MediaGallery from "../components/MediaGallery.astro";
 import { getEntry } from "astro:content";
 import {
   parseMarkdownContent,
@@ -18,30 +19,41 @@ const parsedContent = parseMarkdownContent(aboutContent);
   title={aboutEntry.data.title}
   description={aboutEntry.data.description}
 >
-  <MarkdownLayout title={aboutEntry.data.title}>
-    <div class="flex flex-col gap-2">
-      <section>
-        <p
-          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
-        >
-          {aboutEntry.data.description}
-        </p>
-      </section>
+  <div class="w-full lg:mt-3.5 max-w-2xl">
+    <MarkdownLayout title={aboutEntry.data.title}>
+      <div class="flex flex-col gap-2">
+        <section>
+          <p
+            class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+          >
+            {aboutEntry.data.description}
+          </p>
+        </section>
 
-      <div class="space-y-6 max-w-4xl">
-        {
-          parsedContent.map((section) => (
-            <section>
-              <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
-                {section.title}
-              </h2>
-              <div class="space-y-2">
-                <div set:html={styleMarkdownContent(section.content)} />
-              </div>
-            </section>
-          ))
-        }
+        <div class="space-y-6 max-w-4xl">
+          {
+            parsedContent.map((section) => (
+              <section>
+                <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+                  {section.title}
+                </h2>
+                <div class="space-y-2">
+                  <div set:html={styleMarkdownContent(section.content)} />
+                </div>
+              </section>
+            ))
+          }
+        </div>
       </div>
+    </MarkdownLayout>
+
+    <!-- Media Gallery -->
+    <div class="mt-2">
+      <MediaGallery
+        images={["about.webp", "timbers.webp"]}
+        experienceName="About"
+        variant="desktop"
+      />
     </div>
-  </MarkdownLayout>
+  </div>
 </PageLayout>
