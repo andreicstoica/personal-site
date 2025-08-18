@@ -87,7 +87,7 @@ Selected Projects:
     role: "Writer & Researcher",
     startDate: "2023",
     description:
-      "To graduate, I wrote a ~8 page paper that bounded my studies (and self-named degree). This wasn't meant to be an argumentative essay, more so a laying out of topics that would be discussed in a multiple-hour-long 'colloquium' (read: discussion) with my primary faculty advisor and another professor.",
+      "To graduate, I wrote a ~8 page paper that bounded my studies (and self-named degree). This wasn't meant to be an argumentative essay, more so a laying out of topics that would be discussed in a multiple-hour-long 'colloquium' (read: discussion) with my primary faculty advisor and another professor. That is why my rationale moves rather quickly and in broad strokes.",
   },
   {
     type: "school",
@@ -116,7 +116,7 @@ Selected Projects:
     role: "Venture Fellow",
     startDate: "2021",
     description:
-      "Built product research library for Anthos Capital's portfolio companies, to act as a knowledge base for common questions. Advised ESG product strategy.",
+      "Built product research library for Anthos Capital's portfolio companies. Advised ESG product strategy.",
   },
   {
     type: "personal",

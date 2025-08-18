@@ -18,60 +18,47 @@ if (!images || images.length === 0) {
 
 // A map of all possible images, to avoid dynamic imports
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/src/assets/images/**/*.{jpeg,jpg,png,gif}"
+  "/src/assets/images/**/*.{jpeg,jpg,png,webp}"
 );
 
 // Process images with optimization
 const processedImages = await Promise.all(
   images.map(async (imageName) => {
-    const imagePath = `/src/assets/images/${imageName}`;
-    const isGif = imageName.toLowerCase().endsWith(".gif");
-    const isWebm = imageName.toLowerCase().endsWith(".webm");
-    const isWebp = imageName.toLowerCase().endsWith(".webp");
-
-    // For WebM videos, use direct path
-    if (isWebm) {
+    const isWebM = imageName.toLowerCase().endsWith(".webm");
+    
+    // Handle WebM files as public assets (served directly)
+    if (isWebM) {
       return {
         src: `/images/${imageName}`,
         alt: experienceName,
-        isVideo: true,
-        width: 1920, // Default width for videos
-        height: 1080, // Default height for videos
+        isGif: true, // Keep this name for backwards compatibility in React component
         loading: "lazy" as const,
       };
     }
 
-    // For WebP files, use direct path
+    // Handle regular images through Astro's optimization  
+    const imagePath = `/src/assets/images/${imageName}`;
+    const isWebp = imageName.toLowerCase().endsWith(".webp");
+
+    // For WebP files, use direct path (served from public/images)
     if (isWebp) {
       return {
         src: `/images/${imageName}`,
         alt: experienceName,
-        isGif: false,
+        isGif: false, // Keep consistent with other image types
         width: 1920, // Default width
         height: 1080, // Default height
         loading: "lazy" as const,
       };
     }
 
+    // For other images (JPEG/PNG), use Astro optimization
     const imageModule = allImages[imagePath];
 
     if (!imageModule) return null;
 
     const image = await imageModule();
 
-    // For GIFs, keep original but add loading optimization
-    if (isGif) {
-      return {
-        src: image.default.src,
-        alt: experienceName,
-        isGif: true,
-        width: (image.default as any).width,
-        height: (image.default as any).height,
-        loading: "lazy" as const,
-      };
-    }
-
-    // For other images, use optimized versions
     return {
       src: image.default.src,
       alt: experienceName,
