@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from "react";
 interface ImageData {
   src: string;
   alt: string;
-  isGif?: boolean;
-  isVideo?: boolean;
+  isGif: boolean;
   width?: number;
   height?: number;
 }
@@ -60,41 +59,43 @@ export default function ImageGalleryReact({
   };
 
   const renderImage = (image: ImageData, index: number) => {
-    if (image.isVideo) {
+    // Check if this is a WebM video file
+    const isWebM = image.src.toLowerCase().includes('.webm');
+    
+    if (isWebM) {
       return (
         <video
           key={index}
           src={image.src}
-          className="max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
-          width={image.width}
-          height={image.height}
-          muted
-          loop
-          playsInline
+          className="h-50 w-auto object-contain"
           autoPlay
-          style={{ opacity: 1 }}
+          loop
+          muted
+          playsInline
+          style={{ opacity: 0 }}
+          onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+            e.currentTarget.style.opacity = "1";
+          }}
         />
       );
     }
 
-    const commonProps = {
-      key: index,
-      src: image.src,
-      alt: image.alt,
-      className:
-        "max-h-50 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity",
-      loading: "lazy" as const,
-      width: image.width,
-      height: image.height,
-      decoding: "async" as const,
-      // Add these for better performance
-      onLoad: (e: React.SyntheticEvent<HTMLImageElement>) => {
-        e.currentTarget.style.opacity = "1";
-      },
-      style: { opacity: 0, transition: "opacity 0.3s ease" },
-    };
-
-    return <img {...commonProps} />;
+    return (
+      <img
+        key={index}
+        src={image.src}
+        alt={image.alt}
+        className="h-50 w-auto object-contain"
+        loading="lazy"
+        width={image.width}
+        height={image.height}
+        decoding="async"
+        onLoad={(e: React.SyntheticEvent<HTMLImageElement>) => {
+          e.currentTarget.style.opacity = "1";
+        }}
+        style={{ opacity: 0 }}
+      />
+    );
   };
 
   // No SSR fallback gymnastics required; Astro island loads this client-side
@@ -121,71 +122,47 @@ export default function ImageGalleryReact({
                   <Cambio.Backdrop
                     motion="snappy"
                     className="bg-black/80 backdrop-blur-sm z-[12000]"
-                    onClick={(e: {
-                      stopPropagation: () => void;
-                      currentTarget: { querySelector: (arg0: string) => any };
-                    }) => {
-                      // Close modal when clicking backdrop
-                      e.stopPropagation();
-                      const closeButton = e.currentTarget.querySelector(
-                        "[data-cambio-close]"
-                      );
-                      if (closeButton) {
-                        closeButton.click();
-                      }
-                    }}
                   />
                   <Cambio.Popup
                     motion="snappy"
                     className="z-[12001] p-0 bg-transparent flex items-center justify-center"
-                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                      // Close modal when clicking anywhere on the popup
-                      e.stopPropagation();
-                      const closeButton = e.currentTarget.querySelector(
-                        "[data-cambio-close]"
-                      ) as HTMLElement | null;
-                      if (closeButton) {
-                        closeButton.click();
-                      }
-                    }}
                   >
                     <Cambio.Close asChild>
-                      <div className="cursor-zoom-out shrink-0 min-w-fit">
-                        {image.isVideo ? (
-                          <video
-                            src={image.src}
-                            className="max-w-[90vw] max-h-[85vh] object-contain"
-                            controls
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            style={{
-                              boxShadow: `
-                              0 0 50px rgba(0, 0, 0, 0.3),
-                              0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                              0 20px 25px -5px rgba(0, 0, 0, 0.1)
-                            `,
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={image.src}
-                            alt={image.alt}
-                            className="max-w-[90vw] max-h-[85vh] object-contain"
-                            decoding="async"
-                            fetchPriority="high"
-                            draggable={false}
-                            style={{
-                              boxShadow: `
-                              0 0 50px rgba(0, 0, 0, 0.3),
-                              0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                              0 20px 25px -5px rgba(0, 0, 0, 0.1)
-                            `,
-                            }}
-                          />
-                        )}
-                      </div>
+                      {image.src.toLowerCase().includes('.webm') ? (
+                        <video
+                          src={image.src}
+                          className="max-w-[90vw] max-h-[85vh] object-contain cursor-zoom-out"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          controls
+                          draggable={false}
+                          style={{
+                            boxShadow: `
+                            0 0 50px rgba(0, 0, 0, 0.3),
+                            0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                            0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                          `,
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={image.src}
+                          alt={image.alt}
+                          className="max-w-[90vw] max-h-[85vh] object-contain cursor-zoom-out"
+                          decoding="async"
+                          fetchPriority="high"
+                          draggable={false}
+                          style={{
+                            boxShadow: `
+                            0 0 50px rgba(0, 0, 0, 0.3),
+                            0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                            0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                          `,
+                          }}
+                        />
+                      )}
                     </Cambio.Close>
                   </Cambio.Popup>
                 </Cambio.Portal>
