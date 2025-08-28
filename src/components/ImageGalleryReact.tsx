@@ -1,6 +1,5 @@
 "use client";
 
-import { Cambio } from "cambio";
 import { useEffect, useRef, useState } from "react";
 
 interface ImageData {
@@ -47,7 +46,10 @@ export default function ImageGalleryReact({
   experienceName,
   variant = "desktop",
 }: Props) {
-  // No mount delay; rely on stable dimensions to prevent first-open jank
+  const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver(containerRef);
 
   const isMobile = () => {
     if (typeof window === "undefined") return false;
@@ -60,8 +62,8 @@ export default function ImageGalleryReact({
 
   const renderImage = (image: ImageData, index: number) => {
     // Check if this is a WebM video file
-    const isWebM = image.src.toLowerCase().includes('.webm');
-    
+    const isWebM = image.src.toLowerCase().includes(".webm");
+
     if (isWebM) {
       return (
         <video
@@ -98,10 +100,25 @@ export default function ImageGalleryReact({
     );
   };
 
-  // No SSR fallback gymnastics required; Astro island loads this client-side
+  const closeModal = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedImage(null);
+      setIsClosing(false);
+    }, 100);
+  };
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isVisible = useIntersectionObserver(containerRef);
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    if (selectedImage) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [selectedImage]);
 
   const galleryContent = (
     <div
@@ -112,61 +129,12 @@ export default function ImageGalleryReact({
         images.map((image, index) => (
           <div key={index} className="shrink-0 min-w-fit">
             {variant === "desktop" && !isMobile() ? (
-              <Cambio.Root motion="snappy" dismissible>
-                <Cambio.Trigger asChild>
-                  <div className="cursor-zoom-in shrink-0 min-w-fit">
-                    {renderImage(image, index)}
-                  </div>
-                </Cambio.Trigger>
-                <Cambio.Portal>
-                  <Cambio.Backdrop
-                    motion="snappy"
-                    className="bg-black/80 backdrop-blur-sm z-[12000]"
-                  />
-                  <Cambio.Popup
-                    motion="snappy"
-                    className="z-[12001] p-0 bg-transparent flex items-center justify-center"
-                  >
-                    <Cambio.Close asChild>
-                      {image.src.toLowerCase().includes('.webm') ? (
-                        <video
-                          src={image.src}
-                          className="max-w-[90vw] max-h-[85vh] object-contain cursor-zoom-out"
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          controls
-                          draggable={false}
-                          style={{
-                            boxShadow: `
-                            0 0 50px rgba(0, 0, 0, 0.3),
-                            0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                            0 20px 25px -5px rgba(0, 0, 0, 0.1)
-                          `,
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={image.src}
-                          alt={image.alt}
-                          className="max-w-[90vw] max-h-[85vh] object-contain cursor-zoom-out"
-                          decoding="async"
-                          fetchPriority="high"
-                          draggable={false}
-                          style={{
-                            boxShadow: `
-                            0 0 50px rgba(0, 0, 0, 0.3),
-                            0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                            0 20px 25px -5px rgba(0, 0, 0, 0.1)
-                          `,
-                          }}
-                        />
-                      )}
-                    </Cambio.Close>
-                  </Cambio.Popup>
-                </Cambio.Portal>
-              </Cambio.Root>
+              <div
+                className="cursor-zoom-in shrink-0 min-w-fit"
+                onClick={() => setSelectedImage(image)}
+              >
+                {renderImage(image, index)}
+              </div>
             ) : (
               renderImage(image, index)
             )}
@@ -175,9 +143,69 @@ export default function ImageGalleryReact({
     </div>
   );
 
-  return variant === "desktop" ? (
-    <div className="col-span-4">{galleryContent}</div>
-  ) : (
-    galleryContent
+  return (
+    <>
+      {variant === "desktop" ? (
+        <div className="col-span-4">{galleryContent}</div>
+      ) : (
+        galleryContent
+      )}
+
+      {/* Simple Modal */}
+      {selectedImage && (
+        <div
+          className={`fixed inset-0 bg-black/80 backdrop-blur-sm z-[12000] flex items-center justify-center p-4 modal-backdrop ${
+            isClosing ? "closing" : ""
+          }`}
+          onClick={closeModal}
+        >
+          <div className="relative w-full h-full flex items-center justify-center">
+            {selectedImage.src.toLowerCase().includes(".webm") ? (
+              <video
+                src={selectedImage.src}
+                className="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain cursor-zoom-out"
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls
+                draggable={false}
+                onClick={closeModal}
+                style={{
+                  boxShadow: `
+                    0 0 50px rgba(0, 0, 0, 0.3),
+                    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                    0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                  `,
+                }}
+              />
+            ) : (
+              <img
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                className="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain cursor-zoom-out"
+                decoding="async"
+                fetchPriority="high"
+                draggable={false}
+                onClick={closeModal}
+                style={{
+                  boxShadow: `
+                    0 0 50px rgba(0, 0, 0, 0.3),
+                    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                    0 20px 25px -5px rgba(0, 0, 0, 0.1)
+                  `,
+                }}
+              />
+            )}
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
