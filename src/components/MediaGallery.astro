@@ -25,7 +25,7 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 const processedImages = await Promise.all(
   images.map(async (imageName) => {
     const isWebM = imageName.toLowerCase().endsWith(".webm");
-    
+
     // Handle WebM files as public assets (served directly)
     if (isWebM) {
       return {
@@ -36,7 +36,7 @@ const processedImages = await Promise.all(
       };
     }
 
-    // Handle regular images through Astro's optimization  
+    // Handle regular images through Astro's optimization
     const imagePath = `/src/assets/images/${imageName}`;
     const isWebp = imageName.toLowerCase().endsWith(".webp");
 
@@ -74,13 +74,15 @@ const processedImages = await Promise.all(
 const validImages: {
   src: string;
   alt: string;
-  isGif?: boolean;
-  isVideo?: boolean;
+  isGif: boolean;
   width?: number;
   height?: number;
-}[] = processedImages.filter(
-  (img): img is NonNullable<typeof img> => img !== null
-);
+}[] = processedImages
+  .filter((img): img is NonNullable<typeof img> => img !== null)
+  .map((img) => ({
+    ...img,
+    isGif: img.isGif || false, // Ensure isGif is always a boolean
+  }));
 ---
 
 <ImageGalleryReact

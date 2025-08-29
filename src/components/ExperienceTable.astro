@@ -71,7 +71,7 @@ marked.setOptions({ renderer });
         <!-- Desktop Layout -->
         <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
           <!-- Experience Name (1 col) -->
-          <div class="col-span-1 -mt-0.25">
+          <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
             <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
               {experience.name}
             </span>
@@ -87,7 +87,7 @@ marked.setOptions({ renderer });
               </div>
 
               <!-- Tags (2 cols) -->
-              <div class="col-span-2 -mt-0.25">
+              <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
                 <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
                   {experience.tags.join(', ')}
                 </span>

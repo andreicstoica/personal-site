@@ -30,21 +30,25 @@ Selected Projects:
     description: `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc. <span class="speed-highlight">All built within 6 days</span>.
 <br><br>
 Selected Projects:
+- {{project:refract}} – reflective AI journal that helps you go deeper
 - {{project:blob-game}} – clicker game built with TS/React
 - {{project:courtly}} – tennis practice session (AI generated) React Native and web app
 - {{project:algos-visualized}} – visualized using Framer Motion and CSS animations
 - {{project:tarot-chat}} – daily tarot reading chat website`,
     images: [
+      "refract-anim.webm",
       "blob-game.webm",
       "tarot-response.webm",
       "fractal-2.webp",
       "courtly-ios-home.webp",
       "blob-end.webp",
+
     ],
     projects: [
       { projectId: "blob-game", displayText: "Blob Game" },
       { projectId: "courtly", displayText: "Courtly" },
       { projectId: "algos-visualized", displayText: "Algos, Visualized" },
+      { projectId: "refract", displayText: "Refract" },
     ],
   },
   {

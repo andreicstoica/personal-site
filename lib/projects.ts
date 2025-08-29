@@ -227,6 +227,45 @@ export const projects: Record<string, Project> = {
       demo: "https://simpler.grants.gov/opportunity/0ebd10b9-141c-440d-ae26-9145e61fec39",
     }
   },
+  "refract": {
+    id: "refract",
+    title: "Refract",
+    description:
+      "The journal that collaborates with you to go deeper. Refract engages with your writing in real time, asking thoughtful questions that spark reflection. When you finish, it highlights themes in your words.",
+    technologies: [
+      "AI SDK",
+      "Embeddings",
+      "Browser APIs (text-area)",
+      "NLP",
+      "Generative UI",
+      "React/Next.js",
+    ],
+    technicalDetails: {
+      keyFeatures: [
+        "Two AI-powered features for personal reflection, no prompting required",
+        "Simple, intuitive UI design focused on writing and reflection",
+        "Conextual AI responses that help the user go deeper",
+      ],
+      challenges: [
+        "Balancing AI assistance with user agency in the reflection process",
+        "Creating a conversation flow that feels natural and supportive",
+        "Balancing latency vs. quality - users shouldn't be interrupted by stale responses"
+      ],
+      implementation: [
+        "Next.js with App Router for modern React patterns",
+        "Framer Motion and GSAP for smooth animations",
+        "Vercel AI SDK for object responses and conversation management",
+        "Custom DOM-mirror for overlaying on top of an infinite text-area",
+        "Engine that balances current topic, punctuation monitoring, time, etc. to generate contextual 'nudges' to the user",
+        "Clustered embeddings that are then AI labeled to generate themes for further reflection",
+      ],
+    },
+    links: {
+      demo: "refract.site",
+      github: "https://github.com/andreicstoica/refract",
+    },
+    images: ["refract-anim.webm", "refract-1.webp", "refract-3.webp", "refract-4.webp", "refract-5.webp", "refract-6.webp"],
+  },
 };
 
 const getProject = (id: string): Project | undefined => {
