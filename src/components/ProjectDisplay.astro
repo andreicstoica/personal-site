@@ -117,21 +117,35 @@ const { project } = Astro.props;
         <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
           Video Demo
         </h2>
-        <div class="relative w-full" style="padding-bottom: 56.25%;">
-          <iframe
-            src={
-              project.video.includes("youtube.com/shorts/")
-                ? project.video.replace(
-                    "youtube.com/shorts/",
-                    "youtube.com/embed/",
-                  ) + "?autoplay=1"
-                : project.video
-            }
-            class="absolute top-0 left-0 w-full h-full rounded-lg"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen
-          />
-        </div>
+        {project.video.includes("youtube.com") ? (
+          <div class="relative w-full" style="padding-bottom: 56.25%;">
+            <iframe
+              src={
+                project.video.includes("youtube.com/shorts/")
+                  ? project.video.replace(
+                      "youtube.com/shorts/",
+                      "youtube.com/embed/",
+                    ) + "?autoplay=1"
+                  : project.video
+              }
+              class="absolute top-0 left-0 w-full h-full rounded-lg"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowfullscreen
+            />
+          </div>
+        ) : (
+          <div class="w-full">
+            <video
+              src={project.video}
+              class="w-full rounded-lg"
+              controls
+              autoplay
+              loop
+              muted
+              playsinline
+            />
+          </div>
+        )}
       </div>
     )
   }
