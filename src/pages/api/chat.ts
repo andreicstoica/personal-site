@@ -52,7 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
         const relevantDocs = await queryRag(message);
         console.log('RAG results:', relevantDocs);
 
-        // Format context from retrieved documents
+        // Format context from retrieved document chunks
         const context = relevantDocs
             .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
             .join('\n\n');
