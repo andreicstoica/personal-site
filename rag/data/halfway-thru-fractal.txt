@@ -1,0 +1,45 @@
+Halfway through
+Reflections after Week 6 of Fractal Tech's Bootcamp
+
+Hi everyone,
+
+I recently concluded the mid-bootcamp break and am back at it. We are now focused on expanding skills related to our interests, and getting ready for a new career. I am excited to dive deeper into some newfound interests… what I want to do has changed a lot as I’ve learned.
+
+Part of prepping for interviews has meant the construction of a new personal site. It seems to be tradition for me to rebuild it every two years, so I’ve decided to start memorializing my old versions. You can view it here, still a work in progress.
+
+I also have a suggested blog to read, the latest Are.na Editorial piece on footnotes! I love footnotes 🤓.
+
+Williamsburg Bridge
+Week 4: Framer Motion & HTML Canvas
+I am glad to have found a balance between velocity and fundamental understanding this week. I am proud of the artifacts I was able to produce by Friday evening while not taking the 'easy way out'. One of said artifacts is this brief algorithm visualization website.
+
+Creating animations I was more complex than I had imagined. I initially thought it would be simple using Framer Motion (having seen examples and showreels online) to slide elements across the DOM at will. Unfortunately, I was unable to setup flowing animations for sorting algorithms all that well at all! I dug into how Framer Motion works under the hood - tl;dr, it seems to be built for animating React components themselves rather than flowing visuals across a web page.
+
+So, I turned to an old friend: HTML Canvas. Having used trusty canvas for a course in undergrad, I was familiar with its verbose yet clear logic to 'draw on the web'. I was able to create 'animation' in a stop motion way, which paired well with 'snapshots' of algorithms as they went through their logic. I was able to create a simple canvas element that scales well to different aspect ratios and resolutions.
+
+However, HTML Canvas doesn't truly allow for moving animation. If I had more time, I would have likely combined HTML canvas with SVG, or perhaps only used SVG. SVG is dynamically scalable in straightforward ways like HTML Canvas, but is also animatable. Many animations on the web that appear to 'draw in' use SVG underneath. I look forward to when I can combine HTML Canvas and SVG in the future for even more interactivity with React!
+
+Week 5: Barbells Revisited
+Why everything feels extreme but isn’t
+Week 5 became an uncomfortable mirror. I’m quick to tell others to “trust the process”, but the moment my own work plateaus, I start to beat myself up. I’m hardly alone. Dennis (founder of Amie) poured himself into software he loved; when the launch metrics sagged, he re-skinned it as a generic productivity SaaS in search of faster growth. How do you learn at your own pace and still build things of Quality? True exploration is slow, deliberate. It requires what Rich Hickey calls “hammock time” – space for the mind to wander, ruminate, and recombine.
+
+The trap of binary thinking
+Peter Norvig’s classic Teach Yourself Programming in Ten Years reminds us mastery is measured in decades. Yet entrepreneurship keeps chanting winner-takes-all mantras: “30-day bootcamps,” “no-code millionaires,” “Build your MVP with AI!” We fetishize lifelong craft while secretly pining for a month-long hack to success.
+
+Revisiting barbell theory
+It therefore follows that tech is increasingly reliant on barbell theory as the stakes seemingly get higher. It is easy to adopt this framework wholeheartedly when AI is the driving force behind much of innovation. The country that gets AGI first dominates the next century, maybe the rest of humanity. Tina He’s recent exploration, The Illusions of Barbell Theory, along with my old piece, Barbells Everywhere, question the validity of this claim. Tina does a great job of illuminating the distinctions between perception and reality of barbell theory, driving home the idea that genuine work demands time... time that, in a world hungry for quick results, is often sacrificed. Many ambitious young people fall into this trap: being too ambitious is a clever form of self-sabotage indeed. With today’s technology and access to information, it takes surprisingly little time to find the edges of known knowledge. From there, the hard work of step-by-step exploration begins, like tiny slime molds branching out on a map of knowledge still shrouded in a fog of war. The messy truth is that most meaningful work occurs in the neglected middle distance between these extremes, probing the edges.
+
+A prime example of dedication to the craft is Robert Caro, who has spent 45+ years writing about two individuals. His research is meticulous: he would travel and interview staffers, their spouses, friends, skim microfilm newspaper archives in small county offices in rural Texas... all for one small quote or headline to drive home a character trait he's trying to make. His approach underscores the value of deep and sustained effort. Meaningful work requires time and dedication, even if it is not immediately apparent.
+
+There are, of course, alternatives
+Take Bryce Roberts and Indie.vc. By treating profitability as the starting constraint, not an eventual pivot, Bryce shows that startups can grow on their own. No “go-big-or-bust” barbell, just steady compounding: keep more of the cap table, choose when—or if—to raise again, even share cash dividends along the way. Same upside, less whiplash, even for the investors.
+
+Week 6: Tensions
+Reflection
+Our project this week was to demo a game by Saturday morning. Working in groups for the first time, we needed to decide together a) what we wanted to build and b) how to go about doing that. While we continued refining our knowledge of previously learned technologies, we’d also needed to learn how to communicate as a group.
+
+I was surprised to learn how unsolved of a problem collaborative development is. We quickly tried to establish our own patterns, which did not work very well at first! However, each day got better and we started to roll. By the end of the week, I began to understand the shortcomings and limits of existing practices. So much is just convention! It is surprising so much DevEx (at least, what we experienced in this week) felt like walking through honey. Rao’s concept of ‘tensions’ came to mind. A quick definition c/o o3:
+
+The basic units of sense-making aren’t “problems” or “trade-offs,” but live, opposing forces—tensions. Think of a tension as two incompatible, yet mutually sustaining poles (eg. freedom ↔ security, speed ↔ quality).
+
+Anyways, I also recently watched the second season of Nathan Fielder’s The Rehearsal. It deeply investigates the relationship between first officers and pilots of commercial airplanes. He posits that one of the leading unsolved reasons for crashes and accidents is poor communication practices in the cockpit. In many ways, this is also true for software development - with much lower stakes of course. I recommend a watch for anyone working with others in positions of power in the workplace!

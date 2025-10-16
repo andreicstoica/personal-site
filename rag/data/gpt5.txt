@@ -1,0 +1,53 @@
+GPT-5 is pretty good, actually
+Why I think GPT-5 is a move in the right direction, and fun links :)
+
+Selected Links
+- New Tiny Awards! Which was your favorite?
+
+- Full Neon Genesis Evangelion - one of my favorite shows - cinematic breakdown and analysis series on YT!
+
+- Small $39k off-grid passive solar home - I like the kitchen :)
+
+- Cartoon inspired Parisian apartment - not my exact style preference, but I respect it, it is very well executed
+
+GPT5 is pretty good
+I have seen a lot of mixed opinions on the quality of GPT-5.
+
+The model family is large. While the available variants vary, Cursor offers a grand total of 8 models to choose from.1
+
+The way ChatGPT behaves with GPT-5 under the hood will likely improve how most people interact with it for most use cases.
+
+Prompt Adherence
+It feels much more deterministic in its response. I don’t know if that’s due to temperature nuance, improved prompt adherence, or something else in the architecture, but the model feels like it follows directions for specific tasks much more tightly than before.
+
+For me, this is a huge benefit. While some use cases (like creative writing) will suffer, many others benefit. For example, GPT-5 is now a much better coding agent and thought partner. I trust the model to do what I ask, making it feel like a collaborative partner. This is how I want to use AI, even if it comes at the cost of creativity or perceived style.
+
+User Experience
+In the GPT-5 keynote, OpenAI had a whole segment discussing how good the new models are at helping people with their health questions. Sam backed this up in a follow-up podcast with Cleo Abrams, saying that a big chunk of consumer ChatGPT questions are health related. It makes sense that insane pattern matching technologies can help people spot connections they might have missed.
+
+A peer of mine at Fractal has been exploring unexpected connections between people models can find in various ways.2 Part of this exploration involved building a full-blown product, but also simple experiments like matching people based on interests at a small group discussion he hosted.
+
+GPT-5’s interface changes also bring smart contextual provenance and emergent complexity to the chat experience.3 To me, chat-based LLMs are best used as next level search technologies. Having an efficient router model (even if imperfect) to swap between the family of variants is critically important for the experience the majority of users will encounter. This has improved in the new web interface (from imo poor to… let’s say mediocre :] ).
+
+Road Ahead
+Problems remain. A subtle addition is the ability to get answers faster - nice! Unfortunately, ChatGPT simply stops its response when I hit the ‘get answer faster’ button and returns a ‘model not found’ error. It is still complicated to know when to use deep research, turn on web search from the bottom chat bar, give control to app windows on the MacOS app, etc.
+
+I am frankly not even sure how to turn on ‘study mode’ - which I believe is one of the best ways to use LLM chats today. This is especially true when paired with Canvas, which is still criminally under-explored!
+
+People who dunk on GPT-5 for being worse at 5+1 are missing the point. ChatGPT was never a calculator or pure Google replacement. Instead, it is an evolution: a new tool with different, incredible strengths and surprising weaknesses that we must learn to use effectively.
+
+Like the foundational technology that is Web2 social media, LLMs will produce both positive and negative externalities. My goal (and I hope our goal) is to amplify their best aspects and side-effects, not cram them into ill-fitting roles. GPT-5 and its collection of small improvements feels like a step in that direction.
+
+Reggie James’s recent FWBFest presentation makes this distinction clear, framing it through McLuhan with a focus on hardware. Its well worth a quick read, especially if you are unfamiliar with McLuhan’s frameworks on technology.
+
+
+Contemplador del contemplador
+Tomas Sanchez, 1996: Contemplador del contemplador
+1
+GPT-5-low, high, fast, mini, nano, low-fast, high-fast. All apparently have reasoning, at least to some degree?
+
+2
+Shoutout Will’s The Dream Machine
+
+3
+Shoutout the recent Linus Lee podcast on my favorite podcast of late, Dialectic.

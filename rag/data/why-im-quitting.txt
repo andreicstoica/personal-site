@@ -1,0 +1,55 @@
+Why I'm Quitting My Job
+And regaining some agency over how I spend my time, and what I'm working towards.
+
+I’m slowly engulfed by a constant stream of alarming headlines from the TV playing CNBC in front of my desk. The sound of Teams messages breaks the TV’s capture of my attention. It’s my boss, anxiously asking for a 7th round of edits (reversing previous ones) on an executive deck. It seems we have entered an ‘oh shit we need to work’ period, almost always triggered by unclear communication and poor project structures. This is inevitably followed by hours of idling before I can finally leave my uncomfortable desk.1 My sense of ennui becomes worse as I prepare to navigate the extreme bureaucracy and status games of my workplace, where title and budgets reign supreme as if it is 2004 GE. The analyst assigned to this project hasn’t responded to me in hours. I can’t imagine doing this for another few years at all… How did I end up in this position, working in office on New Year’s Day, having fought for this since I was 15? I feel as if I have no authorship over a huge chunk of my days…
+
+Collected entry badges of the last few years pictured.
+Growing up, I made things. I loved (and still love) to play, cook, build Legos, make computers, paper planes, help grow clubs at school… all sorts of things. Making something new with friends are many of my happiest memories. I have always been inspired by people who have agency to grow and/or create their own. When I was younger, I was surrounded with such people: my high school was filled with very gifted students who all seemed to excel at their own thing, which was an inspiring environment for me to grow in.2 However, not having the same resources as many students at the school, I was insecure about my own talents and skills. I did not have access to the same level of tutoring, test prep, parental homework help, or general professional connections that they did – I felt this acutely in technical classes like math. I thought I was smart, but nowhere near as bright as my peers. As college admissions demanded I chart my future, the diverging trajectories were obvious in my mental graph of ‘progress.’3 My parents’ immigrant scarcity mindset was a constant shadow in my childhood, quietly boxing out my own worldview. My lack of self confidence began to grow into anxieties: I had to make sure I could stand on my own two feet after graduation. The thought of affording New York City felt intimidating.
+
+Still, chasing my curiosities meant I knew what I wanted to study in undergrad. I planned to build my own major around making things: equal parts humanities, engineering, history, and finance. However, at NYU I was exposed to classmates with a completely new level of elite wealth and connections. I shied away from the actual making of things and shifted my attention towards the scaffolding around making as a refuge. Software engineering had always been a means to an end, a tool, right? Understanding the why and how things came to be became my new obsession. Why did some venture capital funds have such strong world views? Why did certain ideas survive over the decades, when others boomed and then fizzled out? What policies and geopolitical currents helped create the tech industry of today? I read histories of Silicon Valley, gorged on all the takes on current tech news, debated concepts like effective altruism, e/acc, and abundance. The more I learned, the more I could begin to see the layers beneath every new trend and ideology. These themes had been present in my youth (both at school and outside the classroom)4, but I learned of their deep histories and broadening implications in college.
+
+Working throughout college to make money, I had a buffet of amuse-bouche bites across tech: VC, startups, S&P 500 firms. After graduating, I ended up in a seemingly ‘safe’ job at a legacy media company, working on streaming technology products. After a year of shifting priorities every quarter, management changes, and team layoffs, I felt like I had learned little and had no path towards growth. I started to look elsewhere. Having a hard time with so little experience in a bad job market, I ended up in a similar legacy media company, building internal tools instead. I hoped a change of scenery would help me continue learning and rekindle my excitement about my chosen career. Unfortunately, in many ways it ended up being worse… I quickly realized a big driver of my professional ennui was a lack of agency.5 Spending my time on what I think is important (learning new skills, directly helping people with their lives, etc.) was replaced by status games and constant start/stops from shifting leadership priorities. While I attempted to suggest improvements for our work structure and procedures, there wasn’t enough will to change anything.6 Outside of work, I was unable to spend my time as flexibly as I would like. Working towards embellished job titles, pay raises solely based on seniority, and finding comfort in job security because I am the only one who knows how something is (inefficiently) done is not the sort of career I am interested in building for the rest of my life.
+
+So, I gave two weeks notice.7 I want to return to making things that help people with those that inspire me and have more skin in the game. My professional sehnsucht is one driver, but there are many more contributing to this decision. For one, I have read a lot about the tech industry and its history over the last six years. I have very much enjoyed learning the history deeply related to ongoing events, but after a certain point simply reading about things was not enough.
+
+Tech has always had many different political influences and aspirational futures to chase. Camps grow and shrink, utopian ideals come and go, but the built technology remains. Seeing tech go through a dramatic shift from when I was in high school, I am feeling impelled to build towards the futures I want – to build opinionated products. General tech 'accelerationism' is an overdue correction to years of growing doom and gloom in Silicon Valley and the West (the piece itself itself surveys a host of canon startup culture pieces by thinkers like Samo Burja, Tyler Cowen, Patrick Collison, and Marc Andreessen) even though so much software has been made.8 Nonetheless, I believe the world still needs so much more software, the possibilities seem endless. AI is only going to supercharge these tailwinds. While much of the tech whiplash of the last two years has been disappointing to see, I’ve also found inspiration around me in NYC and online. Here are a few highlights:
+
+Venkatesh Rao’s writing around Protocols
+
+Demo night culture
+
+South Park Commons - ‘Request for curiosity’
+
+Abundance Politics & NYC - Fireside Chat & Demo Night
+
+Quotes of advice to young people
+
+quotes to 20 y.o. Self
+
+Letters to a Young Technologist
+
+Tech community builders/creatives
+
+Reggie James is a writer and NYC tech community builder, has brought together different communities with tech too, like fashion, etc.
+
+Conor Davidson helps host creative code events at Index
+
+Socratica
+
+Esmaralda
+
+RadialXChange (their work with Audrey Tang specifically)
+
+People who have taken their own first steps
+
+Weber Wong started a startup incubated at a creative code graduate program after being a banker and VC
+
+Jasmine Sun left a growing startup to be an independent writer (journalist?) and is producing inspiring content left and right. Ironically just released a podcast on agency.
+
+Dorothy Ren is now a creative technologist @ Every.to after graduating a bootcamp, was previously a PM and VC
+
+Sean X has a high degree of sovereignty over what he works on, typically involving frontier tech and hardware - I’d like to return to working on some hardware projects!
+
+Anjan Katta and his search for a different paradigm of technology with Daylight Computer
+
+Taking all of this into account - the changing winds of mainstream tech culture, my ennui with corporate America, my desire to work with people I’m inspired by - have pushed me into a different direction. I quit my job to partake in an intense, three month long bootcamp to help round out some skills I’m missing to hopefully be a ‘product engineer’ or ‘design engineer.’ The pull to start a coffee shop or become a geologist park ranger has certainly flickered across my mind - but, if I’m being honest with myself, those won’t solve my frustrations. Applying the ikigai framework to myself, it makes sense to move the focus of my work while still utilizing the skills I’ve spent the last decade building. I believe this new direction can use my previous experience as a strength, and still leaves the opportunity for more flexibility (freedom, agency) and choice in the future!9 So, after two weeks of travel to London and Copenhagen, I will start learning six days a week at bootcamp as a first step in a new direction :). Cheers to first steps.

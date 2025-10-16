@@ -1,0 +1,101 @@
+3 weeks in
+Reflecting after my first three weeks in Fractal Tech's Bootcamp
+Jack Whitten’s show at the MoMA is excellent right now, and very relevant to this piece :)
+I started the bootcamp I discussed in my last post earlier this month. Every Saturday, we have time to sit and reflect on the week. I’ve been posting the writing on a website that will eventually turn into my portfolio. I wanted to share the technologies I’ve learned so far, as well as general reflections from each week.
+
+Technologies Learned:
+React single page app: a basic game (I picked Tic Tac Toe)
+
+Styling: TailwindCSS, making pixel-perfect components from Figma designs
+
+Local server: made my game run locally using vite-express
+
+Database: app references a Postgresql database of games hosted on Supabase
+
+Websockets: auto updating game state for live online multiplayer games
+
+Minimax algorithm: Best next move (minimax algo) autocomplete button built into game
+
+Deployment: backend via Dockerfile to Render, frontend via Vercel.
+
+NextJS (with App Router)
+
+NextJS AI SDK (tool calling, text generation and streaming, object generation, generative UI, etc.)
+
+ElysiaJS
+
+OpenAI & Google Gemini APIs
+
+Better Auth
+
+Sentry
+
+Vercel Analytics
+
+Framer Motion
+
+Reflections
+Decisions - Week 1
+One is constantly making decisions when programming. From the outside working with engineers, this seemed obvious: of course, from my perspective as a Product Manager, an engineer would need to pick the right tools for the job! But it turns out that's just the starting point. At every step after that, a programmer is constantly making decisions. How should my app be structured? How should this component manage state? Oh, this function needs to do more logic work... maybe it should be split into its own function. Since I'm writing in Typescript, decisions about types are constantly swirling around my mind! Referencing Grant Slatton's 'Algorithms we develop software by' it turns out there are many turns on the path to the solution.
+
+At the end of this first week, we were tasked with creating a personal blog NextJS website to reflect on for the rest of the program. I asked why we should maintain our infrastructure instead of just using Substack. Andrew (the lead instructor and co-founder of the bootcamp and space it runs out of) had a simple answer I have heard before: When you build software you start to see other programmers' decisions everywhere. Why is this button all the way over here? Why can I not change this thing? Sometimes it is better to just make your own decisions. Turns out we are also going to be using NextJS next week, so it is a nice easy way to get familiar with the technology 🤓 Here is the link, I'll work on styling it nicer, and will eventually be synced with this blog and part of my personal site.
+
+I have previously learned to think this way before: in high school, when I was learning programming and robotics. Sadly, I have since forgotten this lesson and largely abandoned this very sequential way of thinking. I think re-learning this perspective has helped me better understand the engineers in my life. When every small action is a decision with side effects, it follows that those decisions would be reasoned and deliberate. This perspective can be applied to much outside of programming.
+
+English as Abstraction - Week 2
+Someone asked about the differences between systems software engineers and architecture software engineers, since the names could imply (referencing the physical world) that the roles have similar scopes. Eugene, one of our co-instructors, answered with: "They have no overlap." He went on to explain that a lot of software engineering job terms - like 'Staff' - but also in the languages themselves - like 'interface' in TypeScript - are generally arbitrarily chosen. This is evident everywhere in languages I have come across. Abstract concepts are attempted to be represented by physical terms in as familiar a way as possible, but so are moves in the code. For example, a function in TypeScript can be defined as functionName = () => logic. The => indicates the function starts its work after the arrow.
+
+It is therefore no surprise to me that software engineers have a bend towards literature and philosophy (especially metaphysics). I have read about how programming languages are written in English for humans to better understand how the electrons are moving on the hardware, and Andrew (our main instructor) repeated this often in our first week as well. However, coming across so many different web frameworks and technologies these last two weeks, I have a new broader view at just how wide this horizon is.
+
+Product Like an AI Engineer - Week 3
+Product Work (as a software engineer)
+Working AI products cleanly into existing product flows was a challenge technologically - at least with my last-gen minded design brain. For example, I wanted someone to define a focus for their practice session before I brought them to the actual LLM chat interface. Ideally, this focus would be pre-populated with the coach's practice plan as a response, and formatted to look like a special UI element, since it is a practice plan and not a normal AI message! Getting this to work with my still growing understand of the Vercel AI SDK was a challenge.
+
+First, I learned I needed to reload the page to get the tool call responsible for generating the practice session to recognize a message had been inserted with the user's intended focus. To get this reload to happen without other side effects in a NextJS React app was difficult -- just reloading simply would cause user messages to send twice, or appear twice in the database, or cause the AI to re-send the practice plan inside of a normal message.
+
+Still a beginner, I was forced to dive deeper into the inner workings of React's render logic and came out a better engineer for it. The assigned readings of the week also paired nicely with the 'on-the-job' lessons. Vercel's own Common Mistakes with the NextJS App Router helped dispel misunderstandings, as did Dan Abramov's One Roundtrip Per Navigation. Another theme of the week was to learn more about motion in web apps. Nanda Syahrasyad's posts about how Framer Motion and SVG work in this regard were excellently laid out! Eventually, I'd like to dive deep into how shadows help create depth on screen interfaces - this is something I do not understand very well yet!
+
+Career (or what I could see myself spending 20 years pursuing)
+I took a walk with Andrew to discuss my future career, where he essentially challenged me to think bigger about the scope of what work I'm contributing to.1 After a few days of thinking, I've come up with three themes I could see myself working around for 20 years, which also align to my skills:
+
+Old Steve Jobs computers as 'bicycle for the mind' type shit
+
+Generally, I think that the best technology either helps amputate generally tedious activities (dishwashers, laundry machines, etc.) or extends our reach (access to information like search engines or online media, better payments, etc.).2 I'm drawn to where computation, interface, and new intelligences collide: AR/VR as new HCI, AI as interface architect, etc.
+
+Some companies/prototypes in this domain that I find interesting:
+
+Exasearch built ground up for AI
+
+Flora fresh interface for creatives using new AI capabilities
+
+From DeepMind - Gemini Flash 2.5 Lite creating UIs on the fly that are context aware
+
+Notes app that 'builds itself'
+
+Mainframe (Jordan Singer's latest company, built Orchestra and Cobot)
+
+Sublime new take on categorizing the internet
+
+Daylight Computer hyper-specific purpose computing device
+
+Bevel quantified self, built on Apple Watch (essentially Whoop competitor)
+
+Living in harmony with nature
+
+This includes access to abundant clean energy, ways to access real wilderness, architecting the built environment to be in harmony with nature. There are many ways technology can help humanity and nature coexist better.
+
+Engaging and shaping your community
+
+I think technology can help engage people to their surroundings more, and by extension get them to be more engaged in shaping it. Why can you not interact with your federal government, city, or neighborhood, or street better through technology? I think there should be software that empowers people to shape their communities. For example, some social media (Substack) can help proliferate ideas about what your community should be like. Companies like Kaizen Labs is helping build simple websites for municipalities. There are many ways technology can help in this goal.
+
+When I made my website a few years ago, I wrote: "I'm interested in how technology can help people directly, especially as it relates to expression and the physical world." Ironically, I copy and pasted that paragraph directly when starting this blog; it still feels true. I am excited to take a concrete first step toward these larger ambitions.
+
+1
+He understood that I would (eventually) be unsatisfied with work if it does not align to my broader morals etc.
+
+2
+More examples of amputations that are beneficial:
+
+Anki is a technology that amplifies humanity via amputation (letting a computer remind us about spaced repetition timing, etc.).
+
+A souped up Kindle can be better than a paper book re: highlight/note retrieval. A tool like Readwise is better than a library to notice trends across your entire collection and its notes.

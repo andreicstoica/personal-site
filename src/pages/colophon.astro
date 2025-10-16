@@ -6,7 +6,7 @@ import { getEntry } from "astro:content";
 import {
   parseMarkdownContent,
   styleMarkdownContent,
-} from "../../lib/markdownUtils";
+} from "../lib/markdownUtils";
 
 const colophonEntry = await getEntry("pages", "colophon");
 if (!colophonEntry) throw new Error("Colophon entry not found");

@@ -1,0 +1,50 @@
+Andrei Stoica
+Product minded full - stack software engineer with 4 years of experience in Product and VC
+andrei.bio andreicstoica@icloud.com /andrei-c-stoica (971) 312-7743
+
+Professional Experience
+Independent Contractor Full Stack & AI Engineering Sep ‘25
+- Stance Health: Rebuilt patient landing and results pages focusing on mobile (React/Chakra /Fast API/Next .js), reducing API over-fetching.
+Achieved 10x faster load times on form results page, improving drop off 8% during onboarding . Landing pages are now mobile friendly.
+- Holdfast: Architected research collaboration tool for NOA A-backed aquaculture grants (Postgres, tRPC). Enabled 20+ researchers to co-develop
+proposals, see shared resources, and streamline multi-institution submissions. Used MapLibre to create a collaborative resource map.
+
+Fractal Tech Software Engineering Program Jun ‘25 - Aug ‘25
+Spent 60hrs /wk learning new web technologies, modern patterns, and how to build intuitive products with AI features.
+Selected Projects:
+Refract: Journal that pushes you deeper . E ngine - driven LLM generated ‘ nudges ’ , and clustered embeddings to analy z e themes af ter writing .
+Cour tly: AI-gen practice sessions structured around given focus in an i O S and web app. C ollectible badges for popular NYC cour ts .
+Blob Must Grow: Clicker game in the browse r, inspired by C ookie C licker and Universal P aperclip. C omplex state management and engine .
+Algos, Visualized: S tep by step visualizations of algorithms . Used W eb C anvas for visuals for D i j kstra ’ s and C onvex H ull , motion for Q uick Sor t .
+
+NBCUniversal Product Manager - Journalism Tools
+Aug ‘24 - Jun ‘25
+Directed vendor analysis for newsroom people, places, and things scheduling system. Recommending $2M decision for a new global workflow.
+Led discover y and scoping of AI - aided fact - checking for j ournalists and producers, custom Google C loud LLM system with NBC U DB of facts.
+
+Warner Bros. Discovery Assoc. Product Manager - DTC/Digital July ‘2 3 - Aug ‘24
+Orchestrated accessibility, compliance, tech-debt, and multi-platform feature roadmaps across 20+ TVE (TNT , TLC , Discovery, HGTV) brands.
+Delivered 18% increase in app store rating ratio by solving 10+ consumer facing bugs and releasing 2 new features on mobile, TV, and web.
+Improved streaming per formance 6 2% by coordinating 3 engineering teams through a player and platform upgrade, rebasing 3 into 1 platform.
+
+BlocPower a16z Summer Intern Program Placement May ‘21 - Sep ‘21
+Increased survey click - thru rate from 8% to 33% by implementing an end - page CTA and improved form UI, using Hotjar to analyze funnel .
+Re-designed Webflow website (site hierarchy, brand guidelines, CTAs, images) in preparation for national field enablement and ad campaign.
+
+Autodesk Growth Product Management Intern Jun ‘19 - Aug ‘19
+Launched “Autodesk Day” events globally, where 400 users tested beta builds. Increased brand recognition and education partnerships.
+Improved task completion rates by 25% by orchestrating overhaul of the navigation bar and settings UI with feedback from beta testing .
+
+Education
+New York University Bachelor of Arts 2019-2023
+Individualized Major: “Human-Computer Interaction and Ethical Innovati on Systems”
+Relevant Courses: AI and ML Topics, Discrete Math, Computer Systems Organization, Human-Centered Product Design, Statistics For Business
+
+Honors & Distinctions
+Lexus Eco Challenge Finalist, $10,000 Prize: Pitched a green powered, off-the-grid shower, washer, and dryer system for the Portland
+homeless. Funded by Lexus to finish building ‘ WashPod,’ which is still operational today.
+Google Cloud Covid-19 Hackathon Fund Finalist: Selected as the only Dubhacks 2020 finalist out of 400+ teams for creating a Covid-19 tool .
+
+Skills: React, Typescript, Next JS, Astro, React Native, Expo, Node.js, ExpressJS, Elysia, Better-Auth, JWT, PostgreSQL, Drizzle, Supabase, Web
+Sockets, Biome, Docker, Vercel, GCP, Tailwind, Framer Motion, GSAP, Zustand, Zod, Vitest, Tests, Embeddings, Fast API, Python scripting
+Interests: Soccer (Arsenal & Timbers), Running, Tennis, Espresso, Coffee Roasting and Popups, Substack Blogs, Reading, Cooking, Sewing
