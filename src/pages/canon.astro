@@ -5,7 +5,7 @@ import { getEntry } from "astro:content";
 import {
   parseMarkdownContent,
   styleMarkdownContent,
-} from "../../lib/markdownUtils";
+} from "../lib/markdownUtils";
 
 const canonEntry = await getEntry("pages", "canon");
 if (!canonEntry) throw new Error("Canon entry not found");

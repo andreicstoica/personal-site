@@ -6,7 +6,7 @@ import { getEntry } from "astro:content";
 import {
   parseMarkdownContent,
   styleMarkdownContent,
-} from "../../lib/markdownUtils";
+} from "../lib/markdownUtils";
 
 const aboutEntry = await getEntry("pages", "about");
 if (!aboutEntry) throw new Error("About entry not found");
