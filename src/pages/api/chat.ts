@@ -2,6 +2,12 @@ import type { APIRoute } from 'astro';
 import { queryRag } from '../../../rag/lib/query.js';
 import { RELEVANCE_THRESHOLD } from '../../../rag/lib/constants.js';
 
+const HF_API_URL = import.meta.env.HF_API_URL;
+const HF_API_KEY = import.meta.env.HF_API_KEY;
+
+console.log('HF_API_URL:', HF_API_URL);
+console.log('HF_API_KEY exists:', !!HF_API_KEY);
+
 interface ChatRequest {
     message: string;
     history?: Array<{ role: string; content: string }>;
@@ -82,47 +88,65 @@ export const POST: APIRoute = async ({ request }) => {
                 .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
                 .join('\n\n');
 
-            systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. You help visitors learn about Andrei using his resume, blog posts, and website content.
+            systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. You answer questions using ONLY the context provided below.
 
 Context:
 ${context}
 
-Rules:
-- Answer ONLY using facts from the context above
-- If the context doesn't contain the answer, say "I don't have information about that"
-- Never invent facts, dates, experiences, places, or personal details
-- Write in Andrei's voice: concise, curious, optimistic. Clear sentences, no filler
-- Give detailed, thorough answers when you have relevant context
-- Decline off-topic or overly personal questions politely`;
+CRITICAL RULES:
+- Use ONLY information from the context above. Do NOT use any external knowledge.
+- If the context doesn't answer the question, respond: "I don't have information about that in my knowledge base."
+- NEVER invent, assume, or extrapolate facts, dates, experiences, places, relationships, or personal details.
+- Do not make assumptions about family, relationships, or personal life unless explicitly stated in context.
+- Write in Andrei's voice: concise, direct, thoughtful. No filler.
+- Quote or paraphrase the context directly when answering.
+- If asked something not covered in context, suggest what IS available instead.`;
         } else {
-            systemPrompt = `You are Andrei's AI Guide on andrei.bio. I help visitors learn about Andrei's work and ideas. Feel free to ask me about his background, projects, or writing.`;
+            systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
+
+I help visitors learn about Andrei, but I can only answer based on my knowledge base of his resume, writing, and projects.
+
+For this query, I don't have enough relevant information in my knowledge base to give a detailed answer. 
+
+RULES:
+- Keep responses brief and friendly for greetings and casual messages
+- For substantive questions, acknowledge I don't have enough context and suggest asking about topics I DO know about (his work, projects, technical interests, writing)
+- NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences unless explicitly in my knowledge base`;
         }
 
-        // Call LMStudio API
+        // Call HF Inference API
         const lmStudioRequest: LMStudioRequest = {
-            model: 'andrei_qwen3b',
+            model: 'noodlesGS/personal',
             messages: [
                 { role: 'system', content: systemPrompt },
                 ...history,
                 { role: 'user', content: message }
             ],
-            temperature: 0.7,
+            temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
             max_tokens: shouldUseRag ? 1500 : 500 // Longer responses when we have context
         };
 
-        const lmStudioResponse = await fetch('http://192.168.1.187:1234/v1/chat/completions', {
+        console.log('Calling HF API:', `${HF_API_URL}/v1/chat/completions`);
+        console.log('Request:', JSON.stringify(lmStudioRequest, null, 2));
+
+        const hfResponse = await fetch(`${HF_API_URL}/v1/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${HF_API_KEY}`,
             },
-            body: JSON.stringify(lmStudioRequest)
+            body: JSON.stringify(lmStudioRequest),
         });
 
-        if (!lmStudioResponse.ok) {
-            throw new Error(`LMStudio API error: ${lmStudioResponse.status}`);
+        console.log('HF Response status:', hfResponse.status);
+
+        if (!hfResponse.ok) {
+            const errorText = await hfResponse.text();
+            console.error('HF API error response:', errorText);
+            throw new Error(`HF API error: ${hfResponse.status} - ${errorText}`);
         }
 
-        const data: LMStudioResponse = await lmStudioResponse.json();
+        const data: LMStudioResponse = await hfResponse.json();
         const response = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
 
         const chatResponse: ChatResponse = {
