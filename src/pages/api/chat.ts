@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { queryRag } from '../../../rag/lib/query.js';
+import { RELEVANCE_THRESHOLD } from '../../../rag/lib/constants.js';
 
 interface ChatRequest {
     message: string;
@@ -47,23 +48,49 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        // Get relevant documents from RAG
-        console.log('Starting RAG query for:', message);
-        const relevantDocs = await queryRag(message);
-        console.log('RAG results:', relevantDocs);
+        // Cheap prefilter heuristics
+        const isShortQuery = message.trim().length < 10;
+        const isGreeting = /^(hi|hello|hey|what's up|how are you|howdy|sup|yo)\s*[!.]*$/i.test(message.trim());
+        const shouldSkipRag = isShortQuery || isGreeting;
 
-        // Format context from retrieved document chunks
-        const context = relevantDocs
-            .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
-            .join('\n\n');
+        if (shouldSkipRag) {
+            console.log(`Skipping RAG: ${isShortQuery ? 'short query' : 'greeting detected'}`);
+        }
 
-        // Prepare system prompt with context
-        const systemPrompt = `You are Andrei, responding as yourself. Use the following context to answer questions about yourself and your work. If the context doesn't contain relevant information, respond naturally as yourself.
+        let relevantDocs: any[] = [];
+        let shouldUseRag = false;
+
+        if (!shouldSkipRag) {
+            // Get relevant documents from RAG
+            console.log('Starting RAG query for:', message);
+            relevantDocs = await queryRag(message);
+            console.log('RAG results:', relevantDocs);
+
+            // Only use RAG if the best match exceeds relevance threshold
+            const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
+            shouldUseRag = bestScore >= RELEVANCE_THRESHOLD;
+
+            console.log(`RAG decision: ${shouldUseRag ? 'USE' : 'SKIP'} (best score: ${bestScore.toFixed(3)})`);
+        }
+
+        let systemPrompt: string;
+
+        if (shouldUseRag) {
+            // Format context from retrieved document chunks
+            const context = relevantDocs
+                .filter(doc => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
+                .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
+                .join('\n\n');
+
+            systemPrompt = `You are Andrei, responding as yourself. Use the following context to answer questions about yourself and your work.
 
 Context:
 ${context}
 
 Respond naturally as Andrei would, incorporating relevant information from the context when appropriate.`;
+        } else {
+            systemPrompt = `You are Andrei, responding as yourself. Answer naturally and conversationally.`;
+        }
 
         // Call LMStudio API
         const lmStudioRequest: LMStudioRequest = {
@@ -94,7 +121,11 @@ Respond naturally as Andrei would, incorporating relevant information from the c
 
         const chatResponse: ChatResponse = {
             response,
-            sources: relevantDocs.map(doc => ({ source: doc.source, score: doc.score }))
+            sources: shouldUseRag
+                ? relevantDocs
+                    .filter(doc => doc.score >= RELEVANCE_THRESHOLD)
+                    .map(doc => ({ source: doc.source, score: doc.score }))
+                : [] // No sources when RAG wasn't used
         };
 
         return new Response(JSON.stringify(chatResponse), {
@@ -104,6 +135,7 @@ Respond naturally as Andrei would, incorporating relevant information from the c
 
     } catch (error) {
         console.error('Chat API error:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
         return new Response(JSON.stringify({
             error: 'Failed to process chat request',
             details: error instanceof Error ? error.message : 'Unknown error'

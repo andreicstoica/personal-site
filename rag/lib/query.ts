@@ -1,5 +1,7 @@
 import fs from "fs";
+import path from "path";
 import { buildEmbeddings } from "./embed.js";
+import MiniSearch from "minisearch";
 
 interface Document {
     id: string;
@@ -15,8 +17,48 @@ interface QueryResult {
     score: number;
 }
 
+let keywordIndex: MiniSearch | null = null;
+
+function loadKeywordIndex(): MiniSearch {
+    if (!keywordIndex) {
+        try {
+            const keywordPath = path.resolve("./rag/keyword-index.json");
+            console.log('Loading keyword index from:', keywordPath);
+            const keywordData = JSON.parse(fs.readFileSync(keywordPath, "utf8"));
+            console.log('Keyword data loaded, creating MiniSearch instance...');
+
+            // Create a new MiniSearch instance instead of loading from JSON
+            keywordIndex = new MiniSearch({
+                fields: ['text', 'source'],
+                storeFields: ['id', 'text', 'source'],
+                searchOptions: {
+                    boost: { text: 2, source: 1 },
+                    fuzzy: 0.2,
+                    prefix: true
+                }
+            });
+
+            // Add documents from the keyword data
+            if (keywordData.documents) {
+                const documents = keywordData.documents;
+                for (const docId in documents) {
+                    const doc = documents[docId];
+                    keywordIndex.add(doc);
+                }
+            }
+
+            console.log('MiniSearch instance created successfully');
+        } catch (error) {
+            console.error('Error loading keyword index:', error);
+            throw error;
+        }
+    }
+    return keywordIndex;
+}
+
 export async function queryRag(question: string): Promise<QueryResult[]> {
-    const index: Document[] = JSON.parse(fs.readFileSync("./rag/index.json", "utf8"));
+    const embeddingPath = path.resolve("./rag/index.json");
+    const embeddingIndex: Document[] = JSON.parse(fs.readFileSync(embeddingPath, "utf8"));
     const queryEmbed = await buildEmbeddings(question);
 
     // cosine similarity
@@ -32,7 +74,36 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
         return dot / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
-    const ranked: QueryResult[] = index
+    // Hybrid retrieval: BM25 first-pass + embedding reranking
+    const keywordSearch = loadKeywordIndex();
+    const keywordResults = keywordSearch.search(question, {
+        boost: { text: 2, source: 1 }
+    }).slice(0, 50);
+
+    console.log(`BM25 found ${keywordResults.length} candidates`);
+
+    // If keyword search found good results, rerank with embeddings
+    if (keywordResults.length > 0) {
+        const candidateIds = new Set(keywordResults.map((r: any) => r.id));
+        const candidates = embeddingIndex.filter(doc => candidateIds.has(doc.id));
+
+        const ranked: QueryResult[] = candidates
+            .map((doc: Document) => ({
+                id: doc.id,
+                text: doc.text,
+                source: doc.source,
+                score: cosine(queryEmbed, doc.embedding),
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+
+        console.log(`Hybrid retrieval: ${ranked.length} results`);
+        return ranked;
+    }
+
+    // Fallback to pure embedding search if keyword search failed
+    console.log("Falling back to pure embedding search");
+    const ranked: QueryResult[] = embeddingIndex
         .map((doc: Document) => ({
             id: doc.id,
             text: doc.text,
