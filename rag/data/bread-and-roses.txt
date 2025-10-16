@@ -1,0 +1,103 @@
+Bread and Roses 🥀 - tech, politics, community, and aesthetics
+Hello everyone,
+
+It really has been an interesting month for me. I think the sheer number of links in this edition point to the fact that I felt incredibly distracted for nearly all of the 27 days of February so far. Lots of thoughts on aesthetics, tech, sociology, politics, and this month. Also, consider donating to non-militant groups in Ukraine (such as this one) if you haven’t already - too many thoughts on that situation for the scope of this newsletter. With that, let’s begin!
+
+“In a world that entices us to browse through the lives of others to help us better determine how we feel about ourselves, and to, in turn, feel the need to be constantly visible, for visibility these days seems to somehow equate to success. Do not be afraid to disappear, from it, from us, for a while, and see what comes to you in the silence.” — Michaela Coel
+
+Aesthetics
+Physical
+The Rolex Milgauss - especially the original 1956 edition
+
+Tapio Wirkkala’s work, his nature inspired glass work dope af, the wood panels dope af, man even made dope af light bulbs? there’s a carousel u can click thru, def go thru that!
+
+Two cool pieces involving robotics: drawing with robots, and dancing with robots
+
+I want to drop 2 grand on a coffee grinder…
+
+Digital
+Collaged burst-mode photographs of athletes in Beijing 2022
+
+‘Are You Sure You Know What a Photograph Is?’ - Wired was interesting to see new interpretations of ‘photographs’ with new technologies
+
+JP Bonino’s photography - v cool i vibe
+
+Homesteading - just a cool use of a spreadsheet lol
+
+Comprehensive guide to context menus
+
+This person saves and collages all of their screenshots? Found in my former schoolmate’s zine Capsule.
+
+Anyone know what this genre (???) of art is called?! I want to learn
+
+generated fantasy maps - cool to see it come together! had a perlin noise moment earlier this month haha
+
+Low Tech Magazine - solar powered site
+
+Community
+from The Frog
+If a poem is a looking inside of something, I've been dissecting all my life. And for what?
+Niina Pollari (2022)
+
+from Rebirth of Slick
+I was born this way: unsatisfied
+My color is a bridge with no other side
+In a second life my voice is a drum kit
+Reigning over green hills like weather
+         I am king & anthem
+         I know how to relax
+Morgan Parker (2017)
+
+Places
+Cute college students brief their hometown on this site - nostalgia can be cool! Ty for friend of the newsletter Lily for sending <3
+
+Social charter homes - some friends and I have long talked about doing something like this (again recently!) i want to start one! (taco, julia 😠 read this one)
+
+Literature
+Literature and lonely hearts: “By contrast, authors like Murakami and Kundera tell the tale in reverse. Their heroes start out with their beloved right in their arms, and yet they repeatedly struggle to make a meaningful connection... The protagonist is paralyzed, despite feeling some vague murky depth of strong connection, leaving them trapped behind a glass door, their loved one waiting on the other side. Nothing keeps them apart, except for themselves.”
+
+The Fierce Triumph of Loneliness - seen this one everywhere the last week. I liked a lot of the points made in this piece
+
+video games and not knowing: “When I reflect upon the relationships I've had that felt most satisfying, I similarly realize that it was never about how much we revealed about ourselves, but how much we showed up for each other. The hardest ones were when what we had didn’t feel like enough, where we felt we needed to know more, do more, be more to each other, scooping up every last bit of ourselves and pouring it into a bag to hand over to another person. I find these relationships challenging, maybe for the same reason that "one city block" is considered an impossible game to make — because we can't ever completely model our inner selves and externalize them to another person. If the expectation is completeness, you'll inevitably hit disappointments as you find more holes, more flaws, more things that are missing. The search for completeness will become all-consuming. You'll keep looking for every last missing piece, gathering them greedily up into the sack, instead of seeing what you have in front of you.” — tough to find this balance imo
+
+also seen this piece make the rounds online recently: ‘dont be so attached to attachment theory.’ tl;dr: being patient with people ‘cause we all know nothing anyway is the way to go?!
+
+‘the work hard, play hard mindset’ - this phrase re-entered my life in a bay way the last few weeks. i remember when i toured universities with a friend’s family at the end of high school, nearly every single student ambassador said that students at their institution said most students there like to ‘work hard, play hard.’ (every business school i visited said this, with even some administrators saying this.) have never really rolled with the way this mindset plays out in practice, my version working and playing hard have become dramatically different than most people who say this in the universities i am familiar with. interesting how its so widespread.
+
+Tech / Politics
+Place
+‘Areas of Interest’ by Drew Austin (those yellow highlighted areas on Google Maps) many of you have heard me say ‘ this is so blue bottle aesthetic’ which means i am mostly referencing this (increasingly out of date) Verge article. Austin refreshes this work by looking at the new updates in google maps - the areas of interest are eerily likely the same anywhere you go, esp. if they are on the same continent. the way you browse google maps highlights a very consumption-centric view of a city. for example, in manhattan, dozens of shops, business, and homes exist in every block. why consequences does google showing only a handful of consumptive institutions at that location have on the city at large? what happens when these can be influenced by money, and become more generalized in new gentrified parts of town not only in new york, but across the country? this way of looking at ‘human-computer interaction’ is how i have attempted to structure my concentration.
+
+he generalizes this more in this other piece (not behind his paywall), bringing a similar take to media and journalism:
+
+“West Elm Calebificiation only became possible due to a cultural void created by a redirection of money away from a certain type of media production—one that, importantly, enabled people to leave their homes and gather information about the outside world. Well before 2020, there was a creeping belief that such adventuring was becoming unnecessary, even frivolous, and that the internet was a sufficiently rich and comprehensive information source to replace most others, which ultimately led to widespread reporting about events that had happened on the internet (epitomized by the headline format, “People Are Talking About Topic X”). The physical world, in contrast, was parochial, full of individuals trapped within their own blinkered perspectives, a source of bias that anyone could overcome by logging on. By transcending our geographic limitations and submitting to the hive mind, the liquid marketplace of ideas would presumably guide us toward higher truths. Sadly, that process didn’t work and the higher truth they guided us toward was meta-discourse about TikTok testimonials describing bad dates with some 25-year-old dude who lives in New York—a true feedback loop, with no available mechanism for collectively downvoting the whole conversation and starting over. The pandemic obviously made this worse: It revealed the limitations of fully-digital life, but it also demonstrated that it’s too late to easily change course, now that the prior era’s infrastructure is dismantled. The West Elm Calebs will continue until morale improves.”
+
+in conversation with the two Austin pieces above, this piece on Kerala (although written in 1998 and in a sometimes questionable tone). I think it is interesting how Kerala can exist in its own way, especially with the context of the US today. made me think of the pluralist movement today, strongly evangelized by Glen Weyl. I think there are a lot of good takes in his piece ‘why i’m a pluralist’ but i don’t think his flavor of general political ideology is quite to my taste.
+
+Politics
+continuing the conversation from above, but from a different perspective, is ‘barbell ethics of modernity: why we live in the best and the worst of times simultaneously.’
+
+also, ‘the scapegoating machine: Peter Thiel’s philosophical mentor explains Trump, Gawker, and social media.’
+
+now, in a different direction altogether. this is regarding germany and its military, which is a conversation being had loudly right now: ‘A MILLENNIAL CONSIDERS THE NEW GERMAN PROBLEM AFTER 30 YEARS OF PEACE.’ very interesting reading this, especially with the news today of germany completely changing their military budget and plans for the next decade
+
+‘Google X and the Science of Radical Creativity’ - ty friend of the newsletter jackson! very interesting learning about the ideology instilled within x
+
+Misc.
+do y’all remember this powers of ten? wb this place on reddit? friends and i had a design make it on there! wb nike elite socks???
+
+99% invisible limited series on housing and homelessness… haven’t finished but this makes me so frustrated
+
+boiler room peggy gou
+
+cosmin trg mix in höf berlin’s channel
+
+laughing with kafka by david foster wallace <3 <3 <3
+
+interview with one of my favorite recent writers nadia eghbal
+
+that’s all for feb - hope you found something interesting! ALSO — i am looking for a comfy reading chair that looks nice and isn’t a few grand… anyone have any recommendations? would be appreciated!
+
+take care everyone. i hope you are able to at least enjoy the sunlight becoming more frequent and longer,
+
+andrei

@@ -1,0 +1,58 @@
+Collaborating with LLMs instead of delegating
+Explaining how I made Refract, my end-of-Fractal Tech demo
+
+This is the story of how I arrived at the final state of my end-of-program demo at Fractal Tech: ‘Refract - a journal that pushes you deeper’. I will explain my inspirations, misdirections, and technical architecture of how I made it all work.
+
+Initial Inspiration
+I wanted to explore different ways people could interact with AI. I’ve been bored of the back and forth (often in chat) interaction patterns that most AI products have. There is often a lot of latency in this back and forth too, which takes me out of the experience - they feel bad to use! This has only gotten worse with better quality - reasoning can take a long time. Instead of directly prompting (which is hard to do well, especially when unexperienced!) - why can’t the AI be more environmental - emerging when I need it? Aren’t LLMs supposed to be smart with context? I wanted to think of AI as something that sits in the margins, attentive but unobtrusive.
+
+Since I started journalling recently - I thought it would be a good place to explore new interaction patterns. I wanted to stay in the flow of writing, but get suggestions on how I could go deeper on the fly. When done, I wanted to better reflect on what I wrote.
+
+Prototypes
+Below are screenshots of in progress prototypes. I would demo the prototype to a few friends and bootcamp mates as I got closer to the feeling I envisioned, collect feedback, and iterate from there.
+
+To start, I quickly settled on this double spaced layout for writing. There’s space for inline ‘nudges’ from my system to display cleanly next to the part of the text they relate to, almost like annotations.
+
+
+Overlapping nudges were a challenge to overcome
+My first idea to display ‘themes’ when done writing was a spacial bubble layout. While fun to play with/animate, it wasn’t efficient at displaying what parts of the text related to the grouped themes. It also did not work well on mobile.
+
+
+I pivoted from the bubble layout. Eventually, I settled on keeping the text the same, and instead just highlighting the parts of the text that were part of themes.
+
+
+The final layout → no more ‘write’ and ‘analyze’ tabs. Instead, the analysis happens in the background and becomes available to display when done.
+
+Now with theme support :)
+How It Works
+Nudges (questions inline)
+Engine that balances these considerations:
+
+Characters written and time since last API call
+
+Punctuation (commas are a treated as a light form of punctuation)
+
+Topic shifts (light NLP to make sure nudge isn’t stale when response is received)
+
+Timeouts and debouncer to avoid spamming API calls while maintaining a good nudge cadence
+
+Put simply: nudges work best when they match the rhythm of the writer’s thinking. Just the right speed, not stale, and thoughtful.
+
+When an API call is sent, Refract generates an object with a nudge. Refract asks an LLM to think of a few and pick the best. My initial system was split across two calls and generated great nudges but that way too slow. Combining them into one prompt was the best of both worlds - the tradeoff between speed and quality was a recurring motif. The returned object also includes a confidence score - demo versions have a lower acceptable confidence score for more frequent nudges.
+
+Themes (highlights after writing)
+Run the entire text 20s before the goal time ends through an embedding model
+
+Cluster those embeddings into groups by similarity
+
+Send those groups back to an AI API to label them and generate an appropriate highlight color (we know embeddings with similar values are similar, but not *how*)
+
+Themes are less about classification and more about reflection. At their best, nudges sometimes dramatically change the themes written about - or continue to go deeper. Pinning the nudge and seeing the theme colors change or get more intense in saturation helps writers notice that.
+
+Layout
+The hardest part wasn’t getting the AI to generate thoughtful nudges or recognize themes, it was positioning elements in the browser. Text areas weren’t designed for this, so I had to trick the DOM into letting me layer intelligence on top of plain text
+
+To my knowledge, text areas are treated as a single DOM element and cannot be drilled into. Therefore, I made a mirror of what is inside the text area to help me position contextual elements. By tracking the text-area state through a map of sentence IDs, we can make sure the UI element displaying the nudge, highlight, etc. aligns with the text that generated it. Copying whats in text area split by punctuation, and using spans for each sentence with proper dimensions to replicate the layout in a hidden layer, we can find positions using browser APIs. This approach allows Refract to ‘layered on’ UI elements with correct positioning, with a request for animation approach to keep scrolling in as much sync as possible. Some browsers unfortunately (like mobile) do worse with this system and there is a bit of lag sometimes present.
+
+Conclusion
+Everyone that has written on Refract has written for longer than their intended goal, often not realizing that they’ve gone long beyond their initial goal! People are generally satisfied and sometimes impressed with the quality of the nudges, and like seeing how their themes changed as they wrote. while balancing latency and quality continues to be a challenge, i’m excited about new ways to bring LLMs - and AI in general - into a more collaborative relationship with people. In undergrad, I read about a concept called ‘soft tech’ where architects were proposing a future for technology in the context of the home, embedded into the architecture itself. Refract is a small attempt at ‘soft AI’: not something that demands attention and surveillance, but something that lives quietly in the background that amplifies human agency and thought. I remain curious and optimistic about a future where AI is built in the context of human creativity, connection, and reflection. Try it yourself at refract.site.

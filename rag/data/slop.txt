@@ -1,0 +1,40 @@
+Do people like slop? If so, why?
+
+Lately I’ve been thinking: do people actually like slop?
+
+If so, why?
+
+I don’t mean “AI slop” specifically. The suspicion that technology flattens narrative weight isn’t new. Socrates distrusted the written word; he thought it would erode memory (sounds familiar). The rhetorically tricky Sophists troubled the Greeks long before ‘rage bait.’ The camera was engineered and painting changed. Theater gave way to film, and now film faces diffusion models and LLM screenplays. Drew Austin wrote about how even Google Maps flattens the world.
+
+However, I don’t buy the narrative that the tools are inherently bad and to blame. The idea that history is just a long slide into dumber and dumber forms doesn’t hold up. Someone reminded me recently: artists are responsible for the art they create. If humans are a species that makes tools, of course we’ll use the tools we create. Everyone wants to press the red button, to pick up the stick and walk it home. The difference is always in the quality of the application.1 This has always been true.
+
+So why do people reach for slop?
+
+I don’t think slop is inherently bad either. Maybe it’s about numbness, boredom, or just the desire to pass time without feeling. Slop isn’t being force-fed… people willingly engage with it. Meta found that people prefer branded content to posts from their friends and family. McLuhan argued that every new technology amputates some part of us, for better or for worse, and maybe the long march of narrative accessibility has made us less critical toward what we consume. Each new tool makes production more accessible. And with that comes more slop.
+
+But what even is slop anyway? Is it the early work of a new medium? Low effort creation with little intention? Perhaps how we define it says something deeper about us? Judging creation does seem like is a cultural act. What we choose to consume reflects the kind of culture we have, or want to have.
+
+Slop often lacks craft, or taste (perhaps this is another reason this word has counteractively become a term of art in tech, especially for designers.) The Bauhaus rejected the divide between artist and artisan: art and toolmaking are the same discipline. A chair, a typeface, a building, a city street… all should be built with thought and care. Maybe slop is what happens when technology outpaces craft - or the human capacity to thoughtfully apply it to our needs.
+
+When there’s so much narrative (content, stories, noise) out there, it becomes overwhelming. The simple, cognitively easy narrative becomes more appealing by comparison. Byung-Chul Han (BCH) points to this in The Crisis of Narration. Just as Walter Benjamin noticed a shift in how stories were told in his time, BCH observes something similar for ours. For BCH, stories specifically require distance and contemplation… time to process. But what exactly is a story?
+
+BCH distinguishes between information (news, short form social media, clickbait) and stories (especially as it relates to you as a individual). Information and fast narratives often mimic stories, but are really just “soap operas.” In The Crisis of Narration, BCH argues that as we transitioned from an oppressive society to one focused on achievement and self-optimization, individuals began to exploit themselves under the illusion of freedom. There’s a lot more to this, but a crucial piece is the erosion of collective storytelling in a hyper-individualized society. It follows that the sort of ailed people BCH describes in Burnout Society end up living out a kind of internal, perverted story. This is heightened with panopticons when social media is at its worst.
+
+Theories matter too. Theories are like stories, but with some crucial distinctions. They select which parts of the world matter and rearrange them into something meaningful. A good theory can invite someone to see themselves inside a system, or to navigate a complicated world more clearly. It is how internal stories can collectivize into communities.
+
+But when misused, or applied too quickly and without context, information can also feel like a theory. We see this today in reactionary politics: views that seem inflammatory at first often become much more nuanced when thought through carefully. And yet, there are still massive internet mobs emotionally invested in simplified, fast-moving narratives. Andrew Rose describes another sort of perverted story that happens today in his recent piece Ideas Are Driving Me Mad.
+
+Some may ask: in the age of AI, who even needs reflection (or stories)? The AI will reflect for us! BCH would argue this is impossible because of the very nature of AI. He says AI is pure intelligenz (intelligence), but lacks geist. A German term that roughly translates to “spirit,” geist is closer to a conscious mind with a soul, creativity, and moral capacity. But intelligence without geist is just computation.
+
+Today, AI has become a symbol of pure intelligence. So it’s a mistake to outsource reflection. AI can help us spot patterns, really well! It can even reduce the time and distance we need for pondering for our own stories. But it can’t reflect in our place. That kind of meaning-making is still on us.
+
+I believe technology can be utilized, like the tool it is, to help us be better. AI can do great things to help us tell better stories and create healthy theories to help us all live better lives. However, this isn’t easy work, and not the prevailing consensus in technology. Just reference a16z and Cluely for that…
+
+I look to the Bauhaus again for inspiration.2 They believed that bringing art, architecture, and technology together in service of a more livable society. That spirit still matters, and it seems that the sort of ‘geist’ behind this isn’t part of AI today. We then need to hold onto it ourselves in the application of this new tool. Perhaps we can hope to mend previous wrongs as the change is so dramatic.
+
+I want to help build a version of technology that helps us avoid the shortcomings of our current society that thinkers like Byung-Chul Han - and Walter Benjamin before him) have helped us define. Benjamin once said that storytelling is dying because people no longer have experiences worth retelling. I think people still have stories worth telling, oftentimes people just not given the time or space to process them. Tools can’t do that work for us. But they can create space for it if we build them with that intention. We have to ask what kind of lives we actually want and build in that direction.
+
+And if we don’t, then maybe the slop is just us. Or at least, the version of us most of us have chosen to become.
+
+What do you all think? Let me know if you have any sources of optimistic inspiration, especially as it relates to new technology. I am still slowly working towards being able to contribute to this… the bootcamp ends in one month! I hope you are all well - I’m doing well, just a little tired : )
+
