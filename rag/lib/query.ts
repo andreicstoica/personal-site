@@ -25,10 +25,10 @@ function loadKeywordIndex(): MiniSearch {
             const keywordPath = path.resolve("./rag/keyword-index.json");
             console.log('Loading keyword index from:', keywordPath);
             const keywordData = JSON.parse(fs.readFileSync(keywordPath, "utf8"));
-            console.log('Keyword data loaded, creating MiniSearch instance...');
+            console.log('Keyword data loaded, loading MiniSearch from JSON...');
 
-            // Create a new MiniSearch instance instead of loading from JSON
-            keywordIndex = new MiniSearch({
+            // Load the MiniSearch instance from the saved JSON
+            keywordIndex = MiniSearch.loadJSON(JSON.stringify(keywordData), {
                 fields: ['text', 'source'],
                 storeFields: ['id', 'text', 'source'],
                 searchOptions: {
@@ -38,16 +38,7 @@ function loadKeywordIndex(): MiniSearch {
                 }
             });
 
-            // Add documents from the keyword data
-            if (keywordData.documents) {
-                const documents = keywordData.documents;
-                for (const docId in documents) {
-                    const doc = documents[docId];
-                    keywordIndex.add(doc);
-                }
-            }
-
-            console.log('MiniSearch instance created successfully');
+            console.log('MiniSearch instance loaded successfully');
         } catch (error) {
             console.error('Error loading keyword index:', error);
             throw error;

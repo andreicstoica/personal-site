@@ -58,15 +58,24 @@ export function loadDocuments(dataDir: string): Document[] {
             if (stat.isDirectory()) recurse(full);
             else if (file.endsWith(".txt") || file.endsWith(".md")) {
                 const text = fs.readFileSync(full, "utf8");
-                const chunks = chunkText(text);
+                const filename = path.basename(file, path.extname(file));
 
-                // Create a document for each chunk
-                chunks.forEach((chunk, index) => {
-                    const chunkId = chunks.length > 1
-                        ? `${full.replace(dataDir, "")}#chunk-${index + 1}`
-                        : full.replace(dataDir, "");
-                    docs.push({ id: chunkId, text: chunk });
-                });
+                // Don't chunk resume - keep as single document
+                if (filename === 'resume') {
+                    docs.push({
+                        id: full.replace(dataDir, ""),
+                        text: text
+                    });
+                } else {
+                    // Chunk blog posts and other content
+                    const chunks = chunkText(text, 500, 100); // Larger chunks, more overlap
+                    chunks.forEach((chunk, index) => {
+                        const chunkId = chunks.length > 1
+                            ? `${full.replace(dataDir, "")}#chunk-${index + 1}`
+                            : full.replace(dataDir, "");
+                        docs.push({ id: chunkId, text: chunk });
+                    });
+                }
             }
         }
     }

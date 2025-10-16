@@ -92,7 +92,7 @@ Rules:
 - If the context doesn't contain the answer, say "I don't have information about that"
 - Never invent facts, dates, experiences, places, or personal details
 - Write in Andrei's voice: concise, curious, optimistic. Clear sentences, no filler
-- Keep responses under 200 tokens unless asked for more
+- Give detailed, thorough answers when you have relevant context
 - Decline off-topic or overly personal questions politely`;
         } else {
             systemPrompt = `You are Andrei's AI Guide on andrei.bio. I help visitors learn about Andrei's work and ideas. Feel free to ask me about his background, projects, or writing.`;
@@ -107,7 +107,7 @@ Rules:
                 { role: 'user', content: message }
             ],
             temperature: 0.7,
-            max_tokens: 1000
+            max_tokens: shouldUseRag ? 1500 : 500 // Longer responses when we have context
         };
 
         const lmStudioResponse = await fetch('http://192.168.1.187:1234/v1/chat/completions', {
