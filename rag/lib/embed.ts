@@ -1,16 +1,16 @@
 import fs from "fs";
 import path from "path";
-import OpenAI from "openai";
-import "dotenv/config";
+import { pipeline } from "@xenova/transformers";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let embeddingPipeline: any = null;
 
 export async function buildEmbeddings(text: string) {
-    const res = await client.embeddings.create({
-        model: "text-embedding-3-small",
-        input: text,
-    });
-    return res.data[0].embedding;
+    if (!embeddingPipeline) {
+        embeddingPipeline = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
+    }
+
+    const result = await embeddingPipeline(text, { pooling: "mean", normalize: true });
+    return Array.from(result.data);
 }
 
 // Recursively gather all .txt/.md files in data/

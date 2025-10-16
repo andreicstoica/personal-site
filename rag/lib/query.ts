@@ -1,16 +1,9 @@
 import fs from "fs";
-import OpenAI from "openai";
-
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { buildEmbeddings } from "./embed.js";
 
 export async function queryRag(question: string) {
     const index = JSON.parse(fs.readFileSync("./rag/index.json", "utf8"));
-    const queryEmbed = (
-        await client.embeddings.create({
-            model: "text-embedding-3-small",
-            input: question,
-        })
-    ).data[0].embedding;
+    const queryEmbed = await buildEmbeddings(question);
 
     // cosine similarity
     function cosine(a: number[], b: number[]) {
@@ -26,8 +19,10 @@ export async function queryRag(question: string) {
     }
 
     const ranked = index
-        .map((doc: { id: any; embedding: number[]; }) => ({
+        .map((doc: { id: any; embedding: number[]; text?: string; source?: string; }) => ({
             id: doc.id,
+            text: doc.text,
+            source: doc.source,
             score: cosine(queryEmbed, doc.embedding),
         }))
         .sort((a: { score: number; }, b: { score: number; }) => b.score - a.score)

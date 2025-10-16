@@ -11,7 +11,12 @@ async function main() {
 
     for (const doc of docs) {
         const embedding = await buildEmbeddings(doc.text);
-        index.push({ id: doc.id, embedding });
+        index.push({
+            id: doc.id,
+            text: doc.text,
+            source: doc.id.replace(/^\/?/, ""),
+            embedding
+        });
         console.log("Embedded", doc.id);
     }
 
