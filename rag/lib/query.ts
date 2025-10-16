@@ -1,8 +1,22 @@
 import fs from "fs";
 import { buildEmbeddings } from "./embed.js";
 
-export async function queryRag(question: string) {
-    const index = JSON.parse(fs.readFileSync("./rag/index.json", "utf8"));
+interface Document {
+    id: string;
+    text: string;
+    source: string;
+    embedding: number[];
+}
+
+interface QueryResult {
+    id: string;
+    text: string;
+    source: string;
+    score: number;
+}
+
+export async function queryRag(question: string): Promise<QueryResult[]> {
+    const index: Document[] = JSON.parse(fs.readFileSync("./rag/index.json", "utf8"));
     const queryEmbed = await buildEmbeddings(question);
 
     // cosine similarity
@@ -18,14 +32,14 @@ export async function queryRag(question: string) {
         return dot / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
-    const ranked = index
-        .map((doc: { id: any; embedding: number[]; text?: string; source?: string; }) => ({
+    const ranked: QueryResult[] = index
+        .map((doc: Document) => ({
             id: doc.id,
             text: doc.text,
             source: doc.source,
             score: cosine(queryEmbed, doc.embedding),
         }))
-        .sort((a: { score: number; }, b: { score: number; }) => b.score - a.score)
+        .sort((a, b) => b.score - a.score)
         .slice(0, 3);
 
     return ranked;

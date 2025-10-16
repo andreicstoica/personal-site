@@ -5,6 +5,17 @@ interface Message {
   content: string;
 }
 
+interface ChatRequest {
+  message: string;
+  history: Message[];
+}
+
+interface ChatResponse {
+  response: string;
+  sources: Array<{ source: string; score: number }>;
+  error?: string;
+}
+
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -24,18 +35,20 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     try {
+      const requestBody: ChatRequest = {
+        message: userMessage,
+        history: messages,
+      };
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: userMessage,
-          history: messages,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      const data: ChatResponse = await response.json();
 
       if (data.error) {
         throw new Error(data.error);

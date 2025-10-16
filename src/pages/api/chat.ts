@@ -1,6 +1,31 @@
 import type { APIRoute } from 'astro';
 import { queryRag } from '../../../rag/lib/query.js';
 
+interface ChatRequest {
+    message: string;
+    history?: Array<{ role: string; content: string }>;
+}
+
+interface ChatResponse {
+    response: string;
+    sources: Array<{ source: string; score: number }>;
+}
+
+interface LMStudioRequest {
+    model: string;
+    messages: Array<{ role: string; content: string }>;
+    temperature: number;
+    max_tokens: number;
+}
+
+interface LMStudioResponse {
+    choices: Array<{
+        message: {
+            content: string;
+        };
+    }>;
+}
+
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
@@ -13,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        const { message, history = [] } = JSON.parse(body);
+        const { message, history = [] }: ChatRequest = JSON.parse(body);
 
         if (!message) {
             return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -29,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         // Format context from retrieved documents
         const context = relevantDocs
-            .map((doc: { source: string; text: string; }) => `Source: ${doc.source}\nContent: ${doc.text}`)
+            .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
             .join('\n\n');
 
         // Prepare system prompt with context
@@ -41,34 +66,38 @@ ${context}
 Respond naturally as Andrei would, incorporating relevant information from the context when appropriate.`;
 
         // Call LMStudio API
+        const lmStudioRequest: LMStudioRequest = {
+            model: 'andrei_qwen3b',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...history,
+                { role: 'user', content: message }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000
+        };
+
         const lmStudioResponse = await fetch('http://192.168.1.187:1234/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                model: 'andrei_qwen3b',
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...history,
-                    { role: 'user', content: message }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            })
+            body: JSON.stringify(lmStudioRequest)
         });
 
         if (!lmStudioResponse.ok) {
             throw new Error(`LMStudio API error: ${lmStudioResponse.status}`);
         }
 
-        const data = await lmStudioResponse.json();
+        const data: LMStudioResponse = await lmStudioResponse.json();
         const response = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
 
-        return new Response(JSON.stringify({
+        const chatResponse: ChatResponse = {
             response,
-            sources: relevantDocs.map((doc: { source: any; score: any; }) => ({ source: doc.source, score: doc.score }))
-        }), {
+            sources: relevantDocs.map(doc => ({ source: doc.source, score: doc.score }))
+        };
+
+        return new Response(JSON.stringify(chatResponse), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
