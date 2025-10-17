@@ -66,7 +66,7 @@ async function main() {
 		fields: ["text", "title", "tags", "source"],
 		storeFields: ["id", "text", "title", "tags", "source", "metadata"],
 		searchOptions: {
-			boost: { text: 2, title: 1.5, tags: 1, source: 1 },
+			boost: { text: 2, title: 1.5, tags: 2, source: 1 },
 			fuzzy: 0.2,
 			prefix: true,
 		},

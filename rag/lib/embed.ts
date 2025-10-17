@@ -216,8 +216,16 @@ export function loadDocuments(dataDir: string): Document[] {
 						metadata
 					});
 				} else {
+					// Use larger chunks for projects/experience type
+					const chunkSize = (metadata.type === "projects" || metadata.type === "experience")
+						? 1000  // Larger chunks for structured portfolio data
+						: CHUNK_SIZE;  // 500 for everything else
+					const chunkOverlap = (metadata.type === "projects" || metadata.type === "experience")
+						? 200  // Proportional overlap
+						: CHUNK_OVERLAP;  // 100 for everything else
+
 					// Chunk other content with heading awareness
-					const { chunks } = chunkTextWithHeadings(textContent, CHUNK_SIZE, CHUNK_OVERLAP);
+					const { chunks } = chunkTextWithHeadings(textContent, chunkSize, chunkOverlap);
 					chunks.forEach((chunk, index) => {
 						const chunkId = chunks.length > 1
 							? `${relativePath}#chunk-${index + 1}`

@@ -34,5 +34,20 @@ export const QUERY_SYNONYMS: Record<string, string[]> = {
     "role": ["position", "title", "job"],
     "learned": ["studied", "gained", "acquired", "mastered"],
     "technology": ["tech", "tools", "framework", "language"],
-    "experience": ["background", "history", "past"]
+    "experience": ["background", "history", "past"],
+
+    // New portfolio terms
+    "projects": ["portfolio", "work", "apps", "applications", "built"],
+    "freelance": ["contractor", "independent", "consulting"],
+    "built": ["created", "developed", "made", "engineered"],
+
+    // New tech stack synonyms
+    "nextjs": ["next.js", "next", "react framework"],
+    "react": ["reactjs", "react.js"],
+    "typescript": ["ts", "typed javascript"],
+    "nodejs": ["node.js", "node"],
+    "postgres": ["postgresql", "pg"],
+    "mobile": ["ios", "android", "app", "native"],
+    "ai": ["artificial intelligence", "machine learning", "llm", "gpt"],
+    "fullstack": ["full-stack", "full stack", "frontend and backend"]
 };

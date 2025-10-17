@@ -165,7 +165,7 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 	const keywordSearch = loadKeywordIndex();
 	const sparseResults = keywordSearch
 		.search(expandedQuery, {
-			boost: { text: 2, title: 1.5, tags: 1, source: 1 },
+			boost: { text: 2, title: 1.5, tags: 2, source: 1 },
 		})
 		.slice(0, TOP_K_CANDIDATES);
 
