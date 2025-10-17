@@ -1,0 +1,155 @@
+Professional Experience & Background
+
+Personal Statement
+Builder with a background in product, VC, design, and full-stack development. I'm especially interested in how AI can help people reflect, express themselves, connect, and navigate the internet better. I work best when I can take a strong idea kernel and shape it by iterating quickly with others.
+
+Lately I've been exploring reflective AI tools with a focus on simple interfaces that feel intuitive and well considered, and have been writing about it on my blog. I care about how things feel and the side effects systems create, not just how they function.
+
+Current Work Experience
+
+Freelance Engineer (2025 - Present)
+Full Stack Software Engineer
+Software engineering work across various industries including med-tech and research platforms. Focused on quickly shipping performant web applications and improving user experience.
+
+Selected Projects:
+- Stance Health – chronic health therapy med-tech startup
+- Holdfast Network – NOAA aquaculture research platform
+
+Key Achievements:
+- Delivered performant web applications across multiple industries
+- Improved user experience through technical optimization
+- Worked with startups and research organizations
+
+Fractal AI Accelerator (2025)
+Software Engineer
+Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, PostgreSQL, TypeScript, Sentry, etc. All built within 6 days.
+
+Selected Projects:
+- Refract – reflective AI journal that helps you go deeper
+- Blob Game – clicker game built with TS/React
+- Courtly – tennis practice session (AI generated) React Native and web app
+- Algos, Visualized – visualized using Framer Motion and CSS animations
+- Daily Tarot – daily tarot reading chat website
+
+Key Achievements:
+- Intensive learning program focusing on modern web technologies
+- Built multiple full-stack applications with AI integration
+- Developed expertise in React Native, AI SDK, and modern deployment practices
+
+NBCUniversal (2024 - 2025)
+Product Manager - Journalism Tools
+Led discovery and scoping of an AI-aided fact-checking tool for journalists, correspondents, and producers. This included technically defining what NBCU defined as a 'fact' in collaboration with Standards. Also spearheaded an NBCU News Group wide people, places, and things scheduling software vendor analysis and recommendation.
+
+Key Achievements:
+- Directed vendor analysis for newsroom people, places, and things scheduling system
+- Recommended $2M decision for a new global workflow
+- Led discovery and scoping of AI-aided fact-checking for journalists and producers
+- Custom Google Cloud LLM system with NBCU DB of facts
+
+Warner Bros. Discovery (2023 - 2024)
+Product Manager - DTC/Digital
+Helped create WBD's first APM cohort and served as the lead PM for the digital properties of legacy Turner (like TNT), Discovery (TLC, HGTV, etc.), and WarnerMedia (Cartoon Network) networks. Led projects from start to finish across all platforms and helped rebase all legacy techstacks onto a new platform. Additionally, contributed to a tiger team focused on developing a competitor in the FAST market.
+
+Key Achievements:
+- Orchestrated accessibility, compliance, tech-debt, and multi-platform feature roadmaps across 20+ TVE brands
+- Delivered 18% increase in app store rating ratio by solving 10+ consumer facing bugs
+- Released 2 new features on mobile, TV, and web
+- Improved streaming performance 62% by coordinating 3 engineering teams through player and platform upgrade
+- Rebased 3 platforms into 1 platform
+
+BlocPower (2021)
+Product Manager
+a16z internship placement. Conducted full-site UX audit with Hotjar and found drop-offs. Redesigned an end-to-end website that segmented landing pages by newly identified customer types. Then distilled test results into a detailed product spec that enabled the Head of Product to secure CEO approval and budget for a full agency-built relaunch. Also collaborated with Growth Marketing to launch HubSpot-integrated, campaign-specific landing pages supporting nationwide ads.
+
+Key Achievements:
+- Increased survey click-thru rate from 8% to 33% by implementing end-page CTA and improved form UI
+- Used Hotjar to analyze funnel and identify drop-offs
+- Re-designed Webflow website (site hierarchy, brand guidelines, CTAs, images)
+- Prepared for national field enablement and ad campaign
+- Collaborated with Growth Marketing on HubSpot-integrated landing pages
+
+Autodesk (2019)
+Product Manager
+Owned all 'non-dev' responsibilities: community marketing, user research, and product. Ran 4 multi-city 'Autodesk Day' feedback events globally and online; engaged 100+ students and mentors. Insights drove a full UI/UX refresh that was co-led with engineering leads. Side project: co-designed an interactive exhibit for Oregon Museum of Science & Industry (OMSI). Built a custom Tinkercad parts library for kids to drag-and-drop classroom furniture on iPads, encouraging exploration of collaborative spaces (featured on Tinkercad's official blog).
+
+Key Achievements:
+- Launched "Autodesk Day" events globally, where 400 users tested beta builds
+- Increased brand recognition and education partnerships
+- Improved task completion rates by 25% by orchestrating overhaul of navigation bar and settings UI
+- Co-led full UI/UX refresh with engineering leads based on beta testing feedback
+- Co-designed interactive exhibit for OMSI
+- Built custom Tinkercad parts library for kids to explore collaborative spaces
+
+Personal Projects & Initiatives
+
+Sfânt Coffee (2024 - Present)
+Founder & Barista
+Created a popup coffee shop based in NYC, serving modern coffee drinks and baked goods. Each popup features specialty coffee from local roasters, and a unique 'special' drink created. Profits are donated to charity.
+
+Key Features:
+- Modern coffee drinks and baked goods
+- Specialty coffee from local roasters
+- Unique 'special' drinks for each popup
+- Charity donation model
+
+Lumber Sans (2020)
+Type Designer
+Quarantine passion project: hand-built a bespoke all-caps typeface in Glyphs 3, drawing on wood-block printing heritage and Pacific Northwest timber culture. Features hand-carved curves; optimized for headings and posters. Deployed as the primary accent font across personal site! Inspiration sources: National Park Service signage (Standards Manual 'Parks' book) and avant-garde font archives.
+
+Design Philosophy:
+- Hand-carved curves and wood-block printing heritage
+- Pacific Northwest timber culture influence
+- Optimized for headings and posters
+- National Park Service signage inspiration
+
+RunChuck (2022)
+Developer, Designer
+Runchuck is a playful take on tracking heart rate during your run. Instead of over-fixating on a number (what does 171 really mean?), Runchuck slowly changes a ring of LEDs to different colors to tell you how hard you're working. Final project for NYU ITP's 'Interaction as Art Medium' course.
+
+Concept:
+- Playful heart rate tracking without numbers
+- Ring of LEDs that change colors based on effort level
+- Final project for NYU ITP course
+- Focus on intuitive, non-numeric feedback
+
+WashPod (2017)
+Project Lead
+Lexus Eco Challenge Finalist ($10,000 prize) - A solar powered mobile laundry and shower unit for the Portland homeless. Led 5-member electrical team; designed and wired a solar PV system with charge controller and battery bank to run lighting, washer/dryer, pumps, and water heater—backed by propane generator for winter reliability. Deployed first WashPod at Right 2 Dream Too pod village; continues to serve residents year-round.
+
+Technical Achievements:
+- Solar powered mobile laundry and shower unit
+- Led 5-member electrical team
+- Designed and wired solar PV system with charge controller and battery bank
+- Powers lighting, washer/dryer, pumps, and water heater
+- Propane generator backup for winter reliability
+- Deployed at Right 2 Dream Too pod village
+
+Other Experience
+
+Anthos Capital (2021)
+Venture Fellow
+Built product research library for Anthos Capital's portfolio companies. Advised ESG product strategy.
+
+XXcelerate Women (2018)
+Writing & Ops Intern
+Writing intern for XXcelerate Women, a venture capital firm that invests in women-led startups. Wrote blog posts, researched companies, and helped organize events, securing Oregon Senator Ron Wyden as a speaker!
+
+Education & Writing
+
+Rationale (2023)
+Writer & Researcher
+To graduate, wrote a ~8 page paper that bounded studies (and self-named degree). This wasn't meant to be an argumentative essay, more so a laying out of topics that would be discussed in a multiple-hour-long 'colloquium' (read: discussion) with primary faculty advisor and another professor. That is why the rationale moves rather quickly and in broad strokes.
+
+New York University (2019-2023)
+Bachelor of Arts
+Individualized Major: "Human-Computer Interaction and Ethical Innovation Systems"
+Relevant Courses: AI and ML Topics, Discrete Math, Computer Systems Organization, Human-Centered Product Design, Statistics For Business
+
+Honors & Distinctions
+- Lexus Eco Challenge Finalist, $10,000 Prize: Pitched a green powered, off-the-grid shower, washer, and dryer system for the Portland homeless. Funded by Lexus to finish building 'WashPod,' which is still operational today.
+- Google Cloud Covid-19 Hackathon Fund Finalist: Selected as the only Dubhacks 2020 finalist out of 400+ teams for creating a Covid-19 tool.
+
+Skills & Interests
+Skills: React, TypeScript, Next JS, Astro, React Native, Expo, Node.js, ExpressJS, Elysia, Better-Auth, JWT, PostgreSQL, Drizzle, Supabase, Web Sockets, Biome, Docker, Vercel, GCP, Tailwind, Framer Motion, GSAP, Zustand, Zod, Vitest, Tests, Embeddings, Fast API, Python scripting
+
+Interests: Soccer (Arsenal & Timbers), Running, Tennis, Espresso, Coffee Roasting and Popups, Substack Blogs, Reading, Cooking, Sewing
