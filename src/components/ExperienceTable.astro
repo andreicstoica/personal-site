@@ -1,49 +1,48 @@
 ---
-import type { Experience } from "../lib/types.ts";
+import { marked } from "marked";
 import { experiences } from "../lib/experience";
+import type { Experience } from "../lib/types.ts";
 import MediaGallery from "./MediaGallery.astro";
 import ProjectEnhancedDescription from "./ProjectEnhancedDescription.astro";
-import { marked } from 'marked';
 
 // Get unique types for the filter dropdown
-const allTypes = [...new Set(experiences.map(exp => exp.type))].sort();
+const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
 
 // Color mapping for different experience types using CSS custom properties
 const typeColors = {
-  personal: '--tag-personal',
-  work: '--tag-work',
-  school: '--tag-school',
-  other: '--tag-other'
+	personal: "--tag-personal",
+	work: "--tag-work",
+	school: "--tag-school",
+	other: "--tag-other",
 };
 
 // Text color mapping for better contrast with each background, irrespective of theme
 const textColors = {
-  personal: '272727',    // Dark text on bright green
-  work: 'fefefe',        // White text on blue
-  school: '272727',      // Dark text on yellow
-  other: 'fefefe'        // White text on pink
+	personal: "272727", // Dark text on bright green
+	work: "fefefe", // White text on blue
+	school: "272727", // Dark text on yellow
+	other: "fefefe", // White text on pink
 };
 
 // Helper function to get inline styles for a given type
 const getTypeStyles = (type: string) => {
-  const colorVar = typeColors[type as keyof typeof typeColors] || '--tag-other';
-  const textColorVar = textColors[type as keyof typeof textColors] || '272727';
-  return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`
+	const colorVar = typeColors[type as keyof typeof typeColors] || "--tag-other";
+	const textColorVar = textColors[type as keyof typeof textColors] || "272727";
+	return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
 };
 
 // Format date range
 const formatDateRange = (startDate: string, endDate?: string) => {
-  if (endDate && endDate !== '...') {
-    return `${startDate}-${endDate}`;
-  }
-  return endDate === '...' ? `${startDate}-...` : startDate;
+	if (endDate && endDate !== "...") {
+		return `${startDate}-${endDate}`;
+	}
+	return endDate === "..." ? `${startDate}-...` : startDate;
 };
 
 // Markdown renderer
 const renderer = new marked.Renderer();
-renderer.link = function ({ href, title, text }) {
-  return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ''}>${text}</a>`;
-};
+renderer.link = ({ href, title, text }) =>
+	`<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${text}</a>`;
 marked.setOptions({ renderer });
 ---
 

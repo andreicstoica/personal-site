@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  sources?: SourceDisplay[];
+  sources?: Array<{ source: string; score: number }>;
 }
 
 interface ChatRequest {
@@ -15,11 +15,6 @@ interface ChatResponse {
   response: string;
   sources: Array<{ source: string; score: number }>;
   error?: string;
-}
-
-interface SourceDisplay {
-  source: string;
-  score: number;
 }
 
 export default function FullPageChat() {
@@ -40,7 +35,11 @@ export default function FullPageChat() {
     }
   };
 
-  const addMessage = (content: string, role: "user" | "assistant", sources?: SourceDisplay[]) => {
+  const addMessage = (
+    content: string,
+    role: "user" | "assistant",
+    sources?: Array<{ source: string; score: number }>
+  ) => {
     setMessages((prev) => [...prev, { role, content, sources }]);
   };
 
@@ -109,7 +108,7 @@ export default function FullPageChat() {
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`max-w-[80%] sm:max-w-md px-4 py-3 text-sm border ${
@@ -119,19 +118,24 @@ export default function FullPageChat() {
                 }`}
                 style={{ borderRadius: 0 }}
               >
-                {message.content}
-              </div>
-              {message.sources && message.sources.length > 0 && (
-                <div className="mt-2 text-xs text-gray-500 max-w-[80%] sm:max-w-md">
-                  <div className="text-gray-400 mb-1">Sources:</div>
-                  {message.sources.map((source, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="font-mono text-xs">{source.source.replace('.txt', '')}</span>
-                      <span className="text-gray-300">({(source.score * 100).toFixed(0)}%)</span>
+                <div>{message.content}</div>
+                {message.sources && message.sources.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 mb-2">Sources:</div>
+                    <div className="space-y-1">
+                      {message.sources.map((source, sourceIndex) => (
+                        <div
+                          key={sourceIndex}
+                          className="text-xs text-gray-600"
+                        >
+                          • {source.source.replace(".txt", "")} (
+                          {(source.score * 100).toFixed(1)}%)
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
 
