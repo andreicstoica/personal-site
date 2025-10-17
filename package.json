@@ -1,38 +1,39 @@
 {
-  "name": "personal-site",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "index": "tsx rag/build-index.ts"
-  },
-  "dependencies": {
-    "@astrojs/mdx": "^4.3.7",
-    "@astrojs/react": "^4.4.0",
-    "@astrojs/vercel": "^8.2.10",
-    "@tailwindcss/vite": "^4.1.10",
-    "@xenova/transformers": "^2.17.2",
-    "astro": "^5.14.5",
-    "dotenv": "^17.2.3",
-    "gray-matter": "^4.0.3",
-    "jsdom": "^27.0.0",
-    "markdown-it": "^14.1.0",
-    "marked": "^16.1.1",
-    "minisearch": "^7.2.0",
-    "openai": "^6.3.0",
-    "pdf-parse": "^2.3.12",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-github-calendar": "^4.5.9",
-    "sharp": "^0.34.3",
-    "tailwindcss": "^4.1.10"
-  },
-  "devDependencies": {
-    "prettier": "^3.6.2",
-    "prettier-plugin-astro": "^0.14.1",
-    "tsx": "^4.20.6"
-  }
+	"name": "personal-site",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"index": "tsx rag/build-index.ts"
+	},
+	"dependencies": {
+		"@astrojs/mdx": "^4.3.7",
+		"@astrojs/react": "^4.4.0",
+		"@astrojs/vercel": "^8.2.10",
+		"@tailwindcss/vite": "^4.1.10",
+		"@xenova/transformers": "^2.17.2",
+		"astro": "^5.14.5",
+		"dotenv": "^17.2.3",
+		"gray-matter": "^4.0.3",
+		"jsdom": "^27.0.0",
+		"markdown-it": "^14.1.0",
+		"marked": "^16.1.1",
+		"minisearch": "^7.2.0",
+		"openai": "^6.3.0",
+		"pdf-parse": "^2.3.12",
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1",
+		"react-github-calendar": "^4.5.9",
+		"sharp": "^0.34.3",
+		"tailwindcss": "^4.1.10"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.6",
+		"prettier": "^3.6.2",
+		"prettier-plugin-astro": "^0.14.1",
+		"tsx": "^4.20.6"
+	}
 }

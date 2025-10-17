@@ -1,17 +1,17 @@
 ---
-import PageLayout from "../../layouts/PageLayout.astro";
 import ProjectDisplay from "../../components/ProjectDisplay.astro";
+import PageLayout from "../../layouts/PageLayout.astro";
 import { projects } from "../../lib/projects";
 
 export async function getStaticPaths() {
-  return Object.values(projects).map((project) => ({
-    params: { id: project.id },
-    props: { project },
-  }));
+	return Object.values(projects).map((project) => ({
+		params: { id: project.id },
+		props: { project },
+	}));
 }
 
 interface Props {
-  project: import("../../lib/types").Project;
+	project: import("../../lib/types").Project;
 }
 
 const { project } = Astro.props;

@@ -1,12 +1,12 @@
 ---
 import { marked } from "marked";
 import {
-  replaceProjectReferencesWithHTML,
-  getReferencedProjects,
+	getReferencedProjects,
+	replaceProjectReferencesWithHTML,
 } from "../lib/projectParser";
 
 interface Props {
-  description: string;
+	description: string;
 }
 
 const { description } = Astro.props;
@@ -16,9 +16,8 @@ const processedDescription = replaceProjectReferencesWithHTML(description);
 
 // Set up markdown renderer
 const renderer = new marked.Renderer();
-renderer.link = function ({ href, title, text }) {
-  return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${text}</a>`;
-};
+renderer.link = ({ href, title, text }) =>
+	`<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${text}</a>`;
 marked.setOptions({ renderer });
 
 // Convert processed description to HTML

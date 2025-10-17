@@ -1,17 +1,17 @@
 ---
-import PageLayout from "../layouts/PageLayout.astro";
-import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import MediaGallery from "../components/MediaGallery.astro";
 import { getEntry } from "astro:content";
+import MediaGallery from "../components/MediaGallery.astro";
+import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import PageLayout from "../layouts/PageLayout.astro";
 
 const raceEntry = await getEntry("pages", "race");
 const outdoorsEntry = await getEntry("pages", "outdoors");
 let RaceContent, OutdoorsContent;
 if (raceEntry) {
-  ({ Content: RaceContent } = await raceEntry.render());
+	({ Content: RaceContent } = await raceEntry.render());
 }
 if (outdoorsEntry) {
-  ({ Content: OutdoorsContent } = await outdoorsEntry.render());
+	({ Content: OutdoorsContent } = await outdoorsEntry.render());
 }
 ---
 

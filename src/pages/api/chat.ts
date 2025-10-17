@@ -1,94 +1,113 @@
-import type { APIRoute } from 'astro';
-import { queryRag } from '../../../rag/lib/query.js';
-import { RELEVANCE_THRESHOLD } from '../../../rag/lib/constants.js';
+import type { APIRoute } from "astro";
+import { RELEVANCE_THRESHOLD } from "../../../rag/lib/constants.js";
+import { queryRag } from "../../../rag/lib/query.js";
 
+const MODEL_PROVIDER = (
+	import.meta.env.MODEL_PROVIDER ?? "local"
+).toLowerCase();
+const IS_LOCAL_MODEL = MODEL_PROVIDER === "local";
+const LOCAL_MODEL_URL =
+	import.meta.env.LOCAL_MODEL_URL ?? "http://localhost:1234";
+const LOCAL_MODEL_ID = import.meta.env.LOCAL_MODEL_ID ?? "noodlesGS/personal";
 const HF_API_URL = import.meta.env.HF_API_URL;
 const HF_API_KEY = import.meta.env.HF_API_KEY;
+const HF_MODEL_ID = import.meta.env.HF_MODEL_ID ?? "noodlesGS/personal";
 
-console.log('HF_API_URL:', HF_API_URL);
-console.log('HF_API_KEY exists:', !!HF_API_KEY);
+console.log("Model provider:", MODEL_PROVIDER);
+console.log("HF API configured:", Boolean(HF_API_URL && HF_API_KEY));
+console.log("Local model endpoint:", LOCAL_MODEL_URL);
 
 interface ChatRequest {
-    message: string;
-    history?: Array<{ role: string; content: string }>;
+	message: string;
+	history?: Array<{ role: string; content: string }>;
 }
 
 interface ChatResponse {
-    response: string;
-    sources: Array<{ source: string; score: number }>;
+	response: string;
+	sources: Array<{ source: string; score: number }>;
 }
 
 interface LMStudioRequest {
-    model: string;
-    messages: Array<{ role: string; content: string }>;
-    temperature: number;
-    max_tokens: number;
+	model: string;
+	messages: Array<{ role: string; content: string }>;
+	temperature: number;
+	max_tokens: number;
 }
 
 interface LMStudioResponse {
-    choices: Array<{
-        message: {
-            content: string;
-        };
-    }>;
+	choices: Array<{
+		message: {
+			content: string;
+		};
+	}>;
 }
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-    try {
-        const body = await request.text();
-        if (!body) {
-            return new Response(JSON.stringify({ error: 'Empty request body' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
+	try {
+		const body = await request.text();
+		if (!body) {
+			return new Response(JSON.stringify({ error: "Empty request body" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
 
-        const { message, history = [] }: ChatRequest = JSON.parse(body);
+		const { message, history = [] }: ChatRequest = JSON.parse(body);
 
-        if (!message) {
-            return new Response(JSON.stringify({ error: 'Message is required' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
+		if (!message) {
+			return new Response(JSON.stringify({ error: "Message is required" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
 
-        // Cheap prefilter heuristics
-        const isShortQuery = message.trim().length < 10;
-        const isGreeting = /^(hi|hello|hey|what's up|how are you|howdy|sup|yo)\s*[!.]*$/i.test(message.trim());
-        const shouldSkipRag = isShortQuery || isGreeting;
+		// Cheap prefilter heuristics
+		const isShortQuery = message.trim().length < 10;
+		const isGreeting =
+			/^(hi|hello|hey|what's up|how are you|howdy|sup|yo)\s*[!.]*$/i.test(
+				message.trim(),
+			);
+		const shouldSkipRag = isShortQuery || isGreeting;
 
-        if (shouldSkipRag) {
-            console.log(`Skipping RAG: ${isShortQuery ? 'short query' : 'greeting detected'}`);
-        }
+		if (shouldSkipRag) {
+			console.log(
+				`Skipping RAG: ${isShortQuery ? "short query" : "greeting detected"}`,
+			);
+		}
 
-        let relevantDocs: any[] = [];
-        let shouldUseRag = false;
+		let relevantDocs: any[] = [];
+		let shouldUseRag = false;
 
-        if (!shouldSkipRag) {
-            // Get relevant documents from RAG
-            console.log('Starting RAG query for:', message);
-            relevantDocs = await queryRag(message);
-            console.log('RAG results:', relevantDocs);
+		if (!shouldSkipRag) {
+			// Get relevant documents from RAG
+			console.log("Starting RAG query for:", message);
+			relevantDocs = await queryRag(message);
+			console.log("RAG results:", relevantDocs);
 
-            // Only use RAG if the best match exceeds relevance threshold
-            const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
-            shouldUseRag = bestScore >= RELEVANCE_THRESHOLD;
+			// Only use RAG if the best match exceeds relevance threshold
+			const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
+			shouldUseRag = bestScore >= RELEVANCE_THRESHOLD;
 
-            console.log(`RAG decision: ${shouldUseRag ? 'USE' : 'SKIP'} (best score: ${bestScore.toFixed(3)})`);
-        }
+			console.log(
+				`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)})`,
+			);
+		}
 
-        let systemPrompt: string;
+		let systemPrompt: string;
 
-        if (shouldUseRag) {
-            // Format context from retrieved document chunks
-            const context = relevantDocs
-                .filter(doc => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
-                .map((doc, idx) => `[${idx + 1}] From ${doc.source.replace('.txt', '')}:\n${doc.text}`)
-                .join('\n\n');
+		if (shouldUseRag) {
+			// Format context from retrieved document chunks
+			const context = relevantDocs
+				.filter((doc) => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
+				.map(
+					(doc, idx) =>
+						`[${idx + 1}] From ${doc.source.replace(".txt", "")}:\n${doc.text}`,
+				)
+				.join("\n\n");
 
-            systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the context provided below.
+			systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the context provided below.
 
 Context:
 ${context}
@@ -102,8 +121,8 @@ CRITICAL RULES:
 - Quote or paraphrase the context directly when answering.
 - Be helpful and engaging - if you can't fully answer, explain what you do know and suggest related topics you can discuss.
 - Reference the source numbers [1], [2], etc. when citing specific information.`;
-        } else {
-            systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
+		} else {
+			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
 
 I help visitors learn about Andrei based on his resume, writing, and projects.
 
@@ -113,66 +132,89 @@ RULES:
 - Focus on what I DO know about: his work, projects, technical interests, writing, and professional background
 - NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences
 - Be helpful and suggest related topics I can discuss when you can't fully answer something`;
-        }
+		}
 
-        // Call HF Inference API
-        const lmStudioRequest: LMStudioRequest = {
-            model: 'noodlesGS/personal',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                ...history,
-                { role: 'user', content: message }
-            ],
-            temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
-            max_tokens: shouldUseRag ? 1500 : 500 // Longer responses when we have context
-        };
+		// Call HF Inference API
+		const lmStudioRequest: LMStudioRequest = {
+			model: IS_LOCAL_MODEL ? LOCAL_MODEL_ID : HF_MODEL_ID,
+			messages: [
+				{ role: "system", content: systemPrompt },
+				...history,
+				{ role: "user", content: message },
+			],
+			temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
+			max_tokens: shouldUseRag ? 1500 : 500, // Longer responses when we have context
+		};
 
-        console.log('Calling HF API:', `${HF_API_URL}/v1/chat/completions`);
-        console.log('Request:', JSON.stringify(lmStudioRequest, null, 2));
+		const baseUrl = IS_LOCAL_MODEL ? LOCAL_MODEL_URL : HF_API_URL;
 
-        const hfResponse = await fetch(`${HF_API_URL}/v1/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${HF_API_KEY}`,
-            },
-            body: JSON.stringify(lmStudioRequest),
-        });
+		if (!baseUrl) {
+			throw new Error("No API base URL configured for selected model provider");
+		}
 
-        console.log('HF Response status:', hfResponse.status);
+		const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
 
-        if (!hfResponse.ok) {
-            const errorText = await hfResponse.text();
-            console.error('HF API error response:', errorText);
-            throw new Error(`HF API error: ${hfResponse.status} - ${errorText}`);
-        }
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
 
-        const data: LMStudioResponse = await hfResponse.json();
-        const response = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+		if (!IS_LOCAL_MODEL) {
+			if (!HF_API_KEY) {
+				throw new Error("HF_API_KEY is required for Hugging Face provider");
+			}
+			headers["Authorization"] = `Bearer ${HF_API_KEY}`;
+		}
 
-        const chatResponse: ChatResponse = {
-            response,
-            sources: shouldUseRag
-                ? relevantDocs
-                    .filter(doc => doc.score >= RELEVANCE_THRESHOLD)
-                    .map(doc => ({ source: doc.source, score: doc.score }))
-                : [] // No sources when RAG wasn't used
-        };
+		console.log("Calling model endpoint:", apiUrl);
+		console.log("Request:", JSON.stringify(lmStudioRequest, null, 2));
 
-        return new Response(JSON.stringify(chatResponse), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
+		const hfResponse = await fetch(apiUrl, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(lmStudioRequest),
+		});
 
-    } catch (error) {
-        console.error('Chat API error:', error);
-        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
-        return new Response(JSON.stringify({
-            error: 'Failed to process chat request',
-            details: error instanceof Error ? error.message : 'Unknown error'
-        }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
+		console.log("Model response status:", hfResponse.status);
+
+		if (!hfResponse.ok) {
+			const errorText = await hfResponse.text();
+			console.error("Model API error response:", errorText);
+			throw new Error(`Model API error: ${hfResponse.status} - ${errorText}`);
+		}
+
+		const data: LMStudioResponse = await hfResponse.json();
+		const response =
+			data.choices[0]?.message?.content ||
+			"Sorry, I could not generate a response.";
+
+		const chatResponse: ChatResponse = {
+			response,
+			sources: shouldUseRag
+				? relevantDocs
+						.filter((doc) => doc.score >= RELEVANCE_THRESHOLD)
+						.map((doc) => ({ source: doc.source, score: doc.score }))
+				: [], // No sources when RAG wasn't used
+		};
+
+		return new Response(JSON.stringify(chatResponse), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch (error) {
+		console.error("Chat API error:", error);
+		console.error(
+			"Error stack:",
+			error instanceof Error ? error.stack : "No stack",
+		);
+		return new Response(
+			JSON.stringify({
+				error: "Failed to process chat request",
+				details: error instanceof Error ? error.message : "Unknown error",
+			}),
+			{
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			},
+		);
+	}
 };

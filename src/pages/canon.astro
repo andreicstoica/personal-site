@@ -1,10 +1,10 @@
 ---
-import PageLayout from "../layouts/PageLayout.astro";
-import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import { getEntry } from "astro:content";
+import MarkdownLayout from "../layouts/MarkdownLayout.astro";
+import PageLayout from "../layouts/PageLayout.astro";
 import {
-  parseMarkdownContent,
-  styleMarkdownContent,
+	parseMarkdownContent,
+	styleMarkdownContent,
 } from "../lib/markdownUtils";
 
 const canonEntry = await getEntry("pages", "canon");
