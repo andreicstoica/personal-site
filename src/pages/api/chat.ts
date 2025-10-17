@@ -29,6 +29,17 @@ interface ChatResponse {
 		score: number;
 		metadata?: any;
 		confidence?: string;
+		scoreDetails?: {
+			rawDense: number;
+			dense: number;
+			rawSparse: number;
+			sparse: number;
+			weightedDense: number;
+			weightedSparse: number;
+			intentWeight: number;
+			timeDecayFactor: number;
+			hybrid: number;
+		};
 	}>;
 }
 
@@ -107,12 +118,14 @@ export const POST: APIRoute = async ({ request }) => {
 			const bestScore = relevantDocs[0]?.score || 0;
 			const isHighConfidence = bestScore >= T_HIGH;
 
-			// Format context with numbered citations
-			const context = relevantDocs
-				.filter((doc) => doc.score >= T_MID)
-				.map((doc, index) => `[[${index + 1}]] ${doc.text}`)
-				.join("\n\n");
+			const contextEntries = relevantDocs.map((doc, index) => {
+				const confidenceLabel = doc.confidence ?? "unknown";
+				const scorePercent = (doc.score * 100).toFixed(0);
+				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
+			});
+			const context = contextEntries.join("\n\n");
 
+			// Format context with numbered citations
 			if (isHighConfidence) {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
@@ -124,7 +137,8 @@ CRITICAL RULES:
 - You have high confidence in this context, so provide direct, synthesized answers.
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
-- Be authoritative and helpful - synthesize information across sources when relevant.`;
+- Be authoritative and helpful - synthesize information across sources when relevant.
+- Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.`;
 			} else {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
 
@@ -136,7 +150,8 @@ CRITICAL RULES:
 - You have moderate confidence in this context, so quote relevant passages and acknowledge limitations.
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
-- Be helpful and engaging - explain what you know and suggest related topics you can discuss.`;
+- Be helpful and engaging - explain what you know and suggest related topics you can discuss.
+- Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.`;
 			}
 		} else {
 			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
@@ -148,6 +163,7 @@ RULES:
 - For substantive questions, be conversational and engaging - acknowledge what I can and can't answer based on my knowledge base
 - Focus on what I DO know about: his work, projects, technical interests, writing, and professional background
 - NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences
+- If I'm unsure or lack the information, say that plainly and steer toward topics I can cover instead of speculating
 - Be helpful and suggest related topics I can discuss when you can't fully answer something`;
 		}
 
@@ -204,19 +220,18 @@ RULES:
 			data.choices[0]?.message?.content ||
 			"Sorry, I could not generate a response.";
 
-		const chatResponse: ChatResponse = {
-			response,
-			sources: shouldUseRag
-				? relevantDocs
-					.filter((doc) => doc.score >= T_MID)
-					.map((doc) => ({
+			const chatResponse: ChatResponse = {
+				response,
+				sources: shouldUseRag
+					? relevantDocs.map((doc) => ({
 						source: doc.source,
 						score: doc.score,
 						metadata: doc.metadata,
-						confidence: doc.confidence
+						confidence: doc.confidence,
+						scoreDetails: doc.scoreDetails
 					}))
-				: [], // No sources when RAG wasn't used
-		};
+					: [], // No sources when RAG wasn't used
+			};
 
 		return new Response(JSON.stringify(chatResponse), {
 			status: 200,

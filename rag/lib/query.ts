@@ -3,6 +3,7 @@ import MiniSearch from "minisearch";
 import path from "path";
 import { buildEmbeddings } from "./embed.js";
 import {
+	RELEVANCE_THRESHOLD,
 	TOP_K_CANDIDATES,
 	TOP_K_FINAL,
 	W_DENSE,
@@ -29,6 +30,18 @@ interface Document {
 	};
 }
 
+interface ScoreDetails {
+	rawDense: number;
+	dense: number;
+	rawSparse: number;
+	sparse: number;
+	weightedDense: number;
+	weightedSparse: number;
+	intentWeight: number;
+	timeDecayFactor: number;
+	hybrid: number;
+}
+
 interface QueryResult {
 	id: string;
 	text: string;
@@ -36,6 +49,7 @@ interface QueryResult {
 	score: number;
 	metadata?: any;
 	confidence?: 'high' | 'medium' | 'low';
+	scoreDetails?: ScoreDetails;
 }
 
 let keywordIndex: MiniSearch | null = null;
@@ -110,19 +124,20 @@ function detectQueryIntent(query: string): string[] {
 	return intents;
 }
 
-// Apply time decay to scores based on document date
-function applyTimeDecay(score: number, date?: string): number {
-	if (!date) return score;
+// Compute decay factor for dated content
+function getTimeDecayFactor(date?: string): number {
+	if (!date) return 1;
 
 	try {
 		const docDate = new Date(date);
+		if (Number.isNaN(docDate.getTime())) return 1;
+
 		const now = new Date();
 		const ageDays = (now.getTime() - docDate.getTime()) / (1000 * 60 * 60 * 24);
 
-		const decayFactor = Math.max(MIN_DECAY_FACTOR, 1 - (TIME_DECAY_ALPHA * ageDays));
-		return score * decayFactor;
+		return Math.max(MIN_DECAY_FACTOR, 1 - (TIME_DECAY_ALPHA * ageDays));
 	} catch {
-		return score;
+		return 1;
 	}
 }
 
@@ -217,21 +232,59 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 		}
 	});
 
-	// Apply type prefiltering if intents detected
-	let candidates = Array.from(candidateMap.values());
-	if (intents.length > 0) {
-		candidates = candidates.filter(candidate => {
-			const docType = candidate.metadata?.type;
-			return docType && intents.includes(docType);
-		});
-		console.log(`After type prefiltering: ${candidates.length} candidates`);
+	const candidates = Array.from(candidateMap.values());
+	if (candidates.length === 0) {
+		console.log("No candidates available after merging.");
+		return [];
 	}
+
+	const intentSet = new Set(intents);
+	const hasIntents = intentSet.size > 0;
+
+	// Normalize scores before weighting
+	const normalizedDense = new Map<string, number>();
+	const normalizedSparse = new Map<string, number>();
+
+	const remappedDense = candidates.map((candidate) =>
+		Math.max(0, (candidate.denseScore + 1) / 2)
+	);
+	const rawDenseMax = remappedDense.length > 0 ? Math.max(...candidates.map((candidate) => candidate.denseScore)) : 0;
+	const maxDense = remappedDense.length > 0 ? Math.max(...remappedDense) : 0;
+
+	const sparseScores = candidates.map((candidate) => Math.max(0, candidate.sparseScore));
+	const maxSparseRaw = sparseScores.length > 0 ? Math.max(...sparseScores) : 0;
+
+	candidates.forEach((candidate, index) => {
+		const denseValue = remappedDense[index];
+		const sparseValue = sparseScores[index];
+		normalizedDense.set(candidate.id, denseValue);
+
+		const normalizedSparseValue = 1 - Math.exp(-sparseValue / 10);
+		normalizedSparse.set(candidate.id, normalizedSparseValue);
+	});
+
+	console.log("Score normalization:");
+	console.log(`  Max dense (raw cosine): ${rawDenseMax.toFixed(3)}`);
+	console.log(`  Max dense (remapped to 0-1): ${maxDense.toFixed(3)}`);
+	console.log(`  Max sparse (raw BM25): ${maxSparseRaw.toFixed(3)}`);
 
 	// Calculate final scores with hybrid weighting and time decay
 	const ranked: QueryResult[] = candidates
 		.map((candidate) => {
-			const hybridScore = (W_DENSE * candidate.denseScore) + (W_SPARSE * candidate.sparseScore);
-			const finalScore = applyTimeDecay(hybridScore, candidate.metadata?.date);
+			const denseComponent = normalizedDense.get(candidate.id) ?? 0;
+			const sparseComponent = normalizedSparse.get(candidate.id) ?? 0;
+			const weightedDense = W_DENSE * denseComponent;
+			const weightedSparse = W_SPARSE * sparseComponent;
+			const hybridScore = weightedDense + weightedSparse;
+
+			const docType = candidate.metadata?.type;
+			const intentWeight = hasIntents
+				? (docType && intentSet.has(docType) ? 1 : 0.6)
+				: 1;
+
+			const boostedScore = hybridScore * intentWeight;
+			const timeDecayFactor = getTimeDecayFactor(candidate.metadata?.date);
+			const finalScore = boostedScore * timeDecayFactor;
 
 			return {
 				id: candidate.id,
@@ -240,7 +293,25 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 				metadata: candidate.metadata,
 				score: finalScore,
 				confidence: getConfidenceLevel(finalScore),
+				scoreDetails: {
+					rawDense: candidate.denseScore,
+					dense: denseComponent,
+					rawSparse: Math.max(0, candidate.sparseScore),
+					sparse: sparseComponent,
+					weightedDense,
+					weightedSparse,
+					intentWeight,
+					timeDecayFactor,
+					hybrid: hybridScore,
+				},
 			};
+		})
+		.filter((result) => {
+			const passes = result.score >= RELEVANCE_THRESHOLD;
+			if (!passes) {
+				console.log(`  Dropping ${result.source} below threshold (${(result.score * 100).toFixed(1)}% < ${(RELEVANCE_THRESHOLD * 100).toFixed(1)}%)`);
+			}
+			return passes;
 		})
 		.sort((a, b) => b.score - a.score)
 		.slice(0, TOP_K_FINAL);
@@ -249,6 +320,20 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 	ranked.forEach((result, i) => {
 		console.log(`  ${i + 1}. ${result.source} (${(result.score * 100).toFixed(1)}% - ${result.confidence})`);
 	});
+
+	if (ranked.length > 0) {
+		console.log("Top score breakdown:");
+		ranked.slice(0, Math.min(5, ranked.length)).forEach((result, i) => {
+			const details = result.scoreDetails;
+			if (!details) return;
+			console.log(
+				`  [${i + 1}] rawDense=${details.rawDense.toFixed(3)}, dense=${details.dense.toFixed(3)}, ` +
+				`rawSparse=${details.rawSparse.toFixed(3)}, sparse=${details.sparse.toFixed(3)}, ` +
+				`weighted=(${details.weightedDense.toFixed(3)} + ${details.weightedSparse.toFixed(3)}), ` +
+				`intent×${details.intentWeight.toFixed(2)}, decay×${details.timeDecayFactor.toFixed(2)}`
+			);
+		});
+	}
 
 	return ranked;
 }

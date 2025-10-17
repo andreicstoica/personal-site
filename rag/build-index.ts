@@ -3,13 +3,13 @@ import MiniSearch from "minisearch";
 import path from "path";
 import pLimit from "p-limit";
 import crypto from "crypto";
-import { buildEmbeddings, loadDocuments } from "./lib/embed.js";
+import { buildEmbeddings, loadDocuments } from "./lib/embed.ts";
 import {
 	EMBEDDING_CACHE_FILE,
 	INDEX_FILE,
 	KEYWORD_INDEX_FILE,
 	CACHE_DIR
-} from "./lib/constants.js";
+} from "./lib/constants.ts";
 
 const DATA_DIR = path.resolve("./rag/data");
 
