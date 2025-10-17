@@ -85,10 +85,10 @@ export const POST: APIRoute = async ({ request }) => {
             // Format context from retrieved document chunks
             const context = relevantDocs
                 .filter(doc => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
-                .map((doc) => `Source: ${doc.source}\nContent: ${doc.text}`)
+                .map((doc, idx) => `[${idx + 1}] From ${doc.source.replace('.txt', '')}:\n${doc.text}`)
                 .join('\n\n');
 
-            systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. You answer questions using ONLY the context provided below.
+            systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the context provided below.
 
 Context:
 ${context}
@@ -100,7 +100,8 @@ CRITICAL RULES:
 - Do not make assumptions about family, relationships, or personal life unless explicitly stated in context.
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
-- Be helpful and engaging - if you can't fully answer, explain what you do know and suggest related topics you can discuss.`;
+- Be helpful and engaging - if you can't fully answer, explain what you do know and suggest related topics you can discuss.
+- Reference the source numbers [1], [2], etc. when citing specific information.`;
         } else {
             systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
 

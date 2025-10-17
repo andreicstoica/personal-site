@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  sources?: SourceDisplay[];
 }
 
 interface ChatRequest {
@@ -14,6 +15,11 @@ interface ChatResponse {
   response: string;
   sources: Array<{ source: string; score: number }>;
   error?: string;
+}
+
+interface SourceDisplay {
+  source: string;
+  score: number;
 }
 
 export default function FullPageChat() {
@@ -34,8 +40,8 @@ export default function FullPageChat() {
     }
   };
 
-  const addMessage = (content: string, role: "user" | "assistant") => {
-    setMessages((prev) => [...prev, { role, content }]);
+  const addMessage = (content: string, role: "user" | "assistant", sources?: SourceDisplay[]) => {
+    setMessages((prev) => [...prev, { role, content, sources }]);
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -62,7 +68,7 @@ export default function FullPageChat() {
       const data: ChatResponse = await response.json();
       if (data.error) throw new Error(data.error);
 
-      addMessage(data.response, "assistant");
+      addMessage(data.response, "assistant", data.sources);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       addMessage(`Error: ${msg}`, "assistant");
@@ -103,7 +109,7 @@ export default function FullPageChat() {
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
             >
               <div
                 className={`max-w-[80%] sm:max-w-md px-4 py-3 text-sm border ${
@@ -115,6 +121,17 @@ export default function FullPageChat() {
               >
                 {message.content}
               </div>
+              {message.sources && message.sources.length > 0 && (
+                <div className="mt-2 text-xs text-gray-500 max-w-[80%] sm:max-w-md">
+                  <div className="text-gray-400 mb-1">Sources:</div>
+                  {message.sources.map((source, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="font-mono text-xs">{source.source.replace('.txt', '')}</span>
+                      <span className="text-gray-300">({(source.score * 100).toFixed(0)}%)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
 
