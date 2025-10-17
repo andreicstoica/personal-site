@@ -120,13 +120,15 @@ export default function FullPageChat() {
               >
                 <div>{message.content}</div>
                 {message.sources && message.sources.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 mb-2">Sources:</div>
-                    <div className="space-y-1">
+                  <div className="mt-2 pt-2 border-t border-gray-200">
+                    <div className="text-[10px] text-gray-400 mb-1">
+                      Sources:
+                    </div>
+                    <div className="space-y-0.5">
                       {message.sources.map((source, sourceIndex) => (
                         <div
                           key={sourceIndex}
-                          className="text-xs text-gray-600"
+                          className="text-[10px] text-gray-500"
                         >
                           • {source.source.replace(".txt", "")} (
                           {(source.score * 100).toFixed(1)}%)
