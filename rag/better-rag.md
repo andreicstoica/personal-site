@@ -113,9 +113,42 @@ Behavior guidelines:
 
 ## 5. Tips, Hyperparameters & Tuning
 
-- Overlap size: 50–100 tokens
-- Number of candidates: 5–7
-- Weighting: start with 0.7 dense, 0.3 sparse
-- Confidence thresholds: T_mid = 0.4, T_high = 0.6 (adjust after testing)
-- Time-decay α: maybe 0.001 per day (or lower)
-- Always test with edge-case questions (“unstated topics”) and canonical ones (“Where did Andrei work last?”)
+### Current Configuration (rag/lib/constants.ts)
+
+- **Chunking**: 500 tokens with 100 token overlap
+- **Retrieval**: 50 candidates, 3 final results
+- **Hybrid weights**: 0.7 dense, 0.3 sparse
+- **Confidence bands**: T_MID = 0.4, T_HIGH = 0.6
+- **Time decay**: α = 0.001 per day, min 0.1
+- **Cache**: SHA-1 based embedding cache with 6 concurrent workers
+
+### Tuning Knobs
+
+1. **Weights** (`W_DENSE`, `W_SPARSE`): Adjust dense vs sparse balance
+2. **Thresholds** (`T_MID`, `T_HIGH`): Control response confidence bands
+3. **Chunk size** (`CHUNK_SIZE`, `CHUNK_OVERLAP`): Balance context vs precision
+4. **Time decay** (`TIME_DECAY_ALPHA`): Favor recent content
+5. **Query expansion** (`QUERY_SYNONYMS`): Add domain-specific synonyms
+
+### Evaluation & Testing
+
+```bash
+# Rebuild index with new settings
+npm run rag:rebuild
+
+# Run evaluation suite
+npm run rag:eval
+
+# Check specific queries
+npm run rag:build && node -e "
+import { queryRag } from './rag/lib/query.js';
+queryRag('Where did Andrei work last?').then(console.log);
+"
+```
+
+### Performance Targets
+
+- Build time: < 2 minutes with cache
+- Query latency: < 150ms after warm
+- Coverage: > 80% for expected documents
+- Type accuracy: > 90% for intent detection

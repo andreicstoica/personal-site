@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { RELEVANCE_THRESHOLD } from "../../../rag/lib/constants.js";
+import { T_MID, T_HIGH } from "../../../rag/lib/constants.js";
 import { queryRag } from "../../../rag/lib/query.js";
 
 const MODEL_PROVIDER = (
@@ -24,7 +24,12 @@ interface ChatRequest {
 
 interface ChatResponse {
 	response: string;
-	sources: Array<{ source: string; score: number }>;
+	sources: Array<{
+		source: string;
+		score: number;
+		metadata?: any;
+		confidence?: string;
+	}>;
 }
 
 interface LMStudioRequest {
@@ -86,37 +91,53 @@ export const POST: APIRoute = async ({ request }) => {
 			relevantDocs = await queryRag(message);
 			console.log("RAG results:", relevantDocs);
 
-			// Only use RAG if the best match exceeds relevance threshold
+			// Use banded confidence thresholds
 			const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
-			shouldUseRag = bestScore >= RELEVANCE_THRESHOLD;
+			shouldUseRag = bestScore >= T_MID;
 
 			console.log(
-				`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)})`,
+				`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)}, threshold: ${T_MID})`,
 			);
 		}
 
 		let systemPrompt: string;
 
 		if (shouldUseRag) {
-			// Format context from retrieved document chunks
+			// Determine confidence level and format context accordingly
+			const bestScore = relevantDocs[0]?.score || 0;
+			const isHighConfidence = bestScore >= T_HIGH;
+
+			// Format context with numbered citations
 			const context = relevantDocs
-				.filter((doc) => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
-				.map((doc) => `${doc.text}`)
+				.filter((doc) => doc.score >= T_MID)
+				.map((doc, index) => `[[${index + 1}]] ${doc.text}`)
 				.join("\n\n");
 
-			systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the context provided below.
+			if (isHighConfidence) {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
 Context:
 ${context}
 
 CRITICAL RULES:
 - Use ONLY information from the context above. Do NOT use any external knowledge.
-- If the context doesn't fully answer the question, be conversational and acknowledge what you know vs. what you don't know from the provided context.
-- NEVER invent, assume, or extrapolate facts, dates, experiences, places, relationships, or personal details.
-- Do not make assumptions about family, relationships, or personal life unless explicitly stated in context.
+- You have high confidence in this context, so provide direct, synthesized answers.
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
-- Be helpful and engaging - if you can't fully answer, explain what you do know and suggest related topics you can discuss.`;
+- Be authoritative and helpful - synthesize information across sources when relevant.`;
+			} else {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
+
+Context:
+${context}
+
+CRITICAL RULES:
+- Use ONLY information from the context above. Do NOT use any external knowledge.
+- You have moderate confidence in this context, so quote relevant passages and acknowledge limitations.
+- Write in Andrei's voice: concise, direct, thoughtful. No filler.
+- Quote or paraphrase the context directly when answering.
+- Be helpful and engaging - explain what you know and suggest related topics you can discuss.`;
+			}
 		} else {
 			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
 
@@ -187,8 +208,13 @@ RULES:
 			response,
 			sources: shouldUseRag
 				? relevantDocs
-					.filter((doc) => doc.score >= RELEVANCE_THRESHOLD)
-					.map((doc) => ({ source: doc.source, score: doc.score }))
+					.filter((doc) => doc.score >= T_MID)
+					.map((doc) => ({
+						source: doc.source,
+						score: doc.score,
+						metadata: doc.metadata,
+						confidence: doc.confidence
+					}))
 				: [], // No sources when RAG wasn't used
 		};
 

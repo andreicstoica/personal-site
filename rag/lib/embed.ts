@@ -1,10 +1,22 @@
 import { pipeline } from "@xenova/transformers";
 import fs from "fs";
 import path from "path";
+import { CHUNK_SIZE, CHUNK_OVERLAP } from "./constants.js";
 
 interface Document {
 	id: string;
 	text: string;
+	metadata?: DocumentMetadata;
+}
+
+interface DocumentMetadata {
+	type: string;
+	title?: string;
+	date?: string;
+	tags?: string[];
+	summary?: string;
+	headingPath?: string;
+	sourceUrl?: string;
 }
 
 let embeddingPipeline: any = null;
@@ -24,26 +36,112 @@ export async function buildEmbeddings(text: string): Promise<number[]> {
 	return Array.from(result.data);
 }
 
-// Split text into chunks for better semantic matching
-function chunkText(
+// Parse YAML frontmatter from markdown content
+function parseFrontmatter(content: string): { frontmatter: any; content: string } {
+	const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+	const match = content.match(frontmatterRegex);
+
+	if (!match) {
+		return { frontmatter: {}, content };
+	}
+
+	try {
+		// Simple YAML parsing for basic key-value pairs
+		const frontmatter: any = {};
+		const lines = match[1].split('\n');
+		for (const line of lines) {
+			const colonIndex = line.indexOf(':');
+			if (colonIndex > 0) {
+				const key = line.slice(0, colonIndex).trim();
+				const value = line.slice(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
+				if (key && value) {
+					frontmatter[key] = value;
+				}
+			}
+		}
+		return { frontmatter, content: match[2] };
+	} catch {
+		return { frontmatter: {}, content };
+	}
+}
+
+// Extract heading hierarchy from markdown content
+function extractHeadings(content: string): string[] {
+	const headingRegex = /^(#{1,6})\s+(.+)$/gm;
+	const headings: string[] = [];
+	let match;
+
+	while ((match = headingRegex.exec(content)) !== null) {
+		const level = match[1].length;
+		const text = match[2].trim();
+		headings.push(`${'  '.repeat(level - 1)}${text}`);
+	}
+
+	return headings;
+}
+
+// Infer document type from filename and content
+function inferDocumentType(filename: string, content: string): string {
+	const name = filename.toLowerCase();
+
+	if (name.includes('resume')) return 'resume';
+	if (name.includes('blog') || name.includes('post') || /\d{4}-\d{2}-\d{2}/.test(name)) return 'blog';
+	if (name.includes('canon') || name.includes('essay') || name.includes('philosophy')) return 'essay';
+	if (name.includes('project') || name.includes('work')) return 'project';
+
+	// Check content for indicators
+	if (content.includes('Professional Experience') || content.includes('Work Experience')) return 'resume';
+	if (content.includes('##') && content.length > 1000) return 'blog';
+
+	return 'document';
+}
+
+// Split text into chunks with heading-aware boundaries
+function chunkTextWithHeadings(
 	text: string,
-	chunkSize: number = 300,
-	overlap: number = 50,
-): string[] {
+	chunkSize: number = CHUNK_SIZE,
+	overlap: number = CHUNK_OVERLAP,
+): { chunks: string[]; headings: string[] } {
+	const headings = extractHeadings(text);
 	const chunks: string[] = [];
 	let start = 0;
 
+	// Convert token-based sizes to character-based estimates (roughly 4 chars per token)
+	const charChunkSize = chunkSize * 4;
+	const charOverlap = overlap * 4;
+
 	while (start < text.length) {
-		let end = start + chunkSize;
+		let end = start + charChunkSize;
 
-		// Try to break at sentence boundaries
+		// Try to break at semantic boundaries (headings, paragraphs, sentences)
 		if (end < text.length) {
-			const lastPeriod = text.lastIndexOf(".", end);
-			const lastNewline = text.lastIndexOf("\n", end);
-			const breakPoint = Math.max(lastPeriod, lastNewline);
+			// Look for heading boundaries first
+			const headingMatch = text.slice(start, end).match(/\n(#{1,6})\s+/g);
+			if (headingMatch) {
+				const lastHeading = headingMatch[headingMatch.length - 1];
+				const headingPos = text.lastIndexOf(lastHeading, end);
+				if (headingPos > start + charChunkSize * 0.3) {
+					end = headingPos;
+				}
+			}
 
-			if (breakPoint > start + chunkSize * 0.5) {
-				end = breakPoint + 1;
+			// Fall back to paragraph boundaries
+			if (end === start + charChunkSize) {
+				const lastParagraph = text.lastIndexOf('\n\n', end);
+				if (lastParagraph > start + charChunkSize * 0.5) {
+					end = lastParagraph + 2;
+				}
+			}
+
+			// Final fallback to sentence boundaries
+			if (end === start + charChunkSize) {
+				const lastPeriod = text.lastIndexOf('.', end);
+				const lastNewline = text.lastIndexOf('\n', end);
+				const breakPoint = Math.max(lastPeriod, lastNewline);
+
+				if (breakPoint > start + charChunkSize * 0.5) {
+					end = breakPoint + 1;
+				}
 			}
 		}
 
@@ -52,44 +150,96 @@ function chunkText(
 			chunks.push(chunk);
 		}
 
-		start = end - overlap;
+		// Ensure we always advance to prevent infinite loops
+		const nextStart = end - charOverlap;
+		start = Math.max(nextStart, start + 1);
+
+		// Safety check to prevent infinite loops
+		if (start >= text.length) break;
 	}
 
-	return chunks;
+	return { chunks, headings };
 }
 
-// Recursively gather all .txt/.md files in data/ and chunk them
+// Load metadata from sidecar JSON file
+function loadSidecarMetadata(filePath: string): any {
+	const jsonPath = filePath.replace(/\.(txt|md)$/, '.json');
+	try {
+		if (fs.existsSync(jsonPath)) {
+			return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+		}
+	} catch {
+		// Ignore JSON parse errors
+	}
+	return {};
+}
+
+// Recursively gather all .txt/.md files in data/ and chunk them with metadata
 export function loadDocuments(dataDir: string): Document[] {
 	const docs: Document[] = [];
+
 	function recurse(dir: string) {
 		for (const file of fs.readdirSync(dir)) {
 			const full = path.join(dir, file);
 			const stat = fs.statSync(full);
 			if (stat.isDirectory()) recurse(full);
 			else if (file.endsWith(".txt") || file.endsWith(".md")) {
-				const text = fs.readFileSync(full, "utf8");
+				const content = fs.readFileSync(full, "utf8");
 				const filename = path.basename(file, path.extname(file));
+				const relativePath = full.replace(dataDir, "");
+
+				// Parse frontmatter if present
+				const { frontmatter, content: textContent } = parseFrontmatter(content);
+
+				// Load sidecar metadata
+				const sidecarMetadata = loadSidecarMetadata(full);
+
+				// Combine metadata sources (sidecar overrides frontmatter)
+				const metadata: DocumentMetadata = {
+					type: sidecarMetadata.type || frontmatter.type || inferDocumentType(filename, textContent),
+					title: sidecarMetadata.title || frontmatter.title || filename,
+					date: sidecarMetadata.date || frontmatter.date,
+					tags: sidecarMetadata.tags || frontmatter.tags || [],
+					summary: sidecarMetadata.summary || frontmatter.summary,
+					sourceUrl: sidecarMetadata.sourceUrl || frontmatter.sourceUrl
+				};
+
+				// Extract headings for headingPath
+				const { headings } = chunkTextWithHeadings(textContent, 0, 0);
+				metadata.headingPath = headings.join(' > ');
 
 				// Don't chunk resume - keep as single document
-				if (filename === "resume") {
+				if (metadata.type === "resume") {
 					docs.push({
-						id: full.replace(dataDir, ""),
-						text: text,
+						id: relativePath,
+						text: textContent,
+						metadata
 					});
 				} else {
-					// Chunk blog posts and other content
-					const chunks = chunkText(text, 500, 100); // Larger chunks, more overlap
+					// Chunk other content with heading awareness
+					const { chunks } = chunkTextWithHeadings(textContent, CHUNK_SIZE, CHUNK_OVERLAP);
 					chunks.forEach((chunk, index) => {
-						const chunkId =
-							chunks.length > 1
-								? `${full.replace(dataDir, "")}#chunk-${index + 1}`
-								: full.replace(dataDir, "");
-						docs.push({ id: chunkId, text: chunk });
+						const chunkId = chunks.length > 1
+							? `${relativePath}#chunk-${index + 1}`
+							: relativePath;
+
+						// Create chunk-specific metadata
+						const chunkMetadata = { ...metadata };
+						if (chunks.length > 1) {
+							chunkMetadata.headingPath = `${metadata.headingPath} > Chunk ${index + 1}`;
+						}
+
+						docs.push({
+							id: chunkId,
+							text: chunk,
+							metadata: chunkMetadata
+						});
 					});
 				}
 			}
 		}
 	}
+
 	recurse(dataDir);
 	return docs;
 }
