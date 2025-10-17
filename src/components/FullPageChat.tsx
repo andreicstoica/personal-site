@@ -35,6 +35,7 @@ export default function FullPageChat() {
     "checking" | "online" | "offline"
   >("checking");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const checkServerHealth = async () => {
     try {
@@ -43,6 +44,10 @@ export default function FullPageChat() {
     } catch {
       setServerStatus("offline");
     }
+  };
+
+  const focusInput = () => {
+    inputRef.current?.focus();
   };
 
   const addMessage = (
@@ -88,11 +93,14 @@ export default function FullPageChat() {
       addMessage(`Error: ${msg}`, "assistant");
     } finally {
       setIsLoading(false);
+      // Small delay to ensure input is re-enabled before focusing
+      setTimeout(focusInput, 10);
     }
   };
 
   useEffect(() => {
     checkServerHealth();
+    focusInput();
   }, []);
 
   useEffect(() => {
@@ -204,6 +212,7 @@ export default function FullPageChat() {
       <div className="p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
