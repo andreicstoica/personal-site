@@ -11,6 +11,14 @@ import {
 	CACHE_DIR
 } from "./lib/constants.ts";
 
+interface EmbeddingIndexItem {
+	id: string;
+	text: string;
+	source: string;
+	embedding: number[];
+	metadata: Record<string, any>;
+}
+
 const DATA_DIR = path.resolve("./rag/data");
 
 // Load embedding cache
@@ -61,7 +69,7 @@ async function main() {
 	const embeddingCache = loadEmbeddingCache();
 	console.log(`Loaded ${embeddingCache.size} cached embeddings`);
 
-	const embeddingIndex = [];
+	const embeddingIndex: EmbeddingIndexItem[] = [];
 	const keywordIndex = new MiniSearch({
 		fields: ["text", "title", "tags", "source"],
 		storeFields: ["id", "text", "title", "tags", "source", "metadata"],
