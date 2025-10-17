@@ -1,20 +1,14 @@
 ---
 import ProjectDisplay from "../../components/ProjectDisplay.astro";
 import PageLayout from "../../layouts/PageLayout.astro";
-import { projects } from "../../lib/projects";
+import { getProject } from "../../lib/projects";
 
-export async function getStaticPaths() {
-	return Object.values(projects).map((project) => ({
-		params: { id: project.id },
-		props: { project },
-	}));
+const { id } = Astro.params;
+const project = id ? getProject(id) : undefined;
+
+if (!project) {
+  return Astro.redirect("/404");
 }
-
-interface Props {
-	project: import("../../lib/types").Project;
-}
-
-const { project } = Astro.props;
 ---
 
 <PageLayout title={project.title}>
