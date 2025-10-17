@@ -80,6 +80,11 @@ function extractHeadings(content: string): string[] {
 	return headings;
 }
 
+// Extract headings without chunking overhead
+function extractHeadingsOnly(content: string): string[] {
+	return extractHeadings(content);
+}
+
 // Infer document type from filename and content
 function inferDocumentType(filename: string, content: string): string {
 	const name = filename.toLowerCase();
@@ -204,8 +209,7 @@ export function loadDocuments(dataDir: string): Document[] {
 					sourceUrl: sidecarMetadata.sourceUrl || frontmatter.sourceUrl
 				};
 
-				// Extract headings for headingPath
-				const { headings } = chunkTextWithHeadings(textContent, 0, 0);
+				const headings = extractHeadingsOnly(textContent);
 				metadata.headingPath = headings.join(' > ');
 
 				// Don't chunk resume - keep as single document
