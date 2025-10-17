@@ -1,19 +1,154 @@
-How the router works (concept) 1. Cheap prefilter (optional): quick heuristics (length, greetings) to skip obvious chit-chat. 2. Router call: Ask your local model a yes/no question—“Should I search my docs for this?”—with a short system prompt and a couple examples. 3. Decision:
-• If YES → run your hybrid search (BM25 → embedding rerank), inject context.
-• If NO → skip RAG, answer concisely from the base model. 4. Fail-safe: If the router returns something unexpected, default to NO (no RAG). 5. Telemetry: Log routerDecision, topCosine, usedRag, and sources to tune thresholds. 6. User override: If the query starts with search: or contains a 🔎 emoji, force YES; if it includes no context, force NO.
+# Andrei-Style RAG Improvement Guide
 
-What to change (drop-in steps, no code) 1. Create a tiny router prompt
-• System: “You are a classifier. Answer only YES or NO.”
-• User: include the raw user message plus guidance like “Use YES for queries about Andrei/site/blog/resume/projects; NO for greetings or general chit-chat.”
-• Add 3–5 short examples (hi/what’s up → NO; “Where did Andrei work?” → YES). 2. Call the router before retrieval
-• Place this right after your basic heuristics (length/greetings) and before queryHybrid.
-• Use the same LM Studio endpoint (fast, single-turn chat completion). 3. Normalize and validate
-• Uppercase and trim the router’s text; accept only “YES” or “NO”.
-• If anything else, treat it as NO. 4. Respect user overrides
-• If the query contains search:/🔎, set decision to YES without asking the router.
-• If it contains no context, set NO. 5. Short-circuit the pipeline
-• If NO → build messages without [Context] and send to the model.
-• If YES → run queryHybrid, check top cosine vs your threshold, and only inject context if the score passes. 6. Return metadata
-• Include { usedRag, routerDecision, sources } in your API response so the UI can badge “RAG on/off” and you can debug. 7. Tune
-• Start with your cosine threshold around 0.30 and adjust based on logs.
-• If the router says YES too often, tighten examples or add a keyword list (andrei/resume/blog/portfolio/site/project/company/school).
+This document outlines a comprehensive approach to improving your RAG (Retrieval Augmented Generation) system tailored to your personal site (blogs, resume, writings). Use this as a context prompt or spec for Codex, LLMs, or your pipeline.
+
+## 1. Data Schema & Chunking Strategy
+
+### 🎯 Document Record Structure
+
+Each document (blog, resume entry, project, etc.) should have structured metadata + content. Example:
+
+```json
+{
+  "id": "blog-2024-08-15-ai-ethics",
+  "type": "blog",
+  "title": "The Ethics of AI in Everyday Tools",
+  "date": "2024-08-15",
+  "tags": ["AI", "ethics", "tools"],
+  "summary": "I reflect on how AI can mediate everyday tools ethically ...",
+  "content": "Full blog text …"
+}
+```
+
+For resume entries:
+
+```
+{
+  "id": "resume-job-5",
+  "type": "resume_entry",
+  "company": "InnoTech LLC",
+  "role": "Lead Designer",
+  "start_date": "2023-02",
+  "end_date": "2025-06",
+  "description": "Oversaw product design, strategy, published on topics such as X, Y."
+}
+```
+
+You may also include “project”, “essay”, or “talk” types similarly.
+
+### Chunking / Segmentation
+
+- Split by **semantic boundaries** (paragraphs, logical sections) rather than fixed token lengths.
+- Add **small overlap** (e.g. 50–100 tokens) between adjacent chunks to preserve continuity.
+- Retain metadata in each chunk (title, date, type, parent id).
+- Optionally include a **“heading path”** field (e.g. section hierarchy) in metadata to help contextual relevance.
+
+## 2. Metadata & Enrichment
+
+Embedding metadata is key to controlling and filtering retrieval.
+
+- type (blog, resume, project, talk, etc.)
+- date or start_date / end_date
+- tags or topics
+- title, summary
+- For resume entries: company, role, description
+  This lets you later filter or bias retrieval (e.g. only resume entries for “where did Andrei work?”)
+
+## 3. Retrieval Strategy: Hybrid + Re-ranking
+
+### a. Dense + Sparse Dual Retrieval
+
+- Use **dense (vector)** embeddings for semantic relevance.
+- Use **sparse** (e.g. BM25, keyword search) for exact matching / lexical hits.
+- Retrieve top-K from both, then **merge & re-rank** by a weighted combination:
+
+```
+merged_score = w_dense * score_dense + w_sparse * score_sparse
+```
+
+- You can tune weights (e.g. 0.7 dense, 0.3 sparse) depending on quality.
+
+### b. Query Expansion
+
+When user asks a question, expand it with synonyms or related phrases:
+
+- E.g. “latest job, current role, past employment” for “where did Andrei work last?”
+- Use simple thesaurus or embedding-based nearest words.
+
+### Time Decay / Recency Bias
+
+For content types that age (blogs), you can favor recent ones:
+
+```
+age_days = (today_date – doc_date)
+decay_factor = max(0, 1 − α * age_days)
+final_score = merged_score * decay_factor
+```
+
+Pick a small α (e.g. 0.001) so recency nudges results, not dominates.
+
+### d. Metadata Filtering / Pre-filtering
+
+If question clearly implies a type:
+
+- “Where did Andrei work last?” → filter to type = resume_entry
+- “What did Andrei write recently about X?” → type = blog, optionally filter by tags
+  Filtering helps avoid irrelevant chunks.
+
+## 4. Confidence / Answer Style Logic
+
+Define threshold bands for how the system should respond:
+|**Confidence Score**|**Response Style**|
+|---|---|
+|> T_high (e.g. 0.6)|Confident answer in your voice, possibly synthesizing opinion|
+|between T_mid and T_high (e.g. 0.4–0.6)|Quote relevant passages + contextualize|
+|< T_mid|Say “I don’t have enough info” / suggest related content or encourage user to ask more|
+
+Behavior guidelines:
+
+- Never assert things outside your corpus.
+- Use first person (“I”) only when confident and grounded in retrieved text.
+- Provide citations / mention metadata: e.g. “In the 2024 blog _Ethics of AI in Everyday Tools_, I wrote …”
+- In moderate confidence, you can hedge: “Here’s what seems plausible based on my writings…”
+
+## 5. Tips, Hyperparameters & Tuning
+
+### Current Configuration (rag/lib/constants.ts)
+
+- **Chunking**: 500 tokens with 100 token overlap
+- **Retrieval**: 50 candidates, 3 final results
+- **Hybrid weights**: 0.7 dense, 0.3 sparse
+- **Confidence bands**: T_MID = 0.4, T_HIGH = 0.6
+- **Time decay**: α = 0.001 per day, min 0.1
+- **Cache**: SHA-1 based embedding cache with 6 concurrent workers
+
+### Tuning Knobs
+
+1. **Weights** (`W_DENSE`, `W_SPARSE`): Adjust dense vs sparse balance
+2. **Thresholds** (`T_MID`, `T_HIGH`): Control response confidence bands
+3. **Chunk size** (`CHUNK_SIZE`, `CHUNK_OVERLAP`): Balance context vs precision
+4. **Time decay** (`TIME_DECAY_ALPHA`): Favor recent content
+5. **Query expansion** (`QUERY_SYNONYMS`): Add domain-specific synonyms
+
+### Evaluation & Testing
+
+```bash
+# Rebuild index with new settings
+npm run rag:rebuild
+
+# Run evaluation suite
+npm run rag:eval
+
+# Check specific queries
+npm run rag:build && node -e "
+import { queryRag } from './rag/lib/query.js';
+queryRag('Where did Andrei work last?').then(console.log);
+"
+```
+
+### Performance Targets
+
+- Build time: < 2 minutes with cache
+- Query latency: < 150ms after warm
+- Coverage: > 80% for expected documents
+- Type accuracy: > 90% for intent detection

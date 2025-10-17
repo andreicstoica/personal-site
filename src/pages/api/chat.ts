@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { RELEVANCE_THRESHOLD } from "../../../rag/lib/constants.js";
+import { T_MID, T_HIGH } from "../../../rag/lib/constants.js";
 import { queryRag } from "../../../rag/lib/query.js";
 
 const MODEL_PROVIDER = (
@@ -24,7 +24,23 @@ interface ChatRequest {
 
 interface ChatResponse {
 	response: string;
-	sources: Array<{ source: string; score: number }>;
+	sources: Array<{
+		source: string;
+		score: number;
+		metadata?: any;
+		confidence?: string;
+		scoreDetails?: {
+			rawDense: number;
+			dense: number;
+			rawSparse: number;
+			sparse: number;
+			weightedDense: number;
+			weightedSparse: number;
+			intentWeight: number;
+			timeDecayFactor: number;
+			hybrid: number;
+		};
+	}>;
 }
 
 interface LMStudioRequest {
@@ -86,41 +102,57 @@ export const POST: APIRoute = async ({ request }) => {
 			relevantDocs = await queryRag(message);
 			console.log("RAG results:", relevantDocs);
 
-			// Only use RAG if the best match exceeds relevance threshold
+			// Use banded confidence thresholds
 			const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
-			shouldUseRag = bestScore >= RELEVANCE_THRESHOLD;
+			shouldUseRag = bestScore >= T_MID;
 
 			console.log(
-				`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)})`,
+				`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)}, threshold: ${T_MID})`,
 			);
 		}
 
 		let systemPrompt: string;
 
 		if (shouldUseRag) {
-			// Format context from retrieved document chunks
-			const context = relevantDocs
-				.filter((doc) => doc.score >= RELEVANCE_THRESHOLD) // Only include high-relevance docs
-				.map(
-					(doc, idx) =>
-						`[${idx + 1}] From ${doc.source.replace(".txt", "")}:\n${doc.text}`,
-				)
-				.join("\n\n");
+			// Determine confidence level and format context accordingly
+			const bestScore = relevantDocs[0]?.score || 0;
+			const isHighConfidence = bestScore >= T_HIGH;
 
-			systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the context provided below.
+			const contextEntries = relevantDocs.map((doc, index) => {
+				const confidenceLabel = doc.confidence ?? "unknown";
+				const scorePercent = (doc.score * 100).toFixed(0);
+				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
+			});
+			const context = contextEntries.join("\n\n");
+
+			// Format context with numbered citations
+			if (isHighConfidence) {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
 Context:
 ${context}
 
 CRITICAL RULES:
 - Use ONLY information from the context above. Do NOT use any external knowledge.
-- If the context doesn't fully answer the question, be conversational and acknowledge what you know vs. what you don't know from the provided context.
-- NEVER invent, assume, or extrapolate facts, dates, experiences, places, relationships, or personal details.
-- Do not make assumptions about family, relationships, or personal life unless explicitly stated in context.
+- You have high confidence in this context, so provide direct, synthesized answers.
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
-- Be helpful and engaging - if you can't fully answer, explain what you do know and suggest related topics you can discuss.
-- Reference the source numbers [1], [2], etc. when citing specific information.`;
+- Be authoritative and helpful - synthesize information across sources when relevant.
+- Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.`;
+			} else {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
+
+Context:
+${context}
+
+CRITICAL RULES:
+- Use ONLY information from the context above. Do NOT use any external knowledge.
+- You have moderate confidence in this context, so quote relevant passages and acknowledge limitations.
+- Write in Andrei's voice: concise, direct, thoughtful. No filler.
+- Quote or paraphrase the context directly when answering.
+- Be helpful and engaging - explain what you know and suggest related topics you can discuss.
+- Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.`;
+			}
 		} else {
 			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
 
@@ -131,6 +163,7 @@ RULES:
 - For substantive questions, be conversational and engaging - acknowledge what I can and can't answer based on my knowledge base
 - Focus on what I DO know about: his work, projects, technical interests, writing, and professional background
 - NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences
+- If I'm unsure or lack the information, say that plainly and steer toward topics I can cover instead of speculating
 - Be helpful and suggest related topics I can discuss when you can't fully answer something`;
 		}
 
@@ -187,14 +220,18 @@ RULES:
 			data.choices[0]?.message?.content ||
 			"Sorry, I could not generate a response.";
 
-		const chatResponse: ChatResponse = {
-			response,
-			sources: shouldUseRag
-				? relevantDocs
-						.filter((doc) => doc.score >= RELEVANCE_THRESHOLD)
-						.map((doc) => ({ source: doc.source, score: doc.score }))
-				: [], // No sources when RAG wasn't used
-		};
+			const chatResponse: ChatResponse = {
+				response,
+				sources: shouldUseRag
+					? relevantDocs.map((doc) => ({
+						source: doc.source,
+						score: doc.score,
+						metadata: doc.metadata,
+						confidence: doc.confidence,
+						scoreDetails: doc.scoreDetails
+					}))
+					: [], // No sources when RAG wasn't used
+			};
 
 		return new Response(JSON.stringify(chatResponse), {
 			status: 200,

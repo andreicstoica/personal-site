@@ -1,0 +1,6 @@
+{
+  "type": "project",
+  "title": "Blob Game", 
+  "tags": ["clicker game", "browser game", "typescript", "react", "game engine", "game design", "netlify"],
+  "sourceUrl": "/projects/blob-game"
+}

@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  sources?: Array<{ source: string; score: number }>;
+  sources?: Array<{
+    source: string;
+    score: number;
+    metadata?: any;
+    confidence?: string;
+  }>;
 }
 
 interface ChatRequest {
@@ -13,7 +18,12 @@ interface ChatRequest {
 
 interface ChatResponse {
   response: string;
-  sources: Array<{ source: string; score: number }>;
+  sources: Array<{
+    source: string;
+    score: number;
+    metadata?: any;
+    confidence?: string;
+  }>;
   error?: string;
 }
 
@@ -38,7 +48,12 @@ export default function FullPageChat() {
   const addMessage = (
     content: string,
     role: "user" | "assistant",
-    sources?: Array<{ source: string; score: number }>
+    sources?: Array<{
+      source: string;
+      score: number;
+      metadata?: any;
+      confidence?: string;
+    }>
   ) => {
     setMessages((prev) => [...prev, { role, content, sources }]);
   };
@@ -120,18 +135,50 @@ export default function FullPageChat() {
               >
                 <div>{message.content}</div>
                 {message.sources && message.sources.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 mb-2">Sources:</div>
-                    <div className="space-y-1">
-                      {message.sources.map((source, sourceIndex) => (
-                        <div
-                          key={sourceIndex}
-                          className="text-xs text-gray-600"
-                        >
-                          • {source.source.replace(".txt", "")} (
-                          {(source.score * 100).toFixed(1)}%)
-                        </div>
-                      ))}
+                  <div className="mt-2 pt-2 border-t border-gray-200">
+                    <div className="text-[10px] text-gray-400 mb-1">
+                      Sources:
+                    </div>
+                    <div className="space-y-0.5">
+                      {message.sources.map((source, sourceIndex) => {
+                        const confidenceColor =
+                          source.confidence === "high"
+                            ? "text-green-600"
+                            : source.confidence === "medium"
+                              ? "text-yellow-600"
+                              : "text-red-600";
+                        const sourceUrl = source.metadata?.sourceUrl;
+                        const displayName =
+                          source.metadata?.title ||
+                          source.source.replace(".txt", "");
+
+                        return (
+                          <div
+                            key={sourceIndex}
+                            className="text-[10px] text-gray-500 flex items-center gap-1"
+                          >
+                            <span className={`font-medium ${confidenceColor}`}>
+                              {source.confidence?.toUpperCase() || "LOW"}
+                            </span>
+                            <span>•</span>
+                            {sourceUrl ? (
+                              <a
+                                href={sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {displayName}
+                              </a>
+                            ) : (
+                              <span>{displayName}</span>
+                            )}
+                            <span className="text-gray-400">
+                              ({(source.score * 100).toFixed(1)}%)
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
