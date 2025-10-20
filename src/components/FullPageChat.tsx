@@ -119,10 +119,11 @@ export default function FullPageChat() {
                 "Ask me anything about my work, projects, or background!"}
               {serverStatus === "offline" && (
                 <div className="text-gray-500">
-                  The inference server is currently down (it's expensive to
-                  run!)
+                  The inference server is currently down - it is expensive to
+                  run!
                   <br />
-                  Check back later or reach out directly.
+                  Check back later or reach out directly and I'll spin it up for
+                  you.
                 </div>
               )}
             </div>
