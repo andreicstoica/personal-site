@@ -4,8 +4,8 @@ import MediaGallery from "../components/MediaGallery.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import PageLayout from "../layouts/PageLayout.astro";
 import {
-	parseMarkdownContent,
-	styleMarkdownContent,
+  parseMarkdownContent,
+  styleMarkdownContent,
 } from "../lib/markdownUtils";
 
 const aboutEntry = await getEntry("pages", "about");
@@ -48,7 +48,7 @@ const parsedContent = parseMarkdownContent(aboutContent);
     </MarkdownLayout>
 
     <!-- Media Gallery -->
-    <div class="mt-2">
+    <div class="mt-2 pb-8">
       <MediaGallery
         images={["about.webp", "timbers.webp"]}
         experienceName="About"

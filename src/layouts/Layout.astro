@@ -2,8 +2,8 @@
 import "../styles/global.css";
 
 interface Props {
-	title: string;
-	description?: string;
+  title: string;
+  description?: string;
 }
 
 const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
@@ -20,8 +20,10 @@ const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="m-0 p-0 min-h-[100vh] grid grid-cols-12 root">
-    <slot />
+  <body class="m-0 p-0 layout-body">
+    <div class="layout-grid">
+      <slot />
+    </div>
   </body>
 </html>
 

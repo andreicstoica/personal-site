@@ -122,8 +122,10 @@ export default function FullPageChat() {
                   The inference server is currently down - it is expensive to
                   run!
                   <br />
-                  Check back later or reach out directly and I'll spin it up for
-                  you.
+                  <br />
+                  Reach out directly and I'll spin it up for you:
+                  <br />
+                  <em>andrei c stoica (at) icloud (dot) com</em>
                 </div>
               )}
             </div>
