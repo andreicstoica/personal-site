@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { T_MID, T_HIGH } from "../../../rag/lib/constants.js";
 import { queryRag } from "../../../rag/lib/query.js";
-import { formatForPrompt, estimateTokenCount } from "../../../rag/lib/toon-formatter.js";
 
 const MODEL_PROVIDER = (
 	import.meta.env.MODEL_PROVIDER ?? "local"
@@ -119,15 +118,13 @@ export const POST: APIRoute = async ({ request }) => {
 			const bestScore = relevantDocs[0]?.score || 0;
 			const isHighConfidence = bestScore >= T_HIGH;
 
-			// Calculate token usage before and after TOON encoding
-			const originalTokens = relevantDocs.reduce((sum, doc) => sum + estimateTokenCount(doc.text), 0);
-			const context = formatForPrompt(relevantDocs);
-			const encodedTokens = estimateTokenCount(context);
-			const tokenSavings = originalTokens > 0 ? ((originalTokens - encodedTokens) / originalTokens * 100).toFixed(1) : '0';
+			// Format context with numbered citations
+			const context = relevantDocs.map((doc, index) => {
+				const confidenceLabel = doc.confidence ?? "unknown";
+				const scorePercent = (doc.score * 100).toFixed(0);
+				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
+			}).join("\n\n");
 
-			console.log(`Token usage: ${originalTokens} → ${encodedTokens} tokens (${tokenSavings}% reduction)`);
-
-			// Format context with numbered citations and TOON instructions
 			if (isHighConfidence) {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
@@ -140,14 +137,7 @@ CRITICAL RULES:
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
 - Be authoritative and helpful - synthesize information across sources when relevant.
-- Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.
-
-TOON FORMAT NOTES:
-- When context is provided in TOON format (marked with \`\`\`toon), note:
-  - Arrays show length: items[3] means 3 items
-  - Tabular data uses headers: items[2]{name,value}: shows 2 rows with name/value fields
-  - Values are inline without repeated keys
-  - This format is more compact but contains the same information as regular text`;
+- Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.`;
 			} else {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
 
@@ -160,14 +150,7 @@ CRITICAL RULES:
 - Write in Andrei's voice: concise, direct, thoughtful. No filler.
 - Quote or paraphrase the context directly when answering.
 - Be helpful and engaging - explain what you know and suggest related topics you can discuss.
-- Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.
-
-TOON FORMAT NOTES:
-- When context is provided in TOON format (marked with \`\`\`toon), note:
-  - Arrays show length: items[3] means 3 items
-  - Tabular data uses headers: items[2]{name,value}: shows 2 rows with name/value fields
-  - Values are inline without repeated keys
-  - This format is more compact but contains the same information as regular text`;
+- Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.`;
 			}
 		} else {
 			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
