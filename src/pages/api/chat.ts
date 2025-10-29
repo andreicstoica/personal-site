@@ -118,14 +118,13 @@ export const POST: APIRoute = async ({ request }) => {
 			const bestScore = relevantDocs[0]?.score || 0;
 			const isHighConfidence = bestScore >= T_HIGH;
 
-			const contextEntries = relevantDocs.map((doc, index) => {
+			// Format context with numbered citations
+			const context = relevantDocs.map((doc, index) => {
 				const confidenceLabel = doc.confidence ?? "unknown";
 				const scorePercent = (doc.score * 100).toFixed(0);
 				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
-			});
-			const context = contextEntries.join("\n\n");
+			}).join("\n\n");
 
-			// Format context with numbered citations
 			if (isHighConfidence) {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
@@ -220,18 +219,18 @@ RULES:
 			data.choices[0]?.message?.content ||
 			"Sorry, I could not generate a response.";
 
-			const chatResponse: ChatResponse = {
-				response,
-				sources: shouldUseRag
-					? relevantDocs.map((doc) => ({
-						source: doc.source,
-						score: doc.score,
-						metadata: doc.metadata,
-						confidence: doc.confidence,
-						scoreDetails: doc.scoreDetails
-					}))
-					: [], // No sources when RAG wasn't used
-			};
+		const chatResponse: ChatResponse = {
+			response,
+			sources: shouldUseRag
+				? relevantDocs.map((doc) => ({
+					source: doc.source,
+					score: doc.score,
+					metadata: doc.metadata,
+					confidence: doc.confidence,
+					scoreDetails: doc.scoreDetails
+				}))
+				: [], // No sources when RAG wasn't used
+		};
 
 		return new Response(JSON.stringify(chatResponse), {
 			status: 200,
