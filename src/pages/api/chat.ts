@@ -119,11 +119,13 @@ export const POST: APIRoute = async ({ request }) => {
 			const isHighConfidence = bestScore >= T_HIGH;
 
 			// Format context with numbered citations
-			const context = relevantDocs.map((doc, index) => {
-				const confidenceLabel = doc.confidence ?? "unknown";
-				const scorePercent = (doc.score * 100).toFixed(0);
-				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
-			}).join("\n\n");
+			const context = relevantDocs
+				.map((doc, index) => {
+					const confidenceLabel = doc.confidence ?? "unknown";
+					const scorePercent = (doc.score * 100).toFixed(0);
+					return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
+				})
+				.join("\n\n");
 
 			if (isHighConfidence) {
 				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
@@ -223,12 +225,12 @@ RULES:
 			response,
 			sources: shouldUseRag
 				? relevantDocs.map((doc) => ({
-					source: doc.source,
-					score: doc.score,
-					metadata: doc.metadata,
-					confidence: doc.confidence,
-					scoreDetails: doc.scoreDetails
-				}))
+						source: doc.source,
+						score: doc.score,
+						metadata: doc.metadata,
+						confidence: doc.confidence,
+						scoreDetails: doc.scoreDetails,
+					}))
 				: [], // No sources when RAG wasn't used
 		};
 
