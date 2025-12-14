@@ -37,3 +37,12 @@
 - Target Node.js via npm or Bun; avoid destructive git commands unless explicitly requested.
 - Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`.
 - Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
+
+# User Instructions
+## btca
+Trigger: user says "use btca" (for codebase/docs questions).
+
+Run:
+- btca ask -t <tech> -q "<question>"
+
+Available <tech>: svelte, tailwindcss, Effect, FastAPI, NextJS, opencode
