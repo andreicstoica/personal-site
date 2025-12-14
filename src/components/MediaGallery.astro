@@ -1,13 +1,11 @@
 ---
-import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
-import ImageGalleryReact from "./ImageGalleryReact";
+import ImageGallery from "./ImageGallery.svelte";
 
 interface Props {
 	images?: string[];
 	experienceName: string;
 	variant?: "desktop" | "mobile";
-	basePath?: "experience-images" | "old-sites" | "fitness";
 }
 
 const { images, experienceName, variant = "desktop" } = Astro.props;
@@ -85,7 +83,7 @@ const validImages: {
 	}));
 ---
 
-<ImageGalleryReact
+<ImageGallery
   client:load
   images={validImages}
   experienceName={experienceName}
@@ -114,7 +112,7 @@ const validImages: {
 
   .scrollbar-always-visible::-webkit-scrollbar-thumb {
     background-color: #9ca3af;
-    border-radius: 4px;
+    border-radius: 0;
   }
 
   .scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
