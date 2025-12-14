@@ -7,7 +7,7 @@ const { id } = Astro.params;
 const project = id ? getProject(id) : undefined;
 
 if (!project) {
-  return Astro.redirect("/404");
+	return Astro.redirect("/404");
 }
 ---
 
