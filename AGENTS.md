@@ -1,19 +1,33 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Keep Astro pages lean and funnel logic into reusable pieces. Key paths include `src/pages` for route entrypoints, `src/components` for shared UI, and `src/layouts` for page shells. Cross-cutting helpers land in `src/lib`, while Tailwind tokens and extracted class groups live in `src/styles`. Markdown content sits in `src/content`, acceptance references stay under `specs`, and public-facing assets belong in `public`. The `dist` folder is generated output—never edit it directly.
+- `src/pages`: Astro route entrypoints; keep logic thin and delegate to components.
+- `src/components`: shared UI islands (Astro/Svelte) such as `MediaGallery.astro` and `ImageGallery.svelte`.
+- `src/layouts`: page shells; `src/lib`: helpers; `src/styles`: Tailwind tokens/extracted class groups.
+- Content lives in `src/content`; acceptance references in `specs`; public assets in `public` (e.g., `public/images`). Never edit `dist`.
 
 ## Build, Test, and Development Commands
-Run `npm install` or `bun install` to sync dependencies; honor the existing lockfile. Use `npm run dev` to launch Astro with hot reload at `http://localhost:4321`. Build for production with `npm run build`, which emits static assets to `dist`. Verify the compiled bundle via `npm run preview` before shipping.
+- `npm install` or `bun install`: sync dependencies (respect existing lockfile).
+- `npm run dev`: start Astro locally at `http://localhost:4321` with hot reload.
+- `npm run build`: production build to `dist`.
+- `npm run preview`: serve the built output for final verification.
 
 ## Coding Style & Naming Conventions
-Use two-space indentation across the stack. Favor single quotes in JS/TS, and keep Astro or React component filenames in PascalCase (e.g., `AsciiHero.astro`). Utilities in `src/lib` use camelCase, and Tailwind classes stay inline unless shared, in which case extract them to `src/styles`. Format changes with `npx prettier --write "src/**/*.{astro,ts,tsx}"`, which pulls in `prettier-plugin-astro`.
+- Two-space indentation; prefer single quotes in JS/TS.
+- Components in PascalCase (`AsciiHero.astro`, `ImageGallery.svelte`); utilities camelCase in `src/lib`.
+- Keep Tailwind classes inline unless reused, then extract to `src/styles`.
+- Format with `npx prettier --write "src/**/*.{astro,ts,tsx}"` (includes `prettier-plugin-astro`).
 
 ## Testing Guidelines
-Automated tests are not yet wired in. Validate features manually against the acceptance notes in `specs`, covering navigation paths and data rendering. When adding interactivity, consider introducing Playwright or Vitest specs under `src/components/__tests__/` and document how to execute them in your PR.
+- Automated tests are not yet wired; manually verify navigation, data rendering, and media islands against `specs`.
+- If adding tests, place UI specs under `src/components/__tests__/` (Vitest/Playwright welcome) and document run steps in the PR.
 
 ## Commit & Pull Request Guidelines
-Commits follow short, present-tense summaries (e.g., `feat: Add Refract project details`). Every PR should include a concise description, linked issue when available, screenshots or GIFs for UI updates, and mention of any content or config migrations. Run `npm run build` locally and note the manual checks performed before requesting review.
+- Commits: short, present tense (e.g., `feat: Add Refract project details`).
+- PRs: concise description, linked issue when available, screenshots/GIFs for UI changes, and notes on content/config migrations.
+- Before requesting review, run `npm run build` and record manual checks performed.
 
 ## Configuration & Environment Tips
-This project targets Node.js via npm or Bun. Switch inference providers using `MODEL_PROVIDER`; set `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234` for LM Studio, or `MODEL_PROVIDER=hf` alongside `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID` for Hugging Face. Avoid destructive git commands unless specifically requested, and stage large content shifts under `specs/` and `public/` to keep diffs focused.
+- Target Node.js via npm or Bun; avoid destructive git commands unless explicitly requested.
+- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`.
+- Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
