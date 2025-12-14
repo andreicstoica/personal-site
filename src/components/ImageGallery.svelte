@@ -36,18 +36,20 @@
 
     observer.observe(containerRef);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   });
 
-  // biome-ignore lint/correctness/noUnusedVariables: Used in Svelte template
-  const isMobile = () => {
+  // Derived mobile detection - only recalculates when window changes
+  const isMobile = $derived(() => {
     if (typeof window === "undefined") return false;
     return (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       ) || window.innerWidth <= 768
     );
-  };
+  });
 
   const closeModal = () => {
     isClosing = true;
@@ -80,7 +82,7 @@
       {#if isVisible}
         {#each images as image}
           <div class="shrink-0 min-w-fit">
-            {#if variant === "desktop" && !isMobile()}
+            {#if variant === "desktop" && !isMobile}
               <button
                 type="button"
                 class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"

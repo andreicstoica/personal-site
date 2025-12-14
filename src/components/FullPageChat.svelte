@@ -69,7 +69,8 @@
     messages = [...messages, { role, content, sources }];
   };
 
-  const _handleSubmit = async () => {
+  const _handleSubmit = async (event?: SubmitEvent) => {
+    event?.preventDefault();
     if (!input.trim() || isLoading || serverStatus !== "online") return;
 
     const userMessage = input.trim();
