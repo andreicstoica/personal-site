@@ -6,12 +6,23 @@ export const personalStatement =
 export const experiences: Experience[] = [
 	{
 		type: "work",
+		name: "Liftoff",
+		tags: ["work", "code"],
+		role: "Founding Product Engineer",
+		startDate: "2026",
+		endDate: "...",
+		description:
+			"Building end-to-end AI-powered features at [Liftoff](https://onliftoff.com). Example: an MVP LinkedIn connections analysis feature that uses LLMs to suggest relevant connectors to Hiring Managers.",
+		images: ["liftoff-1.webp"],
+	},
+	{
+		type: "work",
 		name: "Freelance Engineer",
 		tags: ["work", "code"],
 		role: "Full Stack Software Engineer",
 		startDate: "2025",
 		description: `Software engineering work across various industries including med-tech and research platforms. Focused on quickly shipping performant web applications and improving user experience.
-<br><br>
+		<br><br>
 Selected Projects:
 - {{project:stance-health}} – chronic health therapy med-tech startup
 - {{project:holdfast-network}} – NOAA aquaculture research platform`,
@@ -27,7 +38,7 @@ Selected Projects:
 		tags: ["personal", "code"],
 		role: "Software Engineer",
 		startDate: "2025",
-		description: `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc. <span class="speed-highlight">All built within 6 days</span>.
+		description: `Spent 60+ hours per week for 3 months learning React, NextJS, Vercel, Auth, tRPC, AI SDK/API, React Native, Postgresql, Typescript, Sentry, etc. <span class="speed-highlight">All built within 6 days</span>. Video walkthrough: [2025 Project Highlights](https://blog.andrei.bio/p/2025-project-highlights)
 <br><br>
 Selected Projects:
 - {{project:refract}} – reflective AI journal that helps you go deeper

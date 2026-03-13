@@ -247,14 +247,6 @@
           />
         </button>
       {/if}
-      <button
-        onclick={closeModal}
-        class="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10 cursor-pointer"
-        type="button"
-        aria-label="Close media modal"
-      >
-        ✕
-      </button>
     </div>
   </div>
 {/if}
