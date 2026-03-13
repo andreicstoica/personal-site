@@ -7,8 +7,6 @@ description: "Product minded software engineer based in New York City."
 
 When I'm not coding, you'll find me exploring NYC's art exhibits, cooking, running and playing tennis, reading way too many Substacks, and making coffee for my friends. <br><br>
 
-If you want a quick tour of what I built recently, here's my [2025 Project Highlights](https://blog.andrei.bio/p/2025-project-highlights). <br><br>
-
 Recently, I've been thinking about:
 
 - [Netflix, WBD, and attention](https://blog.andrei.bio/p/netflix-wbd-and-attention)
