@@ -6,14 +6,9 @@ lastUpdated: 2026-06-02
 
 # What I'm focused on now
 
-Building full-stack and AI products (Stance Health, Holdfast, and this site), writing on [my blog](https://blog.andrei.bio/), and exploring reflective tools with simple interfaces.
+For work and what I'm building, see [LinkedIn](https://www.linkedin.com/in/andrei-c-stoica/).
 
-Recent writing I'm chewing on:
-
-- [Netflix, WBD, and attention](https://blog.andrei.bio/p/netflix-wbd-and-attention)
-- [Do people like slop?](https://blog.andrei.bio/p/do-people-like-slop)
-- [Why I quit my job to build the future I want](https://blog.andrei.bio/p/why-im-quitting-my-job)
-- [Lessons on Living](https://blog.andrei.bio/p/lessons-on-living) — growing up around people over 100 shaped how I think about time
+Personally: [running](/fitness) and staying consistent with fitness, cooking at home, and coffee popups with friends at [sfantcoffee](https://www.instagram.com/sfantcoffee).
 
 # Outside of work
 
