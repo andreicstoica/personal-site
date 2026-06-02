@@ -5,13 +5,19 @@ import PageLayout from '../layouts/PageLayout.astro';
 
 const aboutEntry = await getEntry('pages', 'about');
 if (!aboutEntry) throw new Error('About entry not found');
+
+const nowTitle = "What I'm doing now";
+const nowDescription =
+  aboutEntry.data.description ??
+  'A short snapshot of what Andrei is focused on right now.';
 ---
 
-<PageLayout
-  title={aboutEntry.data.title}
-  description={aboutEntry.data.description}
->
+<PageLayout title={nowTitle} description={nowDescription}>
   <div class="w-full lg:mt-3.5 max-w-2xl">
-    <AboutPageContent entry={aboutEntry} />
+    <AboutPageContent
+      entry={aboutEntry}
+      pageTitle={nowTitle}
+      scrollToNow={true}
+    />
   </div>
 </PageLayout>

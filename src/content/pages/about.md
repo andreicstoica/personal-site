@@ -1,18 +1,18 @@
 ---
 title: "Introducing Myself"
 description: "Product minded software engineer based in New York City."
+lastUpdated: 2026-06-02
 ---
+
+# What I'm focused on now
+
+For work and what I'm building, see [LinkedIn](https://www.linkedin.com/in/andrei-c-stoica/).
+
+Personally: [running](/fitness) and staying consistent with fitness, cooking at home, and coffee popups with friends at [sfantcoffee](https://www.instagram.com/sfantcoffee).
 
 # Outside of work
 
 When I'm not coding, you'll find me exploring NYC's art exhibits, cooking, running and playing tennis, reading way too many Substacks, and making coffee for my friends. <br><br>
-
-Recently, I've been thinking about:
-
-- [Netflix, WBD, and attention](https://blog.andrei.bio/p/netflix-wbd-and-attention)
-- [Do people like slop?](https://blog.andrei.bio/p/do-people-like-slop)
-- [Why I quit my job to build the future I want](https://blog.andrei.bio/p/why-im-quitting-my-job)
-- I grew up with multiple people over 100 years old, giving me a different perception of time than most kids! Wrote about that in [Lessons on Living](https://blog.andrei.bio/p/lessons-on-living). <br><br>
 
 # Micropages
 

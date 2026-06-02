@@ -1,0 +1,117 @@
+---
+import MediaGallery from './MediaGallery.astro';
+import MarkdownLayout from '../layouts/MarkdownLayout.astro';
+import {
+  parseMarkdownContent,
+  styleMarkdownContent,
+} from '../lib/markdownUtils';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'pages'>;
+  pageTitle?: string;
+  scrollToNow?: boolean;
+}
+
+const { entry, pageTitle, scrollToNow = false } = Astro.props;
+
+const displayTitle = pageTitle ?? entry.data.title;
+const parsedContent = parseMarkdownContent(entry.body);
+
+const nowSectionIndex = parsedContent.findIndex((section) =>
+  section.title.toLowerCase().includes('focused on now'),
+);
+const nowSection =
+  nowSectionIndex >= 0 ? parsedContent[nowSectionIndex] : null;
+const otherSections = parsedContent.filter(
+  (_, index) => index !== nowSectionIndex,
+);
+
+const lastUpdated = entry.data.lastUpdated;
+const formattedLastUpdated = lastUpdated
+  ? lastUpdated.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : null;
+---
+
+<MarkdownLayout title={displayTitle}>
+  <div class="flex flex-col gap-2">
+    {
+      entry.data.description && (
+        <section>
+          <p class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3">
+            {entry.data.description}
+          </p>
+        </section>
+      )
+    }
+
+    {
+      nowSection && (
+        <section id="now" class="scroll-mt-24 space-y-3 pb-6 border-b border-[--color-text-primary]/15">
+          <h2 class="text-xl font-medium text-[--color-text-primary] capitalize">
+            {nowSection.title}
+          </h2>
+          <p class="text-md text-pretty text-[--color-text-primary]/90 italic">
+            This is what I'm focused on now.
+            <a
+              href="https://nownownow.com/about"
+              class="markdown-link not-italic"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              What's a now page?
+            </a>
+          </p>
+          {
+            formattedLastUpdated && (
+              <p class="text-sm text-[--color-text-primary]/70">
+                Last updated {formattedLastUpdated}.
+              </p>
+            )
+          }
+          <div class="space-y-2">
+            <div set:html={styleMarkdownContent(nowSection.content)} />
+          </div>
+        </section>
+      )
+    }
+
+    <div class="space-y-6 max-w-4xl">
+      {
+        otherSections.map((section) => (
+          <section>
+            <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+              {section.title}
+            </h2>
+            <div class="space-y-2">
+              <div set:html={styleMarkdownContent(section.content)} />
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</MarkdownLayout>
+
+<div class="mt-2 pb-8">
+  <MediaGallery
+    images={['about.webp', 'timbers.webp']}
+    experienceName="About"
+    variant="desktop"
+  />
+</div>
+
+{
+  scrollToNow && (
+    <script>
+      if (window.location.pathname === '/now') {
+        const nowSection = document.getElementById('now');
+        nowSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    </script>
+  )
+}
