@@ -46,3 +46,34 @@ Run:
 - btca ask -t <tech> -q "<question>"
 
 Available <tech>: svelte, tailwindcss, Effect, FastAPI, NextJS, opencode
+
+## Cursor Cloud specific instructions
+
+### Package manager and dependencies
+
+- Lockfile is `bun.lock`; run **`bun install`** from the repo root (see VM update script). **`npm install`** also works against `package.json` but does not use the Bun lockfile.
+- Bun may not be on `PATH` on a fresh VM. If `bun` is missing, install once: `curl -fsSL https://bun.sh/install | bash` (adds `~/.bun/bin` to `~/.bashrc`).
+
+### Services
+
+| Service | Command | URL |
+| --- | --- | --- |
+| Astro dev | `bun run dev` (or `npm run dev`) | http://localhost:4321 |
+| Production preview | `bun run build` then `bun run preview` | http://localhost:4321 |
+| Local LLM (optional, for chat E2E) | LM Studio or compatible OpenAI API | http://localhost:1234 (`MODEL_PROVIDER=local`) |
+
+Only the Astro dev server is required for browsing the portfolio, project pages, and static content. Full **chat** E2E needs a running inference endpoint (`MODEL_PROVIDER=local` + LM Studio, or `MODEL_PROVIDER=hf` with HF env vars). `GET /api/health` returns **503** when inference is down; that is expected without a local model.
+
+### Lint / format / build
+
+- Lint/format (Biome): `bunx biome check src/` or `npx biome format --write src/` (Svelte/CSS excluded per `biome.json`).
+- Production build: `bun run build` (required before PRs per repo guidelines).
+- No automated test script yet; manual checks against `specs/` as documented above.
+
+### RAG index (content changes only)
+
+- Rebuild indexes after editing `rag/data/`: `bun run rag:build` or `bun run rag:rebuild`. Not needed for normal UI work when committed indexes are present.
+
+### Dev server process
+
+- Use a persistent session (e.g. tmux) for `bun run dev`; it does not exit on its own. Hot reload may not pick up all dependency installs—restart dev if packages change.
