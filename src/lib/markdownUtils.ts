@@ -1,4 +1,19 @@
 // Parse markdown content to extract sections by headers
+import { iconSvg } from "../icons/pixelarticons";
+
+function formatMarkdownLink(
+	_match: string,
+	text: string,
+	href: string,
+): string {
+	const isExternal = href.startsWith("http");
+	const externalAttrs = isExternal
+		? ' target="_blank" rel="noopener noreferrer"'
+		: "";
+	const linkIcon = isExternal ? iconSvg("external-link", "inline-icon") : "";
+
+	return `<a href="${href}" class="markdown-link"${externalAttrs}>${text}${linkIcon}</a>`;
+}
 export function parseMarkdownContent(
 	content: string,
 ): { title: string; content: string }[] {
@@ -25,9 +40,6 @@ export function styleMarkdownContent(content: string): string {
 			/^- (.+)$/gm,
 			'<div class="markdown-list-item"><span class="markdown-bullet">*</span> $1</div>',
 		)
-		.replace(
-			/\[([^\]]+)\]\(([^)]+)\)/g,
-			'<a href="$2" class="markdown-link">$1</a>',
-		)
+		.replace(/\[([^\]]+)\]\(([^)]+)\)/g, formatMarkdownLink)
 		.replace(/^(?!<[hd])(.+)$/gm, '<p class="markdown-p">$1</p>');
 }

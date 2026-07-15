@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Icon from "../ui/Icon.svelte";
+
   interface SourceMetadata {
     sourceUrl?: string;
     title?: string;
@@ -174,9 +176,10 @@
                           href={sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="text-blue-600 hover:underline"
+                          class="inline-flex items-center gap-1 text-blue-600 hover:underline"
                         >
                           {displayName}
+                          <Icon name="external-link" class="w-3 h-3 shrink-0" />
                         </a>
                       {:else}
                         <span>{displayName}</span>

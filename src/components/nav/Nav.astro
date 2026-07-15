@@ -1,5 +1,6 @@
 ---
 import Icon from "../ui/Icon.astro";
+import { mainNavItems, socialNavItems } from "../../lib/navLinks";
 ---
 
 <nav
@@ -12,25 +13,14 @@ import Icon from "../ui/Icon.astro";
 
   <!-- Desktop Navigation -->
   <div class="hidden md:flex items-end gap-2 text-end">
-    <!-- Internal page links -->
-    <a href="/" class="nav-box">
-      <span
-        class="nav-label"
-        >Home</span
-      >
-    </a>
-    <a href="/about" class="nav-box">
-      <span
-        class="nav-label"
-        >About</span
-      >
-    </a>
-    <a href="/chat" class="nav-box">
-      <span
-        class="nav-label"
-        >Chat</span
-      >
-    </a>
+    {
+      mainNavItems.map((item) => (
+        <a href={item.href} class="nav-box items-center gap-1.5">
+          <Icon name={item.icon} class="w-4 h-4 shrink-0" />
+          <span class="nav-label">{item.label}</span>
+        </a>
+      ))
+    }
 
     <!-- Social dropdown -->
     <div id="desktop-social" class="relative">
@@ -39,12 +29,10 @@ import Icon from "../ui/Icon.astro";
         type="button"
         aria-expanded="false"
         aria-haspopup="true"
-        class="nav-box flex items-center gap-1"
+        class="nav-box items-center gap-1.5"
       >
-        <span
-          class="nav-label"
-          >Social</span
-        >
+        <Icon name="users" class="w-4 h-4 shrink-0" />
+        <span class="nav-label">Social</span>
         <Icon
           name="chevron-down"
           id="desktop-social-arrow"
@@ -60,38 +48,19 @@ import Icon from "../ui/Icon.astro";
         <div
           class="social-dropdown-panel bg-[var(--color-bg-primary)] shadow-lg"
         >
-          <a
-            href="https://github.com/andreicstoica/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="nav-box w-full h-12 flex items-center justify-end nav-label"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://www.linkedin.com/in/andrei-c-stoica/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="nav-box w-full h-12 flex items-center justify-end nav-label"
-          >
-            LinkedIn
-          </a>
-          <a
-            href="https://andreisthoughts.substack.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="nav-box w-full h-12 flex items-center justify-end nav-label"
-          >
-            Substack
-          </a>
-          <a
-            href="https://x.com/andreistoica_"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="nav-box w-full h-12 flex items-center justify-end nav-label"
-          >
-            Twitter (X)
-          </a>
+          {
+            socialNavItems.map((item) => (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="nav-box w-full h-12 items-center justify-end gap-1.5"
+              >
+                <Icon name={item.icon} class="w-4 h-4 shrink-0" />
+                <span class="nav-label">{item.label}</span>
+              </a>
+            ))
+          }
         </div>
       </div>
     </div>
@@ -130,24 +99,17 @@ import Icon from "../ui/Icon.astro";
 
       <!-- Mobile menu items -->
       <div class="mt-8 space-y-4">
-        <a
-          href="/"
-          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
-        >
-          Home
-        </a>
-        <a
-          href="/about"
-          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
-        >
-          About
-        </a>
-        <a
-          href="/chat"
-          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
-        >
-          Chat
-        </a>
+        {
+          mainNavItems.map((item) => (
+            <a
+              href={item.href}
+              class="mobile-menu-link flex items-center gap-2 py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+            >
+              <Icon name={item.icon} class="w-4 h-4 shrink-0" />
+              {item.label}
+            </a>
+          ))
+        }
 
         <!-- Social submenu -->
         <div class="relative">
@@ -156,7 +118,10 @@ import Icon from "../ui/Icon.astro";
             type="button"
             class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded flex items-center justify-between"
           >
-            Social
+            <span class="flex items-center gap-2">
+              <Icon name="users" class="w-4 h-4 shrink-0" />
+              Social
+            </span>
             <Icon
               name="chevron-down"
               id="social-arrow"
@@ -165,34 +130,18 @@ import Icon from "../ui/Icon.astro";
           </button>
           <div id="social-submenu" class="social-submenu pl-4 mt-2">
             <div class="social-submenu-inner space-y-2">
-            <a
-              href="https://github.com/andreicstoica/"
-              target="_blank"
-              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://www.linkedin.com/in/andrei-c-stoica/"
-              target="_blank"
-              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://andreisthoughts.substack.com/"
-              target="_blank"
-              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
-            >
-              Substack
-            </a>
-            <a
-              href="https://x.com/andreistoica_"
-              target="_blank"
-              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
-            >
-              Twitter (X)
-            </a>
+              {
+                socialNavItems.map((item) => (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    class="flex items-center gap-2 py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                  >
+                    <Icon name={item.icon} class="w-4 h-4 shrink-0" />
+                    {item.label}
+                  </a>
+                ))
+              }
             </div>
           </div>
         </div>
