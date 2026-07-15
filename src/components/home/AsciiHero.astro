@@ -1,5 +1,6 @@
 ---
 import { personalStatement } from "../../lib/experience";
+import Icon from "../ui/Icon.astro";
 ---
 
 <section
@@ -12,6 +13,9 @@ import { personalStatement } from "../../lib/experience";
       class="text-lead max-w-2xl"
       set:html={personalStatement}
     />
+    <div class="hero-sigil" aria-hidden="true">
+      <Icon name="human-handsdown" class="w-8 h-8" />
+    </div>
   </div>
 
   <!-- ASCII image on the right for medium+ screens -->
@@ -29,6 +33,32 @@ import { personalStatement } from "../../lib/experience";
 </section>
 
 <style>
+  .hero-sigil {
+    margin-top: 1.5rem;
+    color: var(--color-ascii-bright, #5a6aff);
+    opacity: 0.85;
+    animation: hero-sigil-enter 500ms var(--ease-out) 240ms both;
+  }
+
+  @keyframes hero-sigil-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 0.85;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-sigil {
+      animation: none;
+      opacity: 0.85;
+      transform: none;
+    }
+  }
+
   .ascii-display {
     font-size: clamp(0.2rem, 0.4vw, 0.35rem);
     width: 100%;
