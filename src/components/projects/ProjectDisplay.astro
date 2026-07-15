@@ -112,12 +112,13 @@ const { project } = Astro.props;
           <div class="w-full">
             <video
               src={project.video}
-              class="w-full rounded-lg"
+              class="w-full rounded-lg media-reveal"
               controls
               autoplay
               loop
               muted
               playsinline
+              onloadeddata="this.classList.add('is-loaded')"
             />
           </div>
         )}

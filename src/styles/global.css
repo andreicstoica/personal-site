@@ -77,6 +77,7 @@
 	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 	--duration-ui: 180ms;
 	--duration-drawer: 280ms;
+	--duration-media: 400ms;
 
 	/* Navigation box styles */
 	--nav-box-styles: flex items-end justify-end h-12 w-[10vw] bg-[var(--color-bg-primary)] border border-[var(--color-text-secondary)] no-underline transition-all duration-200 text-[var(--color-text-primary)] p-2 box-border hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)];
@@ -217,6 +218,20 @@
 	overflow: hidden;
 }
 
+/* Media load reveal — images, video, gallery thumbs */
+.media-reveal {
+	opacity: 0;
+	transform: translateY(4px);
+	transition:
+		opacity var(--duration-media) var(--ease-out),
+		transform var(--duration-media) var(--ease-out);
+}
+
+.media-reveal.is-loaded {
+	opacity: 1;
+	transform: translateY(0);
+}
+
 /* Occasional page enter — content pages, not home */
 .page-enter {
 	animation: page-enter 360ms var(--ease-out) both;
@@ -244,7 +259,11 @@
 	.mobile-menu-drawer,
 	.mobile-menu-link,
 	.social-submenu,
-	.page-enter {
+	.page-enter,
+	.media-reveal,
+	.media-reveal.is-loaded,
+	.modal-backdrop,
+	.modal-backdrop.closing {
 		animation: none;
 		transition: none;
 	}
@@ -259,6 +278,12 @@
 	}
 
 	.page-enter {
+		opacity: 1;
+		transform: none;
+	}
+
+	.media-reveal,
+	.media-reveal.is-loaded {
 		opacity: 1;
 		transform: none;
 	}
@@ -531,14 +556,14 @@ a:hover {
 
 /* Modal animations */
 .modal-backdrop {
-	animation: fadeIn 0.1s ease-out;
+	animation: modal-enter var(--duration-drawer) var(--ease-out) both;
 }
 
 .modal-backdrop.closing {
-	animation: fadeOut 0.1s ease-out;
+	animation: modal-exit var(--duration-ui) var(--ease-out) both;
 }
 
-@keyframes fadeIn {
+@keyframes modal-enter {
 	from {
 		opacity: 0;
 	}
@@ -547,7 +572,7 @@ a:hover {
 	}
 }
 
-@keyframes fadeOut {
+@keyframes modal-exit {
 	from {
 		opacity: 1;
 	}
