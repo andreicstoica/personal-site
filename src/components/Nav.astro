@@ -33,7 +33,7 @@
     </a>
 
     <!-- Social dropdown -->
-    <div id="desktop-social" class="relative group">
+    <div id="desktop-social" class="relative">
       <button
         id="desktop-social-toggle"
         type="button"
@@ -47,7 +47,7 @@
         >
         <span
           id="desktop-social-arrow"
-          class="text-sm transition-transform group-hover:rotate-180 translate-y-[1px]"
+          class="social-dropdown-arrow text-sm translate-y-[1px]"
           >⇣</span
         >
       </button>
@@ -55,10 +55,10 @@
       <!-- Dropdown menu -->
       <div
         id="desktop-social-menu"
-        class="absolute top-full right-0 pt-1 z-50 min-w-[10vw] opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200"
+        class="social-dropdown-menu absolute top-full right-0 pt-1 z-50 min-w-[10vw]"
       >
         <div
-          class="bg-[var(--color-bg-primary)] shadow-lg"
+          class="social-dropdown-panel bg-[var(--color-bg-primary)] shadow-lg"
         >
           <a
             href="https://github.com/andreicstoica/"
@@ -101,7 +101,7 @@
   <div class="md:hidden">
     <button
       id="hamburger-btn"
-      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity"
+      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity nav-pressable"
       aria-label="Toggle menu"
     >
       <svg
@@ -123,10 +123,11 @@
 <!-- Mobile Menu Overlay -->
 <div
   id="mobile-menu"
-  class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden md:hidden"
+  class="mobile-menu-overlay fixed inset-0 bg-black/50 z-50 hidden md:hidden"
 >
   <div
-    class="absolute top-0 right-0 h-full w-80 bg-[var(--color-bg-primary)] shadow-lg transform translate-x-full transition-transform duration-300"
+    id="mobile-menu-drawer"
+    class="mobile-menu-drawer absolute top-0 right-0 h-full w-80 bg-[var(--color-bg-primary)] shadow-lg transform translate-x-full"
   >
     <div class="p-6">
       <!-- Close button -->
@@ -153,19 +154,19 @@
       <div class="mt-8 space-y-4">
         <a
           href="/"
-          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
         >
           Home
         </a>
         <a
           href="/about"
-          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
         >
           About
         </a>
         <a
           href="/chat"
-          class="block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
         >
           Chat
         </a>
@@ -174,12 +175,14 @@
         <div class="relative">
           <button
             id="social-toggle"
-            class="w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] transition-colors rounded flex items-center justify-between"
+            type="button"
+            class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded flex items-center justify-between"
           >
             Social
-            <span id="social-arrow" class="transition-transform">⇣</span>
+            <span id="social-arrow" class="social-dropdown-arrow">⇣</span>
           </button>
-          <div id="social-submenu" class="hidden pl-4 space-y-2 mt-2">
+          <div id="social-submenu" class="social-submenu pl-4 mt-2">
+            <div class="social-submenu-inner space-y-2">
             <a
               href="https://github.com/andreicstoica/"
               target="_blank"
@@ -208,6 +211,7 @@
             >
               Twitter (X)
             </a>
+            </div>
           </div>
         </div>
       </div>
@@ -233,13 +237,8 @@
       return;
     }
 
-    desktopSocialMenu.classList.toggle("opacity-0", !open);
-    desktopSocialMenu.classList.toggle("invisible", !open);
-    desktopSocialMenu.classList.toggle("pointer-events-none", !open);
-    desktopSocialMenu.classList.toggle("opacity-100", open);
-    desktopSocialMenu.classList.toggle("visible", open);
-    desktopSocialMenu.classList.toggle("pointer-events-auto", open);
-    desktopSocialArrow.style.transform = open ? "rotate(180deg)" : "";
+    desktopSocialMenu.classList.toggle("is-open", open);
+    desktopSocialArrow.classList.toggle("is-open", open);
     desktopSocialToggle.setAttribute("aria-expanded", String(open));
   };
 
@@ -274,34 +273,34 @@
     });
   }
 
-  if (hamburgerBtn && mobileMenu) {
+  const mobileMenuDrawer = document.getElementById("mobile-menu-drawer");
+  const drawerCloseMs = 280;
+
+  if (hamburgerBtn && mobileMenu && mobileMenuDrawer) {
     hamburgerBtn.onclick = () => {
       mobileMenu.classList.remove("hidden");
-      setTimeout(() => {
-        mobileMenu.querySelector("div")?.classList.remove("translate-x-full");
-      }, 10);
+      requestAnimationFrame(() => {
+        mobileMenu.classList.add("is-open");
+        mobileMenuDrawer.classList.remove("translate-x-full");
+      });
     };
   }
 
-  if (closeMenu && mobileMenu) {
+  if (closeMenu && mobileMenu && mobileMenuDrawer) {
     closeMenu.onclick = () => {
-      mobileMenu.querySelector("div")?.classList.add("translate-x-full");
+      mobileMenu.classList.remove("is-open");
+      mobileMenuDrawer.classList.add("translate-x-full");
       setTimeout(() => {
         mobileMenu.classList.add("hidden");
-      }, 300);
+      }, drawerCloseMs);
     };
   }
 
   if (socialToggle && socialSubmenu && socialArrow) {
     socialToggle.onclick = () => {
-      const isOpen = !socialSubmenu.classList.contains("hidden");
-      if (isOpen) {
-        socialSubmenu.classList.add("hidden");
-        socialArrow.style.transform = "";
-      } else {
-        socialSubmenu.classList.remove("hidden");
-        socialArrow.style.transform = "rotate(180deg)";
-      }
+      const isOpen = socialSubmenu.classList.contains("is-open");
+      socialSubmenu.classList.toggle("is-open", !isOpen);
+      socialArrow.classList.toggle("is-open", !isOpen);
     };
   }
 </script>
