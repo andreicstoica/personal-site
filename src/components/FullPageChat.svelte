@@ -118,7 +118,7 @@
 
 <div class="w-full max-w-3xl mx-auto flex flex-col h-[calc(100vh-80px)]">
   <!-- Messages Area -->
-  <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
+  <div class="flex-1 p-4 sm:p-6 overflow-y-auto scrollbar-gutter-stable">
     <div class="space-y-4">
       {#if messages.length === 0}
         <div class="text-center text-[var(--color-text-secondary)] text-sm py-8">

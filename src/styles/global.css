@@ -294,6 +294,7 @@ html {
 	font-size: 16px;
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
+	scrollbar-gutter: stable;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
@@ -364,6 +365,10 @@ body {
 	margin-inline: calc(var(--page-padding-inline) * -1);
 	padding-inline: var(--page-padding-inline);
 	box-sizing: border-box;
+}
+
+.scrollbar-gutter-stable {
+	scrollbar-gutter: stable;
 }
 
 /* Button utilities */
