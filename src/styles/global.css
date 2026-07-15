@@ -53,10 +53,13 @@
 	--text-lg: 1.0625rem;
 	--text-xl: 1.25rem;
 	--text-2xl: 1.5rem;
+	--text-hero: clamp(1.0625rem, 0.35vw + 1rem, 1.1875rem);
 	--leading-tight: 1.25;
-	--leading-normal: 1.55;
-	--leading-relaxed: 1.65;
-	--tracking-tight: -0.015em;
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.6;
+	--leading-hero: 1.48;
+	--tracking-tight: -0.02em;
+	--tracking-wide: 0.04em;
 
 	/* Spacing */
 	--spacing-xs: 0.5rem;
@@ -349,6 +352,55 @@ body {
 	line-height: var(--leading-relaxed);
 	color: var(--color-text-primary);
 	text-wrap: pretty;
+}
+
+.hero-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	max-width: 36rem;
+}
+
+.text-hero {
+	font-size: var(--text-hero);
+	line-height: var(--leading-hero);
+	letter-spacing: var(--tracking-tight);
+	font-weight: 400;
+	color: var(--color-text-primary);
+	text-wrap: pretty;
+}
+
+.text-hero-muted {
+	font-size: var(--text-base);
+	line-height: var(--leading-normal);
+	letter-spacing: var(--tracking-tight);
+	color: var(--color-text-secondary);
+	text-wrap: pretty;
+}
+
+.hero-copy a {
+	color: var(--color-primary);
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+	text-underline-offset: 0.15em;
+	transition: color var(--duration-ui) var(--ease-out);
+}
+
+.hero-copy a:hover {
+	color: var(--color-primary-hover);
+}
+
+.home-page {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding-bottom: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+	.text-hero {
+		text-wrap: balance;
+	}
 }
 
 .text-muted {
