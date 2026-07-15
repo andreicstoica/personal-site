@@ -152,6 +152,29 @@
 	transform: scale(1) translateY(0);
 }
 
+@media (hover: hover) and (pointer: fine) {
+	#desktop-social:hover .social-dropdown-menu,
+	.social-dropdown-menu.is-open {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition:
+			opacity 180ms var(--ease-out),
+			transform 180ms var(--ease-out),
+			visibility 0s;
+	}
+
+	#desktop-social:hover .social-dropdown-panel,
+	.social-dropdown-menu.is-open .social-dropdown-panel {
+		transform: scale(1) translateY(0);
+	}
+
+	#desktop-social:hover #desktop-social-arrow,
+	#desktop-social-arrow.is-open {
+		transform: rotate(180deg) translateY(1px);
+	}
+}
+
 .social-dropdown-arrow {
 	transition: transform 180ms var(--ease-out);
 }

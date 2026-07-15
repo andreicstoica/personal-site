@@ -3,7 +3,7 @@
 ---
 
 <nav
-  class="full-bleed bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] py-4 flex justify-between items-center"
+  class="full-bleed relative z-50 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] py-4 flex justify-between items-center"
 >
   <!-- Name on the left -->
   <div class="text-2xl text-[#fefefe] font-black">
@@ -243,31 +243,33 @@
   };
 
   if (desktopSocial && desktopSocialToggle && desktopSocialMenu) {
-    let desktopSocialOpen = false;
+    let desktopSocialPinned = false;
 
     desktopSocialToggle.addEventListener("click", (event) => {
       event.stopPropagation();
-      desktopSocialOpen = !desktopSocialOpen;
-      setDesktopSocialOpen(desktopSocialOpen);
+      desktopSocialPinned = !desktopSocialPinned;
+      setDesktopSocialOpen(desktopSocialPinned);
     });
 
     desktopSocial.addEventListener("mouseenter", () => {
-      setDesktopSocialOpen(true);
+      if (!desktopSocialPinned) {
+        setDesktopSocialOpen(true);
+      }
     });
 
     desktopSocial.addEventListener("mouseleave", () => {
-      if (!desktopSocialOpen) {
+      if (!desktopSocialPinned) {
         setDesktopSocialOpen(false);
       }
     });
 
     document.addEventListener("click", (event) => {
       if (
-        desktopSocialOpen &&
+        desktopSocialPinned &&
         event.target instanceof Node &&
         !desktopSocial.contains(event.target)
       ) {
-        desktopSocialOpen = false;
+        desktopSocialPinned = false;
         setDesktopSocialOpen(false);
       }
     });
