@@ -33,13 +33,20 @@
     </a>
 
     <!-- Social dropdown -->
-    <div class="relative group">
-      <button class="nav-box flex items-center gap-1">
+    <div id="desktop-social" class="relative group">
+      <button
+        id="desktop-social-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-haspopup="true"
+        class="nav-box flex items-center gap-1"
+      >
         <span
           class="text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
           >Social</span
         >
         <span
+          id="desktop-social-arrow"
           class="text-sm transition-transform group-hover:rotate-180 translate-y-[1px]"
           >⇣</span
         >
@@ -47,36 +54,45 @@
 
       <!-- Dropdown menu -->
       <div
-        class="absolute bg-[var(--color-bg-primary)] shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-[10vw]"
+        id="desktop-social-menu"
+        class="absolute top-full right-0 pt-1 z-50 min-w-[10vw] opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200"
       >
-        <a
-          href="https://github.com/andreicstoica/"
-          target="_blank"
-          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+        <div
+          class="bg-[var(--color-bg-primary)] shadow-lg"
         >
-          GitHub
-        </a>
-        <a
-          href="https://www.linkedin.com/in/andrei-c-stoica/"
-          target="_blank"
-          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
-        >
-          LinkedIn
-        </a>
-        <a
-          href="https://andreisthoughts.substack.com/"
-          target="_blank"
-          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
-        >
-          Substack
-        </a>
-        <a
-          href="https://x.com/andreistoica_"
-          target="_blank"
-          class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
-        >
-          Twitter (X)
-        </a>
+          <a
+            href="https://github.com/andreicstoica/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.linkedin.com/in/andrei-c-stoica/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >
+            LinkedIn
+          </a>
+          <a
+            href="https://andreisthoughts.substack.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >
+            Substack
+          </a>
+          <a
+            href="https://x.com/andreistoica_"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end text-sm font-medium leading-6 md:text-xs md:leading-5 sm:text-[0.6875rem] sm:leading-[1.125rem]"
+          >
+            Twitter (X)
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -207,6 +223,56 @@
   const socialToggle = document.getElementById("social-toggle");
   const socialSubmenu = document.getElementById("social-submenu");
   const socialArrow = document.getElementById("social-arrow");
+  const desktopSocial = document.getElementById("desktop-social");
+  const desktopSocialToggle = document.getElementById("desktop-social-toggle");
+  const desktopSocialMenu = document.getElementById("desktop-social-menu");
+  const desktopSocialArrow = document.getElementById("desktop-social-arrow");
+
+  const setDesktopSocialOpen = (open: boolean) => {
+    if (!desktopSocialMenu || !desktopSocialToggle || !desktopSocialArrow) {
+      return;
+    }
+
+    desktopSocialMenu.classList.toggle("opacity-0", !open);
+    desktopSocialMenu.classList.toggle("invisible", !open);
+    desktopSocialMenu.classList.toggle("pointer-events-none", !open);
+    desktopSocialMenu.classList.toggle("opacity-100", open);
+    desktopSocialMenu.classList.toggle("visible", open);
+    desktopSocialMenu.classList.toggle("pointer-events-auto", open);
+    desktopSocialArrow.style.transform = open ? "rotate(180deg)" : "";
+    desktopSocialToggle.setAttribute("aria-expanded", String(open));
+  };
+
+  if (desktopSocial && desktopSocialToggle && desktopSocialMenu) {
+    let desktopSocialOpen = false;
+
+    desktopSocialToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      desktopSocialOpen = !desktopSocialOpen;
+      setDesktopSocialOpen(desktopSocialOpen);
+    });
+
+    desktopSocial.addEventListener("mouseenter", () => {
+      setDesktopSocialOpen(true);
+    });
+
+    desktopSocial.addEventListener("mouseleave", () => {
+      if (!desktopSocialOpen) {
+        setDesktopSocialOpen(false);
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (
+        desktopSocialOpen &&
+        event.target instanceof Node &&
+        !desktopSocial.contains(event.target)
+      ) {
+        desktopSocialOpen = false;
+        setDesktopSocialOpen(false);
+      }
+    });
+  }
 
   if (hamburgerBtn && mobileMenu) {
     hamburgerBtn.onclick = () => {
