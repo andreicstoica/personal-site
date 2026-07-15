@@ -1,6 +1,5 @@
 // @ts-check
 
-import mdx from "@astrojs/mdx";
 import svelte from "@astrojs/svelte";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
@@ -20,6 +19,6 @@ export default defineConfig({
     // Ensure WebM and WebP files are treated as assets
     assetsInclude: ["**/*.webm", "**/*.webp"],
   },
-  integrations: [mdx(), svelte()],
+  integrations: [svelte()],
   adapter: vercel(),
 });

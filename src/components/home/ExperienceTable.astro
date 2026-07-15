@@ -1,9 +1,8 @@
 ---
-import { marked } from "marked";
-import { experiences } from "../lib/experience";
-import type { Experience } from "../lib/types.ts";
-import MediaGallery from "./MediaGallery.astro";
-import ProjectEnhancedDescription from "./ProjectEnhancedDescription.astro";
+import { experiences } from "../../lib/experience";
+import type { Experience } from "../../lib/types.ts";
+import MediaGallery from "../gallery/MediaGallery.astro";
+import ProjectEnhancedDescription from "../projects/ProjectEnhancedDescription.astro";
 
 // Get unique types for the filter dropdown
 const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
@@ -38,12 +37,6 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 	}
 	return endDate === "..." ? `${startDate}-...` : startDate;
 };
-
-// Markdown renderer
-const renderer = new marked.Renderer();
-renderer.link = ({ href, title, text }) =>
-	`<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${text}</a>`;
-marked.setOptions({ renderer });
 ---
 
 <section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">

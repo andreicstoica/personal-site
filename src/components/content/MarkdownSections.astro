@@ -1,0 +1,50 @@
+---
+import {
+	parseMarkdownContent,
+	styleMarkdownContent,
+} from '../../lib/markdownUtils';
+
+interface Props {
+	body: string;
+	description?: string;
+	layout?: 'stack' | 'grid';
+	lastUpdated?: string;
+}
+
+const { body, description, layout = 'stack', lastUpdated } = Astro.props;
+const parsedContent = parseMarkdownContent(body);
+const sectionsClass =
+	layout === 'grid'
+		? 'grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl'
+		: 'space-y-6 max-w-4xl';
+---
+
+<div class="flex flex-col gap-2">
+	{
+		(lastUpdated || description) && (
+			<section>
+				{lastUpdated && (
+					<p class="mb-4 font-mono text-xs text-muted">{lastUpdated}</p>
+				)}
+				{description && <p class="text-lead max-w-2xl mb-3">{description}</p>}
+			</section>
+		)
+	}
+
+	<div class={sectionsClass}>
+		{
+			parsedContent.map((section) => (
+				<section>
+					<h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+						{section.title}
+					</h2>
+					<div class="space-y-2">
+						<div set:html={styleMarkdownContent(section.content)} />
+					</div>
+				</section>
+			))
+		}
+	</div>
+
+	<slot />
+</div>

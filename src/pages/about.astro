@@ -1,19 +1,12 @@
 ---
 import { getEntry } from "astro:content";
-import MediaGallery from "../components/MediaGallery.astro";
+import MediaGallery from "../components/gallery/MediaGallery.astro";
+import MarkdownSections from "../components/content/MarkdownSections.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import PageLayout from "../layouts/PageLayout.astro";
-import {
-	parseMarkdownContent,
-	styleMarkdownContent,
-} from "../lib/markdownUtils";
 
 const aboutEntry = await getEntry("pages", "about");
 if (!aboutEntry) throw new Error("About entry not found");
-
-const aboutContent = aboutEntry.body;
-const lastUpdated = "Last updated June 3, 2026";
-const parsedContent = parseMarkdownContent(aboutContent);
 ---
 
 <PageLayout
@@ -22,38 +15,14 @@ const parsedContent = parseMarkdownContent(aboutContent);
 >
   <div class="w-full lg:mt-3.5 max-w-2xl">
     <MarkdownLayout title={aboutEntry.data.title}>
-      <div class="flex flex-col gap-2">
-        <section>
-          <p
-            class="mb-4 font-mono text-xs text-muted"
-          >
-            {lastUpdated}
-          </p>
-          <p
-            class="text-lead max-w-2xl mb-3"
-          >
-            {aboutEntry.data.description}
-          </p>
-        </section>
-
-        <div class="space-y-6 max-w-4xl">
-          {
-            parsedContent.map((section) => (
-              <section>
-                <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
-                  {section.title}
-                </h2>
-                <div class="space-y-2">
-                  <div set:html={styleMarkdownContent(section.content)} />
-                </div>
-              </section>
-            ))
-          }
-        </div>
-      </div>
+      <MarkdownSections
+        body={aboutEntry.body}
+        description={aboutEntry.data.description}
+        lastUpdated="Last updated June 3, 2026"
+        layout="stack"
+      />
     </MarkdownLayout>
 
-    <!-- Media Gallery -->
     <div class="mt-2 pb-8">
       <MediaGallery
         images={["about.webp", "timbers.webp"]}

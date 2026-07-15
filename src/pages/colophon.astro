@@ -1,18 +1,12 @@
 ---
 import { getEntry } from "astro:content";
-import MediaGallery from "../components/MediaGallery.astro";
+import MediaGallery from "../components/gallery/MediaGallery.astro";
+import MarkdownSections from "../components/content/MarkdownSections.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import PageLayout from "../layouts/PageLayout.astro";
-import {
-	parseMarkdownContent,
-	styleMarkdownContent,
-} from "../lib/markdownUtils";
 
 const colophonEntry = await getEntry("pages", "colophon");
 if (!colophonEntry) throw new Error("Colophon entry not found");
-
-const colophonContent = colophonEntry.body;
-const parsedContent = parseMarkdownContent(colophonContent);
 ---
 
 <PageLayout
@@ -20,31 +14,11 @@ const parsedContent = parseMarkdownContent(colophonContent);
   description={colophonEntry.data.description}
 >
   <MarkdownLayout title={colophonEntry.data.title}>
-    <div class="flex flex-col gap-2">
-      <section>
-        <p
-          class="text-lead max-w-2xl mb-3"
-        >
-          {colophonEntry.data.description}
-        </p>
-      </section>
-
-      <div class="grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl">
-        {
-          parsedContent.map((section) => (
-            <section>
-              <h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
-                {section.title}
-              </h2>
-              <div class="space-y-2">
-                <div set:html={styleMarkdownContent(section.content)} />
-              </div>
-            </section>
-          ))
-        }
-      </div>
-
-      <!-- Old Sites Gallery -->
+    <MarkdownSections
+      body={colophonEntry.body}
+      description={colophonEntry.data.description}
+      layout="grid"
+    >
       <div class="mt-4 mb-4">
         <h2 class="text-xl font-medium mb-3 text-[--color-text-primary]">
           Memorial to my old sites (rip)
@@ -59,6 +33,6 @@ const parsedContent = parseMarkdownContent(colophonContent);
           variant="desktop"
         />
       </div>
-    </div>
+    </MarkdownSections>
   </MarkdownLayout>
 </PageLayout>
