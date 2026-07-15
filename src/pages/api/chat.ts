@@ -88,40 +88,42 @@ export const POST: APIRoute = async ({ request }) => {
 			) ||
 			// Short follow-ups without question words
 			(message.trim().length < 20 &&
-				!/\b(what|who|where|when|why|how|which|who|whose)\b/i.test(message.trim())) ||
+				!/\b(what|who|where|when|why|how|which|who|whose)\b/i.test(
+					message.trim(),
+				)) ||
 			// Pure acknowledgments
 			/^(ok|okay|alright|got it|understood|sure|yes|no|yep|nope)\s*[!.]*$/i.test(
 				message.trim(),
 			);
 		const shouldSkipRag = isShortQuery || isGreeting || isConversational;
 
-	let relevantDocs: any[] = [];
-	let shouldUseRag = false;
+		let relevantDocs: any[] = [];
+		let shouldUseRag = false;
 
-	if (!shouldSkipRag) {
-		relevantDocs = await queryRag(message);
-		const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
-		shouldUseRag = bestScore >= T_MID;
-	}
+		if (!shouldSkipRag) {
+			relevantDocs = await queryRag(message);
+			const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
+			shouldUseRag = bestScore >= T_MID;
+		}
 
-	let systemPrompt: string;
+		let systemPrompt: string;
 
-	if (shouldUseRag) {
-		// Determine confidence level and format context accordingly
-		const bestScore = relevantDocs[0]?.score || 0;
-		const isHighConfidence = bestScore >= T_HIGH;
+		if (shouldUseRag) {
+			// Determine confidence level and format context accordingly
+			const bestScore = relevantDocs[0]?.score || 0;
+			const isHighConfidence = bestScore >= T_HIGH;
 
-		// Format context with numbered citations
-		const context = relevantDocs
-			.map((doc, index) => {
-				const confidenceLabel = doc.confidence ?? "unknown";
-				const scorePercent = (doc.score * 100).toFixed(0);
-				return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
-			})
-			.join("\n\n");
+			// Format context with numbered citations
+			const context = relevantDocs
+				.map((doc, index) => {
+					const confidenceLabel = doc.confidence ?? "unknown";
+					const scorePercent = (doc.score * 100).toFixed(0);
+					return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
+				})
+				.join("\n\n");
 
-		if (isHighConfidence) {
-			systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
+			if (isHighConfidence) {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
 
 Context:
 ${context}
@@ -133,8 +135,8 @@ CRITICAL RULES:
 - Quote or paraphrase the context directly when answering.
 - Be authoritative and helpful - synthesize information across sources when relevant.
 - Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.`;
-		} else {
-			systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
+			} else {
+				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
 
 Context:
 ${context}
@@ -146,9 +148,9 @@ CRITICAL RULES:
 - Quote or paraphrase the context directly when answering.
 - Be helpful and engaging - explain what you know and suggest related topics you can discuss.
 - Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.`;
-		}
-	} else {
-		systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
+			}
+		} else {
+			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
 
 I help visitors learn about Andrei based on his resume, writing, and projects.
 
@@ -159,76 +161,74 @@ RULES:
 - NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences
 - If I'm unsure or lack the information, say that plainly and steer toward topics I can cover instead of speculating
 - Be helpful and suggest related topics I can discuss when you can't fully answer something`;
-	}
-
-	// Call HF Inference API
-	const lmStudioRequest: LMStudioRequest = {
-		model: IS_LOCAL_MODEL ? LOCAL_MODEL_ID : HF_MODEL_ID,
-		messages: [
-			{ role: "system", content: systemPrompt },
-			...history,
-			{ role: "user", content: message },
-		],
-		temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
-		max_tokens: shouldUseRag ? 1500 : 500, // Longer responses when we have context
-	};
-
-	const baseUrl = IS_LOCAL_MODEL ? LOCAL_MODEL_URL : HF_API_URL;
-
-	if (!baseUrl) {
-		throw new Error("No API base URL configured for selected model provider");
-	}
-
-	const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
-
-	const headers: Record<string, string> = {
-		"Content-Type": "application/json",
-	};
-
-	if (!IS_LOCAL_MODEL) {
-		if (!HF_API_KEY) {
-			throw new Error("HF_API_KEY is required for Hugging Face provider");
 		}
-		headers["Authorization"] = `Bearer ${HF_API_KEY}`;
-	}
 
-	const hfResponse = await fetch(apiUrl, {
-		method: "POST",
-		headers,
-		body: JSON.stringify(lmStudioRequest),
-	});
+		// Call HF Inference API
+		const lmStudioRequest: LMStudioRequest = {
+			model: IS_LOCAL_MODEL ? LOCAL_MODEL_ID : HF_MODEL_ID,
+			messages: [
+				{ role: "system", content: systemPrompt },
+				...history,
+				{ role: "user", content: message },
+			],
+			temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
+			max_tokens: shouldUseRag ? 1500 : 500, // Longer responses when we have context
+		};
 
-	if (!hfResponse.ok) {
-		const errorText = await hfResponse.text();
-		console.error("Model API error response:", errorText);
-		throw new Error(`Model API error: ${hfResponse.status} - ${errorText}`);
-	}
+		const baseUrl = IS_LOCAL_MODEL ? LOCAL_MODEL_URL : HF_API_URL;
 
-	const data: LMStudioResponse = await hfResponse.json();
-	const response =
-		data.choices[0]?.message?.content ||
-		"Sorry, I could not generate a response.";
+		if (!baseUrl) {
+			throw new Error("No API base URL configured for selected model provider");
+		}
 
-	const chatResponse: ChatResponse = {
-		response,
-		sources: shouldUseRag
-			? relevantDocs.map((doc) => ({
-					source: doc.source,
-					score: doc.score,
-					metadata: doc.metadata,
-					confidence: doc.confidence,
-					scoreDetails: doc.scoreDetails,
-				}))
-			: [], // No sources when RAG wasn't used
-	};
+		const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
 
-	return new Response(JSON.stringify(chatResponse), {
-		status: 200,
-		headers: { "Content-Type": "application/json" },
-	});
-}
-	catch (error)
-	{
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
+
+		if (!IS_LOCAL_MODEL) {
+			if (!HF_API_KEY) {
+				throw new Error("HF_API_KEY is required for Hugging Face provider");
+			}
+			headers["Authorization"] = `Bearer ${HF_API_KEY}`;
+		}
+
+		const hfResponse = await fetch(apiUrl, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(lmStudioRequest),
+		});
+
+		if (!hfResponse.ok) {
+			const errorText = await hfResponse.text();
+			console.error("Model API error response:", errorText);
+			throw new Error(`Model API error: ${hfResponse.status} - ${errorText}`);
+		}
+
+		const data: LMStudioResponse = await hfResponse.json();
+		const response =
+			data.choices[0]?.message?.content ||
+			"Sorry, I could not generate a response.";
+
+		const chatResponse: ChatResponse = {
+			response,
+			sources: shouldUseRag
+				? relevantDocs.map((doc) => ({
+						source: doc.source,
+						score: doc.score,
+						metadata: doc.metadata,
+						confidence: doc.confidence,
+						scoreDetails: doc.scoreDetails,
+					}))
+				: [], // No sources when RAG wasn't used
+		};
+
+		return new Response(JSON.stringify(chatResponse), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch (error) {
 		console.error("Chat API error:", error);
 		console.error(
 			"Error stack:",
