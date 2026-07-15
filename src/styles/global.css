@@ -232,6 +232,35 @@
 	transform: translateY(0);
 }
 
+/* Notion-style ASCII portrait avatar */
+.ascii-portrait {
+	--ascii-portrait-size: 3.5rem;
+	margin-top: 1.5rem;
+	width: var(--ascii-portrait-size);
+	height: var(--ascii-portrait-size);
+	border-radius: 0.625rem;
+	border: 1px solid color-mix(in srgb, var(--color-text-secondary) 35%, transparent);
+	background: color-mix(in srgb, var(--color-bg-secondary) 55%, var(--color-bg-primary));
+	overflow: hidden;
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+}
+
+.ascii-portrait-output {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-ascii-bright, #5a6aff);
+	white-space: pre;
+	line-height: 1;
+	letter-spacing: 0.02em;
+	font-size: calc(var(--ascii-portrait-size) / var(--ascii-portrait-grid, 34));
+	text-shadow:
+		0 0 2px color-mix(in srgb, currentColor 40%, transparent),
+		0 0 4px color-mix(in srgb, currentColor 20%, transparent);
+}
+
 /* Occasional page enter — content pages, not home */
 .page-enter {
 	animation: page-enter 360ms var(--ease-out) both;
@@ -285,6 +314,11 @@
 	.media-reveal,
 	.media-reveal.is-loaded {
 		opacity: 1;
+		transform: none;
+	}
+
+	.hero-sigil {
+		animation: none;
 		transform: none;
 	}
 }
