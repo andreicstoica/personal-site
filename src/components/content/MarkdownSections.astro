@@ -2,21 +2,21 @@
 import {
 	parseMarkdownContent,
 	styleMarkdownContent,
-} from '../../lib/markdownUtils';
+} from "../../lib/markdownUtils";
 
 interface Props {
 	body: string;
 	description?: string;
-	layout?: 'stack' | 'grid';
+	layout?: "stack" | "grid";
 	lastUpdated?: string;
 }
 
-const { body, description, layout = 'stack', lastUpdated } = Astro.props;
+const { body, description, layout = "stack", lastUpdated } = Astro.props;
 const parsedContent = parseMarkdownContent(body);
 const sectionsClass =
-	layout === 'grid'
-		? 'grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl'
-		: 'space-y-6 max-w-4xl';
+	layout === "grid"
+		? "grid lg:grid-cols-2 gap-2 lg:gap-8 max-w-6xl"
+		: "space-y-6 max-w-4xl";
 ---
 
 <div class="flex flex-col gap-2">

@@ -1,0 +1,26 @@
+---
+import {
+	pixelarticons,
+	type PixelarticonName,
+} from "../../icons/pixelarticons";
+
+interface Props {
+	name: PixelarticonName;
+	class?: string;
+	id?: string;
+}
+
+const { name, class: className = "w-6 h-6", id } = Astro.props;
+const path = pixelarticons[name];
+---
+
+<svg
+	id={id}
+	class={className}
+	fill="none"
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 24 24"
+	aria-hidden="true"
+>
+	<path d={path} fill="currentColor"></path>
+</svg>

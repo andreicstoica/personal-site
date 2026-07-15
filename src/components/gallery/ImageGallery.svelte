@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { mediaReveal } from "../../lib/mediaReveal";
+
   interface ImageData {
     src: string;
     alt: string;
@@ -19,6 +21,8 @@
   let isClosing = $state(false);
   let containerRef = $state<HTMLDivElement | null>(null);
   let isVisible = $state(false);
+
+  const modalCloseMs = 180;
 
   // Intersection Observer for lazy loading
   $effect(() => {
@@ -56,7 +60,7 @@
     setTimeout(() => {
       selectedImage = null;
       isClosing = false;
-    }, 100);
+    }, modalCloseMs);
   };
 
   // Close modal on escape key
@@ -97,31 +101,23 @@
               {#if image.src.toLowerCase().includes(".webm")}
                 <video
                   src={image.src}
-                  class="h-50 w-auto object-contain"
+                  class="h-50 w-auto object-contain media-reveal"
+                  use:mediaReveal
                   autoplay
                   loop
                   muted
                   playsinline
-                  style="opacity: 0"
-                  onloadeddata={(e: Event) => {
-                    const target = e.currentTarget as HTMLVideoElement;
-                    target.style.opacity = "1";
-                  }}
                 ></video>
               {:else}
                 <img
                   src={image.src}
                   alt={image.alt}
-                  class="h-50 w-auto object-contain"
+                  class="h-50 w-auto object-contain media-reveal"
+                  use:mediaReveal
                   loading="lazy"
                   width={image.width}
                   height={image.height}
                   decoding="async"
-                  style="opacity: 0"
-                  onload={(e: Event) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.opacity = "1";
-                  }}
                 />
               {/if}
             </button>
@@ -154,31 +150,23 @@
             {#if image.src.toLowerCase().includes(".webm")}
               <video
                 src={image.src}
-                class="h-50 w-auto object-contain"
+                class="h-50 w-auto object-contain media-reveal"
+                use:mediaReveal
                 autoplay
                 loop
                 muted
                 playsinline
-                style="opacity: 0"
-                onloadeddata={(e: Event) => {
-                  const target = e.currentTarget as HTMLVideoElement;
-                  target.style.opacity = "1";
-                }}
               ></video>
             {:else}
               <img
                 src={image.src}
                 alt={image.alt}
-                class="h-50 w-auto object-contain"
+                class="h-50 w-auto object-contain media-reveal"
+                use:mediaReveal
                 loading="lazy"
                 width={image.width}
                 height={image.height}
                 decoding="async"
-                style="opacity: 0"
-                onload={(e: Event) => {
-                  const target = e.currentTarget as HTMLImageElement;
-                  target.style.opacity = "1";
-                }}
               />
             {/if}
           </button>
@@ -204,7 +192,8 @@
       {#if selectedImage.src.toLowerCase().includes(".webm")}
         <video
           src={selectedImage.src}
-          class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain cursor-zoom-out"
+          class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain cursor-zoom-out media-reveal"
+          use:mediaReveal
           autoplay
           loop
           muted
@@ -234,7 +223,8 @@
           <img
             src={selectedImage.src}
             alt={selectedImage.alt}
-            class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain"
+            class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain media-reveal"
+            use:mediaReveal
             decoding="async"
             fetchpriority="high"
             draggable={false}
