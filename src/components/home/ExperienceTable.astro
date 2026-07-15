@@ -39,9 +39,9 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 };
 ---
 
-<section id="experience-table" class="home-experience w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
+<section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
   <!-- Table Header -->
-  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-2 font-medium text-xs uppercase tracking-wide sticky top-0 bg-[var(--color-bg-primary)] z-10" >
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
     <div class="col-span-1 text-sm ">Experience</div>
     <div class="col-span-2 text-sm ">Role</div>
     <div class="col-span-2 text-sm ">
@@ -57,7 +57,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   </div>
 
   <!-- Table Body -->
-  <div class="space-y-2">
+  <div class="space-y-4">
     {experiences.map((experience: Experience) => (
       <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
         <!-- Desktop Layout -->
@@ -72,7 +72,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
           <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
           <div class="col-span-5">
             <!-- Top row: Role, Tags, Date -->
-            <div class="grid grid-cols-5 gap-2 mb-2 text-pretty">
+            <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
               <!-- Role (2 cols) -->
               <div class="col-span-2">
                 <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
@@ -109,7 +109,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
         <!-- Mobile Layout -->
         <div class="lg:hidden">
-          <div class="flex justify-between gap-3 mb-2">
+          <div class="flex justify-between gap-4 mb-3">
             <!-- Experience Name -->
             <span
               class="line-clamp-2"
