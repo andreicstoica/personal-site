@@ -1,6 +1,5 @@
 ---
 import { personalStatement } from "../../lib/experience";
-import AsciiPortrait from "./AsciiPortrait.astro";
 ---
 
 <section
@@ -13,7 +12,6 @@ import AsciiPortrait from "./AsciiPortrait.astro";
       class="text-lead max-w-2xl"
       set:html={personalStatement}
     />
-    <AsciiPortrait />
   </div>
 
   <!-- ASCII image on the right for medium+ screens -->
@@ -31,28 +29,6 @@ import AsciiPortrait from "./AsciiPortrait.astro";
 </section>
 
 <style>
-  .hero-sigil {
-    animation: hero-sigil-enter 500ms var(--ease-out) 240ms both;
-  }
-
-  @keyframes hero-sigil-enter {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-sigil {
-      animation: none;
-      transform: none;
-    }
-  }
-
   .ascii-display {
     font-size: clamp(0.2rem, 0.4vw, 0.35rem);
     width: 100%;

@@ -195,31 +195,6 @@ export class AsciiVideoConverter {
 	}
 }
 
-export type AsciiImageOptions = {
-	invertColors?: boolean;
-	animate?: boolean;
-	maxWidth?: number;
-	maxHeight?: number;
-	squareCrop?: boolean;
-	brightnessThreshold?: number;
-};
-
-function resolveAsciiImageOptions(
-	options: AsciiImageOptions | boolean,
-): Required<AsciiImageOptions> {
-	const resolved =
-		typeof options === "boolean" ? { invertColors: options } : options;
-
-	return {
-		invertColors: resolved.invertColors ?? true,
-		animate: resolved.animate ?? true,
-		maxWidth: resolved.maxWidth ?? 160,
-		maxHeight: resolved.maxHeight ?? 120,
-		squareCrop: resolved.squareCrop ?? false,
-		brightnessThreshold: resolved.brightnessThreshold ?? 0.12,
-	};
-}
-
 export class AsciiImageConverter {
 	private canvas!: HTMLCanvasElement;
 	private ctx!: CanvasRenderingContext2D;
@@ -232,18 +207,14 @@ export class AsciiImageConverter {
 	// ASCII character set for brightness mapping (from darkest to brightest)
 	private readonly asciiChars =
 		".'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+	private readonly brightnessThreshold = 0.12;
+	private readonly maxWidth = 160;
+	private readonly maxHeight = 120;
 
-	// Animation constants (tree sway)
+	// Animation constants
 	private readonly maxSwayAmount = 3;
 	private readonly windSpeed = 0.3;
-	private readonly swayHeightCutoff = 0.6;
-
-	private readonly invertColors: boolean;
-	private readonly animate: boolean;
-	private readonly maxWidth: number;
-	private readonly maxHeight: number;
-	private readonly squareCrop: boolean;
-	private readonly brightnessThreshold: number;
+	private readonly swayHeightCutoff = 0.6; // Only top 60% of tree sways
 
 	private targetWidth = 160;
 	private targetHeight = 120;
@@ -251,15 +222,8 @@ export class AsciiImageConverter {
 	constructor(
 		imagePath: string,
 		outputElement: HTMLElement,
-		options: AsciiImageOptions | boolean = {},
+		private invertColors: boolean = true,
 	) {
-		const resolved = resolveAsciiImageOptions(options);
-		this.invertColors = resolved.invertColors;
-		this.animate = resolved.animate;
-		this.maxWidth = resolved.maxWidth;
-		this.maxHeight = resolved.maxHeight;
-		this.squareCrop = resolved.squareCrop;
-		this.brightnessThreshold = resolved.brightnessThreshold;
 		this.outputElement = outputElement;
 		this.setupImage(imagePath);
 	}
@@ -286,13 +250,6 @@ export class AsciiImageConverter {
 	}
 
 	private calculateAspectRatio(): void {
-		if (this.squareCrop) {
-			const size = Math.min(this.maxWidth, this.maxHeight);
-			this.targetWidth = size;
-			this.targetHeight = size;
-			return;
-		}
-
 		const imageAspectRatio = this.image.naturalWidth / this.image.naturalHeight;
 		const maxAspectRatio = this.maxWidth / this.maxHeight;
 
@@ -353,33 +310,7 @@ export class AsciiImageConverter {
 			this.ctx.clearRect(0, 0, this.targetWidth, this.targetHeight);
 
 			// Draw image to canvas with proper scaling
-			if (this.squareCrop) {
-				const cropSize = Math.min(
-					this.image.naturalWidth,
-					this.image.naturalHeight,
-				);
-				const sx = (this.image.naturalWidth - cropSize) / 2;
-				const sy = (this.image.naturalHeight - cropSize) / 2;
-				this.ctx.drawImage(
-					this.image,
-					sx,
-					sy,
-					cropSize,
-					cropSize,
-					0,
-					0,
-					this.targetWidth,
-					this.targetHeight,
-				);
-			} else {
-				this.ctx.drawImage(
-					this.image,
-					0,
-					0,
-					this.targetWidth,
-					this.targetHeight,
-				);
-			}
+			this.ctx.drawImage(this.image, 0, 0, this.targetWidth, this.targetHeight);
 
 			// Get image data for processing
 			const imageData = this.ctx.getImageData(
@@ -390,29 +321,26 @@ export class AsciiImageConverter {
 			);
 			const data = imageData.data;
 
-			// Convert to ASCII with optional wind animation
+			// Convert to ASCII with wind animation
 			const time = (Date.now() - this.startTime) * 0.001;
-			const displayWidth = this.animate
-				? this.targetWidth + this.maxSwayAmount * 2
-				: this.targetWidth;
+			const displayWidth = this.targetWidth + this.maxSwayAmount * 2;
 			let asciiOutput = "";
 
 			for (let y = 0; y < this.targetHeight; y++) {
+				// Calculate sway for this row (only top portion sways)
 				const heightRatio = y / this.targetHeight;
 				const swayInfluence =
-					this.animate && heightRatio < this.swayHeightCutoff
+					heightRatio < this.swayHeightCutoff
 						? (this.swayHeightCutoff - heightRatio) / this.swayHeightCutoff
 						: 0;
 
-				const windOffset = this.animate
-					? Math.sin(time * this.windSpeed + y * 0.01) *
-						swayInfluence *
-						this.maxSwayAmount
-					: 0;
-				const leftPadding = this.animate
-					? this.maxSwayAmount + Math.round(windOffset)
-					: 0;
+				const windOffset =
+					Math.sin(time * this.windSpeed + y * 0.01) *
+					swayInfluence *
+					this.maxSwayAmount;
+				const leftPadding = this.maxSwayAmount + Math.round(windOffset);
 
+				// Build row with consistent width
 				let rowOutput = " ".repeat(Math.max(0, leftPadding));
 
 				for (let x = 0; x < this.targetWidth; x++) {
@@ -454,9 +382,8 @@ export class AsciiImageConverter {
 			// Update output
 			this.outputElement.textContent = asciiOutput;
 
-			if (this.animate) {
-				this.animationId = requestAnimationFrame(() => this.renderFrame());
-			}
+			// Continue animation
+			this.animationId = requestAnimationFrame(() => this.renderFrame());
 		} catch (error) {
 			console.error("Error in renderFrame:", error);
 			this.startFallbackAnimation();
