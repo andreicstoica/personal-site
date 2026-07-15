@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400&display=swap");
 
 @font-face {
   font-family: "LumberSans";
@@ -45,6 +45,18 @@
 	--font-sans: "IBM Plex Sans", system-ui, sans-serif;
 	--font-serif: "IBM Plex Serif", serif;
 	--font-mono: "IBM Plex Mono", monospace;
+
+	/* Type scale */
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.0625rem;
+	--text-xl: 1.25rem;
+	--text-2xl: 1.5rem;
+	--leading-tight: 1.25;
+	--leading-normal: 1.55;
+	--leading-relaxed: 1.65;
+	--tracking-tight: -0.015em;
 
 	/* Spacing */
 	--spacing-xs: 0.5rem;
@@ -306,8 +318,12 @@
 /* Global base styles */
 html {
 	font-family: var(--font-sans);
+	font-size: 16px;
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 	cursor:
 		url("data:image/svg+xml,%3csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='8' height='8' fill='%23272727' stroke='%23fefefe' stroke-width='1'/%3e%3c/svg%3e")
 		8 8,
@@ -317,6 +333,50 @@ html {
 body {
 	margin: 0;
 	padding: 0;
+	font-size: var(--text-base);
+	line-height: var(--leading-normal);
+	letter-spacing: var(--tracking-tight);
+}
+
+.page-title {
+	font-size: var(--text-2xl);
+	font-weight: 700;
+	line-height: var(--leading-tight);
+	letter-spacing: var(--tracking-tight);
+}
+
+.text-lead {
+	font-size: var(--text-lg);
+	line-height: var(--leading-relaxed);
+	color: var(--color-text-primary);
+	text-wrap: pretty;
+}
+
+.text-muted {
+	color: var(--color-text-secondary);
+}
+
+.nav-label {
+	font-size: var(--text-sm);
+	font-weight: 500;
+	line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+	.nav-label {
+		font-size: var(--text-xs);
+		line-height: 1.25;
+	}
+}
+
+::selection {
+	background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+	color: var(--color-text-primary);
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
 }
 
 .layout-grid {
@@ -404,15 +464,16 @@ a:hover {
 
 /* Markdown content styling */
 .markdown-h2 {
-	font-size: 1.125rem;
+	font-size: var(--text-lg);
 	font-weight: 600;
 	color: var(--color-text-primary);
 	margin-bottom: 0.75rem;
 	margin-top: 1.5rem;
+	letter-spacing: var(--tracking-tight);
 }
 
 .markdown-h3 {
-	font-size: 1rem;
+	font-size: var(--text-base);
 	font-weight: 500;
 	color: var(--color-text-primary);
 	margin-bottom: 0.5rem;
@@ -421,7 +482,8 @@ a:hover {
 
 .markdown-list-item {
 	color: var(--color-text-primary);
-	margin-bottom: 0.25rem;
+	margin-bottom: 0.35rem;
+	line-height: var(--leading-normal);
 }
 
 .markdown-bullet {
@@ -442,7 +504,7 @@ a:hover {
 
 .markdown-p {
 	color: var(--color-text-primary);
-	line-height: 1.6;
+	line-height: var(--leading-relaxed);
 }
 
 /* Navigation name link - override global link styles */
