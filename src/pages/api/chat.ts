@@ -13,10 +13,6 @@ const HF_API_URL = import.meta.env.HF_API_URL;
 const HF_API_KEY = import.meta.env.HF_API_KEY;
 const HF_MODEL_ID = import.meta.env.HF_MODEL_ID ?? "noodlesGS/personal";
 
-console.log("Model provider:", MODEL_PROVIDER);
-console.log("HF API configured:", Boolean(HF_API_URL && HF_API_KEY));
-console.log("Local model endpoint:", LOCAL_MODEL_URL);
-
 interface ChatRequest {
 	message: string;
 	history?: Array<{ role: string; content: string }>;
@@ -103,18 +99,9 @@ export const POST: APIRoute = async ({ request }) => {
 	let shouldUseRag = false;
 
 	if (!shouldSkipRag) {
-		// Get relevant documents from RAG
-		console.log("Starting RAG query for:", message);
 		relevantDocs = await queryRag(message);
-		console.log("RAG results:", relevantDocs);
-
-		// Use banded confidence thresholds
 		const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
 		shouldUseRag = bestScore >= T_MID;
-
-		console.log(
-			`RAG decision: ${shouldUseRag ? "USE" : "SKIP"} (best score: ${bestScore.toFixed(3)}, threshold: ${T_MID})`,
-		);
 	}
 
 	let systemPrompt: string;
@@ -205,16 +192,11 @@ RULES:
 		headers["Authorization"] = `Bearer ${HF_API_KEY}`;
 	}
 
-	console.log("Calling model endpoint:", apiUrl);
-	console.log("Request:", JSON.stringify(lmStudioRequest, null, 2));
-
 	const hfResponse = await fetch(apiUrl, {
 		method: "POST",
 		headers,
 		body: JSON.stringify(lmStudioRequest),
 	});
-
-	console.log("Model response status:", hfResponse.status);
 
 	if (!hfResponse.ok) {
 		const errorText = await hfResponse.text();

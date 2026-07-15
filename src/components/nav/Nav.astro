@@ -1,0 +1,308 @@
+---
+// No imports needed for this simple navigation
+---
+
+<nav
+  class="full-bleed relative z-50 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] py-4 flex justify-between items-center"
+>
+  <!-- Name on the left -->
+  <div class="text-2xl text-[#fefefe] font-bold tracking-tight">
+    <a href="/" class="hover:opacity-90 nav-name">Andrei Stoica</a>
+  </div>
+
+  <!-- Desktop Navigation -->
+  <div class="hidden md:flex items-end gap-2 text-end">
+    <!-- Internal page links -->
+    <a href="/" class="nav-box">
+      <span
+        class="nav-label"
+        >Home</span
+      >
+    </a>
+    <a href="/about" class="nav-box">
+      <span
+        class="nav-label"
+        >About</span
+      >
+    </a>
+    <a href="/chat" class="nav-box">
+      <span
+        class="nav-label"
+        >Chat</span
+      >
+    </a>
+
+    <!-- Social dropdown -->
+    <div id="desktop-social" class="relative">
+      <button
+        id="desktop-social-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-haspopup="true"
+        class="nav-box flex items-center gap-1"
+      >
+        <span
+          class="nav-label"
+          >Social</span
+        >
+        <span
+          id="desktop-social-arrow"
+          class="social-dropdown-arrow text-sm translate-y-[1px]"
+          >⇣</span
+        >
+      </button>
+
+      <!-- Dropdown menu -->
+      <div
+        id="desktop-social-menu"
+        class="social-dropdown-menu absolute top-full right-0 pt-1 z-50 min-w-[10vw]"
+      >
+        <div
+          class="social-dropdown-panel bg-[var(--color-bg-primary)] shadow-lg"
+        >
+          <a
+            href="https://github.com/andreicstoica/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end nav-label"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.linkedin.com/in/andrei-c-stoica/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end nav-label"
+          >
+            LinkedIn
+          </a>
+          <a
+            href="https://andreisthoughts.substack.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end nav-label"
+          >
+            Substack
+          </a>
+          <a
+            href="https://x.com/andreistoica_"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-box w-full h-12 flex items-center justify-end nav-label"
+          >
+            Twitter (X)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Hamburger Menu -->
+  <div class="md:hidden">
+    <button
+      id="hamburger-btn"
+      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity nav-pressable"
+      aria-label="Toggle menu"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu Overlay -->
+<div
+  id="mobile-menu"
+  class="mobile-menu-overlay fixed inset-0 bg-black/50 z-50 hidden md:hidden"
+>
+  <div
+    id="mobile-menu-drawer"
+    class="mobile-menu-drawer absolute top-0 right-0 h-full w-80 bg-[var(--color-bg-primary)] shadow-lg transform translate-x-full"
+  >
+    <div class="p-6">
+      <!-- Close button -->
+      <button
+        id="close-menu"
+        class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70"
+        aria-label="Close menu"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <!-- Mobile menu items -->
+      <div class="mt-8 space-y-4">
+        <a
+          href="/"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+        >
+          Home
+        </a>
+        <a
+          href="/about"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+        >
+          About
+        </a>
+        <a
+          href="/chat"
+          class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+        >
+          Chat
+        </a>
+
+        <!-- Social submenu -->
+        <div class="relative">
+          <button
+            id="social-toggle"
+            type="button"
+            class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded flex items-center justify-between"
+          >
+            Social
+            <span id="social-arrow" class="social-dropdown-arrow">⇣</span>
+          </button>
+          <div id="social-submenu" class="social-submenu pl-4 mt-2">
+            <div class="social-submenu-inner space-y-2">
+            <a
+              href="https://github.com/andreicstoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://www.linkedin.com/in/andrei-c-stoica/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://andreisthoughts.substack.com/"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Substack
+            </a>
+            <a
+              href="https://x.com/andreistoica_"
+              target="_blank"
+              class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              Twitter (X)
+            </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this script block at the end of the file for menu toggling -->
+<script>
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const closeMenu = document.getElementById("close-menu");
+  const socialToggle = document.getElementById("social-toggle");
+  const socialSubmenu = document.getElementById("social-submenu");
+  const socialArrow = document.getElementById("social-arrow");
+  const desktopSocial = document.getElementById("desktop-social");
+  const desktopSocialToggle = document.getElementById("desktop-social-toggle");
+  const desktopSocialMenu = document.getElementById("desktop-social-menu");
+  const desktopSocialArrow = document.getElementById("desktop-social-arrow");
+
+  const setDesktopSocialOpen = (open: boolean) => {
+    if (!desktopSocialMenu || !desktopSocialToggle || !desktopSocialArrow) {
+      return;
+    }
+
+    desktopSocialMenu.classList.toggle("is-open", open);
+    desktopSocialArrow.classList.toggle("is-open", open);
+    desktopSocialToggle.setAttribute("aria-expanded", String(open));
+  };
+
+  if (desktopSocial && desktopSocialToggle && desktopSocialMenu) {
+    let desktopSocialPinned = false;
+
+    desktopSocialToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      desktopSocialPinned = !desktopSocialPinned;
+      setDesktopSocialOpen(desktopSocialPinned);
+    });
+
+    desktopSocial.addEventListener("mouseenter", () => {
+      if (!desktopSocialPinned) {
+        setDesktopSocialOpen(true);
+      }
+    });
+
+    desktopSocial.addEventListener("mouseleave", () => {
+      if (!desktopSocialPinned) {
+        setDesktopSocialOpen(false);
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (
+        desktopSocialPinned &&
+        event.target instanceof Node &&
+        !desktopSocial.contains(event.target)
+      ) {
+        desktopSocialPinned = false;
+        setDesktopSocialOpen(false);
+      }
+    });
+  }
+
+  const mobileMenuDrawer = document.getElementById("mobile-menu-drawer");
+  const drawerCloseMs = 280;
+
+  if (hamburgerBtn && mobileMenu && mobileMenuDrawer) {
+    hamburgerBtn.onclick = () => {
+      mobileMenu.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        mobileMenu.classList.add("is-open");
+        mobileMenuDrawer.classList.remove("translate-x-full");
+      });
+    };
+  }
+
+  if (closeMenu && mobileMenu && mobileMenuDrawer) {
+    closeMenu.onclick = () => {
+      mobileMenu.classList.remove("is-open");
+      mobileMenuDrawer.classList.add("translate-x-full");
+      setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, drawerCloseMs);
+    };
+  }
+
+  if (socialToggle && socialSubmenu && socialArrow) {
+    socialToggle.onclick = () => {
+      const isOpen = socialSubmenu.classList.contains("is-open");
+      socialSubmenu.classList.toggle("is-open", !isOpen);
+      socialArrow.classList.toggle("is-open", !isOpen);
+    };
+  }
+</script>

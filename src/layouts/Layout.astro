@@ -17,6 +17,8 @@ const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
     <meta name="author" content="Andrei Stoica" />
     <meta name="image" content="/cover.jpeg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
@@ -28,12 +30,6 @@ const { title, description = "Andrei's Portfolio" } = Astro.props as Props;
 </html>
 
 <style is:global>
-  html {
-    font-family: var(--font-sans);
-    color: var(--color-text-primary);
-    background-color: var(--color-bg-primary);
-  }
-
   .cursor-pixel {
     position: fixed;
     width: 8px;

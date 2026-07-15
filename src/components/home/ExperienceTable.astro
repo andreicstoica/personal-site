@@ -1,9 +1,8 @@
 ---
-import { marked } from "marked";
-import { experiences } from "../lib/experience";
-import type { Experience } from "../lib/types.ts";
-import MediaGallery from "./MediaGallery.astro";
-import ProjectEnhancedDescription from "./ProjectEnhancedDescription.astro";
+import { experiences } from "../../lib/experience";
+import type { Experience } from "../../lib/types.ts";
+import MediaGallery from "../gallery/MediaGallery.astro";
+import ProjectEnhancedDescription from "../projects/ProjectEnhancedDescription.astro";
 
 // Get unique types for the filter dropdown
 const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
@@ -38,21 +37,15 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 	}
 	return endDate === "..." ? `${startDate}-...` : startDate;
 };
-
-// Markdown renderer
-const renderer = new marked.Renderer();
-renderer.link = ({ href, title, text }) =>
-	`<a href="${href}" target="_blank" rel="noopener noreferrer"${title ? ` title="${title}"` : ""}>${text}</a>`;
-marked.setOptions({ renderer });
 ---
 
-<section class="w-full text-(color-text-primary) dark:text-(color-text-inverse)">
+<section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
   <!-- Table Header -->
   <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
     <div class="col-span-1 text-sm ">Experience</div>
     <div class="col-span-2 text-sm ">Role</div>
     <div class="col-span-2 text-sm ">
-      <select id="typeFilter" class="w-full border max-w-30 border-gray-300 dark:border-gray-600 px-2 text-sm bg-transparent uppercase">
+      <select id="typeFilter" class="experience-filter w-full border max-w-30 border-gray-300 dark:border-gray-600 px-2 text-sm bg-transparent uppercase">
         <option value="">all</option>
         {allTypes.map(type => (
           <option value={type}>{type}</option>
@@ -156,24 +149,23 @@ marked.setOptions({ renderer });
   </div>
 </section>
 
+<style>
+  #experience-table[data-filter="work"] .experience-row:not([data-type="work"]),
+  #experience-table[data-filter="personal"] .experience-row:not([data-type="personal"]),
+  #experience-table[data-filter="school"] .experience-row:not([data-type="school"]),
+  #experience-table[data-filter="other"] .experience-row:not([data-type="other"]) {
+    display: none;
+  }
+</style>
+
 <script>
-  // Filter functionality
-  const filterSelect = document.getElementById('typeFilter') as HTMLSelectElement;
-  const experienceRows = document.querySelectorAll('.experience-row');
+  const experienceTable = document.getElementById("experience-table");
+  const filterSelect = document.getElementById("typeFilter") as HTMLSelectElement | null;
 
-  if (filterSelect) {
-    filterSelect.addEventListener('change', (e) => {
-      const selectedType = (e.target as HTMLSelectElement).value;
-
-      experienceRows.forEach((row) => {
-        const rowType = (row as HTMLElement).dataset.type;
-
-        if (selectedType === '' || rowType === selectedType) {
-          (row as HTMLElement).style.display = 'block';
-        } else {
-          (row as HTMLElement).style.display = 'none';
-        }
-      });
+  if (experienceTable && filterSelect) {
+    filterSelect.addEventListener("change", (event) => {
+      event.preventDefault();
+      experienceTable.dataset.filter = filterSelect.value;
     });
   }
 </script>

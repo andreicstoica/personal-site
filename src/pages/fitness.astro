@@ -1,6 +1,6 @@
 ---
-import { getEntry } from "astro:content";
-import MediaGallery from "../components/MediaGallery.astro";
+import { getEntry, render } from "astro:content";
+import MediaGallery from "../components/gallery/MediaGallery.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import PageLayout from "../layouts/PageLayout.astro";
 
@@ -8,10 +8,10 @@ const raceEntry = await getEntry("pages", "race");
 const outdoorsEntry = await getEntry("pages", "outdoors");
 let RaceContent, OutdoorsContent;
 if (raceEntry) {
-	({ Content: RaceContent } = await raceEntry.render());
+	({ Content: RaceContent } = await render(raceEntry));
 }
 if (outdoorsEntry) {
-	({ Content: OutdoorsContent } = await outdoorsEntry.render());
+	({ Content: OutdoorsContent } = await render(outdoorsEntry));
 }
 ---
 
@@ -20,7 +20,7 @@ if (outdoorsEntry) {
     <div class="flex flex-col gap-8">
       <section>
         <p
-          class="text-md max-w-2xl text-pretty text-[--color-text-primary] mb-3"
+          class="text-lead max-w-2xl mb-3"
         >
           Running and outdoor activities
         </p>
