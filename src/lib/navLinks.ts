@@ -1,36 +1,20 @@
-import type { PixelarticonName } from "../icons/pixelarticons";
-
 export type NavItem = {
 	href: string;
 	label: string;
-	icon: PixelarticonName;
 };
 
 export const mainNavItems: NavItem[] = [
-	{ href: "/", label: "Home", icon: "home" },
-	{ href: "/about", label: "About", icon: "human" },
-	{ href: "/chat", label: "Chat", icon: "chat" },
+	{ href: "/", label: "Home" },
+	{ href: "/about", label: "About" },
+	{ href: "/chat", label: "Chat" },
 ];
 
 export const socialNavItems: NavItem[] = [
-	{
-		href: "https://github.com/andreicstoica/",
-		label: "GitHub",
-		icon: "github",
-	},
-	{
-		href: "https://www.linkedin.com/in/andrei-c-stoica/",
-		label: "LinkedIn",
-		icon: "user",
-	},
+	{ href: "https://github.com/andreicstoica/", label: "GitHub" },
+	{ href: "https://www.linkedin.com/in/andrei-c-stoica/", label: "LinkedIn" },
 	{
 		href: "https://andreisthoughts.substack.com/",
 		label: "Substack",
-		icon: "article",
 	},
-	{
-		href: "https://x.com/andreistoica_",
-		label: "Twitter (X)",
-		icon: "at",
-	},
+	{ href: "https://x.com/andreistoica_", label: "Twitter (X)" },
 ];

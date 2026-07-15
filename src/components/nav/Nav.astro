@@ -1,5 +1,4 @@
 ---
-import Icon from "../ui/Icon.astro";
 import { mainNavItems, socialNavItems } from "../../lib/navLinks";
 ---
 
@@ -15,8 +14,7 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
   <div class="hidden md:flex items-end gap-2 text-end">
     {
       mainNavItems.map((item) => (
-        <a href={item.href} class="nav-box items-center gap-1.5">
-          <Icon name={item.icon} class="w-4 h-4 shrink-0" />
+        <a href={item.href} class="nav-box">
           <span class="nav-label">{item.label}</span>
         </a>
       ))
@@ -29,15 +27,14 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
         type="button"
         aria-expanded="false"
         aria-haspopup="true"
-        class="nav-box items-center gap-1.5"
+        class="nav-box flex items-center gap-1"
       >
-        <Icon name="users" class="w-4 h-4 shrink-0" />
         <span class="nav-label">Social</span>
-        <Icon
-          name="chevron-down"
+        <span
           id="desktop-social-arrow"
-          class="social-dropdown-arrow w-4 h-4 translate-y-[1px]"
-        />
+          class="social-dropdown-arrow text-sm translate-y-[1px]"
+          >⇣</span
+        >
       </button>
 
       <!-- Dropdown menu -->
@@ -54,10 +51,9 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="nav-box w-full h-12 items-center justify-end gap-1.5"
+                class="nav-box w-full h-12 flex items-center justify-end nav-label"
               >
-                <Icon name={item.icon} class="w-4 h-4 shrink-0" />
-                <span class="nav-label">{item.label}</span>
+                {item.label}
               </a>
             ))
           }
@@ -73,7 +69,18 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
       class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity nav-pressable"
       aria-label="Toggle menu"
     >
-      <Icon name="menu" class="w-6 h-6" />
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
     </button>
   </div>
 </nav>
@@ -94,7 +101,18 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
         class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70"
         aria-label="Close menu"
       >
-        <Icon name="close" class="w-6 h-6" />
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
       </button>
 
       <!-- Mobile menu items -->
@@ -103,9 +121,8 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
           mainNavItems.map((item) => (
             <a
               href={item.href}
-              class="mobile-menu-link flex items-center gap-2 py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+              class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
             >
-              <Icon name={item.icon} class="w-4 h-4 shrink-0" />
               {item.label}
             </a>
           ))
@@ -118,15 +135,8 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
             type="button"
             class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded flex items-center justify-between"
           >
-            <span class="flex items-center gap-2">
-              <Icon name="users" class="w-4 h-4 shrink-0" />
-              Social
-            </span>
-            <Icon
-              name="chevron-down"
-              id="social-arrow"
-              class="social-dropdown-arrow w-4 h-4"
-            />
+            Social
+            <span id="social-arrow" class="social-dropdown-arrow">⇣</span>
           </button>
           <div id="social-submenu" class="social-submenu pl-4 mt-2">
             <div class="social-submenu-inner space-y-2">
@@ -135,9 +145,8 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
                   <a
                     href={item.href}
                     target="_blank"
-                    class="flex items-center gap-2 py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                    class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
                   >
-                    <Icon name={item.icon} class="w-4 h-4 shrink-0" />
                     {item.label}
                   </a>
                 ))
@@ -150,7 +159,6 @@ import { mainNavItems, socialNavItems } from "../../lib/navLinks";
   </div>
 </div>
 
-<!-- Add this script block at the end of the file for menu toggling -->
 <script>
   const hamburgerBtn = document.getElementById("hamburger-btn");
   const mobileMenu = document.getElementById("mobile-menu");
