@@ -218,43 +218,6 @@
 	overflow: hidden;
 }
 
-/* Experience table filter — collapse rows in place, no display:none flash */
-.experience-rows {
-	position: relative;
-}
-
-.experience-rows.is-filtering {
-	overflow: hidden;
-}
-
-.experience-row {
-	display: grid;
-	grid-template-rows: 1fr;
-	border-top: 1px solid color-mix(in srgb, var(--color-text-secondary) 22%, transparent);
-	opacity: 1;
-	transition:
-		grid-template-rows var(--duration-drawer) var(--ease-out),
-		opacity var(--duration-ui) var(--ease-out),
-		border-color var(--duration-ui) var(--ease-out);
-}
-
-.experience-row.is-filtered-out {
-	grid-template-rows: 0fr;
-	opacity: 0;
-	pointer-events: none;
-	border-top-color: transparent;
-}
-
-.experience-row-panel {
-	overflow: hidden;
-	min-height: 0;
-	padding-block: 1rem;
-}
-
-.experience-row.is-filtered-out .experience-row-panel {
-	padding-block: 0;
-}
-
 /* Media load reveal — images, video, gallery thumbs */
 .media-reveal {
 	opacity: 0;
@@ -300,9 +263,7 @@
 	.media-reveal,
 	.media-reveal.is-loaded,
 	.modal-backdrop,
-	.modal-backdrop.closing,
-	.experience-row,
-	.experience-rows {
+	.modal-backdrop.closing {
 		animation: none;
 		transition: none;
 	}
@@ -325,11 +286,6 @@
 	.media-reveal.is-loaded {
 		opacity: 1;
 		transform: none;
-	}
-
-	.experience-row.is-filtered-out {
-		grid-template-rows: 0fr;
-		opacity: 0;
 	}
 }
 
