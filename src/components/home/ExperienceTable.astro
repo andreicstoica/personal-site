@@ -57,115 +57,169 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   </div>
 
   <!-- Table Body -->
-  <div class="space-y-4">
+  <div id="experience-rows" class="experience-rows">
     {experiences.map((experience: Experience) => (
-      <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
-        <!-- Desktop Layout -->
-        <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
-          <!-- Experience Name (1 col) -->
-          <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-            <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-              {experience.name}
-            </span>
-          </div>
+      <div class="experience-row" data-type={experience.type}>
+        <div class="experience-row-panel">
+          <!-- Desktop Layout -->
+          <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
+            <!-- Experience Name (1 col) -->
+            <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
+              <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                {experience.name}
+              </span>
+            </div>
 
-          <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
-          <div class="col-span-5">
-            <!-- Top row: Role, Tags, Date -->
-            <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
-              <!-- Role (2 cols) -->
-              <div class="col-span-2">
-                <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
-              </div>
+            <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
+            <div class="col-span-5">
+              <!-- Top row: Role, Tags, Date -->
+              <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
+                <!-- Role (2 cols) -->
+                <div class="col-span-2">
+                  <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
+                </div>
 
-              <!-- Tags (2 cols) -->
-              <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-                  {experience.tags.join(', ')}
-                </span>
-              </div>
+                <!-- Tags (2 cols) -->
+                <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
+                  <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                    {experience.tags.join(', ')}
+                  </span>
+                </div>
 
-              <!-- Date (1 col) -->
-              <div class="col-span-1">
-                <div class="font-mono text-[.92rem] text-end mr-2">
-                  {formatDateRange(experience.startDate, experience.endDate)}
+                <!-- Date (1 col) -->
+                <div class="col-span-1">
+                  <div class="font-mono text-[.92rem] text-end mr-2">
+                    {formatDateRange(experience.startDate, experience.endDate)}
+                  </div>
                 </div>
               </div>
+
+              <!-- Description below -->
+              {experience.description && (
+                <ProjectEnhancedDescription description={experience.description} />
+              )}
             </div>
 
-            <!-- Description below -->
+            <!-- Media (4 cols) -->
+            <MediaGallery
+              images={experience.images}
+              experienceName={experience.name}
+              variant="desktop"
+            />
+          </div>
+
+          <!-- Mobile Layout -->
+          <div class="lg:hidden">
+            <div class="flex justify-between gap-4 mb-3">
+              <!-- Experience Name -->
+              <span
+                class="line-clamp-2"
+                style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
+              >
+                {experience.name}
+              </span>
+
+              <!-- Role -->
+              <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                {experience.role}
+              </div>
+
+              <!-- Date -->
+              <div class="font-mono text-sm flex-shrink-0 mt-1">
+                {formatDateRange(experience.startDate, experience.endDate)}
+              </div>
+            </div>
+
             {experience.description && (
-              <ProjectEnhancedDescription description={experience.description} />
+              <div class="text-sm leading-relaxed mb-3">
+                <ProjectEnhancedDescription description={experience.description} />
+              </div>
             )}
+
+            <MediaGallery
+              images={experience.images}
+              experienceName={experience.name}
+              variant="mobile"
+            />
           </div>
-
-          <!-- Media (4 cols) -->
-          <MediaGallery
-            images={experience.images}
-            experienceName={experience.name}
-            variant="desktop"
-          />
         </div>
-
-        <!-- Mobile Layout -->
-        <div class="lg:hidden">
-          <div class="flex justify-between gap-4 mb-3">
-            <!-- Experience Name -->
-            <span
-              class="line-clamp-2"
-              style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
-            >
-              {experience.name}
-            </span>
-
-            <!-- Role -->
-            <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-              {experience.role}
-            </div>
-
-            <!-- Date -->
-            <div class="font-mono text-sm flex-shrink-0 mt-1">
-              {formatDateRange(experience.startDate, experience.endDate)}
-            </div>
-          </div>
-
-          {experience.description && (
-            <div class="text-sm leading-relaxed mb-3">
-              <ProjectEnhancedDescription description={experience.description} />
-            </div>
-          )}
-
-          <MediaGallery
-            images={experience.images}
-            experienceName={experience.name}
-            variant="mobile"
-          />
-        </div>
-
-
-
       </div>
     ))}
   </div>
 </section>
 
-<style>
-  #experience-table[data-filter="work"] .experience-row:not([data-type="work"]),
-  #experience-table[data-filter="personal"] .experience-row:not([data-type="personal"]),
-  #experience-table[data-filter="school"] .experience-row:not([data-type="school"]),
-  #experience-table[data-filter="other"] .experience-row:not([data-type="other"]) {
-    display: none;
-  }
-</style>
-
 <script>
   const experienceTable = document.getElementById("experience-table");
+  const experienceRows = document.getElementById("experience-rows");
   const filterSelect = document.getElementById("typeFilter") as HTMLSelectElement | null;
+  const drawerDurationMs = 280;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  const rowElements = experienceRows
+    ? Array.from(experienceRows.querySelectorAll<HTMLElement>(".experience-row"))
+    : [];
+
+  const setRowVisibility = (filterValue: string) => {
+    for (const row of rowElements) {
+      const isVisible = !filterValue || row.dataset.type === filterValue;
+      row.classList.toggle("is-filtered-out", !isVisible);
+      row.toggleAttribute("aria-hidden", !isVisible);
+      row.toggleAttribute("inert", !isVisible);
+    }
+  };
+
+  const animateRowsHeight = (filterValue: string) => {
+    if (!experienceTable || !experienceRows) {
+      return;
+    }
+
+    experienceTable.dataset.filter = filterValue;
+
+    if (prefersReducedMotion) {
+      setRowVisibility(filterValue);
+      return;
+    }
+
+    const startHeight = experienceRows.getBoundingClientRect().height;
+    experienceRows.classList.add("is-filtering");
+    experienceRows.style.height = `${startHeight}px`;
+
+    setRowVisibility(filterValue);
+
+    experienceRows.style.height = "auto";
+    const endHeight = experienceRows.getBoundingClientRect().height;
+    experienceRows.style.height = `${startHeight}px`;
+
+    requestAnimationFrame(() => {
+      experienceRows.style.transition = `height ${drawerDurationMs}ms var(--ease-out)`;
+      experienceRows.style.height = `${endHeight}px`;
+    });
+
+    const cleanup = () => {
+      experienceRows.style.height = "";
+      experienceRows.style.transition = "";
+      experienceRows.classList.remove("is-filtering");
+      experienceRows.removeEventListener("transitionend", onTransitionEnd);
+      window.clearTimeout(fallbackTimer);
+    };
+
+    const onTransitionEnd = (event: TransitionEvent) => {
+      if (event.propertyName !== "height") {
+        return;
+      }
+
+      cleanup();
+    };
+
+    const fallbackTimer = window.setTimeout(cleanup, drawerDurationMs + 80);
+    experienceRows.addEventListener("transitionend", onTransitionEnd);
+  };
 
   if (experienceTable && filterSelect) {
-    filterSelect.addEventListener("change", (event) => {
-      event.preventDefault();
-      experienceTable.dataset.filter = filterSelect.value;
+    filterSelect.addEventListener("change", () => {
+      animateRowsHeight(filterSelect.value);
     });
   }
 </script>
