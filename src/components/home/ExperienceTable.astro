@@ -215,10 +215,10 @@ const formatDateRange = (startDate: string, endDate?: string) => {
       experienceTable.dataset.filter = filterSelect.value;
       experienceRows.scrollTop = 0;
 
-      // Remeasure only when returning to "all"
+      // Remeasure only when returning to "all" (grow if media loaded while filtered)
       if (!filterSelect.value) {
         requestAnimationFrame(() => {
-          lockReservedHeight({ growOnly: false });
+          lockReservedHeight({ growOnly: true });
         });
       }
     });
