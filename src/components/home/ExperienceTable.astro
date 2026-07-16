@@ -172,68 +172,40 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
   if (experienceTable && experienceRows && experienceRowsInner && filterSelect) {
     let reservedHeight = 0;
-    let isMeasuring = false;
 
     const getFilterValue = () => experienceTable.dataset.filter ?? "";
 
-    const measureNaturalAllHeight = () => {
-      // Only measure when every row is already visible — avoids a one-frame flash
+    /**
+     * Reserve space with min-height only (never shrinks on filter).
+     * Measured exclusively while "all" is visible.
+     */
+    const reserveFromAllView = () => {
       if (getFilterValue()) {
-        return reservedHeight;
-      }
-
-      isMeasuring = true;
-      const nextHeight = experienceRowsInner.getBoundingClientRect().height;
-      isMeasuring = false;
-      return nextHeight;
-    };
-
-    const applyReservedHeight = (nextHeight: number) => {
-      if (nextHeight <= 0) {
         return;
       }
 
-      reservedHeight = nextHeight;
-      experienceRows.style.height = `${reservedHeight}px`;
-    };
-
-    const lockReservedHeight = ({ growOnly = true } = {}) => {
-      if (isMeasuring) {
+      const measured = experienceRowsInner.getBoundingClientRect().height;
+      if (measured <= reservedHeight) {
         return;
       }
 
-      const measured = measureNaturalAllHeight();
-      if (measured <= 0) {
-        return;
-      }
-
-      const nextHeight = growOnly ? Math.max(reservedHeight, measured) : measured;
-      applyReservedHeight(nextHeight);
+      reservedHeight = measured;
+      experienceRows.style.minHeight = `${reservedHeight}px`;
     };
 
     filterSelect.addEventListener("change", () => {
       experienceTable.dataset.filter = filterSelect.value;
       experienceRows.scrollTop = 0;
 
-      // Remeasure only when returning to "all" (grow if media loaded while filtered)
       if (!filterSelect.value) {
-        requestAnimationFrame(() => {
-          lockReservedHeight({ growOnly: true });
-        });
+        requestAnimationFrame(reserveFromAllView);
       }
     });
 
-    requestAnimationFrame(() => {
-      lockReservedHeight({ growOnly: false });
-    });
+    requestAnimationFrame(reserveFromAllView);
 
-    // Watch inner content so late-loading gallery media can grow the reservation
     const resizeObserver = new ResizeObserver(() => {
-      if (isMeasuring || getFilterValue()) {
-        return;
-      }
-
-      lockReservedHeight({ growOnly: true });
+      reserveFromAllView();
     });
 
     resizeObserver.observe(experienceRowsInner);
@@ -243,7 +215,10 @@ const formatDateRange = (startDate: string, endDate?: string) => {
         return;
       }
 
-      lockReservedHeight({ growOnly: false });
+      // Viewport changed: allow a fresh reservation from the full list
+      reservedHeight = 0;
+      experienceRows.style.minHeight = "";
+      requestAnimationFrame(reserveFromAllView);
     });
   }
 </script>
