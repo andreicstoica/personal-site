@@ -40,7 +40,7 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 ---
 
 <section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
-  <!-- Table Header -->
+  <!-- Table Header — outside scroll region so it stays put while rows scroll -->
   <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
     <div class="col-span-1 text-sm ">Experience</div>
     <div class="col-span-2 text-sm ">Role</div>
@@ -56,100 +56,104 @@ const formatDateRange = (startDate: string, endDate?: string) => {
     <div class="col-span-4 text-sm">Media</div>
   </div>
 
-  <!-- Table Body -->
-  <div class="space-y-4">
-    {experiences.map((experience: Experience) => (
-      <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
-        <!-- Desktop Layout -->
-        <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
-          <!-- Experience Name (1 col) -->
-          <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-            <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-              {experience.name}
-            </span>
-          </div>
+  <!-- Fixed-height body: reserved to "all" so filtering never shifts page height -->
+  <div id="experience-rows" class="experience-rows">
+    <div id="experience-rows-inner" class="space-y-4">
+      {experiences.map((experience: Experience) => (
+        <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
+          <!-- Desktop Layout -->
+          <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
+            <!-- Experience Name (1 col) -->
+            <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
+              <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                {experience.name}
+              </span>
+            </div>
 
-          <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
-          <div class="col-span-5">
-            <!-- Top row: Role, Tags, Date -->
-            <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
-              <!-- Role (2 cols) -->
-              <div class="col-span-2">
-                <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
-              </div>
+            <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
+            <div class="col-span-5">
+              <!-- Top row: Role, Tags, Date -->
+              <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
+                <!-- Role (2 cols) -->
+                <div class="col-span-2">
+                  <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
+                </div>
 
-              <!-- Tags (2 cols) -->
-              <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-                <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-                  {experience.tags.join(', ')}
-                </span>
-              </div>
+                <!-- Tags (2 cols) -->
+                <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
+                  <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                    {experience.tags.join(', ')}
+                  </span>
+                </div>
 
-              <!-- Date (1 col) -->
-              <div class="col-span-1">
-                <div class="font-mono text-[.92rem] text-end mr-2">
-                  {formatDateRange(experience.startDate, experience.endDate)}
+                <!-- Date (1 col) -->
+                <div class="col-span-1">
+                  <div class="font-mono text-[.92rem] text-end mr-2">
+                    {formatDateRange(experience.startDate, experience.endDate)}
+                  </div>
                 </div>
               </div>
+
+              <!-- Description below -->
+              {experience.description && (
+                <ProjectEnhancedDescription description={experience.description} />
+              )}
             </div>
 
-            <!-- Description below -->
+            <!-- Media (4 cols) -->
+            <MediaGallery
+              images={experience.images}
+              experienceName={experience.name}
+              variant="desktop"
+            />
+          </div>
+
+          <!-- Mobile Layout -->
+          <div class="lg:hidden">
+            <div class="flex justify-between gap-4 mb-3">
+              <!-- Experience Name -->
+              <span
+                class="line-clamp-2"
+                style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
+              >
+                {experience.name}
+              </span>
+
+              <!-- Role -->
+              <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
+                {experience.role}
+              </div>
+
+              <!-- Date -->
+              <div class="font-mono text-sm flex-shrink-0 mt-1">
+                {formatDateRange(experience.startDate, experience.endDate)}
+              </div>
+            </div>
+
             {experience.description && (
-              <ProjectEnhancedDescription description={experience.description} />
+              <div class="text-sm leading-relaxed mb-3">
+                <ProjectEnhancedDescription description={experience.description} />
+              </div>
             )}
+
+            <MediaGallery
+              images={experience.images}
+              experienceName={experience.name}
+              variant="mobile"
+            />
           </div>
-
-          <!-- Media (4 cols) -->
-          <MediaGallery
-            images={experience.images}
-            experienceName={experience.name}
-            variant="desktop"
-          />
         </div>
-
-        <!-- Mobile Layout -->
-        <div class="lg:hidden">
-          <div class="flex justify-between gap-4 mb-3">
-            <!-- Experience Name -->
-            <span
-              class="line-clamp-2"
-              style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
-            >
-              {experience.name}
-            </span>
-
-            <!-- Role -->
-            <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-              {experience.role}
-            </div>
-
-            <!-- Date -->
-            <div class="font-mono text-sm flex-shrink-0 mt-1">
-              {formatDateRange(experience.startDate, experience.endDate)}
-            </div>
-          </div>
-
-          {experience.description && (
-            <div class="text-sm leading-relaxed mb-3">
-              <ProjectEnhancedDescription description={experience.description} />
-            </div>
-          )}
-
-          <MediaGallery
-            images={experience.images}
-            experienceName={experience.name}
-            variant="mobile"
-          />
-        </div>
-
-
-
-      </div>
-    ))}
+      ))}
+    </div>
   </div>
 </section>
 
 <style>
+  .experience-rows {
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
   #experience-table[data-filter="work"] .experience-row:not([data-type="work"]),
   #experience-table[data-filter="personal"] .experience-row:not([data-type="personal"]),
   #experience-table[data-filter="school"] .experience-row:not([data-type="school"]),
@@ -160,12 +164,86 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
 <script>
   const experienceTable = document.getElementById("experience-table");
-  const filterSelect = document.getElementById("typeFilter") as HTMLSelectElement | null;
+  const experienceRows = document.getElementById("experience-rows");
+  const experienceRowsInner = document.getElementById("experience-rows-inner");
+  const filterSelect = document.getElementById(
+    "typeFilter",
+  ) as HTMLSelectElement | null;
 
-  if (experienceTable && filterSelect) {
-    filterSelect.addEventListener("change", (event) => {
-      event.preventDefault();
+  if (experienceTable && experienceRows && experienceRowsInner && filterSelect) {
+    let reservedHeight = 0;
+    let isMeasuring = false;
+
+    const getFilterValue = () => experienceTable.dataset.filter ?? "";
+
+    const measureNaturalAllHeight = () => {
+      // Only measure when every row is already visible — avoids a one-frame flash
+      if (getFilterValue()) {
+        return reservedHeight;
+      }
+
+      isMeasuring = true;
+      const nextHeight = experienceRowsInner.getBoundingClientRect().height;
+      isMeasuring = false;
+      return nextHeight;
+    };
+
+    const applyReservedHeight = (nextHeight: number) => {
+      if (nextHeight <= 0) {
+        return;
+      }
+
+      reservedHeight = nextHeight;
+      experienceRows.style.height = `${reservedHeight}px`;
+    };
+
+    const lockReservedHeight = ({ growOnly = true } = {}) => {
+      if (isMeasuring) {
+        return;
+      }
+
+      const measured = measureNaturalAllHeight();
+      if (measured <= 0) {
+        return;
+      }
+
+      const nextHeight = growOnly ? Math.max(reservedHeight, measured) : measured;
+      applyReservedHeight(nextHeight);
+    };
+
+    filterSelect.addEventListener("change", () => {
       experienceTable.dataset.filter = filterSelect.value;
+      experienceRows.scrollTop = 0;
+
+      // Remeasure only when returning to "all"
+      if (!filterSelect.value) {
+        requestAnimationFrame(() => {
+          lockReservedHeight({ growOnly: false });
+        });
+      }
+    });
+
+    requestAnimationFrame(() => {
+      lockReservedHeight({ growOnly: false });
+    });
+
+    // Watch inner content so late-loading gallery media can grow the reservation
+    const resizeObserver = new ResizeObserver(() => {
+      if (isMeasuring || getFilterValue()) {
+        return;
+      }
+
+      lockReservedHeight({ growOnly: true });
+    });
+
+    resizeObserver.observe(experienceRowsInner);
+
+    window.addEventListener("resize", () => {
+      if (getFilterValue()) {
+        return;
+      }
+
+      lockReservedHeight({ growOnly: false });
     });
   }
 </script>
