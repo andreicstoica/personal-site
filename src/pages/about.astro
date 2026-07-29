@@ -1,5 +1,6 @@
 ---
 import { getEntry } from "astro:content";
+import Bookshelf from "../components/bookshelf/Bookshelf.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
 import MarkdownSections from "../components/content/MarkdownSections.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
@@ -13,17 +14,26 @@ if (!aboutEntry) throw new Error("About entry not found");
   title={aboutEntry.data.title}
   description={aboutEntry.data.description}
 >
-  <div class="w-full lg:mt-3.5 max-w-2xl">
-    <MarkdownLayout title={aboutEntry.data.title}>
-      <MarkdownSections
-        body={aboutEntry.body}
-        description={aboutEntry.data.description}
-        lastUpdated="Last updated June 3, 2026"
-        layout="stack"
-      />
-    </MarkdownLayout>
+  <div class="w-full lg:mt-3.5 flex flex-col gap-8 pb-8">
+    <div class="max-w-2xl">
+      <MarkdownLayout title={aboutEntry.data.title}>
+        <MarkdownSections
+          body={aboutEntry.body}
+          description={aboutEntry.data.description}
+          lastUpdated="Last updated June 3, 2026"
+          layout="stack"
+        />
+      </MarkdownLayout>
+    </div>
 
-    <div class="mt-2 pb-8">
+    <div class="max-w-4xl">
+      <Bookshelf
+        heading="Bookshelf"
+        lead="Books and articles that keep reshaping how I think."
+      />
+    </div>
+
+    <div class="max-w-2xl">
       <MediaGallery
         images={["about.webp", "timbers.webp"]}
         experienceName="About"
