@@ -80,6 +80,7 @@ const {
 		align-items: flex-end;
 		gap: 0.65rem;
 		overflow-x: auto;
+		overscroll-behavior-x: contain;
 		scrollbar-width: thin;
 		-webkit-overflow-scrolling: touch;
 	}
@@ -102,26 +103,6 @@ const {
 		box-shadow:
 			0 8px 16px -10px rgb(0 0 0 / 0.35),
 			0 2px 0 color-mix(in srgb, var(--color-text-primary) 18%, transparent);
-	}
-
-	/* Desktop sidebar: stack covers vertically */
-	@media (min-width: 1024px) {
-		.bookshelf--sidebar .bookshelf__row {
-			flex-direction: column;
-			align-items: center;
-			overflow: visible;
-			gap: 0.55rem;
-			padding: 0.15rem 0 0;
-		}
-
-		.bookshelf--sidebar .bookshelf__plank {
-			display: none;
-		}
-
-		.bookshelf--sidebar :global(.shelf-item),
-		.bookshelf--sidebar :global(.shelf-item--article) {
-			width: 7.75rem;
-		}
 	}
 
 	@media (prefers-color-scheme: dark) {
