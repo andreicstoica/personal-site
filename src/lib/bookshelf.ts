@@ -18,9 +18,9 @@ export type BookshelfItem = {
 	year?: string;
 	url?: string;
 	note?: string;
-	/** Optional cover image under /public/images/bookshelf/ */
+	/** Cover image filename under /public/images/bookshelf/ */
 	cover?: string;
-	/** Typographic cover when no image is set */
+	/** Fallback typographic cover when no image is set */
 	poster: {
 		theme: CoverTheme;
 		layout: CoverLayout;
@@ -29,7 +29,6 @@ export type BookshelfItem = {
 
 /**
  * Books and articles for the About bookshelf.
- * Add items as the owner provides them.
  */
 export const bookshelf: BookshelfItem[] = [
 	{
@@ -38,6 +37,7 @@ export const bookshelf: BookshelfItem[] = [
 		title: "Zen and the Art of Motorcycle Maintenance",
 		author: "Robert Pirsig",
 		year: "1974",
+		cover: "zen-motorcycle.webp",
 		poster: { theme: "paper", layout: "stack" },
 	},
 	{
@@ -46,6 +46,7 @@ export const bookshelf: BookshelfItem[] = [
 		title: "The Paper Menagerie and Other Stories",
 		author: "Ken Liu",
 		year: "2016",
+		cover: "paper-menagerie.webp",
 		poster: { theme: "accent", layout: "banner" },
 	},
 	{
@@ -54,6 +55,7 @@ export const bookshelf: BookshelfItem[] = [
 		title: "The Three-Body Problem",
 		author: "Cixin Liu",
 		year: "2008",
+		cover: "three-body-problem.webp",
 		poster: { theme: "ink", layout: "diagonal" },
 	},
 	{
@@ -62,6 +64,7 @@ export const bookshelf: BookshelfItem[] = [
 		title: "The Power Broker",
 		author: "Robert Caro",
 		year: "1974",
+		cover: "power-broker.webp",
 		poster: { theme: "ink", layout: "corner" },
 	},
 	{
@@ -70,6 +73,7 @@ export const bookshelf: BookshelfItem[] = [
 		title: "The Power Law",
 		author: "Sebastian Mallaby",
 		year: "2022",
+		cover: "power-law.webp",
 		poster: { theme: "primary", layout: "stack" },
 	},
 	{
@@ -79,6 +83,7 @@ export const bookshelf: BookshelfItem[] = [
 		author: "Robert Caro",
 		year: "1982–",
 		note: "The four-volume LBJ series.",
+		cover: "lyndon-johnson-series.webp",
 		poster: { theme: "secondary", layout: "banner" },
 	},
 	{
@@ -89,6 +94,7 @@ export const bookshelf: BookshelfItem[] = [
 		year: "2015",
 		url: "https://www.bloomberg.com/graphics/2015-paul-ford-what-is-code/",
 		note: "Bloomberg Businessweek’s deep dive into how software actually works.",
+		cover: "what-is-code.webp",
 		poster: { theme: "primary", layout: "banner" },
 	},
 	{
@@ -99,6 +105,7 @@ export const bookshelf: BookshelfItem[] = [
 		year: "2026",
 		url: "https://jasmi.news/p/2026-advice",
 		note: "Opinionated advice for graduating into the age of AI.",
+		cover: "2026-advice.webp",
 		poster: { theme: "warning", layout: "diagonal" },
 	},
 ];

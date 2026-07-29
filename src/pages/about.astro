@@ -14,8 +14,16 @@ if (!aboutEntry) throw new Error("About entry not found");
   title={aboutEntry.data.title}
   description={aboutEntry.data.description}
 >
-  <div class="w-full lg:mt-3.5 flex flex-col gap-8 pb-8">
-    <div class="max-w-2xl">
+  <div class="about-layout w-full lg:mt-3.5 pb-8">
+    <aside class="about-shelf">
+      <Bookshelf
+        heading="Bookshelf"
+        lead="Books and articles that keep reshaping how I think."
+        class="bookshelf--sidebar"
+      />
+    </aside>
+
+    <div class="about-main">
       <MarkdownLayout title={aboutEntry.data.title}>
         <MarkdownSections
           body={aboutEntry.body}
@@ -24,21 +32,55 @@ if (!aboutEntry) throw new Error("About entry not found");
           layout="stack"
         />
       </MarkdownLayout>
-    </div>
 
-    <div class="w-full max-w-5xl">
-      <Bookshelf
-        heading="Bookshelf"
-        lead="Books and articles that keep reshaping how I think."
-      />
-    </div>
-
-    <div class="max-w-2xl">
-      <MediaGallery
-        images={["about.webp", "timbers.webp"]}
-        experienceName="About"
-        variant="desktop"
-      />
+      <div class="mt-2">
+        <MediaGallery
+          images={["about.webp", "timbers.webp"]}
+          experienceName="About"
+          variant="desktop"
+        />
+      </div>
     </div>
   </div>
 </PageLayout>
+
+<style>
+  .about-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .about-shelf {
+    order: -1;
+    width: 100%;
+  }
+
+  .about-main {
+    max-width: 42rem;
+    width: 100%;
+  }
+
+  @media (min-width: 1024px) {
+    .about-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 9.5rem;
+      gap: 2.75rem;
+      align-items: start;
+    }
+
+    .about-shelf {
+      order: 0;
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: 5.5rem;
+      width: auto;
+    }
+
+    .about-main {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+</style>
