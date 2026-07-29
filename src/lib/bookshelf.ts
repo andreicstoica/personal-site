@@ -1,6 +1,6 @@
 export type BookshelfKind = 'book' | 'article';
 
-export type PosterTheme =
+export type CoverTheme =
 	| 'ink'
 	| 'primary'
 	| 'secondary'
@@ -8,34 +8,51 @@ export type PosterTheme =
 	| 'warning'
 	| 'paper';
 
-export type PosterLayout = 'stack' | 'banner' | 'diagonal' | 'corner';
+export type CoverLayout = 'stack' | 'banner' | 'diagonal' | 'corner';
 
 export type BookshelfItem = {
 	id: string;
 	kind: BookshelfKind;
 	title: string;
 	author: string;
-	/** Optional year or date string shown on the poster */
 	year?: string;
-	/** External link when available */
 	url?: string;
-	/** Short why-it-matters note */
 	note?: string;
-	/** Show first when using featured filter */
-	featured?: boolean;
-	/** Optional real cover/poster image under /public/images/bookshelf/ */
+	/** Optional cover image under /public/images/bookshelf/ */
 	cover?: string;
+	/** Typographic cover when no image is set */
 	poster: {
-		theme: PosterTheme;
-		layout: PosterLayout;
+		theme: CoverTheme;
+		layout: CoverLayout;
 	};
 };
 
 /**
  * Books and articles for the About bookshelf.
- * Populate from the owner's list — leave empty until then.
+ * Add items as the owner provides them.
  */
-export const bookshelf: BookshelfItem[] = [];
+export const bookshelf: BookshelfItem[] = [
+	{
+		id: 'what-is-code',
+		kind: 'article',
+		title: 'What Is Code?',
+		author: 'Paul Ford',
+		year: '2015',
+		url: 'https://www.bloomberg.com/graphics/2015-paul-ford-what-is-code/',
+		note: 'Bloomberg Businessweek’s deep dive into how software actually works.',
+		poster: { theme: 'primary', layout: 'banner' },
+	},
+	{
+		id: '2026-advice',
+		kind: 'article',
+		title: 'The Old World Is Dying',
+		author: 'Jasmine Sun',
+		year: '2026',
+		url: 'https://jasmi.news/p/2026-advice',
+		note: 'Opinionated advice for graduating into the age of AI.',
+		poster: { theme: 'warning', layout: 'diagonal' },
+	},
+];
 
 export function getBookshelfByKind(kind: BookshelfKind): BookshelfItem[] {
 	return bookshelf.filter((item) => item.kind === kind);

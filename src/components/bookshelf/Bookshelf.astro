@@ -1,74 +1,38 @@
 ---
-import {
-	bookshelf,
-	getBookshelfByKind,
-	type BookshelfKind,
-} from '../../lib/bookshelf';
+import { bookshelf } from '../../lib/bookshelf';
 import BookshelfPoster from './BookshelfPoster.astro';
 
 interface Props {
-	/** Filter to one kind, or show all */
-	kind?: BookshelfKind | 'all';
-	/** Compact posters for tight layouts */
-	size?: 'default' | 'compact';
-	/** Section heading override */
 	heading?: string;
-	/** Optional lead under the heading */
 	lead?: string;
 	class?: string;
 }
 
 const {
-	kind = 'all',
-	size = 'default',
 	heading = 'Bookshelf',
 	lead,
 	class: className,
 } = Astro.props;
-
-const visible = kind === 'all' ? bookshelf : getBookshelfByKind(kind);
-const books = visible.filter((item) => item.kind === 'book');
-const articles = visible.filter((item) => item.kind === 'article');
 ---
 
 {
-	visible.length > 0 && (
+	bookshelf.length > 0 && (
 		<section class:list={['bookshelf', className]}>
 			<header class="bookshelf__header">
 				<h2 class="bookshelf__heading">{heading}</h2>
 				{lead && <p class="bookshelf__lead">{lead}</p>}
 			</header>
 
-			{kind === 'all' ? (
-				<>
-					{books.length > 0 && (
-						<div class="bookshelf__section">
-							<h3 class="bookshelf__subheading">Books</h3>
-							<div class="bookshelf__grid">
-								{books.map((item) => (
-									<BookshelfPoster item={item} size={size} />
-								))}
-							</div>
-						</div>
-					)}
-					{articles.length > 0 && (
-						<div class="bookshelf__section">
-							<h3 class="bookshelf__subheading">Articles</h3>
-							<div class="bookshelf__grid">
-								{articles.map((item) => (
-									<BookshelfPoster item={item} size={size} />
-								))}
-							</div>
-						</div>
-					)}
-				</>
-			) : (
-				<div class="bookshelf__grid">
-					{visible.map((item) => (
-						<BookshelfPoster item={item} size={size} />
+			<div class="bookshelf__stage">
+				<ul class="bookshelf__row">
+					{bookshelf.map((item) => (
+						<li class="bookshelf__slot">
+							<BookshelfPoster item={item} />
+						</li>
 					))}
-				</div>
-			)}
+				</ul>
+				<div class="bookshelf__plank" aria-hidden="true" />
+			</div>
 		</section>
 	)
 }
@@ -77,7 +41,7 @@ const articles = visible.filter((item) => item.kind === 'article');
 	.bookshelf {
 		display: flex;
 		flex-direction: column;
-		gap: 1.25rem;
+		gap: 1rem;
 		width: 100%;
 	}
 
@@ -103,39 +67,53 @@ const articles = visible.filter((item) => item.kind === 'article');
 		font-size: var(--text-base);
 	}
 
-	.bookshelf__section {
-		display: flex;
-		flex-direction: column;
-		gap: 0.85rem;
+	.bookshelf__stage {
+		position: relative;
+		padding: 0.5rem 0 0;
 	}
 
-	.bookshelf__section + .bookshelf__section {
-		margin-top: 0.75rem;
-	}
-
-	.bookshelf__subheading {
-		font-size: 1rem;
-		font-weight: 500;
+	.bookshelf__row {
+		list-style: none;
 		margin: 0;
-		color: var(--color-text-primary);
+		padding: 0.75rem 0.25rem 0;
+		display: flex;
+		align-items: flex-end;
+		gap: 0.85rem;
+		overflow-x: auto;
+		scrollbar-width: thin;
+		-webkit-overflow-scrolling: touch;
 	}
 
-	.bookshelf__grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 1.25rem 0.85rem;
+	.bookshelf__slot {
+		margin: 0;
+		padding: 0;
+		flex: 0 0 auto;
 	}
 
-	@media (min-width: 640px) {
-		.bookshelf__grid {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: 1.5rem 1rem;
-		}
+	.bookshelf__plank {
+		height: 0.7rem;
+		margin-top: -1px;
+		border-radius: 2px;
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--color-text-primary) 12%, var(--color-bg-primary)),
+			color-mix(in srgb, var(--color-text-primary) 22%, var(--color-bg-primary))
+		);
+		box-shadow:
+			0 8px 16px -10px rgb(0 0 0 / 0.35),
+			0 2px 0 color-mix(in srgb, var(--color-text-primary) 18%, transparent);
 	}
 
-	@media (min-width: 1024px) {
-		.bookshelf__grid {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
+	@media (prefers-color-scheme: dark) {
+		.bookshelf__plank {
+			background: linear-gradient(
+				to bottom,
+				color-mix(in srgb, #fff 10%, var(--color-bg-primary)),
+				color-mix(in srgb, #fff 18%, var(--color-bg-primary))
+			);
+			box-shadow:
+				0 8px 16px -10px rgb(0 0 0 / 0.65),
+				0 2px 0 color-mix(in srgb, #fff 12%, transparent);
 		}
 	}
 </style>
