@@ -23,7 +23,15 @@ const {
 				{lead && <p class="bookshelf__lead">{lead}</p>}
 			</header>
 
-			<div class="bookshelf__stage">
+			<div
+				class="bookshelf__stage"
+				data-bookshelf-stage
+				data-at-start="true"
+				data-at-end="false"
+			>
+				<div class="bookshelf__fade bookshelf__fade--left" aria-hidden="true" />
+				<div class="bookshelf__fade bookshelf__fade--right" aria-hidden="true" />
+
 				<div class="bookshelf__inner">
 					<ul class="bookshelf__row">
 						{bookshelf.map((item) => (
@@ -79,7 +87,6 @@ const {
 								opacity="0.65"
 								style="mix-blend-mode: multiply"
 							/>
-							{/* front lip highlight */}
 							<rect
 								x="0"
 								y="0"
@@ -88,7 +95,6 @@ const {
 								fill="#f3ebe0"
 								opacity="0.7"
 							/>
-							{/* underside shadow band */}
 							<rect
 								x="0"
 								y="70%"
@@ -104,6 +110,32 @@ const {
 		</section>
 	)
 }
+
+<script>
+	function updateBookshelfStage(stage: HTMLElement) {
+		const max = stage.scrollWidth - stage.clientWidth;
+		const left = stage.scrollLeft;
+		const atStart = left <= 2;
+		const atEnd = max <= 2 || left >= max - 2;
+		stage.dataset.atStart = atStart ? 'true' : 'false';
+		stage.dataset.atEnd = atEnd ? 'true' : 'false';
+	}
+
+	function bindBookshelfStage(stage: HTMLElement) {
+		const onScroll = () => updateBookshelfStage(stage);
+		stage.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onScroll);
+		// images may change scrollWidth after load
+		stage.querySelectorAll('img').forEach((img) => {
+			if (!img.complete) img.addEventListener('load', onScroll, { once: true });
+		});
+		updateBookshelfStage(stage);
+	}
+
+	document
+		.querySelectorAll<HTMLElement>('[data-bookshelf-stage]')
+		.forEach(bindBookshelfStage);
+</script>
 
 <style>
 	.bookshelf {
@@ -121,7 +153,6 @@ const {
 		gap: 0.35rem;
 	}
 
-	/* Match MarkdownSections h2 */
 	.bookshelf__heading {
 		font-size: 1.25rem;
 		font-weight: 500;
@@ -139,12 +170,57 @@ const {
 	}
 
 	.bookshelf__stage {
+		position: relative;
 		overflow-x: auto;
 		overscroll-behavior-x: contain;
-		scrollbar-width: thin;
 		-webkit-overflow-scrolling: touch;
-		/* room for drop shadow under plank */
 		padding-bottom: 0.85rem;
+		scrollbar-width: none;
+	}
+
+	.bookshelf__stage::-webkit-scrollbar {
+		display: none;
+		width: 0;
+		height: 0;
+	}
+
+	.bookshelf__fade {
+		position: absolute;
+		top: 0;
+		bottom: 0.85rem;
+		width: 2.75rem;
+		pointer-events: none;
+		z-index: 3;
+		opacity: 0;
+		transition: opacity var(--duration-ui) var(--ease-out);
+	}
+
+	.bookshelf__fade--left {
+		left: 0;
+		background: linear-gradient(
+			to right,
+			var(--color-bg-primary) 10%,
+			color-mix(in srgb, var(--color-bg-primary) 55%, transparent) 55%,
+			transparent
+		);
+	}
+
+	.bookshelf__fade--right {
+		right: 0;
+		background: linear-gradient(
+			to left,
+			var(--color-bg-primary) 10%,
+			color-mix(in srgb, var(--color-bg-primary) 55%, transparent) 55%,
+			transparent
+		);
+	}
+
+	.bookshelf__stage[data-at-start='false'] .bookshelf__fade--left {
+		opacity: 1;
+	}
+
+	.bookshelf__stage[data-at-end='false'] .bookshelf__fade--right {
+		opacity: 1;
 	}
 
 	.bookshelf__inner {
@@ -191,6 +267,12 @@ const {
 			box-shadow:
 				0 2px 0 rgb(255 255 255 / 0.06),
 				0 10px 16px -6px rgb(0 0 0 / 0.75);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.bookshelf__fade {
+			transition: none;
 		}
 	}
 </style>
