@@ -13,6 +13,11 @@ const {
 	lead,
 	class: className,
 } = Astro.props;
+
+// Long enough ASCII board; clipped to the book row width via overflow:hidden
+const shelfTop = `+${'-'.repeat(120)}+`;
+const shelfMid = `|${'='.repeat(120)}|`;
+const shelfBot = `+${'-'.repeat(120)}+`;
 ---
 
 {
@@ -24,14 +29,18 @@ const {
 			</header>
 
 			<div class="bookshelf__stage">
-				<ul class="bookshelf__row">
-					{bookshelf.map((item) => (
-						<li class="bookshelf__slot">
-							<BookshelfPoster item={item} />
-						</li>
-					))}
-				</ul>
-				<div class="bookshelf__plank" aria-hidden="true" />
+				<div class="bookshelf__inner">
+					<ul class="bookshelf__row">
+						{bookshelf.map((item) => (
+							<li class="bookshelf__slot">
+								<BookshelfPoster item={item} />
+							</li>
+						))}
+					</ul>
+					<pre class="bookshelf__plank" aria-hidden="true">{shelfTop}
+{shelfMid}
+{shelfBot}</pre>
+				</div>
 			</div>
 		</section>
 	)
@@ -41,14 +50,16 @@ const {
 	.bookshelf {
 		display: flex;
 		flex-direction: column;
-		gap: 0.85rem;
+		gap: 1rem;
 		width: 100%;
+		padding-block: 0.25rem 0.75rem;
 	}
 
 	.bookshelf__header {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3rem;
+		gap: 0.35rem;
+		padding-inline: 0.15rem;
 	}
 
 	.bookshelf__heading {
@@ -68,21 +79,30 @@ const {
 	}
 
 	.bookshelf__stage {
-		position: relative;
-		padding: 0.35rem 0 0;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scrollbar-width: thin;
+		-webkit-overflow-scrolling: touch;
+		padding-block: 0.35rem 0.5rem;
+	}
+
+	.bookshelf__inner {
+		display: inline-flex;
+		flex-direction: column;
+		width: max-content;
+		max-width: none;
+		gap: 0.85rem;
+		padding-inline: 0.75rem;
+		padding-top: 0.35rem;
 	}
 
 	.bookshelf__row {
 		list-style: none;
 		margin: 0;
-		padding: 0.5rem 0.15rem 0;
+		padding: 0;
 		display: flex;
 		align-items: flex-end;
-		gap: 0.65rem;
-		overflow-x: auto;
-		overscroll-behavior-x: contain;
-		scrollbar-width: thin;
-		-webkit-overflow-scrolling: touch;
+		gap: 0.85rem;
 	}
 
 	.bookshelf__slot {
@@ -92,29 +112,16 @@ const {
 	}
 
 	.bookshelf__plank {
-		height: 0.65rem;
-		margin-top: -1px;
-		border-radius: 2px;
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--color-text-primary) 12%, var(--color-bg-primary)),
-			color-mix(in srgb, var(--color-text-primary) 22%, var(--color-bg-primary))
-		);
-		box-shadow:
-			0 8px 16px -10px rgb(0 0 0 / 0.35),
-			0 2px 0 color-mix(in srgb, var(--color-text-primary) 18%, transparent);
-	}
-
-	@media (prefers-color-scheme: dark) {
-		.bookshelf__plank {
-			background: linear-gradient(
-				to bottom,
-				color-mix(in srgb, #fff 10%, var(--color-bg-primary)),
-				color-mix(in srgb, #fff 18%, var(--color-bg-primary))
-			);
-			box-shadow:
-				0 8px 16px -10px rgb(0 0 0 / 0.65),
-				0 2px 0 color-mix(in srgb, #fff 12%, transparent);
-		}
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		overflow: hidden;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		color: var(--color-text-secondary);
+		user-select: none;
+		white-space: pre;
 	}
 </style>
