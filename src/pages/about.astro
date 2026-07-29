@@ -14,7 +14,7 @@ if (!aboutEntry) throw new Error("About entry not found");
   title={aboutEntry.data.title}
   description={aboutEntry.data.description}
 >
-  <div class="w-full lg:mt-3.5 flex flex-col gap-8 pb-8">
+  <div class="w-full lg:mt-3.5 flex flex-col gap-5 pb-8">
     <div class="max-w-2xl">
       <MarkdownLayout title={aboutEntry.data.title}>
         <MarkdownSections
@@ -26,7 +26,6 @@ if (!aboutEntry) throw new Error("About entry not found");
       </MarkdownLayout>
     </div>
 
-    {/* After micropages — horizontal shelf with sideways scroll */}
     <Bookshelf
       heading="Bookshelf"
       lead="Books and articles that keep reshaping how I think."
