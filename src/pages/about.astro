@@ -15,11 +15,6 @@ if (!aboutEntry) throw new Error("About entry not found");
   description={aboutEntry.data.description}
 >
   <div class="w-full lg:mt-3.5 flex flex-col gap-8 pb-8">
-    <Bookshelf
-      heading="Bookshelf"
-      lead="Books and articles that keep reshaping how I think."
-    />
-
     <div class="max-w-2xl">
       <MarkdownLayout title={aboutEntry.data.title}>
         <MarkdownSections
@@ -29,14 +24,20 @@ if (!aboutEntry) throw new Error("About entry not found");
           layout="stack"
         />
       </MarkdownLayout>
+    </div>
 
-      <div class="mt-2">
-        <MediaGallery
-          images={["about.webp", "timbers.webp"]}
-          experienceName="About"
-          variant="desktop"
-        />
-      </div>
+    {/* After micropages — horizontal shelf with sideways scroll */}
+    <Bookshelf
+      heading="Bookshelf"
+      lead="Books and articles that keep reshaping how I think."
+    />
+
+    <div class="max-w-2xl">
+      <MediaGallery
+        images={["about.webp", "timbers.webp"]}
+        experienceName="About"
+        variant="desktop"
+      />
     </div>
   </div>
 </PageLayout>

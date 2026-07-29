@@ -13,11 +13,6 @@ const {
 	lead,
 	class: className,
 } = Astro.props;
-
-// Long enough ASCII board; clipped to the book row width via overflow:hidden
-const shelfTop = `+${'-'.repeat(120)}+`;
-const shelfMid = `|${'='.repeat(120)}|`;
-const shelfBot = `+${'-'.repeat(120)}+`;
 ---
 
 {
@@ -37,11 +32,43 @@ const shelfBot = `+${'-'.repeat(120)}+`;
 							</li>
 						))}
 					</ul>
-					<pre class="bookshelf__plank" aria-hidden="true">{shelfTop}
-{shelfMid}
-{shelfBot}</pre>
+					<div class="bookshelf__plank" aria-hidden="true">
+						<span class="bookshelf__plank-fill" />
+						<span class="bookshelf__plank-grain" />
+						<span class="bookshelf__plank-lip" />
+					</div>
 				</div>
 			</div>
+
+			{/* Shared SVG filter for grain — one instance per page */}
+			<svg class="bookshelf__filters" aria-hidden="true" focusable="false">
+				<filter
+					id="bookshelf-grain"
+					x="0%"
+					y="0%"
+					width="100%"
+					height="100%"
+					color-interpolation-filters="sRGB"
+				>
+					<feTurbulence
+						type="fractalNoise"
+						baseFrequency="0.85"
+						numOctaves="3"
+						stitchTiles="stitch"
+						result="noise"
+					/>
+					<feColorMatrix
+						in="noise"
+						type="matrix"
+						values="0 0 0 0 0.15
+                    0 0 0 0 0.15
+                    0 0 0 0 0.15
+                    0 0 0 0.55 0"
+						result="mono"
+					/>
+					<feComposite in="mono" in2="SourceGraphic" operator="in" />
+				</filter>
+			</svg>
 		</section>
 	)
 }
@@ -91,9 +118,9 @@ const shelfBot = `+${'-'.repeat(120)}+`;
 		flex-direction: column;
 		width: max-content;
 		max-width: none;
-		gap: 0.85rem;
+		gap: 0.75rem;
 		padding-inline: 0.75rem;
-		padding-top: 0.35rem;
+		padding-top: 0.5rem;
 	}
 
 	.bookshelf__row {
@@ -112,16 +139,84 @@ const shelfBot = `+${'-'.repeat(120)}+`;
 	}
 
 	.bookshelf__plank {
-		margin: 0;
-		padding: 0;
+		position: relative;
 		width: 100%;
+		height: 0.85rem;
+		isolation: isolate;
 		overflow: hidden;
-		font-family: var(--font-mono);
-		font-size: 0.7rem;
-		line-height: 1;
-		letter-spacing: 0.02em;
-		color: var(--color-text-secondary);
-		user-select: none;
-		white-space: pre;
+		border-radius: 1px;
+	}
+
+	.bookshelf__plank-fill {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--color-text-primary) 14%, var(--color-bg-primary)),
+			color-mix(in srgb, var(--color-text-primary) 28%, var(--color-bg-primary)) 55%,
+			color-mix(in srgb, var(--color-text-primary) 18%, var(--color-bg-primary))
+		);
+		box-shadow:
+			0 1px 0 color-mix(in srgb, var(--color-text-primary) 22%, transparent),
+			0 10px 18px -12px rgb(0 0 0 / 0.4);
+	}
+
+	.bookshelf__plank-grain {
+		position: absolute;
+		inset: 0;
+		opacity: 0.45;
+		mix-blend-mode: multiply;
+		filter: url(#bookshelf-grain);
+		background: color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+		pointer-events: none;
+	}
+
+	.bookshelf__plank-lip {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		height: 2px;
+		background: color-mix(in srgb, #fff 35%, var(--color-text-primary) 8%);
+		opacity: 0.55;
+		pointer-events: none;
+	}
+
+	.bookshelf__filters {
+		position: absolute;
+		width: 0;
+		height: 0;
+		overflow: hidden;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.bookshelf__plank-fill {
+			background: linear-gradient(
+				to bottom,
+				color-mix(in srgb, #fff 12%, var(--color-bg-primary)),
+				color-mix(in srgb, #fff 22%, var(--color-bg-primary)) 55%,
+				color-mix(in srgb, #fff 10%, var(--color-bg-primary))
+			);
+			box-shadow:
+				0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+				0 10px 18px -12px rgb(0 0 0 / 0.7);
+		}
+
+		.bookshelf__plank-grain {
+			mix-blend-mode: soft-light;
+			opacity: 0.55;
+			background: color-mix(in srgb, #fff 28%, transparent);
+		}
+
+		.bookshelf__plank-lip {
+			background: color-mix(in srgb, #fff 22%, transparent);
+			opacity: 0.4;
+		}
+	}
+
+	@media (prefers-reduced-transparency: reduce) {
+		.bookshelf__plank-grain {
+			display: none;
+		}
 	}
 </style>
