@@ -14,29 +14,29 @@ if (!aboutEntry) throw new Error("About entry not found");
   title={aboutEntry.data.title}
   description={aboutEntry.data.description}
 >
-  <div class="w-full lg:mt-3.5 flex flex-col gap-5 pb-8">
-    <div class="max-w-2xl">
-      <MarkdownLayout title={aboutEntry.data.title}>
-        <MarkdownSections
-          body={aboutEntry.body}
-          description={aboutEntry.data.description}
-          lastUpdated="Last updated June 3, 2026"
-          layout="stack"
+  <div class="w-full lg:mt-3.5 max-w-2xl">
+    <MarkdownLayout title={aboutEntry.data.title}>
+      <MarkdownSections
+        body={aboutEntry.body}
+        description={aboutEntry.data.description}
+        lastUpdated="Last updated June 3, 2026"
+        layout="stack"
+      >
+        {/* mt-6 = same 1.5rem as MarkdownSections space-y-6 */}
+        <Bookshelf
+          heading="Bookshelf"
+          lead="Books and articles that keep reshaping how I think."
+          class="mt-6"
         />
-      </MarkdownLayout>
-    </div>
+      </MarkdownSections>
 
-    <Bookshelf
-      heading="Bookshelf"
-      lead="Books and articles that keep reshaping how I think."
-    />
-
-    <div class="max-w-2xl">
-      <MediaGallery
-        images={["about.webp", "timbers.webp"]}
-        experienceName="About"
-        variant="desktop"
-      />
-    </div>
+      <div class="mt-6">
+        <MediaGallery
+          images={["about.webp", "timbers.webp"]}
+          experienceName="About"
+          variant="desktop"
+        />
+      </div>
+    </MarkdownLayout>
   </div>
 </PageLayout>

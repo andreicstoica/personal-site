@@ -33,7 +33,6 @@ const {
 						))}
 					</ul>
 					<div class="bookshelf__plank" aria-hidden="true">
-						{/* Inline SVG so grain works under Astro scoped CSS (no url(#id) breakage) */}
 						<svg
 							class="bookshelf__plank-svg"
 							xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +49,7 @@ const {
 								>
 									<feTurbulence
 										type="fractalNoise"
-										baseFrequency="0.9 0.7"
+										baseFrequency="0.75 0.55"
 										numOctaves="4"
 										stitchTiles="stitch"
 										result="n"
@@ -58,17 +57,18 @@ const {
 									<feColorMatrix
 										in="n"
 										type="matrix"
-										values="0 0 0 0 0.12
-                            0 0 0 0 0.11
-                            0 0 0 0 0.1
-                            0 0 0 0.7 0"
+										values="0 0 0 0 0.1
+                            0 0 0 0 0.09
+                            0 0 0 0 0.08
+                            0 0 0 0.85 0"
 										result="g"
 									/>
 								</filter>
 								<linearGradient id="bs-wood" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="0%" stop-color="#c4b8a4" />
-									<stop offset="45%" stop-color="#a89880" />
-									<stop offset="100%" stop-color="#8a7a64" />
+									<stop offset="0%" stop-color="#d2c4ae" />
+									<stop offset="35%" stop-color="#b5a288" />
+									<stop offset="70%" stop-color="#9a876c" />
+									<stop offset="100%" stop-color="#7a6a52" />
 								</linearGradient>
 							</defs>
 							<rect width="100%" height="100%" fill="url(#bs-wood)" />
@@ -76,24 +76,26 @@ const {
 								width="100%"
 								height="100%"
 								filter="url(#bs-grain)"
-								opacity="0.55"
+								opacity="0.65"
 								style="mix-blend-mode: multiply"
 							/>
+							{/* front lip highlight */}
 							<rect
 								x="0"
 								y="0"
 								width="100%"
-								height="2"
-								fill="#efe6d6"
-								opacity="0.55"
+								height="3"
+								fill="#f3ebe0"
+								opacity="0.7"
 							/>
+							{/* underside shadow band */}
 							<rect
 								x="0"
-								y="88%"
+								y="70%"
 								width="100%"
-								height="12%"
-								fill="#5c4f3d"
-								opacity="0.35"
+								height="30%"
+								fill="#4a3f30"
+								opacity="0.28"
 							/>
 						</svg>
 					</div>
@@ -107,18 +109,19 @@ const {
 	.bookshelf {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
+		gap: 0.75rem;
 		width: 100%;
-		padding-block: 0;
+		padding: 0;
+		margin: 0;
 	}
 
 	.bookshelf__header {
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
-		padding-inline: 0.1rem;
+		gap: 0.35rem;
 	}
 
+	/* Match MarkdownSections h2 */
 	.bookshelf__heading {
 		font-size: 1.25rem;
 		font-weight: 500;
@@ -140,23 +143,21 @@ const {
 		overscroll-behavior-x: contain;
 		scrollbar-width: thin;
 		-webkit-overflow-scrolling: touch;
-		padding-block: 0.15rem 0.85rem;
+		/* room for drop shadow under plank */
+		padding-bottom: 0.85rem;
 	}
 
 	.bookshelf__inner {
 		display: inline-flex;
 		flex-direction: column;
 		width: max-content;
-		max-width: none;
 		gap: 0;
-		padding-inline: 0.35rem;
-		padding-top: 0.15rem;
 	}
 
 	.bookshelf__row {
 		list-style: none;
 		margin: 0;
-		padding: 0 0 1px;
+		padding: 0;
 		display: flex;
 		align-items: flex-end;
 		gap: 0.7rem;
@@ -171,11 +172,12 @@ const {
 	.bookshelf__plank {
 		position: relative;
 		width: 100%;
-		height: 1.05rem;
+		height: 1.35rem;
+		margin-top: -1px;
 		border-radius: 1px;
 		box-shadow:
-			0 1px 0 rgb(0 0 0 / 0.18),
-			0 8px 14px -8px rgb(0 0 0 / 0.45);
+			0 2px 0 rgb(0 0 0 / 0.12),
+			0 10px 16px -6px rgb(0 0 0 / 0.4);
 	}
 
 	.bookshelf__plank-svg {
@@ -187,8 +189,8 @@ const {
 	@media (prefers-color-scheme: dark) {
 		.bookshelf__plank {
 			box-shadow:
-				0 1px 0 rgb(255 255 255 / 0.08),
-				0 8px 14px -8px rgb(0 0 0 / 0.75);
+				0 2px 0 rgb(255 255 255 / 0.06),
+				0 10px 16px -6px rgb(0 0 0 / 0.75);
 		}
 	}
 </style>
