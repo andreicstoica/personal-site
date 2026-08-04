@@ -77,13 +77,13 @@ export const bookshelf: BookshelfItem[] = [
 		poster: { theme: "primary", layout: "stack" },
 	},
 	{
-		id: "lyndon-johnson-series",
+		id: "path-to-power",
 		kind: "book",
-		title: "The Years of Lyndon Johnson",
+		title: "The Path to Power",
 		author: "Robert Caro",
-		year: "1982–",
-		note: "The four-volume LBJ series.",
-		cover: "lyndon-johnson-series.webp",
+		year: "1982",
+		note: "Volume I of The Years of Lyndon Johnson.",
+		cover: "path-to-power.webp",
 		poster: { theme: "secondary", layout: "banner" },
 	},
 	{
