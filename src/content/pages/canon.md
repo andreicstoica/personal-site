@@ -90,6 +90,6 @@ description: "People, things, and ideas that inspire me and shape how I think ab
 
 # clothes
 
-- man-tle
 - outlier
-- evan kinori
+- rosen x
+- iris van herpen
