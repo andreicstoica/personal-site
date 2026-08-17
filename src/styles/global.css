@@ -590,14 +590,18 @@ a:hover {
 	border: 0;
 	padding: 0;
 	cursor: zoom-out;
-	max-width: 100%;
-	max-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 95vw;
+	max-height: 90vh;
+	max-height: 90dvh;
 }
 
 .image-inspect-media {
-	max-width: min(95vw, 100%);
-	max-height: min(90vh, 100%);
-	max-height: min(90dvh, 100%);
+	max-width: 95vw;
+	max-height: 90vh;
+	max-height: 90dvh;
 	width: auto;
 	height: auto;
 	object-fit: contain;
