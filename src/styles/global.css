@@ -232,9 +232,12 @@
 	transform: translateY(0);
 }
 
-/* Occasional page enter — content pages, not home */
+/* Occasional page enter — content pages, not home.
+   Do not use animation-fill-mode: both/forwards with transform/translate.
+   A leftover transform makes `position: fixed` descendants (image inspect)
+   size to this box instead of the viewport. */
 .page-enter {
-	animation: page-enter 360ms var(--ease-out) both;
+	animation: page-enter 360ms var(--ease-out);
 }
 
 @keyframes page-enter {
@@ -262,6 +265,7 @@
 	.page-enter,
 	.media-reveal,
 	.media-reveal.is-loaded,
+	.image-inspect,
 	.modal-backdrop,
 	.modal-backdrop.closing {
 		animation: none;
@@ -552,6 +556,57 @@ a:hover {
 
 .nav-name:hover {
 	color: #fefefe !important;
+}
+
+/* Image inspect — must be portaled to `document.body` so this is viewport-sized */
+.image-inspect {
+	position: fixed;
+	inset: 0;
+	z-index: 12000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 100vh;
+	min-height: 100dvh;
+	padding: 1rem;
+	background: rgb(0 0 0 / 0.8);
+	backdrop-filter: blur(4px);
+	overscroll-behavior: none;
+}
+
+.image-inspect-stage {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+.image-inspect-trigger {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	cursor: zoom-out;
+	max-width: 100%;
+	max-height: 100%;
+}
+
+.image-inspect-media {
+	max-width: min(95vw, 100%);
+	max-height: min(90vh, 100%);
+	max-height: min(90dvh, 100%);
+	width: auto;
+	height: auto;
+	object-fit: contain;
+}
+
+html.image-inspect-open,
+html.image-inspect-open body,
+html.image-inspect-open [data-page-scroll] {
+	overflow: hidden !important;
 }
 
 /* Modal animations */
