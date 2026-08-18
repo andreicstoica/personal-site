@@ -1,5 +1,6 @@
 <script lang="ts">
   import { mediaReveal } from "../../lib/mediaReveal";
+  import { portal } from "../../lib/portal";
 
   interface ImageData {
     src: string;
@@ -21,8 +22,11 @@
   let isClosing = $state(false);
   let containerRef = $state<HTMLDivElement | null>(null);
   let isVisible = $state(false);
+  let dialogRef = $state<HTMLDivElement | null>(null);
 
   const modalCloseMs = 180;
+  const mediaShadow =
+    "0 0 50px rgba(0, 0, 0, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 25px -5px rgba(0, 0, 0, 0.1)";
 
   // Intersection Observer for lazy loading
   $effect(() => {
@@ -56,6 +60,7 @@
   });
 
   const closeModal = () => {
+    if (!selectedImage || isClosing) return;
     isClosing = true;
     setTimeout(() => {
       selectedImage = null;
@@ -72,6 +77,21 @@
     if (selectedImage) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
+    }
+  });
+
+  $effect(() => {
+    if (!selectedImage) return;
+
+    document.documentElement.classList.add("image-inspect-open");
+    return () => {
+      document.documentElement.classList.remove("image-inspect-open");
+    };
+  });
+
+  $effect(() => {
+    if (selectedImage && dialogRef) {
+      dialogRef.focus();
     }
   });
 </script>
@@ -176,23 +196,26 @@
   </div>
 {/if}
 
-<!-- Simple Modal -->
+<!-- Viewport-rooted inspect overlay (portaled so ancestor transforms cannot trap `fixed`) -->
 {#if selectedImage}
   <div
-    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[12000] flex items-center justify-center p-4 modal-backdrop {isClosing ? 'closing' : ''}"
+    bind:this={dialogRef}
+    use:portal
+    class="image-inspect modal-backdrop {isClosing ? 'closing' : ''}"
     role="dialog"
     aria-modal="true"
+    aria-label={`${experienceName} image`}
     tabindex="-1"
     onclick={closeModal}
     onkeydown={(e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
     }}
   >
-    <div class="relative w-full h-full flex items-center justify-center">
+    <div class="image-inspect-stage">
       {#if selectedImage.src.toLowerCase().includes(".webm")}
         <video
           src={selectedImage.src}
-          class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain cursor-zoom-out media-reveal"
+          class="image-inspect-media cursor-zoom-out media-reveal"
           use:mediaReveal
           autoplay
           loop
@@ -201,17 +224,12 @@
           controls
           draggable={false}
           onclick={closeModal}
-          style="
-            box-shadow:
-              0 0 50px rgba(0, 0, 0, 0.3),
-              0 25px 50px -12px rgba(0, 0, 0, 0.25),
-              0 20px 25px -5px rgba(0, 0, 0, 0.1);
-           "
+          style="box-shadow: {mediaShadow};"
         ></video>
       {:else}
         <button
           type="button"
-          class="bg-transparent border-0 p-0 cursor-zoom-out"
+          class="image-inspect-trigger"
           onclick={closeModal}
           onkeydown={(e: KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -223,17 +241,12 @@
           <img
             src={selectedImage.src}
             alt={selectedImage.alt}
-            class="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain media-reveal"
+            class="image-inspect-media media-reveal"
             use:mediaReveal
             decoding="async"
             fetchpriority="high"
             draggable={false}
-            style="
-              box-shadow:
-                0 0 50px rgba(0, 0, 0, 0.3),
-                0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            "
+            style="box-shadow: {mediaShadow};"
           />
         </button>
       {/if}
