@@ -1,0 +1,246 @@
+---
+import type { BookshelfItem } from '../../lib/bookshelf';
+
+interface Props {
+	item: BookshelfItem;
+}
+
+const { item } = Astro.props;
+const { poster, kind, title, author, year, url, cover } = item;
+const href = url ?? undefined;
+const Tag = href ? 'a' : 'div';
+const kindLabel = kind === 'book' ? 'Book' : 'Article';
+---
+
+<Tag
+	class:list={[
+		'shelf-item',
+		`shelf-item--${kind}`,
+		!cover && `shelf-item--${poster.theme}`,
+		!cover && `shelf-item--${poster.layout}`,
+	]}
+	href={href}
+	target={href ? '_blank' : undefined}
+	rel={href ? 'noopener noreferrer' : undefined}
+	title={`${title} — ${author}${year ? ` (${year})` : ''}`}
+	aria-label={`${kindLabel}: ${title} by ${author}${href ? ' (opens in new tab)' : ''}`}
+>
+	{
+		cover ? (
+			<img
+				class="shelf-item__cover"
+				src={`/images/bookshelf/${cover}`}
+				alt=""
+				loading="lazy"
+				decoding="async"
+				width="600"
+				height="900"
+			/>
+		) : (
+			<div class="shelf-item__cover shelf-item__cover--typo" aria-hidden="true">
+				<span class="shelf-item__kind">{kindLabel}</span>
+				<div class="shelf-item__mark" />
+				<div class="shelf-item__rule" />
+				<p class="shelf-item__title">{title}</p>
+				<p class="shelf-item__author">{author}</p>
+				{year && <p class="shelf-item__year">{year}</p>}
+			</div>
+		)
+	}
+	<span class="shelf-item__spine" aria-hidden="true" />
+</Tag>
+
+<style>
+	.shelf-item {
+		position: relative;
+		flex: 0 0 auto;
+		width: 7.25rem;
+		aspect-ratio: 2 / 3;
+		text-decoration: none;
+		color: inherit;
+		transform-origin: bottom center;
+		transition: transform var(--duration-ui) var(--ease-out);
+		display: block;
+	}
+
+	.shelf-item--article {
+		width: 6.5rem;
+	}
+
+	@media (min-width: 640px) {
+		.shelf-item {
+			width: 8.25rem;
+		}
+
+		.shelf-item--article {
+			width: 7.35rem;
+		}
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.shelf-item:hover {
+			transform: translateY(-6px) rotate(-1.25deg);
+			z-index: 2;
+		}
+	}
+
+	.shelf-item__cover {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border: 1px solid color-mix(in srgb, var(--color-text-primary) 45%, transparent);
+		box-shadow:
+			inset -8px 0 12px -10px rgb(0 0 0 / 0.28),
+			2px 3px 0 rgb(0 0 0 / 0.05);
+		background: var(--color-bg-secondary);
+		position: relative;
+		z-index: 1;
+	}
+
+	.shelf-item__cover--typo {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		padding: 0.65rem;
+		box-sizing: border-box;
+		overflow: hidden;
+		isolation: isolate;
+	}
+
+	.shelf-item__spine {
+		position: absolute;
+		top: 1px;
+		bottom: 1px;
+		left: -4px;
+		width: 4px;
+		background: color-mix(in srgb, currentColor 18%, #8a8a8a);
+		transform: skewY(-18deg);
+		transform-origin: bottom left;
+		z-index: 0;
+		opacity: 0.5;
+	}
+
+	.shelf-item__kind {
+		position: absolute;
+		top: 0.55rem;
+		left: 0.55rem;
+		font-family: var(--font-mono);
+		font-size: 0.55rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		z-index: 2;
+		opacity: 0.85;
+	}
+
+	.shelf-item__title {
+		font-family: 'LumberSans', var(--font-sans);
+		font-size: 0.92rem;
+		line-height: 1.05;
+		letter-spacing: -0.02em;
+		margin: 0;
+		z-index: 2;
+		position: relative;
+		text-wrap: balance;
+	}
+
+	.shelf-item__author,
+	.shelf-item__year {
+		font-family: var(--font-mono);
+		font-size: 0.58rem;
+		margin: 0.28rem 0 0;
+		z-index: 2;
+		position: relative;
+		opacity: 0.85;
+	}
+
+	.shelf-item__year {
+		margin-top: 0.1rem;
+		opacity: 0.65;
+	}
+
+	.shelf-item__mark,
+	.shelf-item__rule {
+		position: absolute;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.shelf-item--ink .shelf-item__cover--typo {
+		background: #1a1a1a;
+		color: #fefefe;
+		border-color: #1a1a1a;
+	}
+
+	.shelf-item--primary .shelf-item__cover--typo {
+		background: var(--color-primary);
+		color: #fefefe;
+		border-color: var(--color-primary);
+	}
+
+	.shelf-item--secondary .shelf-item__cover--typo {
+		background: var(--color-secondary);
+		color: #fefefe;
+		border-color: var(--color-secondary);
+	}
+
+	.shelf-item--accent .shelf-item__cover--typo {
+		background: var(--color-accent);
+		color: #fefefe;
+		border-color: var(--color-accent);
+	}
+
+	.shelf-item--warning .shelf-item__cover--typo {
+		background: var(--color-warning);
+		color: #1a1a1a;
+		border-color: #1a1a1a;
+	}
+
+	.shelf-item--paper .shelf-item__cover--typo {
+		background: #f3efe6;
+		color: #1a1a1a;
+		border-color: #1a1a1a;
+	}
+
+	.shelf-item--stack .shelf-item__mark {
+		width: 48%;
+		aspect-ratio: 1;
+		border-radius: 999px;
+		border: 2px solid currentColor;
+		opacity: 0.3;
+		top: 16%;
+		right: -10%;
+	}
+
+	.shelf-item--banner .shelf-item__rule {
+		inset: 30% 0 auto;
+		height: 26%;
+		background: color-mix(in srgb, currentColor 14%, transparent);
+	}
+
+	.shelf-item--diagonal .shelf-item__rule {
+		inset: -20% -35%;
+		height: 38%;
+		background: color-mix(in srgb, currentColor 16%, transparent);
+		transform: rotate(-28deg);
+	}
+
+	.shelf-item--corner .shelf-item__mark {
+		width: 58%;
+		aspect-ratio: 1;
+		border: 2px solid currentColor;
+		opacity: 0.25;
+		top: -14%;
+		left: -20%;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.shelf-item {
+			transition: none;
+		}
+
+		.shelf-item:hover {
+			transform: none;
+		}
+	}
+</style>

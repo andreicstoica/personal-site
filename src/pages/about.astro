@@ -1,7 +1,8 @@
 ---
 import { getEntry } from "astro:content";
-import MediaGallery from "../components/gallery/MediaGallery.astro";
+import Bookshelf from "../components/bookshelf/Bookshelf.astro";
 import MarkdownSections from "../components/content/MarkdownSections.astro";
+import MediaGallery from "../components/gallery/MediaGallery.astro";
 import MarkdownLayout from "../layouts/MarkdownLayout.astro";
 import PageLayout from "../layouts/PageLayout.astro";
 
@@ -20,15 +21,22 @@ if (!aboutEntry) throw new Error("About entry not found");
         description={aboutEntry.data.description}
         lastUpdated="Last updated June 3, 2026"
         layout="stack"
-      />
-    </MarkdownLayout>
+      >
+        {/* mt-6 = same 1.5rem as MarkdownSections space-y-6 */}
+        <Bookshelf
+          heading="Bookshelf"
+          lead="Books and articles that keep reshaping how I think."
+          class="mt-6"
+        />
+      </MarkdownSections>
 
-    <div class="mt-2 pb-8">
-      <MediaGallery
-        images={["about.webp", "timbers.webp"]}
-        experienceName="About"
-        variant="desktop"
-      />
-    </div>
+      <div class="mt-6">
+        <MediaGallery
+          images={["about.webp", "timbers.webp"]}
+          experienceName="About"
+          variant="desktop"
+        />
+      </div>
+    </MarkdownLayout>
   </div>
 </PageLayout>
