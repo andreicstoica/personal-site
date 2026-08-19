@@ -1,0 +1,33 @@
+---
+import { getEntry } from "astro:content";
+import ContentDocument from "../../layouts/ContentDocument.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import MarkdownSections from "./MarkdownSections.astro";
+
+interface Props {
+	slug: string;
+	layout?: "stack" | "grid";
+	lastUpdated?: string;
+	innerClass?: string;
+}
+
+const { slug, layout = "stack", lastUpdated, innerClass } = Astro.props;
+const entry = await getEntry("pages", slug);
+if (!entry) throw new Error(`${slug} entry not found`);
+---
+
+<SiteLayout title={entry.data.title} description={entry.data.description}>
+  <div class={innerClass}>
+    <ContentDocument title={entry.data.title}>
+      <MarkdownSections
+        body={entry.body ?? ""}
+        description={entry.data.description}
+        lastUpdated={lastUpdated}
+        layout={layout}
+      >
+        <slot />
+      </MarkdownSections>
+    </ContentDocument>
+    <slot name="after" />
+  </div>
+</SiteLayout>

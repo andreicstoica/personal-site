@@ -2,10 +2,12 @@
 
 ## Project Structure & Module Organization
 
-- `src/pages`: Astro route entrypoints; keep logic thin and delegate to components.
-- `src/components`: shared UI islands (Astro/Svelte) such as `MediaGallery.astro` and `ImageGallery.svelte`.
+- `src/pages`: thin route entrypoints. Collection routes compose `CollectionPage`; others wrap `SiteLayout` and a page component.
+- Layout layers: `RootLayout` (document + idle cursor island) → `SiteLayout` (nav island + scroll) → `ContentDocument` (markdown page chrome).
+- `src/components`: Astro owns static composition; Svelte islands own client state (`Nav`, `CursorTrail`, `AsciiCanvas`, `ImageGallery`, `FullPageChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS.
 - `src/layouts`: page shells; `src/lib`: helpers; `src/styles`: Tailwind tokens/extracted class groups.
 - Content lives in `src/content`; acceptance references in `specs`; public assets in `public` (e.g., `public/images`). Never edit `dist`.
+- Stay on Astro islands rather than a React/Next rewrite unless a page needs shared client state across the whole tree. Swap an island to React later without changing the layout hierarchy.
 
 ## Build, Test, and Development Commands
 

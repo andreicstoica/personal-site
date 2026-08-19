@@ -1,6 +1,6 @@
 ---
 import ProjectDisplay from "../../components/projects/ProjectDisplay.astro";
-import PageLayout from "../../layouts/PageLayout.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
 import { getProject } from "../../lib/projects";
 
 const { id } = Astro.params;
@@ -11,6 +11,6 @@ if (!project) {
 }
 ---
 
-<PageLayout title={project.title}>
+<SiteLayout title={project.title}>
   <ProjectDisplay project={project} />
-</PageLayout>
+</SiteLayout>

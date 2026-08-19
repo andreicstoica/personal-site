@@ -1,6 +1,6 @@
 ---
 import Nav from "../components/nav/Nav.astro";
-import Layout from "./Layout.astro";
+import RootLayout from "./RootLayout.astro";
 
 interface Props {
 	title: string;
@@ -10,15 +10,11 @@ interface Props {
 const { title, description } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
-  <!-- Full width layout with horizontal nav at top -->
+<RootLayout title={title} description={description}>
   <div class="col-span-12 flex flex-col min-h-screen">
-    <!-- Horizontal navigation at the top -->
     <Nav />
-
-    <!-- Content area takes remaining space -->
     <div class="flex-1 overflow-y-auto scrollbar-gutter-stable" data-page-scroll>
       <slot />
     </div>
   </div>
-</Layout>
+</RootLayout>

@@ -1,46 +1,12 @@
 ---
 import { experiences } from "../../lib/experience";
-import type { Experience } from "../../lib/types.ts";
-import MediaGallery from "../gallery/MediaGallery.astro";
-import ProjectEnhancedDescription from "../projects/ProjectEnhancedDescription.astro";
+import type { Experience } from "../../lib/types";
+import ExperienceRow from "./ExperienceRow.astro";
 
-// Get unique types for the filter dropdown
 const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
-
-// Color mapping for different experience types using CSS custom properties
-const typeColors = {
-	personal: "--tag-personal",
-	work: "--tag-work",
-	school: "--tag-school",
-	other: "--tag-other",
-};
-
-// Text color mapping for better contrast with each background, irrespective of theme
-const textColors = {
-	personal: "272727", // Dark text on bright green
-	work: "fefefe", // White text on blue
-	school: "272727", // Dark text on yellow
-	other: "fefefe", // White text on pink
-};
-
-// Helper function to get inline styles for a given type
-const getTypeStyles = (type: string) => {
-	const colorVar = typeColors[type as keyof typeof typeColors] || "--tag-other";
-	const textColorVar = textColors[type as keyof typeof textColors] || "272727";
-	return `background-color: var(${colorVar}); color: #${textColorVar}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
-};
-
-// Format date range
-const formatDateRange = (startDate: string, endDate?: string) => {
-	if (endDate && endDate !== "...") {
-		return `${startDate}-${endDate}`;
-	}
-	return endDate === "..." ? `${startDate}-...` : startDate;
-};
 ---
 
 <section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
-  <!-- Table Header — outside scroll region so it stays put while rows scroll -->
   <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
     <div class="col-span-1 text-sm ">Experience</div>
     <div class="col-span-2 text-sm ">Role</div>
@@ -56,93 +22,10 @@ const formatDateRange = (startDate: string, endDate?: string) => {
     <div class="col-span-4 text-sm">Media</div>
   </div>
 
-  <!-- Fixed-height body: reserved to "all" so filtering never shifts page height -->
   <div id="experience-rows" class="experience-rows">
     <div id="experience-rows-inner" class="space-y-4">
       {experiences.map((experience: Experience) => (
-        <div class="experience-row border-t border-gray-200 dark:border-gray-700" data-type={experience.type}>
-          <!-- Desktop Layout -->
-          <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
-            <!-- Experience Name (1 col) -->
-            <div class={`col-span-1 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-              <span class="line-clamp-2" style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-                {experience.name}
-              </span>
-            </div>
-
-            <!-- Content area (5 cols: Role, Tags, Date, and Description) -->
-            <div class="col-span-5">
-              <!-- Top row: Role, Tags, Date -->
-              <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
-                <!-- Role (2 cols) -->
-                <div class="col-span-2">
-                  <div class="text-[.92rem]" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>{experience.role}</div>
-                </div>
-
-                <!-- Tags (2 cols) -->
-                <div class={`col-span-2 ${experience.name === 'Lumber Sans' ? '-mt-1' : '-mt-0.25'}`}>
-                  <span class="font-serif text-sm bg-(--color-bg-secondary) p-0.75" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-                    {experience.tags.join(', ')}
-                  </span>
-                </div>
-
-                <!-- Date (1 col) -->
-                <div class="col-span-1">
-                  <div class="font-mono text-[.92rem] text-end mr-2">
-                    {formatDateRange(experience.startDate, experience.endDate)}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Description below -->
-              {experience.description && (
-                <ProjectEnhancedDescription description={experience.description} />
-              )}
-            </div>
-
-            <!-- Media (4 cols) -->
-            <MediaGallery
-              images={experience.images}
-              experienceName={experience.name}
-              variant="desktop"
-            />
-          </div>
-
-          <!-- Mobile Layout -->
-          <div class="lg:hidden">
-            <div class="flex justify-between gap-4 mb-3">
-              <!-- Experience Name -->
-              <span
-                class="line-clamp-2"
-                style={`${getTypeStyles(experience.type)}${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}
-              >
-                {experience.name}
-              </span>
-
-              <!-- Role -->
-              <div class="text-sm flex-none mt-1" style={`${experience.name === 'Lumber Sans' ? 'font-family: "LumberSans";' : ''}`}>
-                {experience.role}
-              </div>
-
-              <!-- Date -->
-              <div class="font-mono text-sm flex-shrink-0 mt-1">
-                {formatDateRange(experience.startDate, experience.endDate)}
-              </div>
-            </div>
-
-            {experience.description && (
-              <div class="text-sm leading-relaxed mb-3">
-                <ProjectEnhancedDescription description={experience.description} />
-              </div>
-            )}
-
-            <MediaGallery
-              images={experience.images}
-              experienceName={experience.name}
-              variant="mobile"
-            />
-          </div>
-        </div>
+        <ExperienceRow experience={experience} />
       ))}
     </div>
   </div>
@@ -175,10 +58,6 @@ const formatDateRange = (startDate: string, endDate?: string) => {
 
     const getFilterValue = () => experienceTable.dataset.filter ?? "";
 
-    /**
-     * Reserve space with min-height only (never shrinks on filter).
-     * Measured exclusively while "all" is visible.
-     */
     const reserveFromAllView = () => {
       if (getFilterValue()) {
         return;
@@ -215,7 +94,6 @@ const formatDateRange = (startDate: string, endDate?: string) => {
         return;
       }
 
-      // Viewport changed: allow a fresh reservation from the full list
       reservedHeight = 0;
       experienceRows.style.minHeight = "";
       requestAnimationFrame(reserveFromAllView);

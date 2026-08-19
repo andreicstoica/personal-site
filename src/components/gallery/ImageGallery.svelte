@@ -49,16 +49,6 @@
     };
   });
 
-  // Derived mobile detection - only recalculates when window changes
-  const isMobile = $derived(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) || window.innerWidth <= 768
-    );
-  });
-
   const closeModal = () => {
     if (!selectedImage || isClosing) return;
     isClosing = true;
@@ -96,57 +86,7 @@
   });
 </script>
 
-{#if variant === "desktop"}
-  <div class="col-span-4">
-    <div
-      bind:this={containerRef}
-      aria-label={`${experienceName} media gallery`}
-      class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible px-2"
-    >
-      {#if isVisible}
-        {#each images as image}
-          <div class="shrink-0 min-w-fit">
-            <button
-              type="button"
-              class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
-              aria-label={`Open ${experienceName} image`}
-              onclick={() => selectedImage = image}
-              onkeydown={(e: KeyboardEvent) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  selectedImage = image;
-                }
-              }}
-            >
-              {#if image.src.toLowerCase().includes(".webm")}
-                <video
-                  src={image.src}
-                  class="h-50 w-auto object-contain media-reveal"
-                  use:mediaReveal
-                  autoplay
-                  loop
-                  muted
-                  playsinline
-                ></video>
-              {:else}
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  class="h-50 w-auto object-contain media-reveal"
-                  use:mediaReveal
-                  loading="lazy"
-                  width={image.width}
-                  height={image.height}
-                  decoding="async"
-                />
-              {/if}
-            </button>
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </div>
-{:else}
+{#snippet galleryStrip()}
   <div
     bind:this={containerRef}
     aria-label={`${experienceName} media gallery`}
@@ -159,7 +99,7 @@
             type="button"
             class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
             aria-label={`Open ${experienceName} image`}
-            onclick={() => selectedImage = image}
+            onclick={() => (selectedImage = image)}
             onkeydown={(e: KeyboardEvent) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -194,6 +134,14 @@
       {/each}
     {/if}
   </div>
+{/snippet}
+
+{#if variant === "desktop"}
+  <div class="col-span-4">
+    {@render galleryStrip()}
+  </div>
+{:else}
+  {@render galleryStrip()}
 {/if}
 
 <!-- Viewport-rooted inspect overlay (portaled so ancestor transforms cannot trap `fixed`) -->

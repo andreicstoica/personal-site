@@ -1,35 +1,31 @@
 ---
 import { getEntry, render } from "astro:content";
+import MarkdownBody from "../components/content/MarkdownBody.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
-import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import PageLayout from "../layouts/PageLayout.astro";
+import ContentDocument from "../layouts/ContentDocument.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
 
 const raceEntry = await getEntry("pages", "race");
 const outdoorsEntry = await getEntry("pages", "outdoors");
-let RaceContent, OutdoorsContent;
-if (raceEntry) {
-	({ Content: RaceContent } = await render(raceEntry));
-}
-if (outdoorsEntry) {
-	({ Content: OutdoorsContent } = await render(outdoorsEntry));
-}
+const race = raceEntry ? await render(raceEntry) : null;
+const outdoors = outdoorsEntry ? await render(outdoorsEntry) : null;
+const RaceContent = race?.Content;
+const OutdoorsContent = outdoors?.Content;
 ---
 
-<PageLayout title="Fitness" description="Running and outdoor activities">
-  <MarkdownLayout title="Fitness">
+<SiteLayout title="Fitness" description="Running and outdoor activities">
+  <ContentDocument title="Fitness">
     <div class="flex flex-col gap-8">
       <section>
-        <p
-          class="text-lead max-w-2xl mb-3"
-        >
+        <p class="text-lead max-w-2xl mb-3">
           Running and outdoor activities
         </p>
       </section>
 
-      <div class="markdown-content">
+      <MarkdownBody>
         {RaceContent && <RaceContent />}
         {OutdoorsContent && <OutdoorsContent />}
-      </div>
+      </MarkdownBody>
 
       <section>
         <h2 class="text-xl font-medium mb-4 text-[--color-text-primary]">
@@ -62,65 +58,5 @@ if (outdoorsEntry) {
         />
       </section>
     </div>
-  </MarkdownLayout>
-</PageLayout>
-
-<style>
-  .markdown-content :global(h1) {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-    color: var(--color-text-primary);
-    text-transform: capitalize;
-  }
-
-  .markdown-content :global(h2) {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin-bottom: 0.75rem;
-    margin-top: 1.5rem;
-  }
-
-  .markdown-content :global(h3) {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    margin-bottom: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .markdown-content :global(ul) {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .markdown-content :global(li) {
-    color: var(--color-text-primary);
-    margin-bottom: 0.25rem;
-  }
-
-  .markdown-content :global(li::before) {
-    content: "* ";
-    display: inline-block;
-    position: relative;
-    top: 0.25rem;
-  }
-
-  .markdown-content :global(a) {
-    color: var(--color-secondary);
-    text-decoration: none;
-  }
-
-  .markdown-content :global(a:hover) {
-    color: var(--color-secondary-hover);
-    text-decoration: underline;
-  }
-
-  .markdown-content :global(p) {
-    color: var(--color-text-primary);
-    line-height: 1.625;
-    margin-bottom: 1rem;
-  }
-</style>
+  </ContentDocument>
+</SiteLayout>
