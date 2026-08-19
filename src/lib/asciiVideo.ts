@@ -1,6 +1,14 @@
 // ASCII Video Converter - Optimized for performance
 // Based on https://github.com/collidingScopes/ascii/blob/main/ASCII.js
 
+function require2dContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+	const ctx = canvas.getContext("2d", { willReadFrequently: true });
+	if (!ctx) {
+		throw new Error("2d canvas context unavailable");
+	}
+	return ctx;
+}
+
 export class AsciiVideoConverter {
 	private canvas!: HTMLCanvasElement;
 	private ctx!: CanvasRenderingContext2D;
@@ -45,7 +53,7 @@ export class AsciiVideoConverter {
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = this.targetWidth;
 		this.canvas.height = this.targetHeight;
-		this.ctx = this.canvas.getContext("2d", { willReadFrequently: true })!;
+		this.ctx = require2dContext(this.canvas);
 
 		// Set canvas properties for better performance
 		this.ctx.imageSmoothingEnabled = false;
@@ -119,9 +127,9 @@ export class AsciiVideoConverter {
 			for (let y = 0; y < this.targetHeight; y++) {
 				for (let x = 0; x < this.targetWidth; x++) {
 					const index = (y * this.targetWidth + x) * 4;
-					const r = data[index];
-					const g = data[index + 1];
-					const b = data[index + 2];
+					const r = data[index] ?? 0;
+					const g = data[index + 1] ?? 0;
+					const b = data[index + 2] ?? 0;
 
 					// Calculate brightness (luminance)
 					const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
@@ -135,7 +143,7 @@ export class AsciiVideoConverter {
 						const charIndex = Math.floor(
 							normalizedBrightness * (this.asciiChars.length - 1),
 						);
-						asciiOutput += this.asciiChars[charIndex];
+						asciiOutput += this.asciiChars[charIndex] ?? " ";
 					} else {
 						asciiOutput += " "; // Empty space for dark areas
 					}
@@ -189,7 +197,7 @@ export class AsciiVideoConverter {
 
 	public destroy(): void {
 		this.stop();
-		if (this.video && this.video.parentNode) {
+		if (this.video?.parentNode) {
 			this.video.parentNode.removeChild(this.video);
 		}
 	}
@@ -266,7 +274,7 @@ export class AsciiImageConverter {
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = this.targetWidth;
 		this.canvas.height = this.targetHeight;
-		this.ctx = this.canvas.getContext("2d", { willReadFrequently: true })!;
+		this.ctx = require2dContext(this.canvas);
 
 		// Set canvas properties for better performance
 		this.ctx.imageSmoothingEnabled = false;
@@ -345,9 +353,9 @@ export class AsciiImageConverter {
 
 				for (let x = 0; x < this.targetWidth; x++) {
 					const index = (y * this.targetWidth + x) * 4;
-					const r = data[index];
-					const g = data[index + 1];
-					const b = data[index + 2];
+					const r = data[index] ?? 0;
+					const g = data[index + 1] ?? 0;
+					const b = data[index + 2] ?? 0;
 
 					// Calculate brightness (luminance) with optional inversion
 					let brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
@@ -364,7 +372,7 @@ export class AsciiImageConverter {
 						const charIndex = Math.floor(
 							normalizedBrightness * (this.asciiChars.length - 1),
 						);
-						rowOutput += this.asciiChars[charIndex];
+						rowOutput += this.asciiChars[charIndex] ?? " ";
 					} else {
 						rowOutput += " "; // Empty space for dark areas
 					}
@@ -376,7 +384,7 @@ export class AsciiImageConverter {
 					rowOutput += " ".repeat(rightPadding);
 				}
 
-				asciiOutput += rowOutput + "\n";
+				asciiOutput += `${rowOutput}\n`;
 			}
 
 			// Update output
@@ -413,7 +421,7 @@ export class AsciiImageConverter {
 				const noise =
 					Math.sin(x * 0.1 + time) * Math.cos(y * 0.1 + time) * 0.5 + 0.5;
 				const charIndex = Math.floor(noise * (this.asciiChars.length - 1));
-				pattern += this.asciiChars[charIndex];
+				pattern += this.asciiChars[charIndex] ?? " ";
 			}
 			pattern += "\n";
 		}
@@ -422,7 +430,7 @@ export class AsciiImageConverter {
 
 	public destroy(): void {
 		this.stop();
-		if (this.image && this.image.parentNode) {
+		if (this.image?.parentNode) {
 			this.image.parentNode.removeChild(this.image);
 		}
 	}

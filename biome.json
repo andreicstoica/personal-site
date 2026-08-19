@@ -7,10 +7,32 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noImplicitAnyLet": "error",
+				"noAssignInExpressions": "error",
+				"noTsIgnore": "error"
+			},
+			"complexity": {
+				"noUselessTypeConstraint": "error"
+			}
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/*.svelte", "!**/*.css"]
-	}
+		"includes": ["src/**", "!src/**/*.svelte", "!src/**/*.css"]
+	},
+	"overrides": [
+		{
+			"includes": ["src/**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					}
+				}
+			}
+		}
+	]
 }

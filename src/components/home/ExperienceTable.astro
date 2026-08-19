@@ -1,9 +1,13 @@
 ---
 import { experiences } from "../../lib/experience";
-import type { Experience } from "../../lib/types";
+import { experienceFilterCss } from "../../lib/experienceUi";
+import { EXPERIENCE_TYPES, type Experience } from "../../lib/types";
 import ExperienceRow from "./ExperienceRow.astro";
 
-const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
+const allTypes = EXPERIENCE_TYPES.filter((type) =>
+	experiences.some((exp) => exp.type === type),
+);
+const filterCss = experienceFilterCss();
 ---
 
 <section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
@@ -36,24 +40,23 @@ const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
     overflow-y: auto;
     scrollbar-gutter: stable;
   }
-
-  #experience-table[data-filter="work"] .experience-row:not([data-type="work"]),
-  #experience-table[data-filter="personal"] .experience-row:not([data-type="personal"]),
-  #experience-table[data-filter="school"] .experience-row:not([data-type="school"]),
-  #experience-table[data-filter="other"] .experience-row:not([data-type="other"]) {
-    display: none;
-  }
 </style>
+<Fragment set:html={`<style>${filterCss}</style>`} />
 
 <script>
+  import { isExperienceType } from "../../lib/types";
+
   const experienceTable = document.getElementById("experience-table");
   const experienceRows = document.getElementById("experience-rows");
   const experienceRowsInner = document.getElementById("experience-rows-inner");
-  const filterSelect = document.getElementById(
-    "typeFilter",
-  ) as HTMLSelectElement | null;
+  const filterSelect = document.getElementById("typeFilter");
 
-  if (experienceTable && experienceRows && experienceRowsInner && filterSelect) {
+  if (
+    experienceTable &&
+    experienceRows &&
+    experienceRowsInner &&
+    filterSelect instanceof HTMLSelectElement
+  ) {
     let reservedHeight = 0;
 
     const getFilterValue = () => experienceTable.dataset.filter ?? "";
@@ -73,7 +76,9 @@ const allTypes = [...new Set(experiences.map((exp) => exp.type))].sort();
     };
 
     filterSelect.addEventListener("change", () => {
-      experienceTable.dataset.filter = filterSelect.value;
+      const next = filterSelect.value;
+      experienceTable.dataset.filter =
+        next === "" || isExperienceType(next) ? next : "";
       experienceRows.scrollTop = 0;
 
       if (!filterSelect.value) {

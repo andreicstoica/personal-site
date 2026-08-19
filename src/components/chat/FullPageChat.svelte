@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import { assertNever } from "../../lib/assertNever";
+  import type { ChatRole, ChatServerStatus } from "../../lib/types";
   import Icon from "../ui/Icon.svelte";
 
   interface SourceMetadata {
@@ -8,7 +11,7 @@
   }
 
   interface Message {
-    role: "user" | "assistant";
+    role: ChatRole;
     content: string;
     sources?: Array<{
       source: string;
@@ -34,12 +37,10 @@
     error?: string;
   }
 
-  import { onMount } from 'svelte';
-
   let messages = $state<Message[]>([]);
   let input = $state("");
   let isLoading = $state(false);
-  let serverStatus = $state<"checking" | "online" | "offline">("checking");
+  let serverStatus = $state<ChatServerStatus>("checking");
   let messagesEndRef: HTMLDivElement;
   let inputRef: HTMLInputElement;
 
@@ -60,7 +61,7 @@
 
   const addMessage = (
     content: string,
-    role: "user" | "assistant",
+    role: ChatRole,
     sources?: Array<{
       source: string;
       score: number;
@@ -138,6 +139,8 @@
               <br />
               <em>andrei c stoica (at) icloud (dot) com</em>
             </div>
+          {:else}
+            {assertNever(serverStatus)}
           {/if}
         </div>
       {/if}

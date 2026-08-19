@@ -169,9 +169,11 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 	function cosine(a: number[], b: number[]) {
 		let dot = 0, normA = 0, normB = 0;
 		for (let i = 0; i < a.length; i++) {
-			dot += a[i] * b[i];
-			normA += a[i] * a[i];
-			normB += b[i] * b[i];
+			const ai = a[i] ?? 0;
+			const bi = b[i] ?? 0;
+			dot += ai * bi;
+			normA += ai * ai;
+			normB += bi * bi;
 		}
 		return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 	}
@@ -255,8 +257,8 @@ export async function queryRag(question: string): Promise<QueryResult[]> {
 	const maxSparseRaw = sparseScores.length > 0 ? Math.max(...sparseScores) : 0;
 
 	candidates.forEach((candidate, index) => {
-		const denseValue = remappedDense[index];
-		const sparseValue = sparseScores[index];
+		const denseValue = remappedDense[index] ?? 0;
+		const sparseValue = sparseScores[index] ?? 0;
 		normalizedDense.set(candidate.id, denseValue);
 
 		const normalizedSparseValue = 1 - Math.exp(-sparseValue / 10);

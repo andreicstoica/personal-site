@@ -22,8 +22,8 @@
       const pixel = document.createElement("div");
       pixel.className = "cursor-pixel";
 
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      pixel.style.backgroundColor = randomColor;
+      pixel.style.backgroundColor =
+        colors[Math.floor(Math.random() * colors.length)] ?? "var(--tag-work)";
 
       const size = Math.floor(Math.random() * 7) + 2;
       pixel.style.width = `${size}px`;

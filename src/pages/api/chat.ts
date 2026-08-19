@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
-import { T_MID, T_HIGH } from "../../../rag/lib/constants.js";
+import { z } from "astro/zod";
+import { T_HIGH, T_MID } from "../../../rag/lib/constants.js";
 import { queryRag } from "../../../rag/lib/query.js";
 
 const MODEL_PROVIDER = (
@@ -13,9 +14,32 @@ const HF_API_URL = import.meta.env.HF_API_URL;
 const HF_API_KEY = import.meta.env.HF_API_KEY;
 const HF_MODEL_ID = import.meta.env.HF_MODEL_ID ?? "noodlesGS/personal";
 
-interface ChatRequest {
-	message: string;
-	history?: Array<{ role: string; content: string }>;
+const chatMessageSchema = z.object({
+	role: z.enum(["user", "assistant"]),
+	content: z.string(),
+});
+
+const chatRequestSchema = z.object({
+	message: z.string().min(1),
+	history: z.array(chatMessageSchema).optional(),
+});
+
+const lmStudioResponseSchema = z.object({
+	choices: z
+		.array(
+			z.object({
+				message: z.object({
+					content: z.string(),
+				}),
+			}),
+		)
+		.min(1),
+});
+
+type RagHit = Awaited<ReturnType<typeof queryRag>>[number];
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 interface ChatResponse {
@@ -23,19 +47,9 @@ interface ChatResponse {
 	sources: Array<{
 		source: string;
 		score: number;
-		metadata?: any;
+		metadata?: Record<string, unknown>;
 		confidence?: string;
-		scoreDetails?: {
-			rawDense: number;
-			dense: number;
-			rawSparse: number;
-			sparse: number;
-			weightedDense: number;
-			weightedSparse: number;
-			intentWeight: number;
-			timeDecayFactor: number;
-			hybrid: number;
-		};
+		scoreDetails?: RagHit["scoreDetails"];
 	}>;
 }
 
@@ -44,14 +58,6 @@ interface LMStudioRequest {
 	messages: Array<{ role: string; content: string }>;
 	temperature: number;
 	max_tokens: number;
-}
-
-interface LMStudioResponse {
-	choices: Array<{
-		message: {
-			content: string;
-		};
-	}>;
 }
 
 export const prerender = false;
@@ -66,14 +72,25 @@ export const POST: APIRoute = async ({ request }) => {
 			});
 		}
 
-		const { message, history = [] }: ChatRequest = JSON.parse(body);
-
-		if (!message) {
-			return new Response(JSON.stringify({ error: "Message is required" }), {
+		let parsedBody: unknown;
+		try {
+			parsedBody = JSON.parse(body);
+		} catch {
+			return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
 				status: 400,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
+
+		const parsedRequest = chatRequestSchema.safeParse(parsedBody);
+		if (!parsedRequest.success) {
+			return new Response(JSON.stringify({ error: "Invalid chat request" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
+
+		const { message, history = [] } = parsedRequest.data;
 
 		// Cheap prefilter heuristics
 		const isShortQuery = message.trim().length < 20;
@@ -97,12 +114,12 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		const shouldSkipRag = isShortQuery || isGreeting || isConversational;
 
-		let relevantDocs: any[] = [];
+		let relevantDocs: RagHit[] = [];
 		let shouldUseRag = false;
 
 		if (!shouldSkipRag) {
 			relevantDocs = await queryRag(message);
-			const bestScore = relevantDocs.length > 0 ? relevantDocs[0].score : 0;
+			const bestScore = relevantDocs[0]?.score ?? 0;
 			shouldUseRag = bestScore >= T_MID;
 		}
 
@@ -191,7 +208,7 @@ RULES:
 			if (!HF_API_KEY) {
 				throw new Error("HF_API_KEY is required for Hugging Face provider");
 			}
-			headers["Authorization"] = `Bearer ${HF_API_KEY}`;
+			headers.Authorization = `Bearer ${HF_API_KEY}`;
 		}
 
 		const hfResponse = await fetch(apiUrl, {
@@ -206,9 +223,15 @@ RULES:
 			throw new Error(`Model API error: ${hfResponse.status} - ${errorText}`);
 		}
 
-		const data: LMStudioResponse = await hfResponse.json();
+		const parsedModel = lmStudioResponseSchema.safeParse(
+			await hfResponse.json(),
+		);
+		if (!parsedModel.success) {
+			throw new Error("Model API returned an unexpected payload");
+		}
+
 		const response =
-			data.choices[0]?.message?.content ||
+			parsedModel.data.choices[0]?.message.content ??
 			"Sorry, I could not generate a response.";
 
 		const chatResponse: ChatResponse = {
@@ -217,11 +240,11 @@ RULES:
 				? relevantDocs.map((doc) => ({
 						source: doc.source,
 						score: doc.score,
-						metadata: doc.metadata,
+						metadata: isPlainObject(doc.metadata) ? doc.metadata : undefined,
 						confidence: doc.confidence,
 						scoreDetails: doc.scoreDetails,
 					}))
-				: [], // No sources when RAG wasn't used
+				: [],
 		};
 
 		return new Response(JSON.stringify(chatResponse), {

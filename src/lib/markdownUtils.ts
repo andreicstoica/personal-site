@@ -21,7 +21,7 @@ export function parseMarkdownContent(
 	const sections = content.split(/^# /m).filter(Boolean);
 	return sections.map((section) => {
 		const lines = section.trim().split("\n");
-		const sectionTitle = lines[0];
+		const sectionTitle = lines[0] ?? "";
 		const remainingLines = lines.slice(1).filter((line) => line.trim());
 
 		return {
