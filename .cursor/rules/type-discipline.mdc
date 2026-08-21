@@ -1,0 +1,14 @@
+---
+description: Make illegal states unrepresentable; encode recurring mistakes in types, lint, and CI.
+alwaysApply: true
+---
+
+# Type discipline (encode in structure)
+
+Prefer a type, lint rule, or `bun run verify` failure over another comment or AGENTS.md note.
+
+- Discriminated unions with a `kind` (or equivalent) literal. No optional-field bags that allow impossible combinations.
+- Exhaustive `switch` over unions: `default: { const _exhaustive: never = x; return _exhaustive; }` or `assertNever`.
+- External data is `unknown` until parsed (Zod at API/content boundaries). No `any`, no unchecked `as`.
+- `unknown` over `any`. Cast only after a runtime check (`instanceof`, schema parse, typeof).
+- Pages stay thin; interactive client state lives in islands. Do not add a new island framework without removing the other.

@@ -1,0 +1,107 @@
+---
+import {
+	displayFontStyle,
+	experienceNameStyle,
+	formatDateRange,
+	usesDisplayFont,
+} from "../../lib/experienceUi";
+import type { Experience } from "../../lib/types";
+import MediaGallery from "../gallery/MediaGallery.astro";
+import ProjectEnhancedDescription from "../projects/ProjectEnhancedDescription.astro";
+
+interface Props {
+	experience: Experience;
+}
+
+const { experience } = Astro.props;
+const nameOffset = usesDisplayFont(experience.name) ? "-mt-1" : "-mt-0.25";
+---
+
+<div
+  class="experience-row border-t border-gray-200 dark:border-gray-700"
+  data-type={experience.type}
+>
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
+    <div class={`col-span-1 ${nameOffset}`}>
+      <span
+        class="line-clamp-2"
+        style={experienceNameStyle(experience.name, experience.type)}
+      >
+        {experience.name}
+      </span>
+    </div>
+
+    <div class="col-span-5">
+      <div class="grid grid-cols-5 gap-3 mb-4 text-pretty">
+        <div class="col-span-2">
+          <div class="text-[.92rem]" style={displayFontStyle(experience.name)}>
+            {experience.role}
+          </div>
+        </div>
+
+        <div class={`col-span-2 ${nameOffset}`}>
+          <span
+            class="font-serif text-sm bg-(--color-bg-secondary) p-0.75"
+            style={displayFontStyle(experience.name)}
+          >
+            {experience.tags.join(", ")}
+          </span>
+        </div>
+
+        <div class="col-span-1">
+          <div class="font-mono text-[.92rem] text-end mr-2">
+            {formatDateRange(experience.startDate, experience.endDate)}
+          </div>
+        </div>
+      </div>
+
+      {
+        experience.description && (
+          <ProjectEnhancedDescription description={experience.description} />
+        )
+      }
+    </div>
+
+    <MediaGallery
+      images={experience.images}
+      experienceName={experience.name}
+      variant="desktop"
+    />
+  </div>
+
+  <div class="lg:hidden">
+    <div class="flex justify-between gap-4 mb-3">
+      <span
+        class="line-clamp-2"
+        style={experienceNameStyle(experience.name, experience.type)}
+      >
+        {experience.name}
+      </span>
+
+      <div
+        class="text-sm flex-none mt-1"
+        style={displayFontStyle(experience.name)}
+      >
+        {experience.role}
+      </div>
+
+      <div class="font-mono text-sm flex-shrink-0 mt-1">
+        {formatDateRange(experience.startDate, experience.endDate)}
+      </div>
+    </div>
+
+    {
+      experience.description && (
+        <div class="text-sm leading-relaxed mb-3">
+          <ProjectEnhancedDescription description={experience.description} />
+        </div>
+      )
+    }
+
+    <MediaGallery
+      images={experience.images}
+      experienceName={experience.name}
+      variant="mobile"
+    />
+  </div>
+</div>

@@ -1,34 +1,19 @@
 ---
-import { getEntry } from "astro:content";
+import CollectionPage from "../components/content/CollectionPage.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
-import MarkdownSections from "../components/content/MarkdownSections.astro";
-import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import PageLayout from "../layouts/PageLayout.astro";
-
-const aboutEntry = await getEntry("pages", "about");
-if (!aboutEntry) throw new Error("About entry not found");
 ---
 
-<PageLayout
-  title={aboutEntry.data.title}
-  description={aboutEntry.data.description}
+<CollectionPage
+  slug="about"
+  layout="stack"
+  lastUpdated="Last updated June 3, 2026"
+  innerClass="w-full lg:mt-3.5 max-w-2xl"
 >
-  <div class="w-full lg:mt-3.5 max-w-2xl">
-    <MarkdownLayout title={aboutEntry.data.title}>
-      <MarkdownSections
-        body={aboutEntry.body}
-        description={aboutEntry.data.description}
-        lastUpdated="Last updated June 3, 2026"
-        layout="stack"
-      />
-    </MarkdownLayout>
-
-    <div class="mt-2 pb-8">
-      <MediaGallery
-        images={["about.webp", "timbers.webp"]}
-        experienceName="About"
-        variant="desktop"
-      />
-    </div>
+  <div slot="after" class="mt-2 pb-8">
+    <MediaGallery
+      images={["about.webp", "timbers.webp"]}
+      experienceName="About"
+      variant="desktop"
+    />
   </div>
-</PageLayout>
+</CollectionPage>

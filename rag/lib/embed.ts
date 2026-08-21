@@ -37,17 +37,20 @@ export async function buildEmbeddings(text: string): Promise<number[]> {
 }
 
 // Parse YAML frontmatter from markdown content
-function parseFrontmatter(content: string): { frontmatter: any; content: string } {
+function parseFrontmatter(content: string): {
+	frontmatter: Record<string, string>;
+	content: string;
+} {
 	const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
 	const match = content.match(frontmatterRegex);
 
-	if (!match) {
+	if (!match || match[1] === undefined || match[2] === undefined) {
 		return { frontmatter: {}, content };
 	}
 
 	try {
 		// Simple YAML parsing for basic key-value pairs
-		const frontmatter: any = {};
+		const frontmatter: Record<string, string> = {};
 		const lines = match[1].split('\n');
 		for (const line of lines) {
 			const colonIndex = line.indexOf(':');
@@ -69,12 +72,11 @@ function parseFrontmatter(content: string): { frontmatter: any; content: string 
 function extractHeadings(content: string): string[] {
 	const headingRegex = /^(#{1,6})\s+(.+)$/gm;
 	const headings: string[] = [];
-	let match;
-
-	while ((match = headingRegex.exec(content)) !== null) {
-		const level = match[1].length;
-		const text = match[2].trim();
-		headings.push(`${'  '.repeat(level - 1)}${text}`);
+	for (const headingMatch of content.matchAll(headingRegex)) {
+		const marks = headingMatch[1];
+		const text = headingMatch[2];
+		if (!marks || !text) continue;
+		headings.push(`${'  '.repeat(marks.length - 1)}${text.trim()}`);
 	}
 
 	return headings;
@@ -123,10 +125,12 @@ function chunkTextWithHeadings(
 			// Look for heading boundaries first
 			const headingMatch = text.slice(start, end).match(/\n(#{1,6})\s+/g);
 			if (headingMatch) {
-				const lastHeading = headingMatch[headingMatch.length - 1];
-				const headingPos = text.lastIndexOf(lastHeading, end);
-				if (headingPos > start + charChunkSize * 0.3) {
-					end = headingPos;
+				const lastHeading = headingMatch.at(-1);
+				if (lastHeading) {
+					const headingPos = text.lastIndexOf(lastHeading, end);
+					if (headingPos > start + charChunkSize * 0.3) {
+						end = headingPos;
+					}
 				}
 			}
 

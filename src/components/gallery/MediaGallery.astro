@@ -1,11 +1,12 @@
 ---
 import type { ImageMetadata } from "astro";
+import type { GalleryMedia, GalleryVariant } from "../../lib/types";
 import ImageGallery from "./ImageGallery.svelte";
 
 interface Props {
 	images?: string[];
 	experienceName: string;
-	variant?: "desktop" | "mobile";
+	variant?: GalleryVariant;
 }
 
 const { images, experienceName, variant = "desktop" } = Astro.props;
@@ -14,73 +15,49 @@ if (!images || images.length === 0) {
 	return null;
 }
 
-// A map of all possible images, to avoid dynamic imports
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
 	"/src/assets/images/**/*.{jpeg,jpg,png,webp}",
 );
 
-// Process images with optimization
 const processedImages = await Promise.all(
-	images.map(async (imageName) => {
-		const isWebM = imageName.toLowerCase().endsWith(".webm");
-
-		// Handle WebM files as public assets (served directly)
-		if (isWebM) {
+	images.map(async (imageName): Promise<GalleryMedia | null> => {
+		if (imageName.toLowerCase().endsWith(".webm")) {
 			return {
+				kind: "video",
 				src: `/images/${imageName}`,
 				alt: experienceName,
-				isGif: true, // Keep this name for backwards compatibility in React component
-				loading: "lazy" as const,
 			};
 		}
 
-		// Handle regular images through Astro's optimization
 		const imagePath = `/src/assets/images/${imageName}`;
-		const isWebp = imageName.toLowerCase().endsWith(".webp");
-
-		// For WebP files, use direct path (served from public/images)
-		if (isWebp) {
+		if (imageName.toLowerCase().endsWith(".webp")) {
 			return {
+				kind: "image",
 				src: `/images/${imageName}`,
 				alt: experienceName,
-				isGif: false, // Keep consistent with other image types
-				width: 1920, // Default width
-				height: 1080, // Default height
-				loading: "lazy" as const,
+				width: 1920,
+				height: 1080,
 			};
 		}
 
-		// For other images (JPEG/PNG), use Astro optimization
 		const imageModule = allImages[imagePath];
-
 		if (!imageModule) return null;
 
 		const image = await imageModule();
 
 		return {
+			kind: "image",
 			src: image.default.src,
 			alt: experienceName,
-			isGif: false,
-			width: (image.default as any).width,
-			height: (image.default as any).height,
-			loading: "lazy" as const,
+			width: image.default.width,
+			height: image.default.height,
 		};
 	}),
 );
 
-// Narrow away nulls so the React island gets a precise type
-const validImages: {
-	src: string;
-	alt: string;
-	isGif: boolean;
-	width?: number;
-	height?: number;
-}[] = processedImages
-	.filter((img): img is NonNullable<typeof img> => img !== null)
-	.map((img) => ({
-		...img,
-		isGif: img.isGif || false, // Ensure isGif is always a boolean
-	}));
+const validImages = processedImages.filter(
+	(img): img is GalleryMedia => img !== null,
+);
 ---
 
 <ImageGallery

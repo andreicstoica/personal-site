@@ -1,24 +1,18 @@
 <script lang="ts">
+  import { assertNever } from "../../lib/assertNever";
   import { mediaReveal } from "../../lib/mediaReveal";
   import { portal } from "../../lib/portal";
-
-  interface ImageData {
-    src: string;
-    alt: string;
-    isGif: boolean;
-    width?: number;
-    height?: number;
-  }
+  import type { GalleryMedia, GalleryVariant } from "../../lib/types";
 
   interface Props {
-    images: ImageData[];
+    images: GalleryMedia[];
     experienceName: string;
-    variant?: "desktop" | "mobile";
+    variant?: GalleryVariant;
   }
 
   const { images, experienceName, variant = "desktop" }: Props = $props();
 
-  let selectedImage = $state<ImageData | null>(null);
+  let selectedImage = $state<GalleryMedia | null>(null);
   let isClosing = $state(false);
   let containerRef = $state<HTMLDivElement | null>(null);
   let isVisible = $state(false);
@@ -28,13 +22,23 @@
   const mediaShadow =
     "0 0 50px rgba(0, 0, 0, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 25px -5px rgba(0, 0, 0, 0.1)";
 
-  // Intersection Observer for lazy loading
+  const wrapperClass = (() => {
+    switch (variant) {
+      case "desktop":
+        return "col-span-4";
+      case "mobile":
+        return "";
+      default:
+        return assertNever(variant);
+    }
+  })();
+
   $effect(() => {
     if (!containerRef) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           isVisible = true;
           observer.disconnect();
         }
@@ -49,16 +53,6 @@
     };
   });
 
-  // Derived mobile detection - only recalculates when window changes
-  const isMobile = $derived(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) || window.innerWidth <= 768
-    );
-  });
-
   const closeModal = () => {
     if (!selectedImage || isClosing) return;
     isClosing = true;
@@ -68,7 +62,6 @@
     }, modalCloseMs);
   };
 
-  // Close modal on escape key
   $effect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
@@ -96,57 +89,7 @@
   });
 </script>
 
-{#if variant === "desktop"}
-  <div class="col-span-4">
-    <div
-      bind:this={containerRef}
-      aria-label={`${experienceName} media gallery`}
-      class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible px-2"
-    >
-      {#if isVisible}
-        {#each images as image}
-          <div class="shrink-0 min-w-fit">
-            <button
-              type="button"
-              class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
-              aria-label={`Open ${experienceName} image`}
-              onclick={() => selectedImage = image}
-              onkeydown={(e: KeyboardEvent) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  selectedImage = image;
-                }
-              }}
-            >
-              {#if image.src.toLowerCase().includes(".webm")}
-                <video
-                  src={image.src}
-                  class="h-50 w-auto object-contain media-reveal"
-                  use:mediaReveal
-                  autoplay
-                  loop
-                  muted
-                  playsinline
-                ></video>
-              {:else}
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  class="h-50 w-auto object-contain media-reveal"
-                  use:mediaReveal
-                  loading="lazy"
-                  width={image.width}
-                  height={image.height}
-                  decoding="async"
-                />
-              {/if}
-            </button>
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </div>
-{:else}
+<div class={wrapperClass}>
   <div
     bind:this={containerRef}
     aria-label={`${experienceName} media gallery`}
@@ -159,7 +102,7 @@
             type="button"
             class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
             aria-label={`Open ${experienceName} image`}
-            onclick={() => selectedImage = image}
+            onclick={() => (selectedImage = image)}
             onkeydown={(e: KeyboardEvent) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -167,7 +110,7 @@
               }
             }}
           >
-            {#if image.src.toLowerCase().includes(".webm")}
+            {#if image.kind === "video"}
               <video
                 src={image.src}
                 class="h-50 w-auto object-contain media-reveal"
@@ -194,9 +137,8 @@
       {/each}
     {/if}
   </div>
-{/if}
+</div>
 
-<!-- Viewport-rooted inspect overlay (portaled so ancestor transforms cannot trap `fixed`) -->
 {#if selectedImage}
   <div
     bind:this={dialogRef}
@@ -212,7 +154,7 @@
     }}
   >
     <div class="image-inspect-stage">
-      {#if selectedImage.src.toLowerCase().includes(".webm")}
+      {#if selectedImage.kind === "video"}
         <video
           src={selectedImage.src}
           class="image-inspect-media cursor-zoom-out media-reveal"

@@ -54,7 +54,7 @@ export const GET: APIRoute = async () => {
 		};
 
 		if (!IS_LOCAL_MODEL) {
-			headers["Authorization"] = `Bearer ${HF_API_KEY}`;
+			headers.Authorization = `Bearer ${HF_API_KEY}`;
 		}
 
 		const response = await fetch(apiUrl, {

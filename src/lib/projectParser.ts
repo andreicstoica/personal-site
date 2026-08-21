@@ -1,10 +1,8 @@
 import { getProject } from "./projects";
 import type { Project } from "./types";
 
-// Regular expression to match project references in the format {{project:id}}
 const PROJECT_REFERENCE_REGEX = /\{\{project:([^}]+)\}\}/g;
 
-// Interface for parsed project reference
 interface ParsedProjectReference {
 	originalText: string;
 	projectId: string;
@@ -13,41 +11,28 @@ interface ParsedProjectReference {
 	endIndex: number;
 }
 
-/**
- * Extract project IDs from a description string
- */
 export function extractProjectIds(description: string): string[] {
-	const matches = description.match(PROJECT_REFERENCE_REGEX);
-	if (!matches) return [];
-
-	return matches
-		.map((match) => {
-			const idMatch = match.match(/\{\{project:([^}]+)\}\}/);
-			return idMatch ? idMatch[1] : "";
-		})
-		.filter((id) => id.length > 0);
+	const ids: string[] = [];
+	for (const match of description.matchAll(PROJECT_REFERENCE_REGEX)) {
+		const id = match[1];
+		if (id) ids.push(id);
+	}
+	return ids;
 }
 
-/**
- * Parse project references from description and return structured data
- */
 export function parseProjectReferences(
 	description: string,
 ): ParsedProjectReference[] {
 	const references: ParsedProjectReference[] = [];
-	let match;
 
-	// Reset regex lastIndex to ensure we start from the beginning
-	PROJECT_REFERENCE_REGEX.lastIndex = 0;
-
-	while ((match = PROJECT_REFERENCE_REGEX.exec(description)) !== null) {
+	for (const match of description.matchAll(PROJECT_REFERENCE_REGEX)) {
 		const projectId = match[1];
-		const project = getProject(projectId);
+		if (!projectId || match.index === undefined) continue;
 
 		references.push({
 			originalText: match[0],
 			projectId,
-			project,
+			project: getProject(projectId),
 			startIndex: match.index,
 			endIndex: match.index + match[0].length,
 		});
@@ -56,10 +41,6 @@ export function parseProjectReferences(
 	return references;
 }
 
-/**
- * Replace project references with HTML for project links
- * This function is used server-side in Astro components
- */
 export function replaceProjectReferencesWithHTML(description: string): string {
 	const references = parseProjectReferences(description);
 
@@ -67,15 +48,12 @@ export function replaceProjectReferencesWithHTML(description: string): string {
 		return description;
 	}
 
-	// Sort references by start index in descending order to replace from end to beginning
-	// This prevents index shifting issues
 	references.sort((a, b) => b.startIndex - a.startIndex);
 
 	let result = description;
 
 	for (const ref of references) {
 		if (ref.project) {
-			// Create HTML for project link that goes to the project page
 			const linkHTML = `<a href="/projects/${ref.projectId}" class="project-link" style="color: #707fff; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: #707fff; text-underline-offset: 2px; transition: all 0.2s ease;">${ref.project.title}</a>`;
 
 			result =
@@ -83,14 +61,12 @@ export function replaceProjectReferencesWithHTML(description: string): string {
 				linkHTML +
 				result.substring(ref.endIndex);
 		} else {
-			// If project not found, replace with plain text and log warning
 			if (typeof console !== "undefined") {
 				console.warn(
 					`Project not found: ${ref.projectId}. Displaying as plain text.`,
 				);
 			}
 
-			// Create a fallback span that looks like regular text
 			const fallbackHTML = `<span class="project-missing" title="Project data not available">${ref.projectId}</span>`;
 
 			result =
@@ -103,9 +79,6 @@ export function replaceProjectReferencesWithHTML(description: string): string {
 	return result;
 }
 
-/**
- * Validate that all project references in a description exist
- */
 export function validateProjectReferences(description: string): {
 	isValid: boolean;
 	missingProjects: string[];
@@ -126,9 +99,6 @@ export function validateProjectReferences(description: string): {
 	};
 }
 
-/**
- * Get all projects referenced in a description
- */
 export function getReferencedProjects(description: string): Project[] {
 	const projectIds = extractProjectIds(description);
 	const projects: Project[] = [];
@@ -143,25 +113,17 @@ export function getReferencedProjects(description: string): Project[] {
 	return projects;
 }
 
-/**
- * Convert markdown-style links to project references
- * This is a utility function to help migrate existing content
- */
 export function convertMarkdownLinksToProjectReferences(
 	description: string,
 	linkToProjectIdMap: Record<string, string>,
 ): string {
 	let result = description;
-
-	// Match markdown links: [text](url)
 	const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-	let match;
 
-	while ((match = markdownLinkRegex.exec(description)) !== null) {
-		const linkText = match[1];
+	for (const match of description.matchAll(markdownLinkRegex)) {
 		const linkUrl = match[2];
+		if (!linkUrl) continue;
 		const projectId = linkToProjectIdMap[linkUrl];
-
 		if (projectId) {
 			result = result.replace(match[0], `{{project:${projectId}}}`);
 		}

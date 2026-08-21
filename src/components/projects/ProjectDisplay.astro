@@ -1,7 +1,10 @@
 ---
 import type { Project } from "../../lib/types";
 import MediaGallery from "../gallery/MediaGallery.astro";
-import Icon from "../ui/Icon.astro";
+import ProjectDetails from "./ProjectDetails.astro";
+import ProjectLinks from "./ProjectLinks.astro";
+import ProjectSection from "./ProjectSection.astro";
+import ProjectVideo from "./ProjectVideo.astro";
 
 interface Props {
 	project: Project;
@@ -11,7 +14,6 @@ const { project } = Astro.props;
 ---
 
 <div class="w-full py-4 lg:mt-3.5 max-w-4xl mx-auto px-4 lg:px-8">
-  <!-- Project Header -->
   <div class="mb-8">
     <h1 class="text-xl lg:text-xl font-bold text-[--color-text-primary] mb-1">
       {project.title}
@@ -21,13 +23,7 @@ const { project } = Astro.props;
     </p>
   </div>
 
-  <!-- Technologies -->
-  <div class="mb-8">
-    <h2
-      class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4"
-    >
-      Technologies
-    </h2>
+  <ProjectSection title="Technologies">
     <div class="flex flex-wrap gap-3">
       {
         project.technologies.map((tech) => (
@@ -37,186 +33,22 @@ const { project } = Astro.props;
         ))
       }
     </div>
-  </div>
+  </ProjectSection>
 
-  <!-- Project Links -->
-  {
-    (project.links.demo || project.links.github || project.links.website) && (
-      <div class="mb-8">
-        <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
-          Links
-        </h2>
-        <div class="flex flex-wrap gap-4">
-          {project.links.demo && (
-            <a
-              href={project.links.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-secondary-custom inline-flex items-center px-4 py-2 transition-colors"
-            >
-              <Icon name="external-link" class="w-5 h-5 mr-2" />
-              Live Demo
-            </a>
-          )}
-          {project.links.github && (
-            <a
-              href={project.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-accent-custom inline-flex items-center px-4 py-2 transition-colors"
-            >
-              <Icon name="github" class="w-5 h-5 mr-2" />
-              GitHub
-            </a>
-          )}
-          {project.links.website && (
-            <a
-              href={project.links.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-secondary-custom inline-flex items-center px-4 py-2 transition-colors"
-            >
-              <Icon name="link" class="w-5 h-5 mr-2" />
-              Website
-            </a>
-          )}
-        </div>
-      </div>
-    )
-  }
+  <ProjectLinks project={project} />
+  <ProjectVideo project={project} />
 
-  <!-- Project Video -->
-  {
-    project.video && (
-      <div class="mb-8">
-        <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
-          Video Demo
-        </h2>
-        {project.video.includes("youtube.com") ? (
-          <div class="relative w-full" style="padding-bottom: 56.25%;">
-            <iframe
-              src={
-                project.video.includes("youtube.com/shorts/")
-                  ? project.video.replace(
-                      "youtube.com/shorts/",
-                      "youtube.com/embed/",
-                    ) + "?autoplay=1"
-                  : project.video
-              }
-              class="absolute top-0 left-0 w-full h-full rounded-lg"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowfullscreen
-            />
-          </div>
-        ) : (
-          <div class="w-full">
-            <video
-              src={project.video}
-              class="w-full rounded-lg media-reveal"
-              controls
-              autoplay
-              loop
-              muted
-              playsinline
-              onloadeddata="this.classList.add('is-loaded')"
-            />
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  <!-- Project Images -->
   {
     project.images && project.images.length > 0 && (
-      <div class="mb-8">
-        <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
-          Screenshots
-        </h2>
+      <ProjectSection title="Screenshots">
         <MediaGallery
           images={project.images}
           experienceName={project.title}
           variant="desktop"
         />
-      </div>
+      </ProjectSection>
     )
   }
 
-  <!-- Technical Details -->
-  {
-    project.technicalDetails && (
-      <div class="mb-8">
-        <h2 class="text-lg lg:text-xl font-semibold text-[--color-text-primary] mb-4">
-          Technical Overview
-        </h2>
-
-        <!-- Key Features -->
-        <div class="mb-6">
-          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
-            Key Features
-          </h3>
-          <ul class="list-disc list-inside space-y-1">
-            {project.technicalDetails.keyFeatures.map((feature) => (
-              <li class="text-md text-[--color-text-secondary]">{feature}</li>
-            ))}
-          </ul>
-        </div>
-
-        <!-- Technical Challenges -->
-        <div class="mb-6">
-          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
-            Technical Challenges
-          </h3>
-          <ul class="list-disc list-inside space-y-1">
-            {project.technicalDetails.challenges.map((challenge) => (
-              <li class="text-md text-[--color-text-secondary]">{challenge}</li>
-            ))}
-          </ul>
-        </div>
-
-        <!-- Implementation Details -->
-        <div class="mb-6">
-          <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
-            Implementation
-          </h3>
-          <ul class="list-disc list-inside space-y-1">
-            {project.technicalDetails.implementation.map((detail) => (
-              <li class="text-md text-[--color-text-secondary]">{detail}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    )
-  }
+  {project.technicalDetails && <ProjectDetails details={project.technicalDetails} />}
 </div>
-
-<style>
-  /* Custom button styles using tag colors */
-  .btn-secondary-custom {
-    background: var(--tag-personal);
-    color: #18181b !important;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-
-  .btn-secondary-custom:hover {
-    background: var(--tag-personal);
-    filter: brightness(0.9);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .btn-accent-custom {
-    background: var(--tag-school);
-    color: #18181b !important;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-
-  .btn-accent-custom:hover {
-    background: var(--tag-school);
-    filter: brightness(0.9);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-</style>

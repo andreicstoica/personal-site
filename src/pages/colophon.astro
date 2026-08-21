@@ -1,38 +1,21 @@
 ---
-import { getEntry } from "astro:content";
+import CollectionPage from "../components/content/CollectionPage.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
-import MarkdownSections from "../components/content/MarkdownSections.astro";
-import MarkdownLayout from "../layouts/MarkdownLayout.astro";
-import PageLayout from "../layouts/PageLayout.astro";
-
-const colophonEntry = await getEntry("pages", "colophon");
-if (!colophonEntry) throw new Error("Colophon entry not found");
 ---
 
-<PageLayout
-  title={colophonEntry.data.title}
-  description={colophonEntry.data.description}
->
-  <MarkdownLayout title={colophonEntry.data.title}>
-    <MarkdownSections
-      body={colophonEntry.body}
-      description={colophonEntry.data.description}
-      layout="grid"
-    >
-      <div class="mt-4 mb-4">
-        <h2 class="text-xl font-medium mb-3 text-[--color-text-primary]">
-          Memorial to my old sites (rip)
-        </h2>
-        <MediaGallery
-          images={[
-            "old-site-2021.webp",
-            "old-site-2023.webp",
-            "old-site-2025.webm",
-          ]}
-          experienceName="Previous site designs"
-          variant="desktop"
-        />
-      </div>
-    </MarkdownSections>
-  </MarkdownLayout>
-</PageLayout>
+<CollectionPage slug="colophon" layout="grid">
+  <div class="mt-4 mb-4">
+    <h2 class="text-xl font-medium mb-3 text-[--color-text-primary]">
+      Memorial to my old sites (rip)
+    </h2>
+    <MediaGallery
+      images={[
+        "old-site-2021.webp",
+        "old-site-2023.webp",
+        "old-site-2025.webm",
+      ]}
+      experienceName="Previous site designs"
+      variant="desktop"
+    />
+  </div>
+</CollectionPage>

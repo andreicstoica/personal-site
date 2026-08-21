@@ -1,3 +1,16 @@
+export const EXPERIENCE_TYPES = [
+	"personal",
+	"work",
+	"school",
+	"other",
+] as const;
+
+export type ExperienceType = (typeof EXPERIENCE_TYPES)[number];
+
+export function isExperienceType(value: string): value is ExperienceType {
+	return (EXPERIENCE_TYPES as readonly string[]).includes(value);
+}
+
 export interface Project {
 	id: string;
 	title: string;
@@ -14,7 +27,7 @@ export interface Project {
 		website?: string;
 	};
 	images?: string[];
-	video?: string; // Add this field for Vimeo embed URL
+	video?: string;
 }
 
 export interface ProjectReference {
@@ -23,7 +36,7 @@ export interface ProjectReference {
 }
 
 export type Experience = {
-	type: "personal" | "work" | "school" | "other";
+	type: ExperienceType;
 	name: string;
 	tags: string[];
 	role: string;
@@ -33,3 +46,22 @@ export type Experience = {
 	images?: string[];
 	projects?: ProjectReference[];
 };
+
+export type GalleryVariant = "desktop" | "mobile";
+
+export type GalleryMedia =
+	| {
+			kind: "image";
+			src: string;
+			alt: string;
+			width?: number;
+			height?: number;
+	  }
+	| {
+			kind: "video";
+			src: string;
+			alt: string;
+	  };
+
+export type ChatRole = "user" | "assistant";
+export type ChatServerStatus = "checking" | "online" | "offline";

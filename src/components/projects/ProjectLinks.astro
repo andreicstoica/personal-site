@@ -1,0 +1,66 @@
+---
+import type { PixelarticonName } from "../../icons/pixelarticons";
+import type { Project } from "../../lib/types";
+import Icon from "../ui/Icon.astro";
+import ProjectSection from "./ProjectSection.astro";
+
+interface Props {
+	project: Project;
+}
+
+const { project } = Astro.props;
+
+type ProjectLink = {
+	href: string;
+	label: string;
+	icon: PixelarticonName;
+	className: string;
+};
+
+const links: ProjectLink[] = [
+	project.links.demo
+		? {
+				href: project.links.demo,
+				label: "Live Demo",
+				icon: "external-link",
+				className: "btn-secondary-custom",
+			}
+		: null,
+	project.links.github
+		? {
+				href: project.links.github,
+				label: "GitHub",
+				icon: "github",
+				className: "btn-accent-custom",
+			}
+		: null,
+	project.links.website
+		? {
+				href: project.links.website,
+				label: "Website",
+				icon: "link",
+				className: "btn-secondary-custom",
+			}
+		: null,
+].filter((link): link is ProjectLink => link !== null);
+---
+
+{
+  links.length > 0 && (
+    <ProjectSection title="Links">
+      <div class="flex flex-wrap gap-4">
+        {links.map((link) => (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={`${link.className} inline-flex items-center px-4 py-2 transition-colors`}
+          >
+            <Icon name={link.icon} class="w-5 h-5 mr-2" />
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </ProjectSection>
+  )
+}

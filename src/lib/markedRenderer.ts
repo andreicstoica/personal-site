@@ -15,5 +15,9 @@ renderer.link = ({ href, title, text }) => {
 marked.use({ renderer });
 
 export function renderMarkdown(content: string): string {
-	return marked.parse(content) as string;
+	const html = marked.parse(content, { async: false });
+	if (typeof html !== "string") {
+		throw new Error("Expected synchronous markdown output");
+	}
+	return html;
 }
