@@ -71,13 +71,10 @@ function drawStars(
 	buf: PixelBuffer,
 	skyHeight: number,
 	color: Rgb,
-	frame: number,
+	_frame: number,
 ): void {
 	const limit = Math.max(2, skyHeight - 1);
 	for (let i = 0; i < 22; i++) {
-		const twinkles = hash(i * 3) > 0.86;
-		const hidden = frame > 0 && twinkles && frame % 16 < 2;
-		if (hidden) continue;
 		const x = Math.floor(hash(i * 53 + 9) * buf.width);
 		const y = Math.floor(hash(i * 29 + 4) * limit);
 		buf.set(x, y, color, true);

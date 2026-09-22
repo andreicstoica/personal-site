@@ -1,22 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Bar from "./Bar.svelte";
-  import Colophon from "./Colophon.svelte";
-  import Margin from "./Margin.svelte";
 
   const variants = [
-    { name: "Bar", view: Bar },
-    { name: "Margin", view: Margin },
-    { name: "Colophon", view: Colophon },
+    { name: "Bar", id: "bar" },
+    { name: "Margin", id: "margin" },
+    { name: "Colophon", id: "colophon" },
   ] as const;
 
   let current = $state(0);
-  let mountKey = $state(0);
   let ready = $state(false);
   let pickerEl = $state<HTMLElement | null>(null);
   let highlight = $state({ width: 0, x: 0 });
-
-  const Active = $derived(variants[current]?.view ?? Bar);
 
   function measure() {
     if (!pickerEl) return;
@@ -31,7 +25,8 @@
   function setActive(index: number) {
     if (index < 0 || index >= variants.length) return;
     current = index;
-    mountKey += 1;
+    const picked = variants[index];
+    if (picked) document.documentElement.dataset.protoNav = picked.id;
     const url = new URL(location.href);
     url.searchParams.set("v", String(index + 1));
     history.replaceState(null, "", url);
@@ -82,12 +77,6 @@
   });
 </script>
 
-<div class="harness">
-  {#key mountKey}
-    <Active />
-  {/key}
-</div>
-
 <nav
   class="proto-picker"
   aria-label="Prototype variants"
@@ -113,11 +102,6 @@
 </nav>
 
 <style>
-  .harness {
-    height: 100dvh;
-    min-width: 0;
-  }
-
   .proto-picker {
     position: fixed;
     bottom: 24px;
