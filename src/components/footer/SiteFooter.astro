@@ -1,0 +1,58 @@
+---
+import { socialNavItems } from "../../lib/navLinks";
+import BeosIcon from "./BeosIcon.astro";
+---
+
+<footer class="site-footer">
+  <ul class="site-footer-list">
+    {
+      socialNavItems.map((item) => (
+        <li>
+          <a href={item.href} target="_blank" rel="noopener noreferrer">
+            <BeosIcon kind={item.icon} />
+            <span>{item.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 2.5rem;
+    padding-block: 1.25rem 1.75rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  }
+
+  .site-footer-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 44px;
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+
+  .site-footer-list a:active {
+    opacity: 0.72;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .site-footer-list a:hover {
+      color: var(--color-text-primary);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+</style>
