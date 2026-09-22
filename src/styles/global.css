@@ -640,13 +640,10 @@ a:hover {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Navigation name link - override global link styles */
-.nav-name {
-	color: var(--color-text-inverse) !important;
-}
-
+/* Name sits on the page-background bar; keep it off the global green link color. */
+.nav-name,
 .nav-name:hover {
-	color: var(--color-text-inverse) !important;
+	color: var(--color-text-primary);
 }
 
 /* Gallery strip — horizontal scroll with snap on touch */

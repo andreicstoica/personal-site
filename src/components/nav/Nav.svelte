@@ -66,9 +66,9 @@
 </script>
 
 <nav
-  class="full-bleed relative z-50 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] py-4 flex justify-between items-center"
+  class="full-bleed relative z-50 border-b border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] py-4 flex justify-between items-center"
 >
-  <div class="text-2xl text-[var(--color-text-inverse)] font-bold tracking-tight">
+  <div class="text-2xl font-bold tracking-tight">
     <a href="/" class="hover:opacity-90 nav-name min-h-[44px] flex items-center">Andrei Stoica</a>
   </div>
 
