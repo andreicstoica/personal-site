@@ -46,17 +46,21 @@ const filterCss = experienceFilterCss();
 <script>
   import { isExperienceType } from "../../lib/types";
 
-  const experienceTable = document.getElementById("experience-table");
-  const experienceRows = document.getElementById("experience-rows");
-  const experienceRowsInner = document.getElementById("experience-rows-inner");
-  const filterSelect = document.getElementById("typeFilter");
+  function mountExperienceTable(): () => void {
+    const experienceTable = document.getElementById("experience-table");
+    const experienceRows = document.getElementById("experience-rows");
+    const experienceRowsInner = document.getElementById("experience-rows-inner");
+    const filterSelect = document.getElementById("typeFilter");
 
-  if (
-    experienceTable &&
-    experienceRows &&
-    experienceRowsInner &&
-    filterSelect instanceof HTMLSelectElement
-  ) {
+    if (
+      !experienceTable ||
+      !experienceRows ||
+      !experienceRowsInner ||
+      !(filterSelect instanceof HTMLSelectElement)
+    ) {
+      return () => {};
+    }
+
     let reservedHeight = 0;
 
     const getFilterValue = () => experienceTable.dataset.filter ?? "";
@@ -75,7 +79,7 @@ const filterCss = experienceFilterCss();
       experienceRows.style.minHeight = `${reservedHeight}px`;
     };
 
-    filterSelect.addEventListener("change", () => {
+    const onFilter = () => {
       const next = filterSelect.value;
       experienceTable.dataset.filter =
         next === "" || isExperienceType(next) ? next : "";
@@ -84,17 +88,9 @@ const filterCss = experienceFilterCss();
       if (!filterSelect.value) {
         requestAnimationFrame(reserveFromAllView);
       }
-    });
+    };
 
-    requestAnimationFrame(reserveFromAllView);
-
-    const resizeObserver = new ResizeObserver(() => {
-      reserveFromAllView();
-    });
-
-    resizeObserver.observe(experienceRowsInner);
-
-    window.addEventListener("resize", () => {
+    const onResize = () => {
       if (getFilterValue()) {
         return;
       }
@@ -102,6 +98,26 @@ const filterCss = experienceFilterCss();
       reservedHeight = 0;
       experienceRows.style.minHeight = "";
       requestAnimationFrame(reserveFromAllView);
+    };
+
+    filterSelect.addEventListener("change", onFilter);
+    window.addEventListener("resize", onResize);
+    const resizeObserver = new ResizeObserver(() => {
+      reserveFromAllView();
     });
+    resizeObserver.observe(experienceRowsInner);
+    requestAnimationFrame(reserveFromAllView);
+
+    return () => {
+      filterSelect.removeEventListener("change", onFilter);
+      window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
+    };
   }
+
+  let release = mountExperienceTable();
+  document.addEventListener("astro:page-load", () => {
+    release();
+    release = mountExperienceTable();
+  });
 </script>

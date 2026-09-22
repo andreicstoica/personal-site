@@ -1,5 +1,6 @@
 ---
 import FloatingChat from "../components/chat/FloatingChat.svelte";
+import SiteFooter from "../components/footer/SiteFooter.astro";
 import Nav from "../components/nav/Nav.astro";
 import WeatherBanner from "../components/weather/WeatherBanner.svelte";
 import { showWeatherLab } from "../lib/weather/lab";
@@ -15,15 +16,41 @@ const showLab = showWeatherLab(import.meta.env.DEV);
 ---
 
 <RootLayout title={title} description={description}>
-  <div class="col-span-12 flex h-dvh min-w-0 flex-col overflow-hidden">
-    <WeatherBanner client:only="svelte" showLab={showLab} />
-    <Nav />
+  <div
+    class="site-column col-span-12 mx-auto flex h-dvh w-full min-w-0 max-w-[64rem] flex-col overflow-hidden"
+  >
+    <WeatherBanner
+      client:only="svelte"
+      showLab={showLab}
+      transition:persist="weather-banner"
+    />
+    <Nav transition:persist="site-nav" />
     <div
       class="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-gutter-stable"
       data-page-scroll
     >
-      <slot />
+      <div
+        class="page-island flex w-full flex-1 flex-col"
+        data-page-island
+        transition:name="page"
+        transition:animate="fade"
+      >
+        <slot />
+      </div>
+      <SiteFooter transition:persist="site-footer" />
     </div>
     <FloatingChat client:load />
   </div>
 </RootLayout>
+
+<script>
+  function resetPageScroll(): void {
+    const scroller = document.querySelector("[data-page-scroll]");
+    if (scroller instanceof HTMLElement) {
+      scroller.scrollTop = 0;
+    }
+  }
+
+  resetPageScroll();
+  document.addEventListener("astro:page-load", resetPageScroll);
+</script>

@@ -46,8 +46,8 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		stencil: false,
 		premultipliedAlpha: false,
 	});
-	if (!gl) {
-		canvas.dataset.glError = "webgl2-unavailable";
+	if (!gl || gl.isContextLost()) {
+		canvas.dataset.glError = gl ? "context-lost" : "webgl2-unavailable";
 		return null;
 	}
 

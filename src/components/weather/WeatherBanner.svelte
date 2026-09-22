@@ -1,11 +1,7 @@
 <script lang="ts">
-  import {
-    BANNER_HEIGHT,
-    BANNER_WIDTH,
-    displayScale,
-  } from "../../lib/weather/buffer";
-  import { renderPlate } from "../../lib/weather/draw";
-  import { createBannerGl } from "../../lib/weather/glBanner";
+  import { untrack } from "svelte";
+  import { mountBanner, whenBannerReady } from "../../lib/weather/bannerSurface";
+  import { BANNER_HEIGHT, BANNER_WIDTH } from "../../lib/weather/buffer";
   import {
     loadOrCreatePlace,
     loadReading,
@@ -45,14 +41,12 @@
   let readingSettled = $state(cachedReading !== null);
   let now = $state(Date.now());
   let systemMode = $state<ColorMode>("light");
-  let reduceMotion = $state(false);
   let placeOverride = $state<Place | null>(null);
   let weatherOverride = $state<Weather | null>(null);
   let timeOverride = $state<TimeOfDay | null>(null);
   let colorOverride = $state<ColorMode | "system">("system");
-  let displayWidth = $state(BANNER_WIDTH * 2);
   let canvasEl = $state<HTMLCanvasElement | null>(null);
-  let slotEl = $state<HTMLDivElement | null>(null);
+  let drawRaf = 0;
 
   const liveTime = $derived(
     timeOfDay(now, reading.sunrise, reading.sunset),
@@ -107,69 +101,78 @@
 
   $effect(() => {
     const colorQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => {
       systemMode = colorQuery.matches ? "dark" : "light";
-      reduceMotion = motionQuery.matches;
     };
     apply();
     colorQuery.addEventListener("change", apply);
-    motionQuery.addEventListener("change", apply);
     return () => {
       colorQuery.removeEventListener("change", apply);
-      motionQuery.removeEventListener("change", apply);
     };
-  });
-
-  $effect(() => {
-    const slot = slotEl;
-    if (!slot) return;
-    const apply = () => {
-      const scale = displayScale(slot.clientWidth);
-      displayWidth = BANNER_WIDTH * scale;
-    };
-    apply();
-    const observer = new ResizeObserver(apply);
-    observer.observe(slot);
-    return () => observer.disconnect();
   });
 
   $effect(() => {
     const canvas = canvasEl;
-    const current = scene;
-    const still = reduceMotion;
-    const cssWidth = displayWidth;
     if (!canvas) return;
-
-    const gl = createBannerGl(canvas);
-    if (!gl) return;
-    gl.setScene(current);
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
-    let raf = 0;
-    const draw = (now: number) => {
+    let surface = mountBanner(canvas);
+    let cancelled = false;
+
+    const paint = (now: number) => {
+      if (!surface) return true;
+      const current = untrack(() => scene);
+      const still = motionQuery.matches;
       const rect = canvas.getBoundingClientRect();
-      const width = rect.width > 1 ? rect.width : cssWidth;
+      const width = rect.width > 1 ? rect.width : BANNER_WIDTH * 2;
       const height =
         rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      gl.resize(width, height, dpr);
-      gl.upload(renderPlate(current, still ? 0 : frame));
-      gl.draw(still ? 0 : now / 1000);
-      if (still) return;
-      frame += 1;
-      raf = requestAnimationFrame(draw);
+      surface.resize(width, height, dpr);
+      surface.frame(current, still ? 0 : frame, still ? 0 : now / 1000);
+      return still;
     };
-    raf = requestAnimationFrame(draw);
+
+    const draw = (now: number) => {
+      if (paint(now)) return;
+      frame += 1;
+      drawRaf = requestAnimationFrame(draw);
+    };
+
+    const onMotion = () => {
+      cancelAnimationFrame(drawRaf);
+      frame = 0;
+      if (paint(0)) return;
+      drawRaf = requestAnimationFrame(draw);
+    };
+
+    const begin = () => {
+      if (cancelled || !surface) return;
+      motionQuery.addEventListener("change", onMotion);
+      draw(performance.now());
+    };
+
+    if (surface) {
+      begin();
+    } else {
+      void whenBannerReady(canvas).then(() => {
+        if (cancelled) return;
+        surface = mountBanner(canvas);
+        begin();
+      });
+    }
+
     return () => {
-      cancelAnimationFrame(raf);
-      gl.destroy();
+      cancelled = true;
+      cancelAnimationFrame(drawRaf);
+      motionQuery.removeEventListener("change", onMotion);
+      surface?.destroy();
     };
   });
 </script>
 
 <div
   class="banner-slot"
-  bind:this={slotEl}
   role="img"
   aria-label={label}
   data-place={scene.place}
@@ -182,7 +185,7 @@
     class="banner-canvas"
     aria-hidden="true"
     data-renderer="webgl"
-    style="width: {displayWidth}px;"
+    style="width: 100%;"
   ></canvas>
 </div>
 
@@ -202,11 +205,9 @@
 <style>
   .banner-slot {
     width: 100%;
-    max-width: 800px;
     min-width: 0;
-    margin: 0.75rem auto 0.45rem;
-    display: flex;
-    justify-content: center;
+    margin: 0.65rem 0 0.35rem;
+    display: block;
   }
 
   .banner-canvas {

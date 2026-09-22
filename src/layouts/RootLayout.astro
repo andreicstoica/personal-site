@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import CursorTrail from "../components/chrome/CursorTrail.svelte";
 import "../styles/global.css";
 
@@ -25,12 +26,13 @@ const { title, description = "Andrei's Portfolio" } = Astro.props;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body class="m-0 p-0 layout-body">
     <div class="layout-grid">
       <slot />
     </div>
-    <CursorTrail client:idle />
+    <CursorTrail client:idle transition:persist="cursor-trail" />
   </body>
 </html>
 

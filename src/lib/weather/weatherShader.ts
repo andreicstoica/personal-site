@@ -77,7 +77,8 @@ void main() {
     color += vec3(0.14, 0.09, 0.02) * band * flick * uShimmer;
   }
 
-  if (uRain > 0.001 && hash(vec2(pix.x, 3.0)) > 0.72) {
+  float rainCutoff = clamp(1.0 - uRainColumns / max(uPlateSize.x, 1.0), 0.0, 0.98);
+  if (uRain > 0.001 && hash(vec2(pix.x, 3.0)) > rainCutoff) {
     float jitter = hash(vec2(pix.x, 2.0));
     float speed = (8.0 + jitter * 10.0) * max(uRainSpeed, 0.15);
     float head = mod(fromTopPix + jitter * uPlateSize.y - uTime * speed, uPlateSize.y);
