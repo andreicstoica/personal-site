@@ -44,11 +44,6 @@ export function readInferenceEnv(): InferenceEnv {
 		HF_API_URL: envValue("HF_API_URL"),
 		HF_API_KEY: envValue("HF_API_KEY"),
 		HF_MODEL_ID: envValue("HF_MODEL_ID"),
-		MODAL_API_URL: envValue("MODAL_API_URL"),
-		MODAL_API_KEY: envValue("MODAL_API_KEY"),
-		MODAL_MODEL_ID: envValue("MODAL_MODEL_ID"),
-		MODAL_PROXY_KEY: envValue("MODAL_PROXY_KEY"),
-		MODAL_PROXY_SECRET: envValue("MODAL_PROXY_SECRET"),
 	};
 }
 

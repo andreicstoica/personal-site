@@ -118,24 +118,24 @@ describe("guide turn", () => {
 });
 
 describe("inference config", () => {
-	test("modal can use proxy auth and still send a bearer token", () => {
+	test("hugging face sends a bearer token", () => {
 		const resolved = resolveInference({
-			MODEL_PROVIDER: "modal",
-			MODAL_API_URL: "https://example.modal.direct/",
-			MODAL_MODEL_ID: "noodlesGS/personal",
-			MODAL_PROXY_KEY: "key",
-			MODAL_PROXY_SECRET: "secret",
-			MODAL_API_KEY: "vllm",
+			MODEL_PROVIDER: "hf",
+			HF_API_URL: "https://hf.example/",
+			HF_API_KEY: "hf_test",
 		});
 		expect(resolved.kind).toBe("ready");
 		if (resolved.kind !== "ready") return;
-		expect(resolved.baseUrl).toBe("https://example.modal.direct");
-		expect(resolved.provider).toBe("modal");
+		expect(resolved.provider).toBe("hf");
 		expect(authHeaders(resolved.auth)).toEqual({
-			"Modal-Key": "key",
-			"Modal-Secret": "secret",
-			Authorization: "Bearer vllm",
+			Authorization: "Bearer hf_test",
 		});
+	});
+
+	test("modal is only a comment, not a provider", () => {
+		expect(resolveInference({ MODEL_PROVIDER: "modal" }).kind).toBe(
+			"unconfigured",
+		);
 	});
 
 	test("hugging face without a key stays unconfigured", () => {
