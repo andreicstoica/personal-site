@@ -194,6 +194,8 @@
 
   const onWindowClick = (event: MouseEvent) => {
     if (!open || !rootRef) return;
+    // The launcher unmounts as soon as it opens. A click that started on it
+    // is no longer inside the panel, so the launcher stops propagation.
     if (event.target instanceof Node && rootRef.contains(event.target)) return;
     open = false;
   };
@@ -371,7 +373,10 @@
       class="inline-flex items-center gap-2 h-12 px-4 bg-[var(--color-primary)] text-white border border-[var(--color-primary)] rounded-none shadow-lg"
       aria-expanded="false"
       aria-controls="guide-panel"
-      onclick={() => (open = true)}
+      onclick={(event) => {
+        event.stopPropagation();
+        open = true;
+      }}
     >
       <Icon name="chat" class="w-5 h-5" />
       <span class="text-sm">Ask</span>
