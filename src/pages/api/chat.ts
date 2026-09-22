@@ -2,7 +2,12 @@ import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import type { ChatApiSuccess } from "../../lib/chatTypes";
 import { buildSystemPrompt, resolveGuideTurn } from "../../lib/guideReply";
-import { completeChat, currentInference } from "../../lib/inference";
+import {
+	completeChat,
+	currentInference,
+	readInferenceEnv,
+} from "../../lib/inference";
+import { guideModelEnabled } from "../../lib/inferenceConfig";
 import { loadMemorySections } from "../../lib/memory";
 import { selectMemory } from "../../lib/memorySelect";
 
@@ -45,14 +50,17 @@ export const POST: APIRoute = async ({ request }) => {
 	const history = (parsed.data.history ?? []).slice(-8);
 	const sections = selectMemory(loadMemorySections(), message);
 	const resolved = currentInference();
+	const modelOff = !guideModelEnabled(readInferenceEnv());
 
-	if (notesOnly || resolved.kind === "unconfigured") {
+	if (modelOff || notesOnly || resolved.kind === "unconfigured") {
 		const payload: ChatApiSuccess = resolveGuideTurn({
 			message,
 			sections,
 			modelText: null,
 			notesReason:
-				resolved.kind === "unconfigured" ? "unconfigured" : "unreachable",
+				modelOff || resolved.kind === "unconfigured"
+					? "unconfigured"
+					: "unreachable",
 		});
 		return json(payload, 200);
 	}

@@ -77,14 +77,9 @@ function notesText(
 				: "The model is still waking or unreachable.";
 		return `${lead} I don't have notes on that. Ask about a project, a job, canon, or fitness — or email ${CONTACT}.`;
 	}
-	const body = sections
-		.map((section) => {
-			const where =
-				section.route && section.route !== "/" ? ` (${section.route})` : "";
-			return `${section.title}${where}\n${clip(section.body, 700)}`;
-		})
-		.join("\n\n");
-	return body;
+	const paragraph = sections[0]?.body.trim().split(/\n\s*\n/)[0] ?? "";
+	const sentence = paragraph.split(/(?<=[.!?])\s+/)[0] ?? paragraph;
+	return clip(sentence, 220);
 }
 
 export function buildSystemPrompt(sections: readonly MemorySection[]): string {

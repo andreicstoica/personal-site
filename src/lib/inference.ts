@@ -39,6 +39,7 @@ function envValue(name: keyof InferenceEnv): string | undefined {
 export function readInferenceEnv(): InferenceEnv {
 	return {
 		MODEL_PROVIDER: envValue("MODEL_PROVIDER"),
+		GUIDE_MODEL: envValue("GUIDE_MODEL"),
 		LOCAL_MODEL_URL: envValue("LOCAL_MODEL_URL"),
 		LOCAL_MODEL_ID: envValue("LOCAL_MODEL_ID"),
 		HF_API_URL: envValue("HF_API_URL"),

@@ -1,5 +1,10 @@
 import type { APIRoute } from "astro";
-import { completeChat, currentInference } from "../../lib/inference";
+import {
+	completeChat,
+	currentInference,
+	readInferenceEnv,
+} from "../../lib/inference";
+import { guideModelEnabled } from "../../lib/inferenceConfig";
 
 function json(body: unknown, status: number): Response {
 	return new Response(JSON.stringify(body), {
@@ -12,6 +17,18 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
 	const resolved = currentInference();
+	if (!guideModelEnabled(readInferenceEnv())) {
+		return json(
+			{
+				status: "off",
+				provider: "notes",
+				live: false,
+				message: "Guide model calls are off",
+			},
+			200,
+		);
+	}
+
 	if (resolved.kind === "unconfigured") {
 		return json(
 			{

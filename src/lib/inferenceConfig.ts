@@ -1,5 +1,6 @@
 export type InferenceEnv = {
 	MODEL_PROVIDER?: string;
+	GUIDE_MODEL?: string;
 	LOCAL_MODEL_URL?: string;
 	LOCAL_MODEL_ID?: string;
 	HF_API_URL?: string;
@@ -11,7 +12,8 @@ export type ProviderName = "local" | "hf";
 
 // Modal is a possible later host: scale-to-zero GPU, per-second billing,
 // Starter plan is $0/month with $30 of compute credit. Not wired. Hugging Face
-// (MODEL_PROVIDER=hf) is the hosted provider for now.
+// (MODEL_PROVIDER=hf) is the hosted provider when the guide is allowed to call
+// one. Calls stay off unless GUIDE_MODEL=on, so a configured endpoint stays asleep.
 export type Auth = { kind: "none" } | { kind: "bearer"; token: string };
 
 export type ResolvedInference =
@@ -38,6 +40,10 @@ function clean(value: string | undefined): string | undefined {
 
 function stripSlash(url: string): string {
 	return url.replace(/\/$/, "");
+}
+
+export function guideModelEnabled(env: InferenceEnv): boolean {
+	return clean(env.GUIDE_MODEL)?.toLowerCase() === "on";
 }
 
 export function resolveInference(env: InferenceEnv): ResolvedInference {

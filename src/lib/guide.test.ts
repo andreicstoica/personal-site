@@ -3,7 +3,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parseChatApiSuccess } from "./chatTypes";
 import { resolveGuideTurn } from "./guideReply";
-import { authHeaders, resolveInference } from "./inferenceConfig";
+import {
+	authHeaders,
+	guideModelEnabled,
+	resolveInference,
+} from "./inferenceConfig";
 import {
 	extractNavigateHref,
 	isNavigationIntent,
@@ -70,6 +74,19 @@ describe("routes", () => {
 });
 
 describe("guide turn", () => {
+	test("notes stay to the first sentence", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: selectMemory(corpus(), "what is refract"),
+			modelText: null,
+			notesReason: "unconfigured",
+		});
+		expect(turn.response).toBe(
+			"The journal that collaborates with you to go deeper.",
+		);
+		expect(turn.response).not.toContain("He describes");
+	});
+
 	test("follows when the visitor asks to open a page, even without the model", () => {
 		const turn = resolveGuideTurn({
 			message: "show me courtly",
@@ -130,6 +147,13 @@ describe("inference config", () => {
 		expect(authHeaders(resolved.auth)).toEqual({
 			Authorization: "Bearer hf_test",
 		});
+	});
+
+	test("model calls stay off unless GUIDE_MODEL=on", () => {
+		expect(guideModelEnabled({})).toBe(false);
+		expect(guideModelEnabled({ GUIDE_MODEL: "hf" })).toBe(false);
+		expect(guideModelEnabled({ MODEL_PROVIDER: "hf" })).toBe(false);
+		expect(guideModelEnabled({ GUIDE_MODEL: "on" })).toBe(true);
 	});
 
 	test("modal is only a comment, not a provider", () => {
