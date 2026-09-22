@@ -237,8 +237,9 @@
   });
 
   $effect(() => {
-    if (!open) return;
-    inputRef?.focus();
+    if (!open || typeof window === "undefined") return;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (finePointer) inputRef?.focus();
   });
 
   $effect(() => {
@@ -253,14 +254,15 @@
 <div
   use:portal
   bind:this={rootRef}
-  class="fixed z-[70] right-3 bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex flex-col items-end gap-2"
+  class="guide-dock"
+  data-open={open ? "true" : "false"}
 >
   {#if open}
     <div
       id="guide-panel"
       role="dialog"
       aria-label="Ask Andrei"
-      class="flex flex-col w-[min(24rem,calc(100vw-1.5rem))] h-[min(20rem,50dvh)] border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
+      class="guide-panel flex flex-col border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
     >
       <header class="flex items-start justify-between gap-3 border-b border-[var(--color-bg-secondary)] px-4 py-3">
         <div>
@@ -279,7 +281,7 @@
         </div>
         <button
           type="button"
-          class="text-[var(--color-text-primary)] hover:text-[var(--color-primary)]"
+          class="guide-icon-button text-[var(--color-text-primary)]"
           aria-label="Close guide"
           onclick={() => (open = false)}
         >
@@ -287,7 +289,7 @@
         </button>
       </header>
 
-      <div bind:this={threadRef} class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      <div bind:this={threadRef} class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {#if messages.length === 0}
           <p class="text-sm text-[var(--color-text-secondary)]">
             Ask about a project or a job. Say “show me Refract” and I'll open the page.
@@ -356,7 +358,7 @@
           autocomplete="off"
           placeholder="Ask about a project…"
           disabled={sending}
-          class="flex-1 min-w-0 px-3 py-2 text-sm border border-[var(--color-bg-secondary)] bg-white text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+          class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-white text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
         />
         <button
           type="submit"
@@ -369,19 +371,127 @@
     </div>
   {/if}
 
-  {#if !open}
-    <button
-      type="button"
-      class="inline-flex items-center gap-2 h-12 px-4 bg-[var(--color-primary)] text-white border border-[var(--color-primary)] rounded-none shadow-lg"
-      aria-expanded="false"
-      aria-controls="guide-panel"
-      onclick={(event) => {
-        event.stopPropagation();
-        open = true;
-      }}
-    >
-      <Icon name="chat" class="w-5 h-5" />
-      <span class="text-sm">Ask</span>
-    </button>
-  {/if}
+  <button
+    type="button"
+    class="guide-launch"
+    aria-expanded={open}
+    aria-controls="guide-panel"
+    aria-label={open ? "Close guide" : "Ask Andrei"}
+    onclick={(event) => {
+      event.stopPropagation();
+      open = !open;
+    }}
+  >
+    <Icon name={open ? "close" : "chat"} class="w-4 h-4" />
+  </button>
 </div>
+
+<style>
+  .guide-dock {
+    position: fixed;
+    z-index: 70;
+    right: 0.75rem;
+    bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .guide-panel,
+  .guide-launch {
+    pointer-events: auto;
+  }
+
+  .guide-panel {
+    width: min(26rem, calc(100vw - 1.5rem));
+    height: min(36rem, calc(100dvh - 5.5rem));
+  }
+
+  .guide-thread {
+    overscroll-behavior: contain;
+  }
+
+  .guide-input {
+    font-size: 1rem;
+  }
+
+  .guide-launch,
+  .guide-icon-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .guide-launch {
+    width: 2.25rem;
+    height: 2.25rem;
+    background: var(--color-primary);
+    color: white;
+    border: 1px solid var(--color-primary);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+  }
+
+  .guide-launch::before,
+  .guide-icon-button::before {
+    content: "";
+    position: absolute;
+    inset: -0.25rem;
+  }
+
+  .guide-icon-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .guide-launch:hover {
+      background: var(--color-primary-hover);
+    }
+
+    .guide-icon-button:hover {
+      color: var(--color-primary);
+    }
+
+    .guide-input {
+      font-size: 0.875rem;
+    }
+  }
+
+  .guide-launch:active {
+    scale: 0.96;
+  }
+
+  @media (max-width: 767px) {
+    .guide-dock {
+      right: max(10%, env(safe-area-inset-right, 0px));
+      bottom: max(10%, env(safe-area-inset-bottom, 0px));
+    }
+
+    .guide-dock[data-open="true"] {
+      top: max(10%, env(safe-area-inset-top, 0px));
+      left: max(10%, env(safe-area-inset-left, 0px));
+    }
+
+    .guide-panel {
+      width: 100%;
+      height: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guide-launch:active {
+      scale: 1;
+    }
+  }
+</style>
