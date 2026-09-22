@@ -1,14 +1,11 @@
 <script lang="ts">
-  import { mainNavItems, socialNavItems } from "../../lib/navLinks";
+  import { socialNavItems } from "../../lib/navLinks";
 
   let { className = "" }: { className?: string } = $props();
 </script>
 
 <nav class="quiet-nav {className}" aria-label="Pages">
   <a class="skip" href="#proto-content">Skip to content</a>
-  {#each mainNavItems as item (item.href)}
-    <a class="quiet-link" href={item.href}>{item.label}</a>
-  {/each}
   {#each socialNavItems as item (item.href)}
     <a
       class="quiet-link"

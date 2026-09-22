@@ -16,11 +16,6 @@ export type SocialLink = NavItem & {
 	icon: SocialIcon;
 };
 
-export const mainNavItems: NavItem[] = [
-	{ href: "/", label: "Home" },
-	{ href: "/about", label: "About" },
-];
-
 export const socialNavItems: SocialLink[] = [
 	{
 		href: "https://github.com/andreicstoica/",

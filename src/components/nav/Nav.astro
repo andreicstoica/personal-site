@@ -1,59 +1,19 @@
----
-import { mainNavItems } from "../../lib/navLinks";
----
-
 <header class="site-nav">
   <a href="/" class="nav-name">Andrei Stoica</a>
-  <nav aria-label="Pages">
-    {
-      mainNavItems.map((item) => (
-        <a class="site-nav-link" href={item.href}>
-          {item.label}
-        </a>
-      ))
-    }
-  </nav>
 </header>
 
 <style>
   .site-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
     padding-block: 0.35rem 0.55rem;
   }
 
   .site-nav .nav-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     text-decoration: none;
-  }
-
-  .site-nav nav {
-    display: flex;
-    align-items: center;
-  }
-
-  .site-nav-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding-inline: 0.75rem;
-    color: var(--color-text-primary);
-    text-decoration: none;
-  }
-
-  .site-nav-link:active {
-    opacity: 0.72;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .site-nav-link:hover {
-      color: var(--color-text-primary);
-      text-decoration: underline;
-      text-underline-offset: 0.2em;
-    }
   }
 </style>
