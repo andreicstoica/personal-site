@@ -70,11 +70,11 @@ function notesText(
 	if (isSmallTalk(message)) {
 		return "Hey. Ask what I've been building, or say “show me Refract”.";
 	}
-	const lead =
-		reason === "unconfigured"
-			? "The guide model isn't connected. This is from the site notes."
-			: "The model is still waking or unreachable. This is from the site notes.";
 	if (sections.length === 0) {
+		const lead =
+			reason === "unconfigured"
+				? "The guide model isn't connected."
+				: "The model is still waking or unreachable.";
 		return `${lead} I don't have notes on that. Ask about a project, a job, canon, or fitness — or email ${CONTACT}.`;
 	}
 	const body = sections
@@ -83,7 +83,7 @@ function notesText(
 			return `${section.title}${where}\n${clip(section.body, 700)}`;
 		})
 		.join("\n\n");
-	return `${lead}\n\n${body}`;
+	return body;
 }
 
 export function buildSystemPrompt(sections: readonly MemorySection[]): string {
