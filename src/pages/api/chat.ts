@@ -1,271 +1,93 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import { T_HIGH, T_MID } from "../../../rag/lib/constants.js";
-import { queryRag } from "../../../rag/lib/query.js";
+import type { ChatApiSuccess } from "../../lib/chatTypes";
+import { buildSystemPrompt, resolveGuideTurn } from "../../lib/guideReply";
+import { completeChat, currentInference } from "../../lib/inference";
+import { loadMemorySections } from "../../lib/memory";
+import { selectMemory } from "../../lib/memorySelect";
 
-const MODEL_PROVIDER = (
-	import.meta.env.MODEL_PROVIDER ?? "local"
-).toLowerCase();
-const IS_LOCAL_MODEL = MODEL_PROVIDER === "local";
-const LOCAL_MODEL_URL =
-	import.meta.env.LOCAL_MODEL_URL ?? "http://localhost:1234";
-const LOCAL_MODEL_ID = import.meta.env.LOCAL_MODEL_ID ?? "noodlesGS/personal";
-const HF_API_URL = import.meta.env.HF_API_URL;
-const HF_API_KEY = import.meta.env.HF_API_KEY;
-const HF_MODEL_ID = import.meta.env.HF_MODEL_ID ?? "noodlesGS/personal";
-
-const chatMessageSchema = z.object({
+const historyItemSchema = z.object({
 	role: z.enum(["user", "assistant"]),
-	content: z.string(),
+	content: z.string().max(4000),
 });
 
 const chatRequestSchema = z.object({
-	message: z.string().min(1),
-	history: z.array(chatMessageSchema).optional(),
+	message: z.string().trim().min(1).max(2000),
+	history: z.array(historyItemSchema).max(12).optional(),
+	notesOnly: z.boolean().optional(),
 });
 
-const lmStudioResponseSchema = z.object({
-	choices: z
-		.array(
-			z.object({
-				message: z.object({
-					content: z.string(),
-				}),
-			}),
-		)
-		.min(1),
-});
-
-type RagHit = Awaited<ReturnType<typeof queryRag>>[number];
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-interface ChatResponse {
-	response: string;
-	sources: Array<{
-		source: string;
-		score: number;
-		metadata?: Record<string, unknown>;
-		confidence?: string;
-		scoreDetails?: RagHit["scoreDetails"];
-	}>;
-}
-
-interface LMStudioRequest {
-	model: string;
-	messages: Array<{ role: string; content: string }>;
-	temperature: number;
-	max_tokens: number;
+function json(
+	body: unknown,
+	status: number,
+	extraHeaders?: Record<string, string>,
+): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { "Content-Type": "application/json", ...extraHeaders },
+	});
 }
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+	let raw: unknown;
 	try {
-		const body = await request.text();
-		if (!body) {
-			return new Response(JSON.stringify({ error: "Empty request body" }), {
-				status: 400,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-
-		let parsedBody: unknown;
-		try {
-			parsedBody = JSON.parse(body);
-		} catch {
-			return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-				status: 400,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-
-		const parsedRequest = chatRequestSchema.safeParse(parsedBody);
-		if (!parsedRequest.success) {
-			return new Response(JSON.stringify({ error: "Invalid chat request" }), {
-				status: 400,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-
-		const { message, history = [] } = parsedRequest.data;
-
-		// Cheap prefilter heuristics
-		const isShortQuery = message.trim().length < 20;
-		const isGreeting =
-			/^(hi|hello|hey|what's up|how are you|howdy|sup|yo)\s*[!.]*$/i.test(
-				message.trim(),
-			);
-		const isConversational =
-			// Conversational phrases anywhere in message
-			/\b(tell me more|go on|continue|what else|interesting|cool|nice|thanks|thank you|really|seriously|wow|amazing|fascinating)\b/i.test(
-				message.trim(),
-			) ||
-			// Short follow-ups without question words
-			(message.trim().length < 20 &&
-				!/\b(what|who|where|when|why|how|which|who|whose)\b/i.test(
-					message.trim(),
-				)) ||
-			// Pure acknowledgments
-			/^(ok|okay|alright|got it|understood|sure|yes|no|yep|nope)\s*[!.]*$/i.test(
-				message.trim(),
-			);
-		const shouldSkipRag = isShortQuery || isGreeting || isConversational;
-
-		let relevantDocs: RagHit[] = [];
-		let shouldUseRag = false;
-
-		if (!shouldSkipRag) {
-			relevantDocs = await queryRag(message);
-			const bestScore = relevantDocs[0]?.score ?? 0;
-			shouldUseRag = bestScore >= T_MID;
-		}
-
-		let systemPrompt: string;
-
-		if (shouldUseRag) {
-			// Determine confidence level and format context accordingly
-			const bestScore = relevantDocs[0]?.score || 0;
-			const isHighConfidence = bestScore >= T_HIGH;
-
-			// Format context with numbered citations
-			const context = relevantDocs
-				.map((doc, index) => {
-					const confidenceLabel = doc.confidence ?? "unknown";
-					const scorePercent = (doc.score * 100).toFixed(0);
-					return `[[${index + 1}]] (confidence: ${confidenceLabel}, score: ${scorePercent}%) ${doc.text}`;
-				})
-				.join("\n\n");
-
-			if (isHighConfidence) {
-				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the high-confidence context provided below.
-
-Context:
-${context}
-
-CRITICAL RULES:
-- Use ONLY information from the context above. Do NOT use any external knowledge.
-- You have high confidence in this context, so provide direct, synthesized answers.
-- Write in Andrei's voice: concise, direct, thoughtful. No filler.
-- Quote or paraphrase the context directly when answering.
-- Be authoritative and helpful - synthesize information across sources when relevant.
-- Entries include confidence labels; when a snippet is marked medium or low, acknowledge uncertainty and use it as supporting evidence only.`;
-			} else {
-				systemPrompt = `You are Andrei's AI Guide, embedded on andrei.bio. Answer questions using the moderate-confidence context provided below.
-
-Context:
-${context}
-
-CRITICAL RULES:
-- Use ONLY information from the context above. Do NOT use any external knowledge.
-- You have moderate confidence in this context, so quote relevant passages and acknowledge limitations.
-- Write in Andrei's voice: concise, direct, thoughtful. No filler.
-- Quote or paraphrase the context directly when answering.
-- Be helpful and engaging - explain what you know and suggest related topics you can discuss.
-- Entries include confidence labels; when a snippet is marked medium or low, treat it as tentative and qualify anything you draw from it.`;
-			}
-		} else {
-			systemPrompt = `You are Andrei's AI Guide on andrei.bio. 
-
-I help visitors learn about Andrei based on his resume, writing, and projects.
-
-RULES:
-- Keep responses brief and friendly for greetings and casual messages
-- For substantive questions, be conversational and engaging - acknowledge what I can and can't answer based on my knowledge base
-- Focus on what I DO know about: his work, projects, technical interests, writing, and professional background
-- NEVER invent facts about Andrei - no assumptions about relationships, family, personal life, or specific experiences
-- If I'm unsure or lack the information, say that plainly and steer toward topics I can cover instead of speculating
-- Be helpful and suggest related topics I can discuss when you can't fully answer something`;
-		}
-
-		// Call HF Inference API
-		const lmStudioRequest: LMStudioRequest = {
-			model: IS_LOCAL_MODEL ? LOCAL_MODEL_ID : HF_MODEL_ID,
-			messages: [
-				{ role: "system", content: systemPrompt },
-				...history,
-				{ role: "user", content: message },
-			],
-			temperature: shouldUseRag ? 0.3 : 0.6, // Lower temp for RAG = more faithful to context
-			max_tokens: shouldUseRag ? 1500 : 500, // Longer responses when we have context
-		};
-
-		const baseUrl = IS_LOCAL_MODEL ? LOCAL_MODEL_URL : HF_API_URL;
-
-		if (!baseUrl) {
-			throw new Error("No API base URL configured for selected model provider");
-		}
-
-		const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
-
-		const headers: Record<string, string> = {
-			"Content-Type": "application/json",
-		};
-
-		if (!IS_LOCAL_MODEL) {
-			if (!HF_API_KEY) {
-				throw new Error("HF_API_KEY is required for Hugging Face provider");
-			}
-			headers.Authorization = `Bearer ${HF_API_KEY}`;
-		}
-
-		const hfResponse = await fetch(apiUrl, {
-			method: "POST",
-			headers,
-			body: JSON.stringify(lmStudioRequest),
-		});
-
-		if (!hfResponse.ok) {
-			const errorText = await hfResponse.text();
-			console.error("Model API error response:", errorText);
-			throw new Error(`Model API error: ${hfResponse.status} - ${errorText}`);
-		}
-
-		const parsedModel = lmStudioResponseSchema.safeParse(
-			await hfResponse.json(),
-		);
-		if (!parsedModel.success) {
-			throw new Error("Model API returned an unexpected payload");
-		}
-
-		const response =
-			parsedModel.data.choices[0]?.message.content ??
-			"Sorry, I could not generate a response.";
-
-		const chatResponse: ChatResponse = {
-			response,
-			sources: shouldUseRag
-				? relevantDocs.map((doc) => ({
-						source: doc.source,
-						score: doc.score,
-						metadata: isPlainObject(doc.metadata) ? doc.metadata : undefined,
-						confidence: doc.confidence,
-						scoreDetails: doc.scoreDetails,
-					}))
-				: [],
-		};
-
-		return new Response(JSON.stringify(chatResponse), {
-			status: 200,
-			headers: { "Content-Type": "application/json" },
-		});
-	} catch (error) {
-		console.error("Chat API error:", error);
-		console.error(
-			"Error stack:",
-			error instanceof Error ? error.stack : "No stack",
-		);
-		return new Response(
-			JSON.stringify({
-				error: "Failed to process chat request",
-				details: error instanceof Error ? error.message : "Unknown error",
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		raw = await request.json();
+	} catch {
+		return json({ error: "Invalid JSON body" }, 400);
 	}
+
+	const parsed = chatRequestSchema.safeParse(raw);
+	if (!parsed.success) return json({ error: "Invalid chat request" }, 400);
+
+	const { message, notesOnly = false } = parsed.data;
+	const history = (parsed.data.history ?? []).slice(-8);
+	const sections = selectMemory(loadMemorySections(), message);
+	const resolved = currentInference();
+
+	if (notesOnly || resolved.kind === "unconfigured") {
+		const payload: ChatApiSuccess = resolveGuideTurn({
+			message,
+			sections,
+			modelText: null,
+			notesReason:
+				resolved.kind === "unconfigured" ? "unconfigured" : "unreachable",
+		});
+		return json(payload, 200);
+	}
+
+	const completion = await completeChat({
+		resolved,
+		temperature: sections.length > 0 ? 0.3 : 0.6,
+		maxTokens: sections.length > 0 ? 700 : 320,
+		messages: [
+			{ role: "system", content: buildSystemPrompt(sections) },
+			...history,
+			{ role: "user", content: message },
+		],
+	});
+
+	if (completion.kind === "cold") {
+		return json({ error: "Model is waking up", retryable: true }, 503);
+	}
+
+	if (completion.kind === "down") {
+		console.error("Chat model unavailable:", completion.detail);
+		const payload = resolveGuideTurn({
+			message,
+			sections,
+			modelText: null,
+			notesReason: "unreachable",
+		});
+		return json(payload, 200);
+	}
+
+	const payload = resolveGuideTurn({
+		message,
+		sections,
+		modelText: completion.content,
+		notesReason: null,
+	});
+	return json(payload, 200);
 };

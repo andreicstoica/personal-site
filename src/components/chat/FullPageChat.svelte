@@ -14,8 +14,10 @@
     role: ChatRole;
     content: string;
     sources?: Array<{
-      source: string;
-      score: number;
+      source?: string;
+      title?: string;
+      href?: string;
+      score?: number;
       metadata?: SourceMetadata;
       confidence?: string;
     }>;
@@ -160,36 +162,27 @@
                   Sources:
                 </div>
                 <div class="space-y-0.5">
-                  {#each message.sources as source, sourceIndex}
-                    {@const confidenceColor = source.confidence === "high"
-                      ? "text-green-600"
-                      : source.confidence === "medium"
-                        ? "text-yellow-600"
-                        : "text-red-600"}
-                    {@const sourceUrl = source.metadata?.sourceUrl}
-                    {@const displayName = source.metadata?.title || source.source.replace(".txt", "")}
+                  {#each message.sources as source}
+                    {@const sourceUrl = source.href || source.metadata?.sourceUrl}
+                    {@const displayName = source.title || source.metadata?.title || source.source?.replace(".txt", "") || "Note"}
+                    {@const external = sourceUrl?.startsWith("http") ?? false}
 
                     <div class="text-[10px] text-gray-500 flex items-center gap-1">
-                      <span class="font-medium {confidenceColor}">
-                        {source.confidence?.toUpperCase() || "LOW"}
-                      </span>
-                      <span>•</span>
                       {#if sourceUrl}
                         <a
                           href={sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target={external ? "_blank" : undefined}
+                          rel={external ? "noopener noreferrer" : undefined}
                           class="inline-flex items-center gap-1 text-blue-600 hover:underline"
                         >
                           {displayName}
-                          <Icon name="external-link" class="w-3 h-3 shrink-0" />
+                          {#if external}
+                            <Icon name="external-link" class="w-3 h-3 shrink-0" />
+                          {/if}
                         </a>
                       {:else}
                         <span>{displayName}</span>
                       {/if}
-                      <span class="text-gray-400">
-                        ({(source.score * 100).toFixed(1)}%)
-                      </span>
                     </div>
                   {/each}
                 </div>
