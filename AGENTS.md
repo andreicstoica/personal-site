@@ -37,7 +37,7 @@
 ## Configuration & Environment Tips
 
 - Target Node.js via npm or Bun; avoid destructive git commands unless explicitly requested.
-- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`.
+- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`, or `MODEL_PROVIDER=modal` with `MODAL_API_URL` (see `inference/modal_app.py`). Modal proxy auth uses `MODAL_PROXY_KEY` and `MODAL_PROXY_SECRET`; `MODAL_API_KEY` is an optional vLLM bearer token. The guide's notes live in `src/content/memory`. `GET /api/health` checks configuration and does not wake a GPU; add `?probe=1` for a live generation.
 - Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
 
 # User Instructions
@@ -62,9 +62,10 @@ Available <tech>: svelte, tailwindcss, Effect, FastAPI, NextJS, opencode
 | --- | --- | --- |
 | Astro dev | `bun run dev` (or `npm run dev`) | http://localhost:4321 |
 | Production preview | `bun run build` then `bun run preview` | http://localhost:4321 |
-| Local LLM (optional, for chat E2E) | LM Studio or compatible OpenAI API | http://localhost:1234 (`MODEL_PROVIDER=local`) |
+| Local LLM (optional, for model replies) | LM Studio or compatible OpenAI API | http://localhost:1234 (`MODEL_PROVIDER=local`) |
+| Modal GPU (optional, scale-to-zero) | `modal deploy inference/modal_app.py` | `MODAL_API_URL` (`MODEL_PROVIDER=modal`) |
 
-Only the Astro dev server is required for browsing the portfolio, project pages, and static content. Full **chat** E2E needs a running inference endpoint (`MODEL_PROVIDER=local` + LM Studio, or `MODEL_PROVIDER=hf` with HF env vars). `GET /api/health` returns **503** when inference is down; that is expected without a local model.
+Only the Astro dev server is required for browsing the portfolio, project pages, and static content. The floating guide answers from `src/content/memory` when no model is reachable. Full model replies need a running inference endpoint (`MODEL_PROVIDER=local`, `MODEL_PROVIDER=hf`, or `MODEL_PROVIDER=modal`). `GET /api/health` returns **503** when the selected provider is missing configuration. It does not call the model unless `?probe=1` is set, so a sleeping Modal app stays asleep.
 
 ### Lint / format / build
 
