@@ -79,7 +79,8 @@ function notesText(
 	}
 	const body = sections
 		.map((section) => {
-			const where = section.route ? ` (${section.route})` : "";
+			const where =
+				section.route && section.route !== "/" ? ` (${section.route})` : "";
 			return `${section.title}${where}\n${clip(section.body, 700)}`;
 		})
 		.join("\n\n");
