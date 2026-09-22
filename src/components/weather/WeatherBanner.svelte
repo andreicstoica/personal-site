@@ -4,7 +4,8 @@
     BANNER_WIDTH,
     displayScale,
   } from "../../lib/weather/buffer";
-  import { renderScene } from "../../lib/weather/draw";
+  import { renderPlate, renderScene } from "../../lib/weather/draw";
+  import { createBannerGl } from "../../lib/weather/glBanner";
   import {
     loadOrCreatePlace,
     loadReading,
@@ -52,6 +53,7 @@
   let displayWidth = $state(BANNER_WIDTH * 2);
   let canvasEl = $state<HTMLCanvasElement | null>(null);
   let slotEl = $state<HTMLDivElement | null>(null);
+  let pixelated = $state(true);
 
   const liveTime = $derived(
     timeOfDay(now, reading.sunrise, reading.sunset),
@@ -137,7 +139,38 @@
     const canvas = canvasEl;
     const current = scene;
     const still = reduceMotion;
+    const cssWidth = displayWidth;
     if (!canvas) return;
+
+    const gl = createBannerGl(canvas);
+    if (gl) {
+      pixelated = false;
+      gl.setScene(current);
+      let frame = 0;
+      let raf = 0;
+      const draw = (now: number) => {
+        const rect = canvas.getBoundingClientRect();
+        const width = rect.width > 1 ? rect.width : cssWidth;
+        const height =
+          rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        gl.resize(width, height, dpr);
+        gl.upload(renderPlate(current, still ? 0 : frame));
+        gl.draw(still ? 0 : now / 1000);
+        if (still) return;
+        frame += 1;
+        raf = requestAnimationFrame(draw);
+      };
+      raf = requestAnimationFrame(draw);
+      return () => {
+        cancelAnimationFrame(raf);
+        gl.destroy();
+      };
+    }
+
+    pixelated = true;
+    canvas.width = BANNER_WIDTH;
+    canvas.height = BANNER_HEIGHT;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
@@ -170,9 +203,9 @@
   <canvas
     bind:this={canvasEl}
     class="banner-canvas"
-    width={BANNER_WIDTH}
-    height={BANNER_HEIGHT}
+    class:is-pixelated={pixelated}
     aria-hidden="true"
+    data-renderer={pixelated ? "2d" : "webgl"}
     style="width: {displayWidth}px;"
   ></canvas>
 </div>
@@ -205,6 +238,9 @@
     max-width: 100%;
     height: auto;
     aspect-ratio: 160 / 48;
+  }
+
+  .banner-canvas.is-pixelated {
     image-rendering: crisp-edges;
     image-rendering: pixelated;
   }

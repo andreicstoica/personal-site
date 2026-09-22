@@ -29,7 +29,24 @@ export type BannerImage = {
 	data: Uint8ClampedArray;
 };
 
+/**
+ * Landscape plate for the WebGL weather pass. Sky, land, and sunlight stay
+ * here; clouds, rain, fog, and shimmer are composited in the shader.
+ */
+export function renderPlate(scene: Scene, frame: number): BannerImage {
+	return compose(scene, frame, false);
+}
+
+/** Full frame, including CPU atmosphere. Used when WebGL is unavailable. */
 export function renderScene(scene: Scene, frame: number): BannerImage {
+	return compose(scene, frame, true);
+}
+
+function compose(
+	scene: Scene,
+	frame: number,
+	atmosphere: boolean,
+): BannerImage {
 	const buf = new PixelBuffer(BANNER_WIDTH, BANNER_HEIGHT);
 	const stops = skyStops(scene);
 	const bottom = stops[stops.length - 1] ?? ([0, 0, 0] as Rgb);
@@ -38,9 +55,12 @@ export function renderScene(scene: Scene, frame: number): BannerImage {
 	drawSky(buf, stops, skyHeight);
 	if (showStars(scene)) drawStars(buf, skyHeight, starColor(scene), frame);
 	drawCelestial(buf, scene, skyHeight);
-	drawClouds(buf, scene, frame, skyHeight);
+	if (atmosphere) drawClouds(buf, scene, frame, skyHeight);
 	drawPlace(buf, scene, frame);
 	applySunlight(buf, scene);
+	if (!atmosphere) {
+		return { width: buf.width, height: buf.height, data: buf.data };
+	}
 	if (scene.weather === "sunny" && frame > 0) applyShimmer(buf, frame);
 	if (scene.weather === "fog") applyFog(buf, fogColor(scene), frame);
 	if (scene.weather === "rainy") applyRain(buf, rainColor(scene), frame);
