@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { assertNever } from "../../lib/assertNever";
+  import { portal } from "../../lib/portal";
   import {
     isColdStart,
     parseChatApiSuccess,
@@ -250,15 +251,16 @@
 <svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
 
 <div
+  use:portal
   bind:this={rootRef}
-  class="fixed z-[70] right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] flex flex-col items-end gap-3"
+  class="fixed z-[70] right-3 bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex flex-col items-end gap-2"
 >
   {#if open}
     <div
       id="guide-panel"
       role="dialog"
       aria-label="Ask Andrei"
-      class="flex flex-col w-[min(24rem,calc(100vw-2rem))] h-[min(32rem,calc(100dvh-6.5rem))] border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
+      class="flex flex-col w-[min(24rem,calc(100vw-1.5rem))] h-[min(20rem,50dvh)] border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
     >
       <header class="flex items-start justify-between gap-3 border-b border-[var(--color-bg-secondary)] px-4 py-3">
         <div>
