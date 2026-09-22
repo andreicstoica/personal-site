@@ -1,6 +1,8 @@
 ---
 import FloatingChat from "../components/chat/FloatingChat.svelte";
 import Nav from "../components/nav/Nav.astro";
+import WeatherBanner from "../components/weather/WeatherBanner.svelte";
+import { showWeatherLab } from "../lib/weather/lab";
 import RootLayout from "./RootLayout.astro";
 
 interface Props {
@@ -9,12 +11,17 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+const showLab = showWeatherLab(import.meta.env.DEV);
 ---
 
 <RootLayout title={title} description={description}>
-  <div class="col-span-12 flex flex-col min-h-screen">
+  <div class="col-span-12 flex h-dvh min-w-0 flex-col overflow-hidden">
+    <WeatherBanner client:only="svelte" showLab={showLab} />
     <Nav />
-    <div class="flex-1 overflow-y-auto scrollbar-gutter-stable" data-page-scroll>
+    <div
+      class="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-gutter-stable"
+      data-page-scroll
+    >
       <slot />
     </div>
     <FloatingChat client:load />

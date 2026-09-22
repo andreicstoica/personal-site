@@ -1,10 +1,12 @@
 ---
-import AsciiHero from "./AsciiHero.astro";
+import { personalStatement } from "../../lib/experience";
 import ExperienceTable from "./ExperienceTable.astro";
 ---
 
 <div>
-  <AsciiHero />
+  <div class="max-w-2xl pt-6 pb-4">
+    <p class="text-lead" set:html={personalStatement} />
+  </div>
   <div class="flex flex-col pb-4">
     <ExperienceTable />
   </div>
