@@ -1,0 +1,15 @@
+---
+import RootLayout from "../../layouts/RootLayout.astro";
+import { showWeatherLab } from "../../lib/weather/lab";
+import NavProto from "../../proto/nav/NavProto.svelte";
+
+if (!showWeatherLab(import.meta.env.DEV)) {
+	return Astro.redirect("/");
+}
+---
+
+<RootLayout title="Nav placement">
+  <div class="col-span-12 min-w-0">
+    <NavProto client:only="svelte" />
+  </div>
+</RootLayout>
