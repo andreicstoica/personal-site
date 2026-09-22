@@ -127,9 +127,6 @@
     input = "";
     sending = true;
     waking = false;
-    const wakeHint = setTimeout(() => {
-      waking = true;
-    }, 1200);
 
     try {
       const request = { message: userMessage, history };
@@ -178,7 +175,6 @@
         { id: crypto.randomUUID(), role: "assistant", content: "The guide couldn't answer." },
       ];
     } finally {
-      clearTimeout(wakeHint);
       sending = false;
       waking = false;
     }
@@ -309,32 +305,35 @@
 
         {#each messages as message (message.id)}
           <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
-            <div
-              class="max-w-[85%] px-3 py-2 text-sm border rounded-none whitespace-pre-wrap {message.role === 'user'
-                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-                : 'bg-white text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
-            >
-              <div>{message.content}</div>
-              {#if message.role === "assistant" && message.sources && message.sources.length > 0}
-                <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-1">
-                  {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
-                    {#if source.href && source.href !== actionHref(message.action)}
-                      <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
-                        {source.title}
-                      </a>
-                    {:else if !source.href}
-                      <span class="text-[11px] text-[var(--color-text-muted)]">{source.title}</span>
-                    {/if}
-                  {/each}
-                </div>
-              {/if}
-              {#if message.action?.kind === "navigate"}
+            <div class="flex max-w-[85%] flex-col items-start gap-2">
+              <div
+                class="px-3 py-2 text-sm border rounded-none whitespace-pre-wrap {message.role === 'user'
+                  ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                  : 'bg-white text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+              >
+                <div>{message.content}</div>
+                {#if message.role === "assistant" && message.sources && message.sources.length > 0}
+                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-1">
+                    {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
+                      {#if source.href && source.href !== actionHref(message.action)}
+                        <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
+                          {source.title}
+                        </a>
+                      {:else if !source.href}
+                        <span class="text-[11px] text-[var(--color-text-muted)]">{source.title}</span>
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+              {#if message.role === "assistant" && message.action?.kind === "navigate"}
                 <a
                   href={message.action.href}
-                  class="mt-2 inline-flex text-xs px-2 py-1 border border-current rounded-none"
+                  class="guide-action"
+                  aria-label="Open {message.action.label}"
                 >
-                  {message.action.follow ? "Opening" : "Open"}
-                  {message.action.label}
+                  <Icon name="hammer" class="w-4 h-4" />
+                  <span>{message.action.label}</span>
                 </a>
               {/if}
             </div>
@@ -415,6 +414,20 @@
 
   .guide-input {
     font-size: 1rem;
+  }
+
+  :global(.guide-action),
+  :global(.guide-action:hover) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--color-text-primary);
+    background: white;
+    color: var(--color-text-primary);
+    font-size: 0.75rem;
+    line-height: 1;
+    text-decoration: none;
   }
 
   .guide-launch,

@@ -22,6 +22,8 @@ export const pixelarticons = {
 	"external-link":
 		"M21 11V3h-8v2h4v2h-2v2h-2v2h-2v2H9v2h2v-2h2v-2h2V9h2V7h2v4h2zM11 5H3v16h16v-8h-2v6H5V7h6V5z",
 	link: "M4 6h7v2H4v8h7v2H2V6h2zm16 0h-7v2h7v8h-7v2h9V6h-2zm-3 5H7v2h10v-2z",
+	// Local 24px hammer for the guide action. The other paths are Pixelarticons.
+	hammer: "M6 2h12v6H6V2zm4 6h4v14h-4V8z",
 } as const;
 
 export type PixelarticonName = keyof typeof pixelarticons;
