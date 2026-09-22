@@ -5,19 +5,14 @@ export type InferenceEnv = {
 	HF_API_URL?: string;
 	HF_API_KEY?: string;
 	HF_MODEL_ID?: string;
-	MODAL_API_URL?: string;
-	MODAL_API_KEY?: string;
-	MODAL_MODEL_ID?: string;
-	MODAL_PROXY_KEY?: string;
-	MODAL_PROXY_SECRET?: string;
 };
 
-export type ProviderName = "local" | "hf" | "modal";
+export type ProviderName = "local" | "hf";
 
-export type Auth =
-	| { kind: "none" }
-	| { kind: "bearer"; token: string }
-	| { kind: "modal-proxy"; key: string; secret: string; token: string | null };
+// Modal is a possible later host: scale-to-zero GPU, per-second billing,
+// Starter plan is $0/month with $30 of compute credit. Not wired. Hugging Face
+// (MODEL_PROVIDER=hf) is the hosted provider for now.
+export type Auth = { kind: "none" } | { kind: "bearer"; token: string };
 
 export type ResolvedInference =
 	| {
@@ -75,38 +70,6 @@ export function resolveInference(env: InferenceEnv): ResolvedInference {
 				auth: { kind: "bearer", token },
 			};
 		}
-		case "modal": {
-			const baseUrl = clean(env.MODAL_API_URL);
-			if (!baseUrl) {
-				return {
-					kind: "unconfigured",
-					provider: "modal",
-					reason: "Modal needs MODAL_API_URL",
-				};
-			}
-			const proxyKey = clean(env.MODAL_PROXY_KEY);
-			const proxySecret = clean(env.MODAL_PROXY_SECRET);
-			const apiKey = clean(env.MODAL_API_KEY);
-			let auth: Auth = { kind: "none" };
-			if (proxyKey && proxySecret) {
-				auth = {
-					kind: "modal-proxy",
-					key: proxyKey,
-					secret: proxySecret,
-					token: apiKey ?? null,
-				};
-			} else if (apiKey) {
-				auth = { kind: "bearer", token: apiKey };
-			}
-			return {
-				kind: "ready",
-				provider: "modal",
-				baseUrl: stripSlash(baseUrl),
-				model:
-					clean(env.MODAL_MODEL_ID) ?? clean(env.HF_MODEL_ID) ?? DEFAULT_MODEL,
-				auth,
-			};
-		}
 		default:
 			return {
 				kind: "unconfigured",
@@ -122,14 +85,6 @@ export function authHeaders(auth: Auth): Record<string, string> {
 			return {};
 		case "bearer":
 			return { Authorization: `Bearer ${auth.token}` };
-		case "modal-proxy": {
-			const headers: Record<string, string> = {
-				"Modal-Key": auth.key,
-				"Modal-Secret": auth.secret,
-			};
-			if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
-			return headers;
-		}
 		default: {
 			const _exhaustive: never = auth;
 			return _exhaustive;
