@@ -9,6 +9,7 @@
 		"astro": "astro",
 		"lint": "biome check --error-on-warnings src/",
 		"lint:fix": "biome check --write src/",
+		"lint:ui": "eslint .",
 		"check": "astro check && svelte-check --tsconfig ./tsconfig.json",
 		"test": "bun test",
 		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build",
@@ -32,9 +33,13 @@
 	"devDependencies": {
 		"@astrojs/check": "^0.9.10",
 		"@biomejs/biome": "^2.2.6",
+		"@shadcn/lint": "^0.2.0",
+		"@typescript-eslint/parser": "^8.70.1",
 		"@xenova/transformers": "^2.17.2",
+		"eslint": "^10.11.0",
 		"p-limit": "^5.0.0",
 		"svelte-check": "^4.7.6",
+		"svelte-eslint-parser": "^1.8.1",
 		"tsx": "^4.20.6",
 		"typescript": "5.9.2"
 	}

@@ -12,6 +12,7 @@
 ## Build, Test, and Development Commands
 
 - `bun run lint` / `bun run check` / `bun run test` / `bun run verify`: Biome on `src/`, `astro check`, `svelte-check`, `bun test`, then production build. `verify` is the CI gate (`/.github/workflows/check.yml`).
+- `bun run lint:ui`: `@shadcn/lint` via ESLint on Svelte templates and `src/**/*.ts`. No design-system rules are enabled yet; add them in `eslint.config.mjs`. This does not replace Biome.
 - `bun run dev`: start Astro locally at `http://localhost:4321` with hot reload.
 - `bun run build`: production build to `dist`.
 - `bun run preview`: serve the built output for final verification.
