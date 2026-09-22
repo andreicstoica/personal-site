@@ -37,7 +37,7 @@
 ## Configuration & Environment Tips
 
 - Target Node.js via npm or Bun; avoid destructive git commands unless explicitly requested.
-- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`. Hugging Face is the hosted provider. Modal (scale-to-zero GPU, Starter is $0/month with $30 of compute credit) is a possible later alternative and is not wired. The guide's notes live in `src/content/memory`. `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
+- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`. Hugging Face is the hosted provider. The guide does not call it, or any other model, unless `GUIDE_MODEL=on`. Modal (scale-to-zero GPU, Starter is $0/month with $30 of compute credit) is a possible later alternative and is not wired. The guide's notes live in `src/content/memory`. `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
 - Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
 
 # User Instructions
