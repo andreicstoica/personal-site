@@ -1,10 +1,11 @@
 """Serve a fine-tune on Modal with vLLM, billed only while a GPU is up.
 
 Modal stays deployed and scales to zero. You pay per second of GPU time, not
-for a VM that has to be manually paused. The Starter plan includes a monthly
-compute credit. A small model on an L4 (about $0.80/hr) with a few minutes of
-idle before shutdown fits a personal site inside that credit unless traffic
-is heavy.
+for a VM that has to be manually paused. The Starter plan is $0/month and includes $30 of compute credit; usage past
+that credit is billed per second. A small model on an L4 (about $0.80/hr)
+with a few minutes of idle before shutdown fits a personal site inside that
+credit unless traffic is heavy. The live site can stay on Hugging Face
+(MODEL_PROVIDER=hf) until this app is deployed.
 
 Cold start: the first request after shutdown can 503 until vLLM is listening.
 andrei.bio retries those and answers from markdown notes if the wake runs long.
