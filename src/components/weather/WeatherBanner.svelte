@@ -4,7 +4,7 @@
     BANNER_WIDTH,
     displayScale,
   } from "../../lib/weather/buffer";
-  import { renderPlate, renderScene } from "../../lib/weather/draw";
+  import { renderPlate } from "../../lib/weather/draw";
   import { createBannerGl } from "../../lib/weather/glBanner";
   import {
     loadOrCreatePlace,
@@ -53,7 +53,6 @@
   let displayWidth = $state(BANNER_WIDTH * 2);
   let canvasEl = $state<HTMLCanvasElement | null>(null);
   let slotEl = $state<HTMLDivElement | null>(null);
-  let pixelated = $state(true);
 
   const liveTime = $derived(
     timeOfDay(now, reading.sunrise, reading.sunset),
@@ -143,50 +142,28 @@
     if (!canvas) return;
 
     const gl = createBannerGl(canvas);
-    if (gl) {
-      pixelated = false;
-      gl.setScene(current);
-      let frame = 0;
-      let raf = 0;
-      const draw = (now: number) => {
-        const rect = canvas.getBoundingClientRect();
-        const width = rect.width > 1 ? rect.width : cssWidth;
-        const height =
-          rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        gl.resize(width, height, dpr);
-        gl.upload(renderPlate(current, still ? 0 : frame));
-        gl.draw(still ? 0 : now / 1000);
-        if (still) return;
-        frame += 1;
-        raf = requestAnimationFrame(draw);
-      };
-      raf = requestAnimationFrame(draw);
-      return () => {
-        cancelAnimationFrame(raf);
-        gl.destroy();
-      };
-    }
-
-    pixelated = true;
-    canvas.width = BANNER_WIDTH;
-    canvas.height = BANNER_HEIGHT;
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) return;
-    ctx.imageSmoothingEnabled = false;
+    if (!gl) return;
+    gl.setScene(current);
     let frame = 0;
     let raf = 0;
-    const draw = () => {
-      const image = renderScene(current, still ? 0 : frame);
-      const pixels = new Uint8ClampedArray(image.data.byteLength);
-      pixels.set(image.data);
-      ctx.putImageData(new ImageData(pixels, image.width, image.height), 0, 0);
+    const draw = (now: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width > 1 ? rect.width : cssWidth;
+      const height =
+        rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      gl.resize(width, height, dpr);
+      gl.upload(renderPlate(current, still ? 0 : frame));
+      gl.draw(still ? 0 : now / 1000);
       if (still) return;
       frame += 1;
       raf = requestAnimationFrame(draw);
     };
-    draw();
-    return () => cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      gl.destroy();
+    };
   });
 </script>
 
@@ -203,9 +180,8 @@
   <canvas
     bind:this={canvasEl}
     class="banner-canvas"
-    class:is-pixelated={pixelated}
     aria-hidden="true"
-    data-renderer={pixelated ? "2d" : "webgl"}
+    data-renderer="webgl"
     style="width: {displayWidth}px;"
   ></canvas>
 </div>
@@ -238,10 +214,5 @@
     max-width: 100%;
     height: auto;
     aspect-ratio: 160 / 48;
-  }
-
-  .banner-canvas.is-pixelated {
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
   }
 </style>
