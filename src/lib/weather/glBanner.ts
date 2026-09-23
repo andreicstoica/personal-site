@@ -1,6 +1,8 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
 import type { BannerImage } from "./draw";
 import { type WeatherEffect, weatherEffect } from "./effects";
+import { LAYER_SPEEDS } from "./landscapes";
+import { lighting } from "./palette";
 import type { Scene } from "./scene";
 import { BANNER_FRAG, BANNER_VERT } from "./weatherShader";
 
@@ -13,6 +15,14 @@ export type BannerGl = {
 };
 
 const UNIFORMS = [
+	"uZenith",
+	"uHorizon",
+	"uAmbient",
+	"uDirect",
+	"uSun",
+	"uNight",
+	"uCoast",
+	"uSpeeds",
 	"uPlate",
 	"uPlateSize",
 	"uTime",
@@ -106,9 +116,9 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 	};
 
 	gl.bindTexture(gl.TEXTURE_2D, texture);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 	let effect: WeatherEffect = weatherEffect({
@@ -117,6 +127,12 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		time: "day",
 		colorMode: "light",
 	});
+	let current: Scene = {
+		place: "painted-hills",
+		weather: "clear",
+		time: "day",
+		colorMode: "light",
+	};
 	let plateWidth = 0;
 	let plateHeight = 0;
 	let alive = true;
@@ -124,7 +140,7 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 	return {
 		upload(image) {
 			if (!alive) return;
-			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			if (plateWidth !== image.width || plateHeight !== image.height) {
 				gl.texImage2D(
@@ -156,6 +172,7 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		},
 		setScene(scene) {
 			effect = weatherEffect(scene);
+			current = scene;
 		},
 		resize(cssWidth, cssHeight, dpr) {
 			if (!alive) return;
@@ -170,6 +187,15 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		draw(timeSeconds) {
 			if (!alive || plateWidth === 0) return;
 			bindPass();
+			const light = lighting(current);
+			gl.uniform3fv(uniform("uZenith"), light.zenith);
+			gl.uniform3fv(uniform("uHorizon"), light.horizon);
+			gl.uniform3fv(uniform("uAmbient"), light.ambient);
+			gl.uniform3fv(uniform("uDirect"), light.direct);
+			gl.uniform3fv(uniform("uSpeeds"), LAYER_SPEEDS);
+			gl.uniform2fv(uniform("uSun"), light.sun);
+			gl.uniform1f(uniform("uNight"), current.time === "night" ? 1 : 0);
+			gl.uniform1f(uniform("uCoast"), current.place === "oregon-coast" ? 1 : 0);
 			gl.viewport(0, 0, canvas.width, canvas.height);
 			gl.uniform1f(uniform("uTime"), timeSeconds);
 			gl.uniform1f(uniform("uSkyFrac"), effect.skyFrac);

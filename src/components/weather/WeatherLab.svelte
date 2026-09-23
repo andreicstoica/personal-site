@@ -11,7 +11,6 @@
     type Weather,
   } from "../../lib/weather/scene";
 
-  // Delete this file and its mount in WeatherBanner.svelte before merge.
   let {
     place,
     weather,
@@ -80,7 +79,7 @@
       onchange={(event) => choose(event, TIMES, onTime)}
     >
       {#each TIMES as option}
-        <option value={option}>{option}</option>
+        <option value={option}>{option === "golden-hour" ? "golden hour" : option}</option>
       {/each}
     </select>
   </label>

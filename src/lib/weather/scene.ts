@@ -16,7 +16,7 @@ export const weatherSchema = z.enum([
 	"fog",
 ]);
 
-export const timeSchema = z.enum(["dawn", "day", "dusk", "night"]);
+export const timeSchema = z.enum(["day", "golden-hour", "night"]);
 
 export const colorModeSchema = z.enum(["light", "dark"]);
 
@@ -73,7 +73,7 @@ export function fallbackReading(): StoredReading {
 
 export function sceneLabel(scene: Scene): string {
 	const place = PLACE_LABEL[scene.place];
-	return `${place}, ${scene.time}, ${scene.weather}`;
+	return `${place}, ${scene.time === "golden-hour" ? "golden hour" : scene.time}, ${scene.weather}`;
 }
 
 /** Sunny is hot, high-visibility sun — a clear sky alone stays clear. */
@@ -122,10 +122,10 @@ export function timeOfDay(
 		return timeFromClock(new Date(nowMs));
 	}
 	if (nowMs >= sunriseMs - DAWN_LEAD_MS && nowMs < sunriseMs + DAWN_TAIL_MS) {
-		return "dawn";
+		return "golden-hour";
 	}
 	if (nowMs >= sunsetMs - DUSK_LEAD_MS && nowMs < sunsetMs + DUSK_TAIL_MS) {
-		return "dusk";
+		return "golden-hour";
 	}
 	if (nowMs >= sunriseMs + DAWN_TAIL_MS && nowMs < sunsetMs - DUSK_LEAD_MS) {
 		return "day";
@@ -135,8 +135,8 @@ export function timeOfDay(
 
 export function timeFromClock(date: Date): TimeOfDay {
 	const minutes = date.getHours() * 60 + date.getMinutes();
-	if (minutes >= 5 * 60 && minutes < 7 * 60 + 30) return "dawn";
+	if (minutes >= 5 * 60 && minutes < 7 * 60 + 30) return "golden-hour";
 	if (minutes >= 7 * 60 + 30 && minutes < 17 * 60 + 30) return "day";
-	if (minutes >= 17 * 60 + 30 && minutes < 20 * 60) return "dusk";
+	if (minutes >= 17 * 60 + 30 && minutes < 20 * 60) return "golden-hour";
 	return "night";
 }

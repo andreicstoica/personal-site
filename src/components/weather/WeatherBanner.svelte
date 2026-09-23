@@ -115,42 +115,66 @@
     const canvas = canvasEl;
     if (!canvas) return;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
+    let elapsed = 0;
+    let previous = 0;
+    let visible = false;
     let surface = mountBanner(canvas);
     let cancelled = false;
 
-    const paint = (now: number) => {
+    const paint = () => {
       if (!surface) return true;
       const current = untrack(() => scene);
       const still = motionQuery.matches;
-      const rect = canvas.getBoundingClientRect();
+      const rect =
+        canvas.parentElement?.getBoundingClientRect() ?? canvas.getBoundingClientRect();
       const width = rect.width > 1 ? rect.width : BANNER_WIDTH * 2;
       const height =
         rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       surface.resize(width, height, dpr);
-      surface.frame(current, still ? 0 : frame, still ? 0 : now / 1000);
-      return still;
+      surface.frame(current, still ? 0 : elapsed);
+      return still || canvas.dataset.renderer === "plate";
     };
 
     const draw = (now: number) => {
-      if (paint(now)) return;
-      frame += 1;
+      if (document.hidden || !visible) {
+        previous = 0;
+        return;
+      }
+      if (previous) elapsed += (now - previous) / 1000;
+      previous = now;
+      if (paint()) return;
       drawRaf = requestAnimationFrame(draw);
     };
 
-    const onMotion = () => {
+    const resume = () => {
       cancelAnimationFrame(drawRaf);
-      frame = 0;
-      if (paint(0)) return;
-      drawRaf = requestAnimationFrame(draw);
+      previous = 0;
+      if (!document.hidden && visible) drawRaf = requestAnimationFrame(draw);
     };
-
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry?.isIntersecting ?? false;
+      resume();
+    });
+    observer.observe(canvas.parentElement ?? canvas);
+    const resize = new ResizeObserver(() => {
+      if (visible && !document.hidden) paint();
+    });
+    resize.observe(canvas.parentElement ?? canvas);
     const begin = () => {
       if (cancelled || !surface) return;
-      motionQuery.addEventListener("change", onMotion);
-      draw(performance.now());
+      motionQuery.addEventListener("change", resume);
+      document.addEventListener("visibilitychange", resume);
+      resume();
     };
+
+    // Track scene changes even when reduced motion stops the animation loop.
+    const stopSceneWatch = $effect.root(() => {
+      $effect(() => {
+        scene;
+        if (visible && !document.hidden) paint();
+      });
+    });
 
     if (surface) {
       begin();
@@ -165,7 +189,11 @@
     return () => {
       cancelled = true;
       cancelAnimationFrame(drawRaf);
-      motionQuery.removeEventListener("change", onMotion);
+      motionQuery.removeEventListener("change", resume);
+      document.removeEventListener("visibilitychange", resume);
+      observer.disconnect();
+      resize.disconnect();
+      stopSceneWatch();
       surface?.destroy();
     };
   });

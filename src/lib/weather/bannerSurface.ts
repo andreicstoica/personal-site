@@ -1,6 +1,6 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
 import type { BannerImage } from "./draw";
-import { renderPlate } from "./draw";
+import { renderLayers, renderPlate } from "./draw";
 import { createBannerGl } from "./glBanner";
 import type { Scene } from "./scene";
 
@@ -13,7 +13,7 @@ export function whenBannerReady(canvas: HTMLCanvasElement): Promise<void> {
 		stencil: false,
 		premultipliedAlpha: false,
 	});
-	if (!(gl instanceof WebGL2RenderingContext) || !gl.isContextLost()) {
+	if (!gl || !gl.isContextLost()) {
 		return Promise.resolve();
 	}
 	return new Promise((resolve) => {
@@ -26,39 +26,68 @@ export function whenBannerReady(canvas: HTMLCanvasElement): Promise<void> {
 
 export type BannerFrame = {
 	resize: (cssWidth: number, cssHeight: number, dpr: number) => void;
-	frame: (scene: Scene, animationFrame: number, timeSeconds: number) => void;
+	frame: (scene: Scene, timeSeconds: number) => void;
 	destroy: () => void;
 };
 
 /**
- * WebGL composites weather over the plate. If that context cannot be created,
+ * WebGL lights and composites the terrain layers. If that context cannot be created,
  * paint the plate directly so the scene is never left as a black canvas.
  */
 export function mountBanner(canvas: HTMLCanvasElement): BannerFrame | null {
 	const gl = createBannerGl(canvas);
 	if (gl) {
 		canvas.dataset.renderer = "webgl";
+		let uploadedPlace: Scene["place"] | null = null;
 		return {
 			resize: gl.resize,
-			frame(scene, animationFrame, timeSeconds) {
+			frame(scene, timeSeconds) {
 				gl.setScene(scene);
-				gl.upload(renderPlate(scene, animationFrame));
+				if (uploadedPlace !== scene.place) {
+					gl.upload(renderLayers(scene.place));
+					uploadedPlace = scene.place;
+				}
 				gl.draw(timeSeconds);
 			},
 			destroy: gl.destroy,
 		};
 	}
 
-	const plate = createPlatePainter(canvas);
-	if (!plate) return null;
+	// A canvas that acquired WebGL cannot subsequently acquire a 2D context.
+	const fallback = document.createElement("canvas");
+	fallback.className = canvas.className;
+	fallback.style.cssText = canvas.style.cssText;
+	fallback.setAttribute("aria-hidden", "true");
+	canvas.after(fallback);
+	canvas.style.display = "none";
+	const plate = createPlatePainter(fallback);
+	if (!plate) {
+		fallback.remove();
+		canvas.style.display = "";
+		return null;
+	}
 	canvas.dataset.renderer = "plate";
+	fallback.dataset.renderer = "plate";
+	let lastScene = "";
+	let lastSize = "";
 	return {
-		resize: plate.resize,
-		frame(scene, animationFrame) {
-			plate.paint(renderPlate(scene, animationFrame));
+		resize: (width, height, dpr) => {
+			const size = `${width},${height},${dpr}`;
+			if (size === lastSize) return;
+			lastSize = size;
+			plate.resize(width, height, dpr);
+			lastScene = "";
+		},
+		frame(scene) {
+			const key = JSON.stringify(scene);
+			if (key === lastScene) return;
+			lastScene = key;
+			plate.paint(renderPlate(scene));
 		},
 		destroy() {
 			plate.destroy();
+			fallback.remove();
+			canvas.style.display = "";
 		},
 	};
 }
@@ -96,7 +125,7 @@ function createPlatePainter(canvas: HTMLCanvasElement): PlatePainter | null {
 				0,
 				0,
 			);
-			ctx.imageSmoothingEnabled = false;
+			ctx.imageSmoothingEnabled = true;
 			ctx.drawImage(plate, 0, 0, canvas.width, canvas.height);
 		},
 		destroy() {
