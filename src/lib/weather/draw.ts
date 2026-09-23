@@ -1,7 +1,7 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
 import { DITHER_CELL_CSS, quantize } from "./dither";
 import { weatherEffect } from "./effects";
-import { DETAIL, material } from "./landscapes";
+import { DETAIL, material, vistaWindow } from "./landscapes";
 import { ATLAS_MARGIN, ATLAS_WIDTH, layerOffsets } from "./motion";
 import { grade, lighting, mix, type Rgb } from "./palette";
 import type { Place, Scene } from "./scene";
@@ -91,8 +91,18 @@ export function renderPlate(
 				);
 				if (surface) {
 					depth = (layer + 1) / 3;
+					const lit = grade(surface, scene);
+					const window =
+						scene.place === "columbia-gorge" &&
+						layer === 1 &&
+						vistaWindow(shifted, uvY * BANNER_HEIGHT);
+					const emission = window ? light.windowLight : ([0, 0, 0] as const);
 					color = mix(
-						grade(surface, scene),
+						[
+							lit[0] + emission[0] * 255,
+							lit[1] + emission[1] * 255,
+							lit[2] + emission[2] * 255,
+						],
 						[
 							light.horizon[0] * 255,
 							light.horizon[1] * 255,

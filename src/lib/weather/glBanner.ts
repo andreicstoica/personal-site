@@ -17,6 +17,7 @@ export type BannerGl = {
 };
 
 const UNIFORMS = [
+	"uWindowLight",
 	"uZenith",
 	"uHorizon",
 	"uAmbient",
@@ -197,6 +198,10 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			if (!alive || plateWidth === 0) return;
 			bindPass();
 			const light = lighting(current);
+			gl.uniform3fv(
+				uniform("uWindowLight"),
+				current.place === "columbia-gorge" ? light.windowLight : [0, 0, 0],
+			);
 			gl.uniform3fv(uniform("uZenith"), light.zenith);
 			gl.uniform3fv(uniform("uHorizon"), light.horizon);
 			gl.uniform3fv(uniform("uAmbient"), light.ambient);

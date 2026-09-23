@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { DITHER_LEVELS, quantize } from "./dither";
 import { renderLayers, renderPlate } from "./draw";
-import { DETAIL, material } from "./landscapes";
+import { DETAIL, material, vistaWindow } from "./landscapes";
 import { createLightningTimeline, lightningGap } from "./lightning";
 import {
 	ATLAS_MARGIN,
@@ -9,6 +9,7 @@ import {
 	layerOffsets,
 	OSCILLATION_PERIOD,
 } from "./motion";
+import { lighting } from "./palette";
 import { PLACES, sceneLabel, timeFromClock, timeOfDay } from "./scene";
 
 const minute = 60_000;
@@ -61,6 +62,76 @@ describe("layered terrain", () => {
 			expect(material("cascade-forest", 2, x, 47.9)).not.toBeNull();
 		}
 	});
+	test("Smith Rock, Haystack, and Crown Point retain continuous bases", () => {
+		for (const [place, layer] of [
+			["bend-plateau", 0],
+			["oregon-coast", 0],
+			["columbia-gorge", 1],
+		] as const) {
+			for (const x of place === "bend-plateau"
+				? [48, 67, 77, 85, 97, 107, 116]
+				: place === "oregon-coast"
+					? [93, 101, 107, 116, 130, 137, 143]
+					: [8, 25, 40, 137, 140, 141, 142, 150, 164]) {
+				let entered = false;
+				for (let y = 0.125; y < 48; y += 0.25) {
+					const covered = material(place, layer, x, y) !== null;
+					if (entered && !covered)
+						throw new Error(`${place}: gap at ${x},${y}`);
+					entered ||= covered;
+				}
+			}
+		}
+	});
+	test("Gorge ridges connect to the sides and the river has no detached land", () => {
+		for (let second = 0; second <= 30; second += 0.25) {
+			const offsets = layerOffsets(second);
+			for (let y = 18; y < 35; y += 0.5) {
+				let crossedGap = false;
+				let enteredRight = false;
+				for (let x = 0; x < 160; x += 0.5) {
+					const land =
+						material("columbia-gorge", 0, x - offsets[0], y) !== null;
+					if (!land && enteredRight)
+						throw new Error(`detached ridge at ${second},${x},${y}`);
+					if (!land) crossedGap = true;
+					if (land && crossedGap) enteredRight = true;
+				}
+			}
+			for (let y = 35.5; y <= 44; y += 0.5) {
+				let enteredBank = false;
+				for (let x = 30; x < 160; x += 0.5) {
+					const color = material("columbia-gorge", 1, x - offsets[1], y);
+					if (!color) throw new Error("river coverage gap");
+					const bank = color[1] < 75;
+					if (enteredBank && !bank)
+						throw new Error(`detached bank at ${second},${x},${y}`);
+					enteredBank ||= bank;
+					if (x < 115) {
+						expect(bank).toBe(false);
+						expect(material("columbia-gorge", 2, x - offsets[2], y)).toBeNull();
+					}
+				}
+			}
+		}
+	});
+	test("Vista House has two supported windows with night light", () => {
+		for (const x of [140, 142]) {
+			expect(vistaWindow(x, 16)).toBe(true);
+			expect(material("columbia-gorge", 1, x, 16)).not.toBeNull();
+		}
+		expect(vistaWindow(141, 16)).toBe(false);
+		const scene = {
+			place: "columbia-gorge",
+			weather: "clear",
+			colorMode: "light",
+		} as const;
+		expect(lighting({ ...scene, time: "day" }).windowLight).toEqual([0, 0, 0]);
+		expect(
+			lighting({ ...scene, time: "night" }).windowLight[0],
+		).toBeGreaterThan(0.5);
+	});
+
 	for (const place of PLACES)
 		test(`${place} has opaque ground at every oscillation phase`, () => {
 			const image = renderLayers(place);

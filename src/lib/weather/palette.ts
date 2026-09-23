@@ -6,12 +6,14 @@ export type Lighting = {
 	horizon: Rgb;
 	ambient: Rgb;
 	direct: Rgb;
+	windowLight: Rgb;
 	sun: readonly [number, number];
 };
 
 /** Linear shader inputs; the fallback uses this same sky and land light. */
 export const LIGHTING: Record<TimeOfDay, Lighting> = {
 	day: {
+		windowLight: [0, 0, 0],
 		zenith: [0.19, 0.43, 0.68],
 		horizon: [0.77, 0.86, 0.87],
 		ambient: [0.76, 0.83, 0.88],
@@ -19,6 +21,7 @@ export const LIGHTING: Record<TimeOfDay, Lighting> = {
 		sun: [0.73, 0.18],
 	},
 	"golden-hour": {
+		windowLight: [0, 0, 0],
 		zenith: [0.28, 0.26, 0.46],
 		horizon: [0.98, 0.65, 0.38],
 		ambient: [0.65, 0.54, 0.57],
@@ -26,6 +29,7 @@ export const LIGHTING: Record<TimeOfDay, Lighting> = {
 		sun: [0.76, 0.48],
 	},
 	night: {
+		windowLight: [0.8, 0.57, 0.23],
 		zenith: [0.018, 0.03, 0.075],
 		horizon: [0.16, 0.23, 0.32],
 		ambient: [0.16, 0.23, 0.35],
@@ -66,6 +70,7 @@ export function lighting(scene: Scene): Lighting {
 		ambient: scale(base.ambient, mode * (1 - overcast * 0.2)),
 		direct: scale(base.direct, mode * (1 - overcast)),
 		sun: base.sun,
+		windowLight: scale(base.windowLight, mode),
 	};
 }
 

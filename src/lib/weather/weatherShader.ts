@@ -1,4 +1,5 @@
 import { DITHER_LEVELS } from "./dither";
+import { VISTA_WINDOWS } from "./landscapes";
 
 export const BANNER_VERT = `#version 300 es
 in vec2 aPos;
@@ -18,6 +19,7 @@ out vec4 outColor;
 uniform sampler2D uPlate;
 uniform vec3 uZenith, uHorizon, uAmbient, uDirect, uOffsets;
 uniform vec2 uSun;
+uniform vec3 uWindowLight;
 uniform float uNight, uCoast;
 uniform float uAtlasWidth, uDitherSize;
 uniform vec2 uPlateSize;
@@ -113,6 +115,11 @@ void main() {
     float direction = clamp(0.55 + (uSun.x - uv.x) * 0.25 + (detail - 0.5) * 0.35, 0.0, 1.0);
     vec3 land = albedo * (uAmbient + uDirect * direction);
     land *= 1.0 - uLandShade * clouds * 0.3;
+    if (i == 1) {
+      vec2 local = vec2(p.x - uOffsets[i], p.y);
+      float windows = ${VISTA_WINDOWS.map(([left, right, top, bottom]) => `(step(${left.toFixed(1)}, local.x) * (1.0 - step(${right.toFixed(1)}, local.x)) * step(${top.toFixed(1)}, local.y) * (1.0 - step(${bottom.toFixed(1)}, local.y)))`).join(" + ")};
+      land += uWindowLight * windows;
+    }
     float haze = (2.0 - layer) * 0.14 + uFog * (0.42 - layer * 0.13);
     land = mix(land, uHorizon, haze);
     color = mix(color, land, surface.a);
@@ -143,7 +150,7 @@ void main() {
 
   if (uCoast > 0.5) {
     float wave = sin(p.y * 8.0 + sin(p.x * 0.22 + uTime * 0.6));
-    color += uHorizon * 0.07 * smoothstep(0.8, 1.0, wave) * step(22.0, p.y) * (1.0 - step(0.5, depth));
+    color += uHorizon * 0.07 * smoothstep(0.8, 1.0, wave) * step(28.0, p.y) * (1.0 - step(0.5, depth));
   }
 
   if (uRain > 0.001) {
