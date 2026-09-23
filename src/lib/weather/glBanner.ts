@@ -1,7 +1,7 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
 import { DITHER_CELL_CSS } from "./dither";
-import type { BannerImage } from "./draw";
-import { type WeatherEffect, weatherEffect } from "./effects";
+import { type BannerImage, renderMotionPatches } from "./draw";
+import { birdsAllowed, type WeatherEffect, weatherEffect } from "./effects";
 import { createLightningTimeline } from "./lightning";
 import { ATLAS_WIDTH, layerOffsets } from "./motion";
 import { lighting } from "./palette";
@@ -17,6 +17,8 @@ export type BannerGl = {
 };
 
 const UNIFORMS = [
+	"uFlashLight",
+	"uFlashBlue",
 	"uWindowLight",
 	"uZenith",
 	"uHorizon",
@@ -24,7 +26,6 @@ const UNIFORMS = [
 	"uDirect",
 	"uSun",
 	"uNight",
-	"uCoast",
 	"uOffsets",
 	"uAtlasWidth",
 	"uDitherSize",
@@ -44,6 +45,10 @@ const UNIFORMS = [
 	"uLightning",
 	"uFlash",
 	"uFlashSeed",
+	"uFlashOrigin",
+	"uFlashCool",
+	"uBirds",
+	"uHood",
 	"uGolden",
 	"uDust",
 	"uBubbles",
@@ -143,12 +148,14 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 	let plateWidth = 0;
 	let plateHeight = 0;
 	let alive = true;
+	let lastMotionFrame = -1;
 	let ditherSize: number = DITHER_CELL_CSS;
 	const lightningAt = createLightningTimeline();
 
 	return {
 		upload(image) {
 			if (!alive) return;
+			lastMotionFrame = -1;
 			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			if (plateWidth !== image.width || plateHeight !== image.height) {
@@ -197,7 +204,28 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		draw(timeSeconds) {
 			if (!alive || plateWidth === 0) return;
 			bindPass();
+			const motionFrame = Math.floor(timeSeconds * 24);
+			if (lastMotionFrame !== motionFrame) {
+				for (const patch of renderMotionPatches(
+					current.place,
+					motionFrame / 24,
+				))
+					gl.texSubImage2D(
+						gl.TEXTURE_2D,
+						0,
+						patch.x,
+						patch.y,
+						patch.width,
+						patch.height,
+						gl.RGBA,
+						gl.UNSIGNED_BYTE,
+						patch.data,
+					);
+				lastMotionFrame = motionFrame;
+			}
 			const light = lighting(current);
+			gl.uniform3fv(uniform("uFlashLight"), light.flashLight);
+			gl.uniform3fv(uniform("uFlashBlue"), light.flashCool);
 			gl.uniform3fv(
 				uniform("uWindowLight"),
 				current.place === "columbia-gorge" ? light.windowLight : [0, 0, 0],
@@ -211,7 +239,6 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			gl.uniform1f(uniform("uDitherSize"), ditherSize);
 			gl.uniform2fv(uniform("uSun"), light.sun);
 			gl.uniform1f(uniform("uNight"), current.time === "night" ? 1 : 0);
-			gl.uniform1f(uniform("uCoast"), current.place === "oregon-coast" ? 1 : 0);
 			gl.viewport(0, 0, canvas.width, canvas.height);
 			gl.uniform1f(uniform("uTime"), timeSeconds);
 			gl.uniform1f(uniform("uSkyFrac"), effect.skyFrac);
@@ -228,6 +255,16 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			const lightning = lightningAt(timeSeconds);
 			gl.uniform1f(uniform("uFlash"), lightning.flash);
 			gl.uniform1f(uniform("uFlashSeed"), lightning.seed);
+			gl.uniform1f(uniform("uFlashOrigin"), lightning.origin);
+			gl.uniform1f(uniform("uFlashCool"), lightning.cool);
+			gl.uniform1f(
+				uniform("uBirds"),
+				birdsAllowed(current.weather, effect.rain) ? 1 : 0,
+			);
+			gl.uniform1f(
+				uniform("uHood"),
+				current.place === "cascade-forest" ? 1 : 0,
+			);
 			gl.uniform1f(uniform("uGolden"), current.time === "golden-hour" ? 1 : 0);
 			gl.uniform1f(uniform("uDust"), effect.dust);
 			gl.uniform1f(uniform("uBubbles"), effect.bubbles);

@@ -12,7 +12,6 @@
     type ColorMode,
     fallbackReading,
     type Place,
-    presentLiveWeather,
     sceneLabel,
     type StoredReading,
     type TimeOfDay,
@@ -51,7 +50,7 @@
   const liveTime = $derived(
     timeOfDay(now, reading.sunrise, reading.sunset),
   );
-  const liveWeather = $derived(presentLiveWeather(reading.weather, liveTime));
+  const liveWeather = $derived(reading.weather);
   const scene = $derived({
     place: placeOverride ?? place,
     weather: weatherOverride ?? liveWeather,

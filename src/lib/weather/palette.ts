@@ -7,12 +7,16 @@ export type Lighting = {
 	ambient: Rgb;
 	direct: Rgb;
 	windowLight: Rgb;
+	flashLight: Rgb;
+	flashCool: Rgb;
 	sun: readonly [number, number];
 };
 
 /** Linear shader inputs; the fallback uses this same sky and land light. */
 export const LIGHTING: Record<TimeOfDay, Lighting> = {
 	day: {
+		flashLight: [0.72, 0.82, 1],
+		flashCool: [0.48, 0.68, 1],
 		windowLight: [0, 0, 0],
 		zenith: [0.19, 0.43, 0.68],
 		horizon: [0.77, 0.86, 0.87],
@@ -21,6 +25,8 @@ export const LIGHTING: Record<TimeOfDay, Lighting> = {
 		sun: [0.73, 0.18],
 	},
 	"golden-hour": {
+		flashLight: [0.72, 0.82, 1],
+		flashCool: [0.48, 0.68, 1],
 		windowLight: [0, 0, 0],
 		zenith: [0.28, 0.26, 0.46],
 		horizon: [0.98, 0.65, 0.38],
@@ -29,6 +35,8 @@ export const LIGHTING: Record<TimeOfDay, Lighting> = {
 		sun: [0.76, 0.48],
 	},
 	night: {
+		flashLight: [0.72, 0.82, 1],
+		flashCool: [0.48, 0.68, 1],
 		windowLight: [0.8, 0.57, 0.23],
 		zenith: [0.018, 0.03, 0.075],
 		horizon: [0.16, 0.23, 0.32],
@@ -71,6 +79,8 @@ export function lighting(scene: Scene): Lighting {
 		direct: scale(base.direct, mode * (1 - overcast)),
 		sun: base.sun,
 		windowLight: scale(base.windowLight, mode),
+		flashLight: scale(base.flashLight, mode),
+		flashCool: scale(base.flashCool, mode),
 	};
 }
 

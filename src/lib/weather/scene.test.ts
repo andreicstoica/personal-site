@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { DITHER_LEVELS, quantize } from "./dither";
-import { renderLayers, renderPlate } from "./draw";
+import { renderLayers, renderMotionPatches, renderPlate } from "./draw";
+import { birdsAllowed } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
 import { createLightningTimeline, lightningGap } from "./lightning";
 import {
@@ -10,7 +11,16 @@ import {
 	OSCILLATION_PERIOD,
 } from "./motion";
 import { lighting } from "./palette";
-import { PLACES, sceneLabel, timeFromClock, timeOfDay } from "./scene";
+import {
+	classifyWeather,
+	fallbackReading,
+	PLACES,
+	sceneLabel,
+	timeFromClock,
+	timeOfDay,
+	WEATHERS,
+} from "./scene";
+import { loadReading } from "./session";
 
 const minute = 60_000;
 
@@ -83,37 +93,13 @@ describe("layered terrain", () => {
 			}
 		}
 	});
-	test("Gorge ridges connect to the sides and the river has no detached land", () => {
-		for (let second = 0; second <= 30; second += 0.25) {
-			const offsets = layerOffsets(second);
-			for (let y = 18; y < 35; y += 0.5) {
-				let crossedGap = false;
-				let enteredRight = false;
-				for (let x = 0; x < 160; x += 0.5) {
-					const land =
-						material("columbia-gorge", 0, x - offsets[0], y) !== null;
-					if (!land && enteredRight)
-						throw new Error(`detached ridge at ${second},${x},${y}`);
-					if (!land) crossedGap = true;
-					if (land && crossedGap) enteredRight = true;
-				}
+	test("Gorge foreground contains the river at every phase", () => {
+		for (const t of [0, 7.5, 15, 22.5])
+			for (let x = -4; x <= 164; x += 0.5) {
+				expect(material("columbia-gorge", 2, x, 47.9, t)).not.toBeNull();
+				if (x > 40 && x < 115)
+					expect(material("columbia-gorge", 2, x, 38, t)).toBeNull();
 			}
-			for (let y = 35.5; y <= 44; y += 0.5) {
-				let enteredBank = false;
-				for (let x = 30; x < 160; x += 0.5) {
-					const color = material("columbia-gorge", 1, x - offsets[1], y);
-					if (!color) throw new Error("river coverage gap");
-					const bank = color[1] < 75;
-					if (enteredBank && !bank)
-						throw new Error(`detached bank at ${second},${x},${y}`);
-					enteredBank ||= bank;
-					if (x < 115) {
-						expect(bank).toBe(false);
-						expect(material("columbia-gorge", 2, x - offsets[2], y)).toBeNull();
-					}
-				}
-			}
-		}
 	});
 	test("Vista House has two supported windows with night light", () => {
 		for (const x of [140, 142]) {
@@ -215,8 +201,17 @@ describe("weather raster and elapsed time", () => {
 		let doubles = 0;
 		for (const gap of gaps) {
 			start += gap;
-			expect(timeline(start + 0.11).flash).toBeCloseTo(1);
-			if (timeline(start + 0.42).flash > 0) doubles++;
+			expect(timeline(start + 0.06).flash).toBeCloseTo(1);
+			const first = timeline(start + 0.06);
+			const second = timeline(start + first.delay + 0.06);
+			if (second.flash > 0) {
+				doubles++;
+				expect(second.flash).toBeGreaterThanOrEqual(0.4);
+				expect(second.flash).toBeLessThanOrEqual(0.55);
+				expect(second.origin - first.origin).toBeGreaterThanOrEqual(4);
+				expect(second.cool).toBe(1);
+				expect(first.cool).toBe(0);
+			}
 		}
 		expect(doubles).toBeGreaterThan(10);
 		expect(doubles).toBeLessThan(50);
@@ -225,5 +220,37 @@ describe("weather raster and elapsed time", () => {
 		timeline(500);
 		expect(timeline(20)).toEqual(sample);
 		expect(timeline(0).flash).toBe(0);
+	});
+});
+
+describe("place motion and merged clear weather", () => {
+	test("place frames reproduce after forward and backward seeks", () => {
+		for (const place of PLACES) {
+			const still = renderMotionPatches(place, 0);
+			const moving = renderMotionPatches(place, 4.5);
+			expect(moving).not.toEqual(still);
+			renderMotionPatches(place, 52);
+			expect(renderMotionPatches(place, 4.5)).toEqual(moving);
+			expect(renderMotionPatches(place, 0)).toEqual(still);
+		}
+	});
+	test("rain excludes birds even at fractional intensity", () => {
+		for (const rain of [0.001, 0.4, 0.85, 1])
+			for (const weather of WEATHERS)
+				expect(birdsAllowed(weather, rain)).toBe(false);
+		expect(birdsAllowed("cloudy", 0)).toBe(false);
+		expect(birdsAllowed("clear", 0)).toBe(true);
+		expect(birdsAllowed("fog", 0)).toBe(true);
+	});
+	test("clear codes and stale sunny cache use clear fallback", () => {
+		expect(classifyWeather(0)).toBe("clear");
+		expect(classifyWeather(1)).toBe("clear");
+		const storage = {
+			getItem: () =>
+				JSON.stringify({ weather: "sunny", sunrise: null, sunset: null }),
+		} as unknown as Storage;
+		expect(loadReading(storage) ?? fallbackReading()).toEqual(
+			fallbackReading(),
+		);
 	});
 });

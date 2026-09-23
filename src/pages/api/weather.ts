@@ -6,9 +6,7 @@ export const prerender = false;
 
 const openMeteoSchema = z.object({
 	current: z.object({
-		temperature_2m: z.number(),
 		weather_code: z.number(),
-		visibility: z.number().nullable().optional(),
 	}),
 	daily: z.object({
 		sunrise: z.array(z.number()),
@@ -48,7 +46,7 @@ export const GET: APIRoute = async ({ request }) => {
 	const url = new URL("https://api.open-meteo.com/v1/forecast");
 	url.searchParams.set("latitude", String(latitude));
 	url.searchParams.set("longitude", String(longitude));
-	url.searchParams.set("current", "temperature_2m,weather_code,visibility");
+	url.searchParams.set("current", "weather_code");
 	url.searchParams.set("daily", "sunrise,sunset");
 	url.searchParams.set("forecast_days", "1");
 	url.searchParams.set("timezone", "auto");
@@ -65,14 +63,9 @@ export const GET: APIRoute = async ({ request }) => {
 		if (sunriseSec === undefined || sunsetSec === undefined) {
 			return unavailable();
 		}
-		const visibility = parsed.data.current.visibility ?? null;
 		const body: WeatherApi = {
 			ok: true,
-			weather: classifyWeather(
-				parsed.data.current.weather_code,
-				parsed.data.current.temperature_2m,
-				visibility,
-			),
+			weather: classifyWeather(parsed.data.current.weather_code),
 			sunrise: sunriseSec * 1000,
 			sunset: sunsetSec * 1000,
 		};

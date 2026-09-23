@@ -8,13 +8,7 @@ export const placeSchema = z.enum([
 	"oregon-coast",
 ]);
 
-export const weatherSchema = z.enum([
-	"clear",
-	"cloudy",
-	"rainy",
-	"sunny",
-	"fog",
-]);
+export const weatherSchema = z.enum(["clear", "cloudy", "rainy", "fog"]);
 
 export const timeSchema = z.enum(["day", "golden-hour", "night"]);
 
@@ -64,8 +58,6 @@ const DAWN_LEAD_MS = 45 * 60 * 1000;
 const DAWN_TAIL_MS = 50 * 60 * 1000;
 const DUSK_LEAD_MS = 50 * 60 * 1000;
 const DUSK_TAIL_MS = 45 * 60 * 1000;
-const HOT_CELSIUS = 27;
-const HIGH_VISIBILITY_M = 16_000;
 
 export function fallbackReading(): StoredReading {
 	return { weather: "clear", sunrise: null, sunset: null };
@@ -76,21 +68,11 @@ export function sceneLabel(scene: Scene): string {
 	return `${place}, ${scene.time === "golden-hour" ? "golden hour" : scene.time}, ${scene.weather}`;
 }
 
-/** Sunny is hot, high-visibility sun — a clear sky alone stays clear. */
-export function classifyWeather(
-	code: number,
-	tempC: number,
-	visibilityM: number | null,
-): Weather {
+export function classifyWeather(code: number): Weather {
 	if (code === 45 || code === 48) return "fog";
 	if (isPrecipitation(code)) return "rainy";
 	if (code === 2 || code === 3) return "cloudy";
-	if (code === 0 || code === 1) {
-		const hot = tempC >= HOT_CELSIUS;
-		const highVis = visibilityM !== null && visibilityM >= HIGH_VISIBILITY_M;
-		if (hot && highVis) return "sunny";
-		return "clear";
-	}
+	if (code === 0 || code === 1) return "clear";
 	return "cloudy";
 }
 
@@ -99,12 +81,6 @@ function isPrecipitation(code: number): boolean {
 	if (code >= 71 && code <= 77) return true;
 	if (code >= 80 && code <= 86) return true;
 	return code >= 95 && code <= 99;
-}
-
-/** A clear night stays clear even when the afternoon was hot and sunny. */
-export function presentLiveWeather(weather: Weather, time: TimeOfDay): Weather {
-	if (weather === "sunny" && time === "night") return "clear";
-	return weather;
 }
 
 export function timeOfDay(

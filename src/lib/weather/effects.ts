@@ -2,14 +2,14 @@ import { assertNever } from "../assertNever";
 import { BANNER_HEIGHT } from "./buffer";
 import { SKY_ROWS } from "./landscapes";
 import { cloudColors, fogColor, type Rgb, rainColor } from "./palette";
-import type { Place, Scene } from "./scene";
+import type { Place, Scene, Weather } from "./scene";
 
 /**
  * Tune weather here. These numbers are uploaded as shader uniforms every frame.
  * Amounts are 0–1 unless noted. Speeds are cycles per second.
  */
 export const WEATHER_KNOBS = {
-	clearCloud: 0.22,
+	clearCloud: 0.28,
 	cloudyCloud: 0.78,
 	rainyCloud: 0.94,
 	clearCloudSpeed: 0.025,
@@ -120,19 +120,6 @@ function atmosphere(scene: Scene, dust: number, bubbles: number): Atmosphere {
 				dust: 0,
 				bubbles: bubbles * 0.35,
 			};
-		case "sunny":
-			return {
-				cloud: 0.28,
-				cloudSpeed: WEATHER_KNOBS.clearCloudSpeed,
-				landShade: 0,
-				rain: 0,
-				rainSpeed: 0,
-				fog: 0,
-				shimmer: scene.time === "night" ? 0 : WEATHER_KNOBS.shimmer,
-				lightning: 0,
-				dust,
-				bubbles,
-			};
 		case "fog":
 			return {
 				cloud: 0,
@@ -167,4 +154,8 @@ function placeCarriesDust(place: Place): boolean {
 
 function unit(color: Rgb): Vec3 {
 	return [color[0] / 255, color[1] / 255, color[2] / 255];
+}
+
+export function birdsAllowed(weather: Weather, rain: number): boolean {
+	return rain === 0 && (weather === "clear" || weather === "fog");
 }

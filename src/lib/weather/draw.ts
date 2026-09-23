@@ -132,3 +132,47 @@ export function renderPlate(
 	}
 	return { width, height, data };
 }
+
+/** Bound updates to animated material, preserving the static atlas elsewhere. */
+export function renderMotionPatches(place: Place, time: number) {
+	const regions: Record<
+		Place,
+		readonly (readonly [number, number, number, number, number])[]
+	> = {
+		"cascade-forest": [[2, 30, 34, 94, 14]],
+		"columbia-gorge": [[1, 25, 20, 5, 16]],
+		"oregon-coast": [
+			[0, -4, 22, 168, 11],
+			[1, -4, 28, 168, 9],
+			[2, 34, 41, 22, 7],
+		],
+		"painted-hills": [[1, -4, 25, 168, 15]],
+		"bend-plateau": [
+			[0, 76, 11, 4, 17],
+			[0, 100, 15, 4, 17],
+		],
+	};
+	return regions[place].map(([layer, left, top, w, h]) => {
+		const width = w * DETAIL,
+			height = h * DETAIL;
+		const data = new Uint8ClampedArray(width * height * 4);
+		for (let y = 0; y < height; y++)
+			for (let x = 0; x < width; x++) {
+				const color = material(
+					place,
+					layer,
+					left + (x + 0.5) / DETAIL,
+					top + (y + 0.5) / DETAIL,
+					time,
+				);
+				if (color) data.set([...color, 255], (y * width + x) * 4);
+			}
+		return {
+			x: (left + ATLAS_MARGIN) * DETAIL,
+			y: (layer * BANNER_HEIGHT + top) * DETAIL,
+			width,
+			height,
+			data,
+		};
+	});
+}

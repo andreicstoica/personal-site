@@ -14,7 +14,15 @@ export function createLightningTimeline(seed = 731) {
 	let index = 0;
 	let start = 0;
 	let next = lightningGap(1, seed);
-	return (time: number): { flash: number; seed: number } => {
+	return (
+		time: number,
+	): {
+		flash: number;
+		seed: number;
+		origin: number;
+		cool: number;
+		delay: number;
+	} => {
 		if (time < start) {
 			index = 0;
 			start = 0;
@@ -26,15 +34,27 @@ export function createLightningTimeline(seed = 731) {
 			next += lightningGap(index + 1, seed);
 		}
 		const pulse = (age: number) => {
-			if (age < 0 || age > 0.22) return 0;
-			return Math.sin((age / 0.22) * Math.PI) ** 2;
+			if (age < 0 || age > 0.12) return 0;
+			return Math.sin((age / 0.12) * Math.PI) ** 2;
 		};
 		const age = time - start;
 		const double = random(index + 3000, seed) < 0.3;
+		const delay = 0.13 + random(index + 4000, seed) * 0.07;
+		const secondary = double && age >= delay;
 		return {
 			flash:
-				index === 0 ? 0 : pulse(age) + (double ? pulse(age - 0.31) * 0.7 : 0),
+				index === 0
+					? 0
+					: secondary
+						? pulse(age - delay) * (0.4 + random(index + 5000, seed) * 0.15)
+						: pulse(age),
 			seed: random(index + 6000, seed) * 1000,
+			origin:
+				25 +
+				random(index + 7000, seed) * 110 +
+				(secondary ? 4 + random(index + 8000, seed) * 5 : 0),
+			cool: secondary ? 1 : 0,
+			delay,
 		};
 	};
 }

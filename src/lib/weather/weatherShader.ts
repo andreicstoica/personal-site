@@ -19,8 +19,8 @@ out vec4 outColor;
 uniform sampler2D uPlate;
 uniform vec3 uZenith, uHorizon, uAmbient, uDirect, uOffsets;
 uniform vec2 uSun;
-uniform vec3 uWindowLight;
-uniform float uNight, uCoast;
+uniform vec3 uWindowLight, uFlashLight, uFlashBlue;
+uniform float uNight, uHood, uBirds;
 uniform float uAtlasWidth, uDitherSize;
 uniform vec2 uPlateSize;
 uniform float uTime;
@@ -35,7 +35,7 @@ uniform float uRainLength;
 uniform float uFog;
 uniform float uShimmer;
 uniform float uLightning;
-uniform float uFlash, uFlashSeed, uGolden;
+uniform float uFlash, uFlashSeed, uGolden, uFlashOrigin, uFlashCool;
 uniform float uDust;
 uniform float uBubbles;
 uniform vec3 uCloudLit;
@@ -104,6 +104,11 @@ void main() {
   cover += wisps * (1.0 - smoothstep(0.15, 0.65, uv.y)) * (1.0 - uCloud) * 0.22 * (1.0 - uFog);
   color = mix(color, mix(uCloudShade, uCloudLit, clouds), cover * (1.0 - smoothstep(uSkyFrac, 0.86, uv.y)));
 
+  float summitWisp = exp(-pow((p.y - 6.0 - sin(p.x * 0.1 - uTime * 0.07)) / 0.7, 2.0)) * exp(-pow((p.x - 90.0 - sin(uTime * 0.09) * 8.0) / 18.0, 2.0));
+  color = mix(color, uCloudLit, summitWisp * uHood * 0.25);
+  float flash = uFlash * uLightning;
+  vec3 flashColor = mix(uFlashLight, uFlashBlue, uFlashCool);
+  color *= 1.0 - flash * 0.6;
   float depth = 0.0;
   float sky = 1.0;
   for (int i = 0; i < 3; i++) {
@@ -113,7 +118,9 @@ void main() {
     vec3 albedo = surface.rgb / max(surface.a, 0.001);
     float detail = noise(vec2((p.x - uOffsets[i]) * 1.4, p.y * 2.0));
     float direction = clamp(0.55 + (uSun.x - uv.x) * 0.25 + (detail - 0.5) * 0.35, 0.0, 1.0);
-    vec3 land = albedo * (uAmbient + uDirect * direction);
+    float falloff = exp(-pow((p.x - uFlashOrigin) / 30.0, 2.0) - pow((p.y - 24.0) / 38.0, 2.0));
+    float flashFacing = clamp(0.7 + (uFlashOrigin - p.x) * (detail - 0.5) * 0.04, 0.2, 1.0);
+    vec3 land = albedo * ((uAmbient + uDirect * direction) * (1.0 - flash * 0.72) + flashColor * flash * falloff * flashFacing * 2.4);
     land *= 1.0 - uLandShade * clouds * 0.3;
     if (i == 1) {
       vec2 local = vec2(p.x - uOffsets[i], p.y);
@@ -121,7 +128,7 @@ void main() {
       land += uWindowLight * windows;
     }
     float haze = (2.0 - layer) * 0.14 + uFog * (0.42 - layer * 0.13);
-    land = mix(land, uHorizon, haze);
+    land = mix(land, uHorizon * (1.0 - flash * 0.6), haze);
     color = mix(color, land, surface.a);
     depth = mix(depth, (layer + 1.0) / 3.0, surface.a);
     sky *= 1.0 - surface.a;
@@ -141,17 +148,12 @@ void main() {
     fade *= 0.55 + 0.45 * sin(uTime * 0.21 + id * 2.0);
     birds = max(birds, (1.0 - smoothstep(0.09, 0.23, shape)) * fade);
   }
-  color = mix(color, uZenith * 0.28, birds * sky * (1.0 - uRain) * (1.0 - uNight) * (0.7 - uFog * 0.35));
+  color = mix(color, uZenith * 0.28, birds * sky * uBirds * (1.0 - uNight) * (0.7 - uFog * 0.35));
 
   float fogBreath = 0.87 + 0.13 * sin(uTime * 0.17);
   float mist = noise(vec2(p.x * 0.055 - uTime * 0.04, p.y * 0.12));
   color = mix(color, uFogColor, uFog * fogBreath * (0.16 + mist * 0.3) * (1.0 - depth * 0.65));
   color += uDirect * uShimmer * 0.07 * sin(p.y * 6.0 + sin(p.x * 0.3 - uTime)) * (1.0 - sky);
-
-  if (uCoast > 0.5) {
-    float wave = sin(p.y * 8.0 + sin(p.x * 0.22 + uTime * 0.6));
-    color += uHorizon * 0.07 * smoothstep(0.8, 1.0, wave) * step(28.0, p.y) * (1.0 - step(0.5, depth));
-  }
 
   if (uRain > 0.001) {
     float gust = 0.5 + 0.3 * sin(uTime * 0.23) + 0.2 * sin(uTime * 0.071 + 1.7);
@@ -185,8 +187,7 @@ void main() {
 
   if (uLightning > 0.001) {
     float cycle = uFlashSeed;
-    float flash = uFlash * uLightning;
-    float origin = 25.0 + hash(vec2(cycle, 2.0)) * 110.0;
+    float origin = uFlashOrigin;
     float bolt = 0.0;
     vec2 a = vec2(origin, 1.0);
     for (int i = 1; i <= 7; i++) {
@@ -196,7 +197,7 @@ void main() {
       if (i == 3 || i == 5) bolt = max(bolt, (1.0 - smoothstep(0.04, 0.2, segment(p, a, a + vec2(5.0, 4.0)))) * 0.7);
       a = b;
     }
-    color += vec3(0.65, 0.75, 0.9) * flash * (0.1 + bolt * sky);
+    color += flashColor * flash * (bolt * sky + exp(-pow((p.x - origin) / 18.0, 2.0)) * sky * 0.18);
   }
 
   vec2 moteP = p * vec2(1.5, 2.0) - vec2(uTime * 0.18, uTime * 0.08);
