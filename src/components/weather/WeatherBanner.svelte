@@ -94,7 +94,7 @@
   $effect(() => {
     const clock = window.setInterval(() => {
       now = Date.now();
-    }, 60_000);
+    }, 900_000);
     return () => window.clearInterval(clock);
   });
 
