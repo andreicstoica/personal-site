@@ -1,5 +1,5 @@
 ---
-title: "Introducing Myself"
+title: "About"
 description: "Product minded software engineer based in New York City."
 ---
 

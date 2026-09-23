@@ -342,7 +342,7 @@ a:hover {
 	font-weight: 600;
 	color: var(--color-text-primary);
 	margin-bottom: 0.75rem;
-	margin-top: 1.5rem;
+	margin-top: 2rem;
 	letter-spacing: var(--tracking-tight);
 }
 
@@ -402,7 +402,7 @@ a:hover {
 	font-weight: 600;
 	color: var(--color-text-primary);
 	margin-bottom: 0.75rem;
-	margin-top: 1.5rem;
+	margin-top: 2rem;
 }
 
 .markdown-body :where(h3) {
@@ -491,6 +491,14 @@ a:hover {
 	scroll-snap-align: start;
 }
 
+.gallery-strip button {
+	transition: transform 160ms var(--ease-out);
+}
+
+.gallery-strip button:active {
+	transform: scale(0.98);
+}
+
 /* Mobile refinements */
 @media (max-width: 767px) {
 	/* iOS momentum scrolling */
@@ -563,29 +571,48 @@ html.image-inspect-open [data-page-scroll] {
 	overflow: hidden !important;
 }
 
-/* Modal animations */
+/* Modal transitions — scrim fades while media scales from the clicked thumbnail. */
 .modal-backdrop {
-	animation: modal-enter var(--duration-drawer) var(--ease-out) both;
+	transition: opacity var(--duration-drawer) var(--ease-out);
+
+	@starting-style {
+		opacity: 0;
+	}
 }
 
 .modal-backdrop.closing {
-	animation: modal-exit var(--duration-ui) var(--ease-out) both;
+	opacity: 0;
+	transition: opacity var(--duration-ui) var(--ease-out);
 }
 
-@keyframes modal-enter {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
+.modal-backdrop .image-inspect-media {
+	transform: scale(1);
+	transform-origin: var(--inspect-origin, center);
+	transition: transform var(--duration-drawer) var(--ease-out);
+
+	@starting-style {
+		transform: scale(0.96);
 	}
 }
 
-@keyframes modal-exit {
-	from {
-		opacity: 1;
-	}
-	to {
-		opacity: 0;
+.modal-backdrop.closing .image-inspect-media {
+	transform: scale(0.96);
+	transition: transform var(--duration-ui) var(--ease-out);
+}
+
+/*
+ * Reduced motion must come after the modal rules above: same specificity,
+ * later position wins. The block near the top of this file cannot disable
+ * these transitions.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.modal-backdrop,
+	.modal-backdrop.closing,
+	.modal-backdrop .image-inspect-media,
+	.modal-backdrop.closing .image-inspect-media,
+	.gallery-strip button,
+	.gallery-strip button:active {
+		animation: none;
+		transition: none;
 	}
 }

@@ -233,7 +233,7 @@
   .banner-slot {
     width: 100%;
     min-width: 0;
-    margin: 0.65rem 0 0.35rem;
+    margin: 0.5rem 0 0;
     display: block;
   }
 
