@@ -3,8 +3,8 @@
 ## Project Structure & Module Organization
 
 - `src/pages`: thin route entrypoints. Collection routes compose `CollectionPage`; others wrap `SiteLayout` and a page component.
-- Layout layers: `RootLayout` (document + idle cursor island) → `SiteLayout` (nav island + scroll) → `ContentDocument` (markdown page chrome).
-- `src/components`: Astro owns static composition; Svelte islands own client state (`Nav`, `CursorTrail`, `AsciiCanvas`, `ImageGallery`, `FullPageChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS.
+- Layout layers: `RootLayout` (document + `ClientRouter` + idle cursor island) → `SiteLayout` (weather banner, static nav, page scroll region with footer, guide island) → `ContentDocument` (markdown page chrome).
+- `src/components`: Astro owns static composition; Svelte islands own client state (`WeatherBanner`, `CursorTrail`, `ImageGallery`, `FloatingChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS; `WeatherBanner` is `client:only`. `Nav.astro` and `SiteFooter.astro` are static markup, not islands.
 - `src/layouts`: page shells; `src/lib`: helpers; `src/styles`: Tailwind tokens/extracted class groups.
 - Content lives in `src/content`; acceptance references in `specs`; public assets in `public` (e.g., `public/images`). Never edit `dist`.
 - Stay on Astro islands rather than a React/Next rewrite unless a page needs shared client state across the whole tree. Swap an island to React later without changing the layout hierarchy.
@@ -22,7 +22,7 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Coding Style & Naming Conventions
 
 - Two-space indentation; prefer single quotes in JS/TS.
-- Components in PascalCase (`AsciiHero.astro`, `ImageGallery.svelte`); utilities camelCase in `src/lib`.
+- Components in PascalCase (`WeatherBanner.svelte`, `ImageGallery.svelte`); utilities camelCase in `src/lib`.
 - Keep Tailwind classes inline unless reused, then extract to `src/styles`.
 - Format with `bun run lint:fix` (Biome; ignores Svelte/CSS). Types and islands are gated by `bun run check`.
 
