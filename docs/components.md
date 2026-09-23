@@ -167,7 +167,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 
 - Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
 - Collapsed: `.guide-launch` button in the bottom corner. Expanded: `.guide-panel` with header, thread, and input form
-- Thread persists to `localStorage` under `andrei-guide-v1`
+- Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
 - Cold start shows three starter prompts instead of an empty thread
 
 ### Reply shape
