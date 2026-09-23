@@ -68,8 +68,8 @@
 <nav
   class="full-bleed relative z-50 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-bg-primary)] py-4 flex justify-between items-center"
 >
-  <div class="text-2xl text-[#fefefe] font-bold tracking-tight">
-    <a href="/" class="hover:opacity-90 nav-name">Andrei Stoica</a>
+  <div class="text-2xl text-[var(--color-text-inverse)] font-bold tracking-tight">
+    <a href="/" class="hover:opacity-90 nav-name min-h-[44px] flex items-center">Andrei Stoica</a>
   </div>
 
   <div class="hidden md:flex items-end gap-2 text-end">
@@ -126,7 +126,7 @@
 
   <div class="md:hidden">
     <button
-      class="text-[var(--color-text-primary)] p-2 hover:opacity-80 transition-opacity nav-pressable"
+      class="text-[var(--color-text-primary)] p-2.5 min-w-[44px] min-h-[44px] hover:opacity-80 transition-opacity nav-pressable"
       aria-label="Toggle menu"
       onclick={openMobileMenu}
     >
@@ -143,7 +143,7 @@
 </nav>
 
 <div
-  class="mobile-menu-overlay fixed inset-0 bg-black/50 z-50 md:hidden"
+  class="mobile-menu-overlay fixed inset-0 bg-black/50 z-50 md:hidden overflow-hidden"
   class:hidden={mobileMenuHidden}
   class:is-open={mobileMenuOpen}
 >
@@ -153,7 +153,7 @@
   >
     <div class="p-6">
       <button
-        class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70"
+        class="absolute top-4 right-4 text-[var(--color-text-primary)] hover:opacity-70 min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Close menu"
         onclick={closeMobileMenu}
       >
@@ -171,7 +171,7 @@
         {#each mainNavItems as item}
           <a
             href={item.href}
-            class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded"
+            class="mobile-menu-link block py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-text-inverse)] rounded"
           >
             {item.label}
           </a>
@@ -180,7 +180,7 @@
         <div class="relative">
           <button
             type="button"
-            class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[#fefefe] rounded flex items-center justify-between"
+            class="mobile-menu-link w-full text-left py-3 px-4 text-[var(--color-text-primary)] hover:bg-[var(--color-primary)] hover:text-[var(--color-text-inverse)] rounded flex items-center justify-between"
             onclick={() => (mobileSocialOpen = !mobileSocialOpen)}
           >
             Social
@@ -193,7 +193,7 @@
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="block py-2 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                  class="block py-3 px-4 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   {item.label}
                 </a>

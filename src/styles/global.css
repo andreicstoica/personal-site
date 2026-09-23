@@ -96,17 +96,23 @@
 	transition:
 		background-color var(--duration-ui) var(--ease-out),
 		border-color var(--duration-ui) var(--ease-out),
-		color var(--duration-ui) var(--ease-out);
+		color var(--duration-ui) var(--ease-out),
+		transform 160ms var(--ease-out),
+		filter 80ms linear;
 	color: var(--color-text-primary);
 	padding: 0.5rem;
 	box-sizing: border-box;
+}
+
+.nav-box:active {
+	transform: scale(0.98);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.nav-box:hover {
 		background-color: var(--color-primary);
 		border-color: var(--color-primary);
-		color: #fefefe;
+		color: var(--color-text-inverse);
 	}
 }
 
@@ -131,7 +137,7 @@
 }
 
 .social-dropdown-panel {
-	transform: scale(0.97) translateY(-4px);
+	transform: scale(0.98) translateY(-4px);
 	transition: transform 180ms var(--ease-out);
 }
 
@@ -221,38 +227,20 @@
 /* Media load reveal — images, video, gallery thumbs */
 .media-reveal {
 	opacity: 0;
-	transform: translateY(4px);
+	filter: blur(4px);
 	transition:
-		opacity var(--duration-media) var(--ease-out),
-		transform var(--duration-media) var(--ease-out);
+		opacity 180ms var(--ease-out),
+		filter 180ms var(--ease-out);
 }
 
 .media-reveal.is-loaded {
 	opacity: 1;
-	transform: translateY(0);
-}
-
-/* Occasional page enter — content pages, not home.
-   Do not use animation-fill-mode: both/forwards with transform/translate.
-   A leftover transform makes `position: fixed` descendants (image inspect)
-   size to this box instead of the viewport. */
-.page-enter {
-	animation: page-enter 360ms var(--ease-out);
-}
-
-@keyframes page-enter {
-	from {
-		opacity: 0;
-		transform: translateY(6px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	filter: blur(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.nav-box,
+	.nav-box:active,
 	.nav-name,
 	.nav-pressable,
 	.social-dropdown-menu,
@@ -262,12 +250,13 @@
 	.mobile-menu-drawer,
 	.mobile-menu-link,
 	.social-submenu,
-	.page-enter,
 	.media-reveal,
 	.media-reveal.is-loaded,
 	.image-inspect,
 	.modal-backdrop,
-	.modal-backdrop.closing {
+	.modal-backdrop.closing,
+	.btn-primary:active,
+	.btn-secondary:active {
 		animation: none;
 		transition: none;
 	}
@@ -281,15 +270,9 @@
 		transform: none;
 	}
 
-	.page-enter {
-		opacity: 1;
-		transform: none;
-	}
-
 	.media-reveal,
 	.media-reveal.is-loaded {
 		opacity: 1;
-		transform: none;
 	}
 }
 
@@ -414,7 +397,7 @@ body {
 	overflow-x: auto !important;
 	overflow-y: hidden;
 	scrollbar-width: thin;
-	scrollbar-color: #9ca3af transparent;
+	scrollbar-color: var(--color-text-muted) transparent;
 	white-space: nowrap;
 }
 
@@ -428,23 +411,23 @@ body {
 }
 
 .scrollbar-always-visible::-webkit-scrollbar-thumb {
-	background-color: #9ca3af;
+	background-color: var(--color-text-muted);
 	border-radius: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
-		background-color: #6b7280;
+		background-color: var(--color-text-secondary);
 	}
 }
 
 @media (prefers-color-scheme: dark) {
 	.scrollbar-always-visible {
-		scrollbar-color: #6b7280 transparent;
+		scrollbar-color: var(--color-text-secondary) transparent;
 	}
 
 	.scrollbar-always-visible::-webkit-scrollbar-thumb {
-		background-color: #6b7280;
+		background-color: var(--color-text-secondary);
 	}
 }
 
@@ -458,7 +441,9 @@ body {
 	cursor: pointer;
 	transition:
 		background-color var(--duration-ui) var(--ease-out),
-		box-shadow var(--duration-ui) var(--ease-out);
+		box-shadow var(--duration-ui) var(--ease-out),
+		transform 160ms var(--ease-out),
+		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
 	align-items: center;
@@ -472,6 +457,10 @@ body {
 	}
 }
 
+.btn-primary:active {
+	transform: scale(0.98);
+}
+
 .btn-secondary {
 	background: transparent;
 	color: var(--color-text-primary);
@@ -481,7 +470,9 @@ body {
 	cursor: pointer;
 	transition:
 		border-color var(--duration-ui) var(--ease-out),
-		color var(--duration-ui) var(--ease-out);
+		color var(--duration-ui) var(--ease-out),
+		transform 160ms var(--ease-out),
+		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
 	align-items: center;
@@ -493,6 +484,10 @@ body {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
 	}
+}
+
+.btn-secondary:active {
+	transform: scale(0.98);
 }
 
 /* Global link styles */
@@ -619,7 +614,7 @@ a:hover {
 
 .btn-secondary-custom {
 	background: var(--tag-personal);
-	color: #18181b !important;
+	color: var(--color-text-primary) !important;
 	font-weight: 500;
 	transition: all 0.2s ease;
 }
@@ -633,7 +628,7 @@ a:hover {
 
 .btn-accent-custom {
 	background: var(--tag-school);
-	color: #18181b !important;
+	color: var(--color-text-primary) !important;
 	font-weight: 500;
 	transition: all 0.2s ease;
 }
@@ -647,11 +642,48 @@ a:hover {
 
 /* Navigation name link - override global link styles */
 .nav-name {
-	color: #fefefe !important;
+	color: var(--color-text-inverse) !important;
 }
 
 .nav-name:hover {
-	color: #fefefe !important;
+	color: var(--color-text-inverse) !important;
+}
+
+/* Gallery strip — horizontal scroll with snap on touch */
+.gallery-strip {
+	scroll-snap-type: x proximity;
+	touch-action: pan-x;
+}
+
+.gallery-strip > * {
+	scroll-snap-align: start;
+}
+
+/* Mobile refinements */
+@media (max-width: 767px) {
+	/* iOS momentum scrolling */
+	.scrollbar-always-visible {
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* Hide WebKit scrollbar on touch devices (no visual track) */
+	.scrollbar-always-visible::-webkit-scrollbar {
+		display: none;
+	}
+
+	.scrollbar-always-visible {
+		scrollbar-width: none;
+	}
+
+	/* Drawer: promote to own compositor layer for jank-free slide */
+	.mobile-menu-drawer {
+		will-change: transform;
+	}
+
+	/* Prevent body scroll when overlay is visible */
+	.mobile-menu-overlay:not(.hidden) {
+		touch-action: none;
+	}
 }
 
 /* Image inspect — must be portaled to `document.body` so this is viewport-sized */

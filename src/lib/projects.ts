@@ -274,4 +274,4 @@ const getAllProjects = (): Project[] => {
 	return Object.values(projects);
 };
 
-export { getProject, getAllProjects };
+export { getAllProjects, getProject };
