@@ -16,28 +16,27 @@ const showLab = showWeatherLab(import.meta.env.DEV);
 ---
 
 <RootLayout title={title} description={description}>
-  <div
-    class="site-column col-span-12 mx-auto flex h-dvh w-full min-w-0 max-w-[64rem] flex-col overflow-hidden"
-  >
-    <WeatherBanner
-      client:only="svelte"
-      showLab={showLab}
-      transition:persist="weather-banner"
-    />
-    <Nav transition:persist="site-nav" />
-    <div
-      class="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-gutter-stable"
-      data-page-scroll
-    >
-      <div
-        class="page-island flex w-full flex-1 flex-col"
-        data-page-island
-        transition:name="page"
-        transition:animate="fade"
-      >
-        <slot />
+  <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
+    <div class="flex min-h-full flex-col">
+      <div class="site-column sticky top-0 z-20 bg-[var(--color-bg-primary)]">
+        <WeatherBanner
+          client:only="svelte"
+          showLab={showLab}
+          transition:persist="weather-banner"
+        />
+        <Nav transition:persist="site-nav" />
       </div>
-      <SiteFooter transition:persist="site-footer" />
+      <div class="site-column flex flex-1 flex-col">
+        <div
+          class="page-island flex w-full flex-1 flex-col"
+          data-page-island
+          transition:name="page"
+          transition:animate="fade"
+        >
+          <slot />
+        </div>
+        <SiteFooter transition:persist="site-footer" />
+      </div>
     </div>
     <FloatingChat client:load />
   </div>
