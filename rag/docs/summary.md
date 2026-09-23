@@ -1,5 +1,9 @@
 # LLM RAG System Architecture Summary
 
+Chat requests no longer use this index. The live guide reads markdown in `src/content/memory` and, when a model is configured, puts the matched sections in the prompt. The hybrid BM25 and embedding pipeline below stays available through `bun run rag:build` and is not on the request path.
+
+
+
 ## The Balance Between Personality and Accuracy
 
 Your RAG system achieves the perfect balance between personality and accuracy through **confidence-based routing** and intelligent pre-filtering.

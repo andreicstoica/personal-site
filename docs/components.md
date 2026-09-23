@@ -159,11 +159,45 @@ Full-width hero with personal statement text on the left and an ASCII art canvas
 - Canvas sizes: 350px (mobile), 500px (desktop), 650px (large desktop)
 - Glow animation: `ascii-glow` keyframes (brightness/contrast oscillation, 3s infinite)
 
-## FullPageChat
+## FloatingChat (the guide)
 
-**File**: `src/components/chat/FullPageChat.svelte`
+**File**: `src/components/chat/FloatingChat.svelte`
 
-Chat interface that fills the viewport. Uses Svelte for message state and streaming responses.
+The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once in `SiteLayout.astro` with `client:load`, so it is present on every page.
+
+- Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
+- Collapsed: `.guide-launch` button in the bottom corner. Expanded: `.guide-panel` with header, thread, and input form
+- Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
+- Cold start shows three starter prompts instead of an empty thread
+
+### Interaction and accessibility
+
+- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel
+- On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
+- The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
+- Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`; source chips use `--color-text-secondary` (`--color-text-muted` cannot reach 4.5:1 on a light surface)
+- Prompts, Send, and `.guide-action` are at least 44px tall, and interactive elements in the panel set `touch-action: manipulation`
+
+### Reply shape
+
+`POST /api/chat` returns a `ChatApiSuccess` (`src/lib/chatTypes.ts`):
+
+| Field | Meaning |
+| --- | --- |
+| `mode` | `notes` — answered from `src/content/memory` with no model involved; `model` — real inference |
+| `sources` | `ChatSource[]`, rendered as small links under the reply |
+| `action` | `none`, or `navigate { href, label, follow }` |
+
+A `navigate` action renders as `.guide-action` — a button with the `hammer` icon and the route label. When `follow` is `true` the guide also navigates after 900ms, unless the visitor has started composing another question or focus is in the input (then the action link stays the way through).
+
+### Supporting modules
+
+- `src/lib/guideReply.ts` — decides mode, action, and route; handles small talk and navigation intent
+- `src/lib/memorySelect.ts` — selects `src/content/memory` sections and matches routes
+- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hf`)
+- `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
+
+The model is not called unless `GUIDE_MODEL=on`. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
 
