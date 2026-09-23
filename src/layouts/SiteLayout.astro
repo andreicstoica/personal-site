@@ -18,13 +18,13 @@ const showLab = showWeatherLab(import.meta.env.DEV);
 <RootLayout title={title} description={description}>
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
     <div class="flex min-h-full flex-col">
-      <div class="site-column sticky top-0 z-20 bg-[var(--color-bg-primary)]">
+      <div class="site-column">
         <WeatherBanner
           client:only="svelte"
           showLab={showLab}
           transition:persist="weather-banner"
         />
-        <Nav transition:persist="site-nav" />
+        <Nav />
       </div>
       <div class="site-column flex flex-1 flex-col">
         <div
@@ -35,7 +35,7 @@ const showLab = showWeatherLab(import.meta.env.DEV);
         >
           <slot />
         </div>
-        <SiteFooter transition:persist="site-footer" />
+        <SiteFooter />
       </div>
     </div>
     <FloatingChat client:load />

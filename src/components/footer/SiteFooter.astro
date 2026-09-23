@@ -3,7 +3,7 @@ import { socialNavItems } from "../../lib/navLinks";
 import BeosIcon from "./BeosIcon.astro";
 ---
 
-<footer class="site-footer">
+<footer class="site-footer" transition:persist="site-footer">
   <ul class="site-footer-list">
     {
       socialNavItems.map((item) => (
