@@ -10,10 +10,6 @@ export type InferenceEnv = {
 
 export type ProviderName = "local" | "hf";
 
-// Modal is a possible later host: scale-to-zero GPU, per-second billing,
-// Starter plan is $0/month with $30 of compute credit. Not wired. Hugging Face
-// (MODEL_PROVIDER=hf) is the hosted provider when the guide is allowed to call
-// one. Calls stay off unless GUIDE_MODEL=on, so a configured endpoint stays asleep.
 export type Auth = { kind: "none" } | { kind: "bearer"; token: string };
 
 export type ResolvedInference =

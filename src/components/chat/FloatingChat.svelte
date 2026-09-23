@@ -32,7 +32,10 @@
   let inputRef = $state<HTMLInputElement | null>(null);
   let threadRef = $state<HTMLDivElement | null>(null);
   let rootRef = $state<HTMLDivElement | null>(null);
+  let panelRef = $state<HTMLDivElement | null>(null);
+  let launchRef = $state<HTMLButtonElement | null>(null);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
+  let abortRef: AbortController | null = null;
 
   function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -84,6 +87,36 @@
     });
   }
 
+  function isAbortError(value: unknown): boolean {
+    return value instanceof DOMException && value.name === "AbortError";
+  }
+
+  function abortError(): DOMException {
+    return new DOMException("Aborted", "AbortError");
+  }
+
+  /** History is capped at 30 to match what sessionStorage keeps, so a
+   *  restored thread is never shorter than the live one. */
+  function appendMessage(message: GuideMessage) {
+    messages = [...messages, message].slice(-30);
+  }
+
+  function appendReply(content: string, extra: Partial<GuideMessage> = {}) {
+    appendMessage({ id: crypto.randomUUID(), role: "assistant", content, ...extra });
+  }
+
+  // Outside clicks move focus to the clicked element before this runs, so the
+  // focus hand-back below only has to cover closes triggered from inside.
+  function closeGuide() {
+    const focusWasInside =
+      rootRef !== null &&
+      document.activeElement instanceof Node &&
+      rootRef.contains(document.activeElement);
+    abortRef?.abort();
+    open = false;
+    if (focusWasInside) launchRef?.focus();
+  }
+
   function actionHref(action: ChatAction | undefined): string | undefined {
     if (!action || action.kind !== "navigate") return undefined;
     return action.href;
@@ -99,15 +132,21 @@
     if (window.location.pathname === action.href) return;
     if (followTimer) clearTimeout(followTimer);
     followTimer = setTimeout(() => {
+      // Never yank the page out from under a question the visitor is typing.
+      if (input.trim().length > 0 || document.activeElement === inputRef) return;
       window.location.assign(action.href);
     }, 900);
   }
 
-  async function postChat(body: { message: string; history: Array<{ role: "user" | "assistant"; content: string }>; notesOnly?: boolean }) {
+  async function postChat(
+    body: { message: string; history: Array<{ role: "user" | "assistant"; content: string }>; notesOnly?: boolean },
+    signal?: AbortSignal,
+  ) {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal,
     });
     const payload: unknown = await response.json().catch(() => null);
     return { response, payload };
@@ -120,13 +159,12 @@
       role: message.role,
       content: message.content,
     }));
-    messages = [
-      ...messages,
-      { id: crypto.randomUUID(), role: "user", content: userMessage },
-    ];
+    appendMessage({ id: crypto.randomUUID(), role: "user", content: userMessage });
     input = "";
     sending = true;
     waking = false;
+    const controller = new AbortController();
+    abortRef = controller;
 
     try {
       const request = { message: userMessage, history };
@@ -137,44 +175,32 @@
         if (delay > 0) {
           waking = true;
           await sleep(delay);
+          if (controller.signal.aborted) throw abortError();
         }
-        const result = await postChat(request);
+        const result = await postChat(request, controller.signal);
         response = result.response;
         payload = result.payload;
         if (response.status !== 503 || !isColdStart(payload)) break;
       }
       if (response?.status === 503 && isColdStart(payload)) {
         waking = true;
-        const notes = await postChat({ ...request, notesOnly: true });
+        const notes = await postChat({ ...request, notesOnly: true }, controller.signal);
         response = notes.response;
         payload = notes.payload;
       }
       const parsed = parseChatApiSuccess(payload);
       if (!response?.ok || !parsed) {
-        messages = [
-          ...messages,
-          { id: crypto.randomUUID(), role: "assistant", content: errorText(payload) },
-        ];
+        appendReply(errorText(payload));
         return;
       }
       mode = parsed.mode;
-      messages = [
-        ...messages,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: parsed.response,
-          sources: parsed.sources,
-          action: parsed.action,
-        },
-      ];
+      appendReply(parsed.response, { sources: parsed.sources, action: parsed.action });
       scheduleFollow(parsed.action);
-    } catch {
-      messages = [
-        ...messages,
-        { id: crypto.randomUUID(), role: "assistant", content: "The guide couldn't answer." },
-      ];
+    } catch (error) {
+      // A cancelled turn is the visitor's own doing — don't narrate it.
+      if (!isAbortError(error)) appendReply("The guide couldn't answer.");
     } finally {
+      if (abortRef === controller) abortRef = null;
       sending = false;
       waking = false;
     }
@@ -186,15 +212,14 @@
   };
 
   const onWindowKeydown = (event: KeyboardEvent) => {
-    if (event.key === "Escape") open = false;
+    if (!open || event.key !== "Escape") return;
+    closeGuide();
   };
 
   const onWindowClick = (event: MouseEvent) => {
     if (!open || !rootRef) return;
-    // The launcher unmounts as soon as it opens. A click that started on it
-    // is no longer inside the panel, so the launcher stops propagation.
     if (event.target instanceof Node && rootRef.contains(event.target)) return;
-    open = false;
+    closeGuide();
   };
 
   onMount(() => {
@@ -235,13 +260,21 @@
   $effect(() => {
     if (!open || typeof window === "undefined") return;
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    // On touch, focusing the input would raise the keyboard — focus the
+    // dialog instead so assistive tech lands inside the panel.
     if (finePointer) inputRef?.focus();
+    else panelRef?.focus();
   });
 
   $effect(() => {
     void messages.length;
     void sending;
-    if (threadRef) threadRef.scrollTop = threadRef.scrollHeight;
+    if (!threadRef) return;
+    const distanceFromBottom =
+      threadRef.scrollHeight - threadRef.scrollTop - threadRef.clientHeight;
+    if (distanceFromBottom < 60 || threadRef.scrollTop === 0) {
+      threadRef.scrollTop = threadRef.scrollHeight;
+    }
   });
 </script>
 
@@ -258,6 +291,8 @@
       id="guide-panel"
       role="dialog"
       aria-label="Ask Andrei"
+      tabindex="-1"
+      bind:this={panelRef}
       class="guide-panel flex flex-col border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
     >
       <header class="flex items-start justify-between gap-3 border-b border-[var(--color-bg-secondary)] px-4 py-3">
@@ -279,13 +314,17 @@
           type="button"
           class="guide-icon-button text-[var(--color-text-primary)]"
           aria-label="Close guide"
-          onclick={() => (open = false)}
+          onclick={closeGuide}
         >
           <Icon name="close" class="w-5 h-5" />
         </button>
       </header>
 
-      <div bind:this={threadRef} class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      <div
+        bind:this={threadRef}
+        class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3"
+        aria-live="polite"
+      >
         {#if messages.length === 0}
           <p class="text-sm text-[var(--color-text-secondary)]">
             Ask about a project or a job. Say “show me Refract” and I'll open the page.
@@ -294,7 +333,7 @@
             {#each prompts as prompt (prompt)}
               <button
                 type="button"
-                class="text-left text-sm px-3 py-2 border border-[var(--color-bg-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] rounded-none"
+                class="flex min-h-[44px] items-center text-left text-sm px-3 py-2 border border-[var(--color-bg-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] rounded-none"
                 onclick={() => void send(prompt)}
               >
                 {prompt}
@@ -308,19 +347,19 @@
             <div
               class="max-w-[85%] border rounded-none {message.role === 'user'
                 ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-                : 'bg-white text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
             >
-              <div class="px-3 py-2 text-sm whitespace-pre-wrap">
+              <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
                 <div>{message.content}</div>
                 {#if message.role === "assistant" && message.sources && message.sources.length > 0}
-                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-1">
+                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-2">
                     {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
                       {#if source.href && source.href !== actionHref(message.action)}
                         <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
                           {source.title}
                         </a>
                       {:else if !source.href}
-                        <span class="text-[11px] text-[var(--color-text-muted)]">{source.title}</span>
+                        <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
                       {/if}
                     {/each}
                   </div>
@@ -341,7 +380,7 @@
         {/each}
 
         {#if sending}
-          <div class="text-sm text-[var(--color-text-secondary)]">
+          <div class="text-sm text-[var(--color-text-secondary)]" role="status">
             {waking ? "Waking the model…" : "Thinking…"}
           </div>
         {/if}
@@ -357,12 +396,12 @@
           autocomplete="off"
           placeholder="Ask about a project…"
           disabled={sending}
-          class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-white text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+          class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={sending || input.trim().length === 0}
-          class="px-3 py-2 text-sm border border-[var(--color-primary)] bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
+          class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm border border-[var(--color-primary)] bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
         >
           Send
         </button>
@@ -373,8 +412,9 @@
   <button
     type="button"
     class="guide-launch"
+    bind:this={launchRef}
     aria-expanded={open}
-    aria-controls="guide-panel"
+    aria-controls={open ? "guide-panel" : undefined}
     aria-label={open ? "Close guide" : "Ask Andrei"}
     onclick={(event) => {
       event.stopPropagation();
@@ -416,8 +456,13 @@
     font-size: 1rem;
   }
 
-  :global(.guide-action),
-  :global(.guide-action:hover) {
+  .guide-panel button,
+  .guide-panel a,
+  .guide-panel input {
+    touch-action: manipulation;
+  }
+
+  :global(.guide-action) {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -452,6 +497,9 @@
     color: white;
     border: 1px solid var(--color-primary);
     box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+    transition:
+      background-color var(--duration-ui) var(--ease-out),
+      scale 160ms var(--ease-out);
   }
 
   .guide-launch::before,
@@ -475,13 +523,17 @@
       color: var(--color-primary);
     }
 
+    :global(.guide-action:hover) {
+      background: var(--color-bg-secondary);
+    }
+
     .guide-input {
       font-size: 0.875rem;
     }
   }
 
   .guide-launch:active {
-    scale: 0.96;
+    scale: 0.98;
   }
 
   @media (max-width: 767px) {
@@ -504,6 +556,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .guide-launch {
+      transition: none;
+    }
+
     .guide-launch:active {
       scale: 1;
     }

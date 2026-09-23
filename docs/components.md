@@ -170,6 +170,14 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
 - Cold start shows three starter prompts instead of an empty thread
 
+### Interaction and accessibility
+
+- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel
+- On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
+- The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
+- Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`; source chips use `--color-text-secondary` (`--color-text-muted` cannot reach 4.5:1 on a light surface)
+- Prompts, Send, and `.guide-action` are at least 44px tall, and interactive elements in the panel set `touch-action: manipulation`
+
 ### Reply shape
 
 `POST /api/chat` returns a `ChatApiSuccess` (`src/lib/chatTypes.ts`):
@@ -180,7 +188,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 | `sources` | `ChatSource[]`, rendered as small links under the reply |
 | `action` | `none`, or `navigate { href, label, follow }` |
 
-A `navigate` action renders as `.guide-action` — a button with the `hammer` icon and the route label. When `follow` is `true` the guide also navigates after a delay.
+A `navigate` action renders as `.guide-action` — a button with the `hammer` icon and the route label. When `follow` is `true` the guide also navigates after 900ms, unless the visitor has started composing another question or focus is in the input (then the action link stays the way through).
 
 ### Supporting modules
 
