@@ -161,11 +161,16 @@ Top of the front page: the `.text-lead` personal statement (`personalStatement` 
 
 **File**: `src/components/weather/WeatherBanner.svelte`
 
-Dithered pixel strip that replaces the old ASCII hero. Mounted in `SiteLayout` as `client:only="svelte"`. Place is chosen once per visit; weather comes from coarse IP plus Open-Meteo, with a clear-sky fallback.
+Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"`. Place is chosen once per visit; weather comes from coarse IP plus Open-Meteo, with a clear-sky fallback.
 
-- Rendered at 160×48 (`BANNER_WIDTH` / `BANNER_HEIGHT` in `src/lib/weather/buffer.ts`), Bayer-dithered, then scaled to the page column up to `MAX_BANNER_SCALE` (5×)
-- `src/lib/weather/glBanner.ts` composites it in a WebGL shader; `draw.ts` renders the same `PixelBuffer` for the plate and lab paths
-- `palette.ts` owns the color ramps; `landscapes.ts` and `effects.ts` paint terrain, rain, and fog
+- `landscapes.ts` defines opaque back, middle, and foreground terrain. Each layer continues below its silhouette. Mount Hood has a continuous mountain base, a forest ridge, and foreground firs. The other places include hill strata, riverbanks, gorge vegetation, or coastal tide pools.
+- `draw.ts` samples terrain at 640×192 per layer into one RGBA atlas. WebGL uploads it only when the place changes. `buffer.ts` retains the 160×48 logical coordinate system and deterministic noise seed.
+- `glBanner.ts` uses linear texture filtering and renders at the displayed size, capped at 2× device pixel ratio. `weatherShader.ts` applies sky gradients, terrain light, atmospheric depth, sun or moon glow, weather tint, vignette, and a fine Bayer pattern at physical pixel resolution. There is no CPU color quantization or shader pixel snapping.
+- `palette.ts` provides one lighting table for **day**, **golden hour**, and **night**. Dawn and dusk both select golden hour. The table supplies sky, ambient terrain light, direct light, and weather colors. Dark mode scales this shared light. Live golden hour runs from 45 minutes before sunrise to 50 minutes after, and from 50 minutes before sunset to 45 minutes after. Without solar data, local clock ranges are 05:00–07:30 and 17:30–20:00.
+- Layers drift right at **0.5 / 2 / 4 logical pixels per second**, back to front. Coordinates wrap modulo 160, with no easing. Displayed speeds scale with the banner width.
+- Reduced motion holds time at zero. The animation loop stops when the document is hidden or the banner leaves the viewport. It resumes from the held time. Scene overrides and resize events still repaint a reduced-motion frame.
+- Rain has three angled depth layers with varied lengths and speeds, plus ground ripples. The shader also adds cloud layers, fog, branching lightning, motes, coastal water highlights, and a passing orca. Tide-pool starfish and anemones are part of the foreground terrain.
+- `bannerSurface.ts` provides a still CPU fallback with the same terrain and lighting table when WebGL is unavailable. It uses a separate 2D canvas, including after shader initialization failure, and repaints on scene or size changes.
 - Place and last reading persist in `sessionStorage` (`oregon-banner-place-v1`, `oregon-banner-reading-v1`), so a reload doesn't re-pick the place
 - The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
 - `transition:persist="weather-banner"` keeps it mounted while the page body swaps

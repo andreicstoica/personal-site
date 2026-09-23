@@ -4,7 +4,7 @@
 
 - `src/pages`: thin route entrypoints. Collection routes compose `CollectionPage`; others wrap `SiteLayout` and a page component.
 - Layout layers: `RootLayout` (document + `ClientRouter` + idle cursor island) → `SiteLayout` (weather banner, static nav, page scroll region with footer, guide island) → `ContentDocument` (markdown page chrome).
-- `src/components`: Astro owns static composition; Svelte islands own client state (`WeatherBanner`, `CursorTrail`, `ImageGallery`, `FloatingChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS; `WeatherBanner` is `client:only`. `Nav.astro` and `SiteFooter.astro` are static markup, not islands.
+- `src/components`: Astro owns static composition; Svelte islands own client state (`WeatherBanner`, `CursorTrail`, `ImageGallery`, `FloatingChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS; `WeatherBanner` is `client:only`. Its WebGL terrain layers use constant wrapped drift, pause off-screen or in hidden tabs, and hold a still frame for reduced motion. Lighting states are day, golden hour, and night. WebGL failure uses a still CPU plate. `Nav.astro` and `SiteFooter.astro` are static markup, not islands.
 - `src/layouts`: page shells; `src/lib`: helpers; `src/styles`: Tailwind tokens/extracted class groups.
 - Content lives in `src/content`; acceptance references in `specs`; public assets in `public` (e.g., `public/images`). Never edit `dist`.
 - Stay on Astro islands rather than a React/Next rewrite unless a page needs shared client state across the whole tree. Swap an island to React later without changing the layout hierarchy.
@@ -29,7 +29,7 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Testing Guidelines
 
 - `bun test` runs the unit suite (`*.test.ts`, Bun's built-in runner — no extra config). It is part of `bun run verify`, so CI gates on it.
-- Existing coverage: `src/lib/guide.test.ts` covers memory note parsing, route matching, guide reply/mode/action decisions, and inference config gating.
+- Existing coverage: `src/lib/guide.test.ts` covers memory note parsing, route matching, guide reply/mode/action decisions, and inference config gating. `src/lib/weather/scene.test.ts` covers golden-hour boundaries, terrain ground coverage, and CPU fallback lighting.
 - Add co-located `*.test.ts` files next to the module under test. For UI specs, prefer `src/components/__tests__/` (Vitest/Playwright welcome) and document run steps in the PR.
 
 ## Commit & Pull Request Guidelines
