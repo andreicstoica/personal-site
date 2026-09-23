@@ -1,6 +1,6 @@
 import { hash } from "./buffer";
 import { mix, type Rgb } from "./palette";
-import { placeMotion } from "./placeMotion";
+import { baleMotion, bubbleMotion, placeMotion } from "./placeMotion";
 import type { Place } from "./scene";
 
 export const SKY_ROWS: Record<Place, number> = {
@@ -50,9 +50,13 @@ function fir(
 	spacing: number,
 	ground: number,
 	height: number,
+	minCenter = -Infinity,
+	maxCenter = Infinity,
 ): boolean {
 	const cell = Math.floor(x / spacing);
-	const dx = x - cell * spacing - spacing * (0.35 + hash(cell * 43) * 0.3);
+	const center = cell * spacing + spacing * (0.35 + hash(cell * 43) * 0.3);
+	if (center < minCenter || center > maxCenter) return false;
+	const dx = x - center;
 	const h = height * (0.65 + hash(cell * 19 + ground) * 0.35);
 	const top = ground - h;
 	const width = (y - top) * 0.24 * (0.8 + 0.2 * Math.sin(y * 9));
@@ -205,35 +209,56 @@ export function material(
 					y > ridge(x, 36, 1.7) ||
 					(hash(Math.floor(x / 4.3) * 17) > 0.2 && fir(x, y, 4.3, 38, 7))
 				)
-					color = mix([40, 78, 74], [67, 102, 87], stone(x, y));
+					color = mix([25, 57, 57], [44, 79, 70], stone(x, y));
 			} else if (layer === 2) {
 				if (y > ridge(x, 39.5, 2, 0.7))
-					color = mix([68, 91, 43], [110, 127, 65], stone(x, y));
-				for (let row = 0; row < 3; row++) {
-					const cell = Math.floor((x + row * 3) / 6);
-					const cx = cell * 6 + 3 - row * 3;
-					if (cx < 34 || cx > 119 || (cx < 46 && hash(cell + row * 71) < 0.5))
-						continue;
-					const ground = ridge(cx, 40.5 + row * 2.6, 2, 0.7);
-					const dx = x - cx - motion.sway * Math.max(0, (ground - y) / 3);
-					if (Math.abs(dx) < 0.2 && y > ground - 2 && y < ground)
-						color = [71, 57, 38];
-					if ((dx / 2.1) ** 2 + ((y - ground + 2) / 1.65) ** 2 < 1) {
-						color = mix(
-							[39, 77, 36],
-							[94, 132, 53],
-							0.4 + stone(x, y) * 0.3 + motion.shimmer,
-						);
-						if (
-							hash(
-								Math.floor((x - motion.sway) * 3) * 71 +
-									Math.floor(y * 3) * 331,
-							) > 0.978
-						)
-							color = [180, 62, 39];
+					color = mix([124, 151, 66], [167, 183, 96], stone(x, y));
+				if (color && y > 38.5) {
+					const spacing = profile(y, [
+						[38.7, 6],
+						[42.1, 14],
+						[47.1, 22],
+					]);
+					for (let lane = -1.5; lane <= 1.5; lane++) {
+						if (Math.abs(x - 81 - lane * spacing) < 0.3 + (y - 38.5) * 0.045)
+							color = mix(color, [189, 180, 113], 0.5);
 					}
 				}
-				if ((x < 27 || x > 135) && fir(x, y, 11, 47, 13))
+				for (let depth = 0; depth < 3; depth++) {
+					const ground = [38.7, 42.1, 47.1][depth] ?? 47.1;
+					const scale = 0.5 + depth * 0.3;
+					if (y < ground - 4.5 * scale || y > ground) continue;
+					for (let row = -2; row <= 2; row++) {
+						const cx = 81 + row * (6 + depth * 8);
+						if (Math.abs(x - cx) > 3.7) continue;
+						const sway = placeMotion(time, cx).sway;
+						const dx = x - cx - sway * Math.max(0, (ground - y) / 4);
+						if (
+							Math.abs(dx) < 0.22 * scale &&
+							y > ground - 3 * scale &&
+							y < ground
+						)
+							color = [77, 55, 35];
+						if (
+							(dx / (2.25 * scale)) ** 2 +
+								((y - ground + 2.6 * scale) / (1.9 * scale)) ** 2 <
+							1
+						) {
+							color = mix(
+								[27, 78, 38],
+								[77, 128, 43],
+								0.3 + stone(x, y) * 0.5 + motion.shimmer,
+							);
+							if (
+								hash(
+									Math.floor((x - sway) * 3) * 71 + Math.floor(y * 3) * 331,
+								) > 0.968
+							)
+								color = [206, 65, 36];
+						}
+					}
+				}
+				if (fir(x, y, 11, 47, 13, -Infinity, 24) || fir(x, y, 11, 47, 13, 138))
 					color = mix([18, 43, 35], [46, 70, 43], stone(x, y));
 			}
 			break;
@@ -274,12 +299,16 @@ export function material(
 					y >= profile(x, SMITH_CREST) ||
 					y > ridge(x, 34, 2)
 				) {
-					const fold = noise(x, y * 0.07, 140);
+					const fold = noise(x, y * 0.07, 45);
 					const strata = Math.sin(y * 2.1 + Math.sin(x * 0.09) * 0.6);
-					color = mix([116, 83, 91], [216, 143, 76], fold * 0.8 + 0.15);
+					color = mix(
+						[83, 79, 103],
+						[229, 166, 91],
+						Math.max(0, Math.min(1, (fold - 0.25) * 2.2)),
+					);
 					color = mix(color, [237, 177, 113], Math.max(0, strata) * 0.15);
 					if (noise(x + Math.sin(y * 0.4) * 0.12, y * 0.04, 320) > 0.72)
-						color = mix(color, [85, 65, 75], 0.4);
+						color = mix(color, [48, 44, 61], 0.7);
 				}
 			} else if (layer === 1 && y > riverBank(x)) {
 				color = mix(
@@ -287,13 +316,26 @@ export function material(
 					[92, 132, 129],
 					0.5 + 0.5 * Math.sin(y * 5 + Math.sin(x * 0.3)),
 				);
-				if (y < riverBank(x) + 0.5) color = [156, 139, 102];
+				if (y < riverBank(x) + 0.9)
+					color = mix([81, 136, 44], [129, 170, 67], stone(x, y));
+				for (const [cx, offset, size] of [
+					[30, 2.2, 1.5],
+					[60, 3, 1.1],
+					[91, 2.6, 1.8],
+					[121, 2, 1.2],
+				] as const) {
+					const dy = y - riverBank(cx) - offset;
+					if (((x - cx) / size) ** 2 + (dy / (size * 0.45)) ** 2 < 1)
+						color = mix([42, 48, 57], [88, 92, 93], Math.max(0, 0.5 - dy));
+				}
 			} else if (layer === 2) {
 				const ground = riverBank(x) + 5;
 				if (y > ground)
 					color = mix([108, 100, 62], [156, 134, 88], stone(x, y));
-				if (y > ground - 0.7 && y < ground + 1 && noise(x, y, 240) > 0.53)
-					color = [111, 117, 76];
+				if (y > ground - 0.25 && y < ground + 1.2)
+					color = mix([70, 121, 38], [127, 160, 57], stone(x, y));
+				if (fir(x, y, 14, 46, 22, 4, 10))
+					color = mix([20, 38, 36], [38, 58, 42], stone(x, y));
 				for (const cx of [18, 134]) {
 					const dx = x - cx;
 					const base = riverBank(cx) + 5.5;
@@ -437,7 +479,11 @@ export function material(
 					const age = (time * (0.19 + wave * 0.027) + wave / 3) % 1;
 					const line = 22 + age * 10 + 0.2 * Math.sin(x * 0.15 + wave);
 					if (color && Math.abs(y - line) < 0.14)
-						color = mix(color, [197, 216, 209], Math.sin(age * Math.PI) * 0.7);
+						color = mix(
+							color,
+							[197, 216, 209],
+							Math.sin(age * Math.PI) ** 2 * 0.7,
+						);
 				}
 				const rock = x >= 87 && x <= 123 && y >= profile(x, HAYSTACK_CREST);
 				let needle = false;
@@ -505,25 +551,21 @@ export function material(
 				)
 					color = [170, 93, 52];
 				for (let i = 0; i < 3; i++) {
-					const age = (time + i * 4.7) % 13;
+					const bubble = bubbleMotion(time, i);
 					const bx = x - 39 - i * 6;
-					const by = y - (45.8 - age * 0.6);
-					if (age < 3 && Math.abs(Math.hypot(bx, by) - 0.3) < 0.1)
-						color = [152, 191, 178];
-					if (
-						age >= 3 &&
-						age < 3.4 &&
-						Math.abs(Math.hypot(bx, (y - 44) * 2) - 0.3 - (age - 3) * 1.5) < 0.1
-					)
-						color = mix(color, [152, 191, 178], 1 - (age - 3) / 0.4);
+					if (Math.abs(Math.hypot(bx, y - bubble.y) - 0.3) < 0.1)
+						color = mix(color, [152, 191, 178], bubble.rise);
+					if (Math.abs(Math.hypot(bx, (y - 44) * 2) - bubble.radius) < 0.1)
+						color = mix(color, [152, 191, 178], bubble.ring);
 				}
 			}
 			break;
 		}
 	}
 	if (place === "painted-hills" && layer === 1) {
-		for (const shift of [0, 84]) {
-			const cx = ((motion.baleX + shift + 8) % 180) - 8;
+		for (const shift of [0, 235]) {
+			const bale = baleMotion(time + shift);
+			const cx = bale.x;
 			const ground = ridge(cx, 33, 4, 2) + 1;
 			const dx = x - cx,
 				dy = y - ground + 1.1 + Math.sin(cx * 1.7) * 0.12;
@@ -534,28 +576,56 @@ export function material(
 				color = mix(
 					[144, 106, 47],
 					[222, 184, 99],
-					0.5 +
-						0.3 * Math.sin(radius * 12 + Math.atan2(dy, dx) - motion.baleAngle),
+					0.5 + 0.3 * Math.sin(radius * 12 + Math.atan2(dy, dx) - bale.angle),
 				);
 		}
 	}
-	if (place === "bend-plateau" && layer === 0) {
-		for (const [cx, base] of [
-			[102, 25],
-			[78, 21],
+	if (place === "bend-plateau" && layer === 0 && color) {
+		for (const [cx, base, phase] of [
+			[103, 25, 0],
+			[78, 20, 1.7],
 		] as const) {
 			const dx = x - cx,
 				dy = y - base + motion.climb;
-			if (dy > 0 && dy < 6 && Math.abs(dx - 0.3 * Math.sin(dy * 0.5)) < 0.075)
-				color = [180, 179, 150];
+			if (Math.abs(dx) > 2 || dy < -4.2 || dy > 6) continue;
+			const reach = Math.sin(time * 0.12 + phase) * 0.2;
 			if (
-				Math.hypot(dx, dy + 1.2) < 0.32 ||
-				(Math.abs(dx) < 0.25 && Math.abs(dy) < 0.85) ||
-				(Math.abs(dx) < 0.85 &&
-					Math.abs(dy - Math.abs(dx) * 0.8 - Math.sin(time * 0.8) * dx * 0.25) <
-						0.13)
+				dy > 0 &&
+				dy < 6 &&
+				Math.abs(dx - 0.35 - 0.22 * Math.sin(dy * 0.6)) < 0.1
 			)
-				color = [36, 43, 49];
+				color = [212, 200, 158];
+			if (Math.hypot(dx - 0.5, dy - 4.7) < 0.24) color = [33, 39, 46];
+			const limb = (
+				ax: number,
+				ay: number,
+				bx: number,
+				by: number,
+				width: number,
+			) => {
+				const vx = bx - ax,
+					vy = by - ay;
+				const t = Math.max(
+					0,
+					Math.min(1, ((dx - ax) * vx + (dy - ay) * vy) / (vx * vx + vy * vy)),
+				);
+				return Math.hypot(dx - ax - t * vx, dy - ay - t * vy) < width;
+			};
+			if (
+				Math.hypot(dx - 0.25, dy + 2.3) < 0.48 ||
+				limb(0, -1.4, -0.3, 0.5, 0.48) ||
+				limb(0.1, -1.3, 1.1, -2.2, 0.25) ||
+				limb(1.1, -2.2, 1.2 + reach, -3.8, 0.24) ||
+				limb(-0.2, -1.1, -1.25, -0.6, 0.25) ||
+				limb(-1.25, -0.6, -1.5, -1.5, 0.24) ||
+				limb(-0.3, 0.4, -1.25, 1.4, 0.3) ||
+				limb(-1.25, 1.4, -0.8, 2.6, 0.28) ||
+				limb(-0.1, 0.4, 1.3, 0.9, 0.3) ||
+				limb(1.3, 0.9, 1.2, 1.8, 0.28)
+			)
+				color = [24, 30, 39];
+			if (limb(-0.05, -1.25, -0.25, -0.05, 0.33)) color = [243, 190, 161];
+			if (Math.hypot(dx + 0.65, dy - 0.2) < 0.26) color = [219, 206, 172];
 		}
 	}
 	return color ? texture(color, x, y) : null;

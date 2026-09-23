@@ -139,7 +139,7 @@ export function renderMotionPatches(place: Place, time: number) {
 		Place,
 		readonly (readonly [number, number, number, number, number])[]
 	> = {
-		"cascade-forest": [[2, 30, 34, 94, 14]],
+		"cascade-forest": [[2, 30, 34, 104, 14]],
 		"columbia-gorge": [[1, 25, 20, 5, 16]],
 		"oregon-coast": [
 			[0, -4, 22, 168, 11],
@@ -148,8 +148,8 @@ export function renderMotionPatches(place: Place, time: number) {
 		],
 		"painted-hills": [[1, -4, 25, 168, 15]],
 		"bend-plateau": [
-			[0, 76, 11, 4, 17],
-			[0, 100, 15, 4, 17],
+			[0, 75, 8, 6, 20],
+			[0, 100, 13, 6, 20],
 		],
 	};
 	return regions[place].map(([layer, left, top, w, h]) => {

@@ -92,10 +92,12 @@ void main() {
   color += sunColor * glow * visibility * mix(0.13 + uGolden * 0.13, 0.045, uNight);
   color = mix(color, sunColor, core * visibility * mix(0.85, 0.55, uNight));
 
-  vec2 starCell = floor(p * 2.0);
-  vec2 starLocal = fract(p * 2.0) - 0.5;
-  float stars = step(0.996, hash(starCell)) * exp(-dot(starLocal, starLocal) * 65.0);
-  color += stars * uNight * visibility * (1.0 - skyRamp) * 0.55;
+  vec2 starCell = floor(p);
+  vec2 starLocal = fract(p) - 0.5;
+  float magnitude = hash(starCell + 19.0);
+  float twinkle = 0.78 + 0.22 * sin(uTime * mix(0.7, 2.1, hash(starCell + 37.0)) + hash(starCell + 53.0) * 6.283185);
+  float stars = step(0.989, hash(starCell)) * (1.0 - smoothstep(mix(0.12, 0.3, magnitude), 0.48, length(starLocal)));
+  color += stars * mix(0.65, 1.2, magnitude) * twinkle * uNight * visibility * (1.0 - skyRamp);
 
   float clouds = noise(vec2(p.x * 0.035 - uTime * uCloudSpeed, p.y * 0.10));
   clouds = clouds * 0.65 + noise(vec2(p.x * 0.095 - uTime * uCloudSpeed * 3.4, p.y * 0.23)) * 0.35;
@@ -141,7 +143,7 @@ void main() {
     float travel = mod(uTime * speed + id * 61.0 + 22.0, 210.0) - 25.0;
     float height = 6.0 + id * 3.3 + sin(uTime * 0.3 + id) * 0.6;
     vec2 bird = p - vec2(travel, height);
-    float flap = step(0.5, fract(uTime * (1.7 + id * 0.13) + id * 0.3));
+    float flap = 0.5 + 0.5 * sin((uTime * (1.7 + id * 0.13) + id * 0.3) * 6.283185);
     float wingY = mix(-0.65, 0.12, flap);
     float shape = min(segment(bird, vec2(-1.0, wingY), vec2(0.0, 0.0)), segment(bird, vec2(0.0, 0.0), vec2(1.0, wingY)));
     float fade = smoothstep(0.0, 18.0, travel) * (1.0 - smoothstep(142.0, 160.0, travel));
@@ -172,7 +174,8 @@ void main() {
       float width = 0.045 + z * 0.025;
       float line = 1.0 - smoothstep(width, width + 0.08, abs(local.x - 0.4 - random * 2.0));
       float length = (1.0 + random * 3.0) * (0.6 + uRainLength * 8.0) * (0.8 + gust * 0.4 + 0.12 * sin(uTime * 0.9 + columnSeed * 6.28));
-      float tail = smoothstep(0.0, length, local.y) * (1.0 - smoothstep(length, length + 0.4, local.y));
+      float tail = smoothstep(0.0, length, local.y) * (1.0 - smoothstep(length, min(11.8, length + 0.4), local.y));
+      tail *= smoothstep(0.0, 0.2, local.x) * (1.0 - smoothstep(2.8, 3.0, local.x));
       float drop = line * tail * smoothstep(1.0 - uRainColumns / 160.0 * (0.7 + gust * 0.5), 1.08 - uRainColumns / 160.0 * (0.7 + gust * 0.5), random);
       vec3 rainLight = mix(uRainColor, uHorizon + vec3(0.16), 0.5);
       color = mix(color, rainLight, drop * uRain * (0.18 + z * 0.18));
@@ -182,7 +185,7 @@ void main() {
     float phase = fract(uTime * 1.2 + seed * 7.0);
     vec2 local = fract(vec2(p.x / 5.0, p.y / 2.0)) - 0.5;
     float ring = 1.0 - smoothstep(0.02, 0.07, abs(length(local * vec2(1.0, 2.8)) - phase * 0.5));
-    color += uRainColor * ring * (1.0 - phase) * step(0.78, seed) * step(0.73, uv.y) * (1.0 - sky) * uRain * 0.22;
+    color += uRainColor * ring * pow(sin(phase * 3.141593), 2.0) * step(0.78, seed) * step(0.73, uv.y) * (1.0 - sky) * uRain * 0.22;
   }
 
   if (uLightning > 0.001) {
@@ -204,6 +207,7 @@ void main() {
   vec2 cell = floor(moteP);
   vec2 point = fract(moteP) - vec2(hash(cell), hash(cell + 3.0));
   float mote = exp(-dot(point, point) * 150.0) * step(0.97, hash(cell + 9.0));
+  mote *= smoothstep(0.0, 0.15, fract(moteP.x)) * (1.0 - smoothstep(0.85, 1.0, fract(moteP.x))) * smoothstep(0.0, 0.15, fract(moteP.y)) * (1.0 - smoothstep(0.85, 1.0, fract(moteP.y)));
   color += (uHorizon + uDirect) * mote * (0.035 + uDust * 0.16 + uBubbles * step(0.8, uv.y) * 0.12);
   float vignette = 1.0 - 0.10 * dot(uv - 0.5, uv - 0.5);
   color *= vignette;

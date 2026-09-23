@@ -3,7 +3,11 @@ import { DITHER_LEVELS, quantize } from "./dither";
 import { renderLayers, renderMotionPatches, renderPlate } from "./draw";
 import { birdsAllowed } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
-import { createLightningTimeline, lightningGap } from "./lightning";
+import {
+	createLightningTimeline,
+	LIGHTNING_DURATION,
+	lightningGap,
+} from "./lightning";
 import {
 	ATLAS_MARGIN,
 	ATLAS_WIDTH,
@@ -11,6 +15,7 @@ import {
 	OSCILLATION_PERIOD,
 } from "./motion";
 import { lighting } from "./palette";
+import { baleMotion, bubbleMotion, placeMotion } from "./placeMotion";
 import {
 	classifyWeather,
 	fallbackReading,
@@ -201,10 +206,12 @@ describe("weather raster and elapsed time", () => {
 		let doubles = 0;
 		for (const gap of gaps) {
 			start += gap;
-			expect(timeline(start + 0.06).flash).toBeCloseTo(1);
-			const first = timeline(start + 0.06);
-			const second = timeline(start + first.delay + 0.06);
-			if (second.flash > 0) {
+			expect(timeline(start + LIGHTNING_DURATION / 2).flash).toBeCloseTo(1);
+			expect(timeline(start + 0.22).flash).toBeGreaterThan(0);
+			expect(timeline(start + 0.47).flash).toBe(0);
+			const first = timeline(start + LIGHTNING_DURATION / 2);
+			const second = timeline(start + first.delay + LIGHTNING_DURATION / 2);
+			if (second.cool === 1 && second.flash > 0) {
 				doubles++;
 				expect(second.flash).toBeGreaterThanOrEqual(0.4);
 				expect(second.flash).toBeLessThanOrEqual(0.55);
@@ -252,5 +259,116 @@ describe("place motion and merged clear weather", () => {
 		expect(loadReading(storage) ?? fallbackReading()).toEqual(
 			fallbackReading(),
 		);
+	});
+});
+
+describe("weather seam regression", () => {
+	test("periodic motion joins with continuous value and velocity", () => {
+		const epsilon = 0.00001;
+		const cases: [number, (t: number) => number][] = [
+			[960, (t) => baleMotion(t).x],
+			[960, (t) => baleMotion(t).angle],
+			[12, (t) => placeMotion(t, 80).sway],
+			[12, (t) => placeMotion(t, 80).shimmer],
+			[13, (t) => bubbleMotion(t).rise],
+			[13, (t) => bubbleMotion(t).ring],
+			[13, (t) => bubbleMotion(t).y * bubbleMotion(t).rise],
+			[13, (t) => bubbleMotion(t).radius * bubbleMotion(t).ring],
+			[(Math.PI * 2) / 0.43, (t) => placeMotion(t).anemone],
+		];
+		for (const [period, sample] of cases) {
+			expect(Math.abs(sample(period - epsilon) - sample(0))).toBeLessThan(
+				0.001,
+			);
+			const incoming =
+				(3 * sample(period) -
+					4 * sample(period - epsilon) +
+					sample(period - 2 * epsilon)) /
+				(2 * epsilon);
+			const outgoing =
+				(-3 * sample(0) + 4 * sample(epsilon) - sample(2 * epsilon)) /
+				(2 * epsilon);
+			expect(Math.abs(incoming - outgoing)).toBeLessThan(0.001);
+		}
+		for (const x of [0, 40, 80, 120, 160]) {
+			const reset = 2 + x * 0.025;
+			expect(
+				Math.abs(
+					placeMotion(reset - epsilon, x).sway -
+						placeMotion(reset + epsilon, x).sway,
+				),
+			).toBeLessThan(0.001);
+		}
+	});
+	test("seam patches repaint their ground without new near-black texels", () => {
+		for (const [place, boundaries] of [
+			["painted-hills", [480, 960]],
+			["cascade-forest", [12, 24]],
+			["oregon-coast", [3, 3.6, 8.3, 13]],
+		] as const) {
+			for (const time of boundaries) {
+				const frames = [-1, 0, 1].map((step) =>
+					renderMotionPatches(place, time + step / 24),
+				);
+				for (const frame of frames)
+					for (const patch of frame) {
+						for (let i = 0; i < patch.data.length; i += 4) {
+							if (patch.data[i + 3] === 255)
+								expect(
+									Math.max(
+										patch.data[i] ?? 0,
+										patch.data[i + 1] ?? 0,
+										patch.data[i + 2] ?? 0,
+									),
+								).toBeGreaterThan(15);
+						}
+					}
+				const center = frames[1] ?? [];
+				for (let p = 0; p < center.length; p++) {
+					const before = frames[0]?.[p],
+						at = center[p],
+						after = frames[2]?.[p];
+					if (!before || !at || !after) throw new Error("missing patch");
+					for (let i = 3; i < at.data.length; i += 4) {
+						if (before.data[i] === 255 && after.data[i] === 255)
+							expect(at.data[i]).toBe(255);
+					}
+				}
+			}
+		}
+	});
+	test("climbers retain a head, raised hand, torso and separated footholds at time zero", () => {
+		for (const [cx, base] of [
+			[103, 25],
+			[78, 20],
+		] as const) {
+			for (const [dx, dy] of [
+				[0.25, -2.3],
+				[1.2, -3.7],
+				[-1.2, 1.4],
+				[1.2, 1.8],
+			] as const) {
+				const pixel = material("bend-plateau", 0, cx + dx, base + dy);
+				expect(pixel).not.toBeNull();
+				expect(Math.max(...(pixel ?? []))).toBeLessThan(45);
+			}
+			const shirt = material("bend-plateau", 0, cx - 0.1, base - 1);
+			expect(shirt?.[0]).toBeGreaterThan(230);
+			expect(material("bend-plateau", 0, cx, base + 2.4)?.[0]).toBeGreaterThan(
+				45,
+			);
+		}
+	});
+	test("overlapping lightning pulses blend without a cutoff at secondary onset", () => {
+		const at = createLightningTimeline();
+		let start = 0;
+		for (let i = 1; i < 40; i++) {
+			start += lightningGap(i);
+			const delay = at(start).delay;
+			const before = at(start + delay - 0.00001);
+			const after = at(start + delay + 0.00001);
+			expect(Math.abs(before.flash - after.flash)).toBeLessThan(0.001);
+			expect(Math.abs(before.origin - after.origin)).toBeLessThan(0.001);
+		}
 	});
 });
