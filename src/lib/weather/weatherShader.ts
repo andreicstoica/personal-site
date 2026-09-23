@@ -1,3 +1,5 @@
+import { DITHER_LEVELS } from "./dither";
+
 export const BANNER_VERT = `#version 300 es
 in vec2 aPos;
 out vec2 vUv;
@@ -14,9 +16,10 @@ in vec2 vUv;
 out vec4 outColor;
 
 uniform sampler2D uPlate;
-uniform vec3 uZenith, uHorizon, uAmbient, uDirect, uSpeeds;
+uniform vec3 uZenith, uHorizon, uAmbient, uDirect, uOffsets;
 uniform vec2 uSun;
 uniform float uNight, uCoast;
+uniform float uAtlasWidth, uDitherSize;
 uniform vec2 uPlateSize;
 uniform float uTime;
 uniform float uSkyFrac;
@@ -30,7 +33,7 @@ uniform float uRainLength;
 uniform float uFog;
 uniform float uShimmer;
 uniform float uLightning;
-uniform float uLightningGap;
+uniform float uFlash, uFlashSeed, uGolden;
 uniform float uDust;
 uniform float uBubbles;
 uniform vec3 uCloudLit;
@@ -53,8 +56,9 @@ float noise(vec2 p) {
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-vec4 layerAt(vec2 uv, float layer, float speed) {
-  float x = fract(uv.x - mod(uTime * speed, uPlateSize.x) / uPlateSize.x);
+vec4 layerAt(vec2 uv, float layer, float offset) {
+  float margin = (uAtlasWidth - uPlateSize.x) * 0.5;
+  float x = (uv.x * uPlateSize.x + margin - offset) / uAtlasWidth;
   float y = clamp(uv.y, 0.5 / 192.0, 1.0 - 0.5 / 192.0);
   return texture(uPlate, vec2(x, (layer + y) / 3.0));
 }
@@ -79,9 +83,12 @@ void main() {
   vec2 sunDelta = (uv - uSun) * vec2(3.3333, 1.0);
   float sunDistance = length(sunDelta);
   float visibility = 1.0 - max(uCloud * 0.85, uFog);
-  color += uDirect * exp(-sunDistance * 6.0) * visibility * 0.55;
-  float disc = 1.0 - smoothstep(0.027, 0.031, sunDistance);
-  color = mix(color, mix(vec3(1.0, 0.88, 0.64), vec3(0.78, 0.86, 0.9), uNight), disc * visibility);
+  float radius = mix(0.055 + uGolden * 0.035, 0.035, uNight);
+  float core = exp(-pow(sunDistance / radius, 2.0) * 2.0);
+  float glow = exp(-pow(sunDistance / (radius * 3.0), 2.0));
+  vec3 sunColor = mix(mix(vec3(1.0, 0.91, 0.72), vec3(1.0, 0.68, 0.35), uGolden), vec3(0.65, 0.76, 0.86), uNight);
+  color += sunColor * glow * visibility * mix(0.13 + uGolden * 0.13, 0.045, uNight);
+  color = mix(color, sunColor, core * visibility * mix(0.85, 0.55, uNight));
 
   vec2 starCell = floor(p * 2.0);
   vec2 starLocal = fract(p * 2.0) - 0.5;
@@ -89,18 +96,20 @@ void main() {
   color += stars * uNight * visibility * (1.0 - skyRamp) * 0.55;
 
   float clouds = noise(vec2(p.x * 0.035 - uTime * uCloudSpeed, p.y * 0.10));
-  clouds = clouds * 0.65 + noise(vec2(p.x * 0.095 - uTime * uCloudSpeed * 1.5, p.y * 0.23)) * 0.35;
+  clouds = clouds * 0.65 + noise(vec2(p.x * 0.095 - uTime * uCloudSpeed * 3.4, p.y * 0.23)) * 0.35;
   float cover = smoothstep(0.38, 0.78, clouds) * uCloud;
+  float wisps = smoothstep(0.46, 0.72, noise(vec2(p.x * 0.065 - uTime * 0.055, p.y * 0.38)));
+  cover += wisps * (1.0 - smoothstep(0.15, 0.65, uv.y)) * (1.0 - uCloud) * 0.22 * (1.0 - uFog);
   color = mix(color, mix(uCloudShade, uCloudLit, clouds), cover * (1.0 - smoothstep(uSkyFrac, 0.86, uv.y)));
 
   float depth = 0.0;
   float sky = 1.0;
   for (int i = 0; i < 3; i++) {
     float layer = float(i);
-    vec4 surface = layerAt(uv, layer, uSpeeds[i]);
+    vec4 surface = layerAt(uv, layer, uOffsets[i]);
     // Recover edge color after filtering transparent texels.
     vec3 albedo = surface.rgb / max(surface.a, 0.001);
-    float detail = noise(vec2(p.x * 1.4 - uTime * uSpeeds[i] * 1.4, p.y * 2.0));
+    float detail = noise(vec2((p.x - uOffsets[i]) * 1.4, p.y * 2.0));
     float direction = clamp(0.55 + (uSun.x - uv.x) * 0.25 + (detail - 0.5) * 0.35, 0.0, 1.0);
     vec3 land = albedo * (uAmbient + uDirect * direction);
     land *= 1.0 - uLandShade * clouds * 0.3;
@@ -111,41 +120,53 @@ void main() {
     sky *= 1.0 - surface.a;
   }
 
+  float birds = 0.0;
+  for (int i = 0; i < 3; i++) {
+    float id = float(i);
+    float speed = 1.8 + id * 0.63;
+    float travel = mod(uTime * speed + id * 61.0 + 22.0, 210.0) - 25.0;
+    float height = 6.0 + id * 3.3 + sin(uTime * 0.3 + id) * 0.6;
+    vec2 bird = p - vec2(travel, height);
+    float flap = step(0.5, fract(uTime * (1.7 + id * 0.13) + id * 0.3));
+    float wingY = mix(-0.65, 0.12, flap);
+    float shape = min(segment(bird, vec2(-1.0, wingY), vec2(0.0, 0.0)), segment(bird, vec2(0.0, 0.0), vec2(1.0, wingY)));
+    float fade = smoothstep(0.0, 18.0, travel) * (1.0 - smoothstep(142.0, 160.0, travel));
+    fade *= 0.55 + 0.45 * sin(uTime * 0.21 + id * 2.0);
+    birds = max(birds, (1.0 - smoothstep(0.09, 0.23, shape)) * fade);
+  }
+  color = mix(color, uZenith * 0.28, birds * sky * (1.0 - uRain) * (1.0 - uNight) * (0.7 - uFog * 0.35));
+
+  float fogBreath = 0.87 + 0.13 * sin(uTime * 0.17);
   float mist = noise(vec2(p.x * 0.055 - uTime * 0.04, p.y * 0.12));
-  color = mix(color, uFogColor, uFog * (0.16 + mist * 0.3) * (1.0 - depth * 0.65));
+  color = mix(color, uFogColor, uFog * fogBreath * (0.16 + mist * 0.3) * (1.0 - depth * 0.65));
   color += uDirect * uShimmer * 0.07 * sin(p.y * 6.0 + sin(p.x * 0.3 - uTime)) * (1.0 - sky);
 
-  // A passing dorsal fin stays in the offshore band and behind the beach.
   if (uCoast > 0.5) {
-    float whaleX = mod(uTime * 1.6 + 35.0, 190.0) - 15.0;
-    vec2 whale = p - vec2(whaleX, 27.5);
-    float body = 1.0 - smoothstep(0.8, 1.0, length(whale / vec2(3.4, 0.55)));
-    float fin = step(-1.8, whale.y) * step(whale.y, 0.0) * (1.0 - smoothstep(0.12, 0.28, abs(whale.x + whale.y * 0.25)));
-    color = mix(color, vec3(0.025, 0.045, 0.055) * (uAmbient + uDirect), max(body, fin) * (1.0 - step(0.5, depth)));
-    float eye = 1.0 - smoothstep(0.7, 1.0, length((whale - vec2(1.7, -0.1)) / vec2(0.55, 0.19)));
-    color = mix(color, uHorizon, eye * body * (1.0 - step(0.5, depth)));
     float wave = sin(p.y * 8.0 + sin(p.x * 0.22 + uTime * 0.6));
     color += uHorizon * 0.07 * smoothstep(0.8, 1.0, wave) * step(22.0, p.y) * (1.0 - step(0.5, depth));
   }
 
   if (uRain > 0.001) {
+    float gust = 0.5 + 0.3 * sin(uTime * 0.23) + 0.2 * sin(uTime * 0.071 + 1.7);
+    // Integrating speed keeps drops continuous while gusts accelerate them.
+    float rainTravel = uTime - 0.3 / 0.23 * cos(uTime * 0.23) - 0.2 / 0.071 * cos(uTime * 0.071 + 1.7);
     for (int i = 0; i < 3; i++) {
       float z = float(i);
       float scale = 1.6 - z * 0.4;
-      vec2 rainP = vec2(p.x + p.y * (0.18 + z * 0.035), p.y) * scale;
+      vec2 rainP = vec2(p.x + p.y * (0.12 + gust * 0.12 + z * 0.035), p.y) * scale;
       float columnSeed = hash(vec2(floor(rainP.x / 3.0), z + 91.0));
       rainP.y += columnSeed * 12.0;
-      rainP.y -= uTime * uRainSpeed * (28.0 + z * 19.0) * (0.8 + columnSeed * 0.4);
+      rainP.y -= rainTravel * uRainSpeed * (28.0 + z * 19.0) * (0.8 + columnSeed * 0.4);
       vec2 cell = floor(rainP / vec2(3.0, 12.0));
       vec2 local = mod(rainP, vec2(3.0, 12.0));
       float random = hash(cell + z * 73.0);
       float width = 0.045 + z * 0.025;
       float line = 1.0 - smoothstep(width, width + 0.08, abs(local.x - 0.4 - random * 2.0));
-      float length = (1.0 + random * 3.0) * (0.6 + uRainLength * 8.0);
+      float length = (1.0 + random * 3.0) * (0.6 + uRainLength * 8.0) * (0.8 + gust * 0.4 + 0.12 * sin(uTime * 0.9 + columnSeed * 6.28));
       float tail = smoothstep(0.0, length, local.y) * (1.0 - smoothstep(length, length + 0.4, local.y));
-      float drop = line * tail * step(1.0 - uRainColumns / 160.0, random);
+      float drop = line * tail * smoothstep(1.0 - uRainColumns / 160.0 * (0.7 + gust * 0.5), 1.08 - uRainColumns / 160.0 * (0.7 + gust * 0.5), random);
       vec3 rainLight = mix(uRainColor, uHorizon + vec3(0.16), 0.5);
-      color = mix(color, rainLight, drop * uRain * (0.13 + z * 0.13));
+      color = mix(color, rainLight, drop * uRain * (0.18 + z * 0.18));
     }
     vec2 splashCell = floor(vec2(p.x / 5.0, p.y / 2.0));
     float seed = hash(splashCell);
@@ -156,9 +177,8 @@ void main() {
   }
 
   if (uLightning > 0.001) {
-    float cycle = floor(uTime / uLightningGap);
-    float phase = mod(uTime, uLightningGap);
-    float flash = (1.0 - smoothstep(0.03, 0.18, phase)) * step(0.72, hash(vec2(cycle, 8.0))) * uLightning;
+    float cycle = uFlashSeed;
+    float flash = uFlash * uLightning;
     float origin = 25.0 + hash(vec2(cycle, 2.0)) * 110.0;
     float bolt = 0.0;
     vec2 a = vec2(origin, 1.0);
@@ -179,7 +199,8 @@ void main() {
   color += (uHorizon + uDirect) * mote * (0.035 + uDust * 0.16 + uBubbles * step(0.8, uv.y) * 0.12);
   float vignette = 1.0 - 0.10 * dot(uv - 0.5, uv - 0.5);
   color *= vignette;
-  color += bayer(gl_FragCoord.xy) * (1.5 / 255.0);
+  // Fixed CSS-sized cells remain visible at both supported device pixel ratios.
+  color = floor(clamp(color, 0.0, 1.0) * ${(DITHER_LEVELS - 1).toFixed(1)} + 0.5 + bayer(gl_FragCoord.xy / uDitherSize)) / ${(DITHER_LEVELS - 1).toFixed(1)};
   outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 `;

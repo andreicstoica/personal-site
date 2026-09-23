@@ -1,5 +1,8 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
-import { DETAIL, LAYER_SPEEDS, material } from "./landscapes";
+import { DITHER_CELL_CSS, quantize } from "./dither";
+import { weatherEffect } from "./effects";
+import { DETAIL, material } from "./landscapes";
+import { ATLAS_MARGIN, ATLAS_WIDTH, layerOffsets } from "./motion";
 import { grade, lighting, mix, type Rgb } from "./palette";
 import type { Place, Scene } from "./scene";
 
@@ -11,7 +14,7 @@ export type BannerImage = {
 
 /** Three vertically packed RGBA layers. Color is unlit; alpha is coverage. */
 export function renderLayers(place: Place): BannerImage {
-	const width = BANNER_WIDTH * DETAIL;
+	const width = ATLAS_WIDTH * DETAIL;
 	const height = BANNER_HEIGHT * DETAIL;
 	const data = new Uint8ClampedArray(width * height * 3 * 4);
 	for (let layer = 0; layer < 3; layer++) {
@@ -20,7 +23,7 @@ export function renderLayers(place: Place): BannerImage {
 				const color = material(
 					place,
 					layer,
-					(x + 0.5) / DETAIL,
+					(x + 0.5) / DETAIL - ATLAS_MARGIN,
 					(y + 0.5) / DETAIL,
 				);
 				if (!color) continue;
@@ -33,28 +36,61 @@ export function renderLayers(place: Place): BannerImage {
 }
 
 /** Still CPU fallback, with the same opaque geometry and lighting table. */
-export function renderPlate(scene: Scene, timeSeconds = 0): BannerImage {
-	const width = BANNER_WIDTH * DETAIL;
-	const height = BANNER_HEIGHT * DETAIL;
+export function renderPlate(
+	scene: Scene,
+	timeSeconds = 0,
+	width = BANNER_WIDTH * DETAIL,
+	height = BANNER_HEIGHT * DETAIL,
+	ditherSize = DITHER_CELL_CSS,
+): BannerImage {
 	const data = new Uint8ClampedArray(width * height * 4);
 	const light = lighting(scene);
+	const offsets = layerOffsets(timeSeconds);
+	const effect = weatherEffect(scene);
+	const golden = scene.time === "golden-hour" ? 1 : 0;
+	const night = scene.time === "night";
+	const radius = night ? 0.035 : 0.055 + golden * 0.035;
+	const sunColor: Rgb = night
+		? [0.65, 0.76, 0.86]
+		: golden
+			? [1, 0.68, 0.35]
+			: [1, 0.91, 0.72];
+	const visibility = 1 - Math.max(effect.cloud * 0.85, effect.fog);
 	for (let y = 0; y < height; y++) {
-		const sky = mix(light.zenith, light.horizon, Math.min(1, y / height / 0.7));
+		const ramp = Math.min(1, (y + 0.5) / height / 0.78);
+		const sky = mix(light.zenith, light.horizon, ramp * ramp * (3 - 2 * ramp));
 		for (let x = 0; x < width; x++) {
-			let color: Rgb = [sky[0] * 255, sky[1] * 255, sky[2] * 255];
+			const uvX = (x + 0.5) / width;
+			const uvY = (y + 0.5) / height;
+			const distance = Math.hypot(
+				(uvX - light.sun[0]) * 3.3333,
+				uvY - light.sun[1],
+			);
+			const core = Math.exp(-((distance / radius) ** 2) * 2);
+			const glow =
+				Math.exp(-((distance / (radius * 3)) ** 2)) *
+				visibility *
+				(night ? 0.045 : 0.13 + golden * 0.13);
+			let color: Rgb = mix(
+				[
+					(sky[0] + sunColor[0] * glow) * 255,
+					(sky[1] + sunColor[1] * glow) * 255,
+					(sky[2] + sunColor[2] * glow) * 255,
+				],
+				[sunColor[0] * 255, sunColor[1] * 255, sunColor[2] * 255],
+				core * visibility * (night ? 0.55 : 0.85),
+			);
+			let depth = 0;
 			for (let layer = 0; layer < 3; layer++) {
-				const shifted =
-					((x + 0.5) / DETAIL -
-						((timeSeconds * (LAYER_SPEEDS[layer] ?? 0)) % BANNER_WIDTH) +
-						BANNER_WIDTH) %
-					BANNER_WIDTH;
+				const shifted = uvX * BANNER_WIDTH - (offsets[layer] ?? 0);
 				const surface = material(
 					scene.place,
 					layer,
 					shifted,
-					(y + 0.5) / DETAIL,
+					uvY * BANNER_HEIGHT,
 				);
-				if (surface)
+				if (surface) {
+					depth = (layer + 1) / 3;
 					color = mix(
 						grade(surface, scene),
 						[
@@ -62,9 +98,25 @@ export function renderPlate(scene: Scene, timeSeconds = 0): BannerImage {
 							light.horizon[1] * 255,
 							light.horizon[2] * 255,
 						],
-						(2 - layer) * 0.13,
+						(2 - layer) * 0.14 + effect.fog * (0.42 - layer * 0.13),
 					);
+				}
 			}
+			color = mix(
+				color,
+				[
+					light.horizon[0] * 255,
+					light.horizon[1] * 255,
+					light.horizon[2] * 255,
+				],
+				effect.fog * 0.27 * (1 - depth * 0.65),
+			);
+			const vignette = 1 - 0.1 * ((uvX - 0.5) ** 2 + (uvY - 0.5) ** 2);
+			color = quantize(
+				[color[0] * vignette, color[1] * vignette, color[2] * vignette],
+				Math.floor(x / ditherSize),
+				Math.floor((height - 1 - y) / ditherSize),
+			);
 			data.set([...color, 255], (y * width + x) * 4);
 		}
 	}

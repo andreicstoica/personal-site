@@ -1,7 +1,9 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
+import { DITHER_CELL_CSS } from "./dither";
 import type { BannerImage } from "./draw";
 import { type WeatherEffect, weatherEffect } from "./effects";
-import { LAYER_SPEEDS } from "./landscapes";
+import { createLightningTimeline } from "./lightning";
+import { ATLAS_WIDTH, layerOffsets } from "./motion";
 import { lighting } from "./palette";
 import type { Scene } from "./scene";
 import { BANNER_FRAG, BANNER_VERT } from "./weatherShader";
@@ -22,7 +24,9 @@ const UNIFORMS = [
 	"uSun",
 	"uNight",
 	"uCoast",
-	"uSpeeds",
+	"uOffsets",
+	"uAtlasWidth",
+	"uDitherSize",
 	"uPlate",
 	"uPlateSize",
 	"uTime",
@@ -37,7 +41,9 @@ const UNIFORMS = [
 	"uFog",
 	"uShimmer",
 	"uLightning",
-	"uLightningGap",
+	"uFlash",
+	"uFlashSeed",
+	"uGolden",
 	"uDust",
 	"uBubbles",
 	"uCloudLit",
@@ -118,7 +124,7 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 	let effect: WeatherEffect = weatherEffect({
@@ -136,6 +142,8 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 	let plateWidth = 0;
 	let plateHeight = 0;
 	let alive = true;
+	let ditherSize: number = DITHER_CELL_CSS;
+	const lightningAt = createLightningTimeline();
 
 	return {
 		upload(image) {
@@ -176,6 +184,7 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 		},
 		resize(cssWidth, cssHeight, dpr) {
 			if (!alive) return;
+			ditherSize = DITHER_CELL_CSS * dpr;
 			const width = Math.max(1, Math.round(cssWidth * dpr));
 			const height = Math.max(1, Math.round(cssHeight * dpr));
 			if (canvas.width !== width || canvas.height !== height) {
@@ -192,7 +201,9 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			gl.uniform3fv(uniform("uHorizon"), light.horizon);
 			gl.uniform3fv(uniform("uAmbient"), light.ambient);
 			gl.uniform3fv(uniform("uDirect"), light.direct);
-			gl.uniform3fv(uniform("uSpeeds"), LAYER_SPEEDS);
+			gl.uniform3fv(uniform("uOffsets"), layerOffsets(timeSeconds));
+			gl.uniform1f(uniform("uAtlasWidth"), ATLAS_WIDTH);
+			gl.uniform1f(uniform("uDitherSize"), ditherSize);
 			gl.uniform2fv(uniform("uSun"), light.sun);
 			gl.uniform1f(uniform("uNight"), current.time === "night" ? 1 : 0);
 			gl.uniform1f(uniform("uCoast"), current.place === "oregon-coast" ? 1 : 0);
@@ -209,7 +220,10 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			gl.uniform1f(uniform("uFog"), effect.fog);
 			gl.uniform1f(uniform("uShimmer"), effect.shimmer);
 			gl.uniform1f(uniform("uLightning"), effect.lightning);
-			gl.uniform1f(uniform("uLightningGap"), effect.lightningGap);
+			const lightning = lightningAt(timeSeconds);
+			gl.uniform1f(uniform("uFlash"), lightning.flash);
+			gl.uniform1f(uniform("uFlashSeed"), lightning.seed);
+			gl.uniform1f(uniform("uGolden"), current.time === "golden-hour" ? 1 : 0);
 			gl.uniform1f(uniform("uDust"), effect.dust);
 			gl.uniform1f(uniform("uBubbles"), effect.bubbles);
 			gl.uniform3f(

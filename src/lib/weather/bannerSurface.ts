@@ -1,4 +1,5 @@
 import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
+import { DITHER_CELL_CSS } from "./dither";
 import type { BannerImage } from "./draw";
 import { renderLayers, renderPlate } from "./draw";
 import { createBannerGl } from "./glBanner";
@@ -70,11 +71,13 @@ export function mountBanner(canvas: HTMLCanvasElement): BannerFrame | null {
 	fallback.dataset.renderer = "plate";
 	let lastScene = "";
 	let lastSize = "";
+	let pixelRatio = 1;
 	return {
 		resize: (width, height, dpr) => {
 			const size = `${width},${height},${dpr}`;
 			if (size === lastSize) return;
 			lastSize = size;
+			pixelRatio = dpr;
 			plate.resize(width, height, dpr);
 			lastScene = "";
 		},
@@ -82,7 +85,15 @@ export function mountBanner(canvas: HTMLCanvasElement): BannerFrame | null {
 			const key = JSON.stringify(scene);
 			if (key === lastScene) return;
 			lastScene = key;
-			plate.paint(renderPlate(scene));
+			plate.paint(
+				renderPlate(
+					scene,
+					0,
+					fallback.width,
+					fallback.height,
+					DITHER_CELL_CSS * pixelRatio,
+				),
+			);
 		},
 		destroy() {
 			plate.destroy();
@@ -125,7 +136,7 @@ function createPlatePainter(canvas: HTMLCanvasElement): PlatePainter | null {
 				0,
 				0,
 			);
-			ctx.imageSmoothingEnabled = true;
+			ctx.imageSmoothingEnabled = false;
 			ctx.drawImage(plate, 0, 0, canvas.width, canvas.height);
 		},
 		destroy() {

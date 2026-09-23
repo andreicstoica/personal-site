@@ -9,7 +9,6 @@ export const SKY_ROWS: Record<Place, number> = {
 	"columbia-gorge": 25,
 	"oregon-coast": 22,
 };
-export const LAYER_SPEEDS = [0.5, 2, 4] as const;
 export const DETAIL = 4;
 const TAU = Math.PI * 2;
 
@@ -22,7 +21,7 @@ function ridge(x: number, base: number, amplitude: number, phase = 0): number {
 	);
 }
 function distance(x: number, center: number): number {
-	return ((x - center + 240) % 160) - 80;
+	return x - center;
 }
 function noise(x: number, y: number, cells = 32): number {
 	const px = (x / 160) * cells;
@@ -52,7 +51,7 @@ function fir(
 	height: number,
 ): boolean {
 	const cell = Math.floor(x / spacing);
-	const dx = (x % spacing) - spacing * (0.35 + hash(cell * 43) * 0.3);
+	const dx = x - cell * spacing - spacing * (0.35 + hash(cell * 43) * 0.3);
 	const h = height * (0.65 + hash(cell * 19 + ground) * 0.35);
 	const top = ground - h;
 	const width = (y - top) * 0.24 * (0.8 + 0.2 * Math.sin(y * 9));
@@ -68,7 +67,7 @@ function texture(color: Rgb, x: number, y: number, strength = 0.05): Rgb {
 	];
 }
 
-/** Opaque material below each silhouette, transparent above; all profiles tile. */
+/** Opaque material below each silhouette, transparent above; profiles extend beyond the visible window. */
 export function material(
 	place: Place,
 	layer: number,
@@ -169,8 +168,9 @@ export function material(
 		case "columbia-gorge": {
 			if (layer === 0 && y > ridge(x, 25, 5)) color = [88, 119, 116];
 			if (layer === 1) {
-				const dx = Math.abs(distance(x, 0));
-				const crest = 10 + dx * 0.6 + Math.sin((x / 160) * TAU * 9);
+				const crest =
+					Math.min(10 + Math.abs(x) * 0.6, 13 + Math.abs(x - 160) * 0.5) +
+					Math.sin((x / 160) * TAU * 9);
 				if (y > crest) {
 					color = mix(
 						[43, 65, 60],

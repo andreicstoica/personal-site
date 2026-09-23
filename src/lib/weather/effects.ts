@@ -23,7 +23,6 @@ export const WEATHER_KNOBS = {
 	rainLength: 0.055,
 	fogStrength: 0.8,
 	shimmer: 0.62,
-	lightningGap: 6.5,
 	dust: 0.75,
 	bubbles: 0.7,
 } as const;
@@ -42,7 +41,6 @@ export type WeatherEffect = {
 	fog: number;
 	shimmer: number;
 	lightning: number;
-	lightningGap: number;
 	dust: number;
 	bubbles: number;
 	cloudLit: Vec3;
@@ -57,7 +55,6 @@ export function weatherEffect(scene: Scene): WeatherEffect {
 		skyFrac: SKY_ROWS[scene.place] / BANNER_HEIGHT,
 		rainColumns: WEATHER_KNOBS.rainColumns,
 		rainLength: WEATHER_KNOBS.rainLength,
-		lightningGap: WEATHER_KNOBS.lightningGap,
 		cloudLit: unit(clouds.lit),
 		cloudShade: unit(clouds.shade),
 		rainColor: unit(rainColor(scene)),
@@ -125,8 +122,8 @@ function atmosphere(scene: Scene, dust: number, bubbles: number): Atmosphere {
 			};
 		case "sunny":
 			return {
-				cloud: 0,
-				cloudSpeed: 0,
+				cloud: 0.28,
+				cloudSpeed: WEATHER_KNOBS.clearCloudSpeed,
 				landShade: 0,
 				rain: 0,
 				rainSpeed: 0,
