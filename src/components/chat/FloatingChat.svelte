@@ -20,7 +20,6 @@
   };
 
   const storageKey = "andrei-guide-v1";
-  const prompts = ["What are you working on?", "Show me Refract", "What's in your canon?"];
 
   let open = $state(false);
   let messages = $state<GuideMessage[]>([]);
@@ -28,6 +27,7 @@
   let sending = $state(false);
   let waking = $state(false);
   let mode = $state<ChatMode | null>(null);
+  let offline = $state(false);
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
   let threadRef = $state<HTMLDivElement | null>(null);
@@ -127,6 +127,21 @@
     return "The guide couldn't answer.";
   }
 
+  /** Config-only: no probe, so this never wakes a scale-to-zero GPU. */
+  async function checkHealth() {
+    try {
+      const response = await fetch("/api/health");
+      if (!response.ok) {
+        offline = true;
+        return;
+      }
+      const payload: unknown = await response.json().catch(() => null);
+      offline = !(isRecord(payload) && payload.status === "ok");
+    } catch {
+      offline = true;
+    }
+  }
+
   function scheduleFollow(action: ChatAction) {
     if (action.kind !== "navigate" || !action.follow) return;
     if (window.location.pathname === action.href) return;
@@ -223,6 +238,7 @@
   };
 
   onMount(() => {
+    void checkHealth();
     const stored = readStored();
     if (stored) {
       messages = stored.messages;
@@ -326,20 +342,20 @@
         aria-live="polite"
       >
         {#if messages.length === 0}
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            Ask about a project or a job. Say “show me Refract” and I'll open the page.
-          </p>
-          <div class="flex flex-col gap-2">
-            {#each prompts as prompt (prompt)}
-              <button
-                type="button"
-                class="flex min-h-[44px] items-center text-left text-sm px-3 py-2 border border-[var(--color-bg-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] rounded-none"
-                onclick={() => void send(prompt)}
-              >
-                {prompt}
-              </button>
-            {/each}
-          </div>
+          {#if offline}
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              The inference server is currently down - it is expensive to run!
+            </p>
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              Reach out directly and I'll spin it up for you:
+              <br />
+              <em>andrei c stoica (at) icloud (dot) com</em>
+            </p>
+          {:else}
+            <p class="text-sm text-[var(--color-text-secondary)]">
+              Ask about a project or a job. Say “show me Refract” and I'll open the page.
+            </p>
+          {/if}
         {/if}
 
         {#each messages as message (message.id)}
@@ -351,30 +367,34 @@
             >
               <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
                 <div>{message.content}</div>
-                {#if message.role === "assistant" && message.sources && message.sources.length > 0}
-                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-2">
-                    {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
-                      {#if source.href && source.href !== actionHref(message.action)}
-                        <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
-                          {source.title}
+                {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
+                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] space-y-1">
+                    {#if message.action?.kind === "navigate"}
+                      <div>
+                        <a
+                          href={message.action.href}
+                          class="text-[11px] text-[var(--color-text-secondary)]"
+                        >
+                          → Navigating to {message.action.href}
                         </a>
-                      {:else if !source.href}
-                        <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
-                      {/if}
-                    {/each}
+                      </div>
+                    {/if}
+                    {#if message.sources && message.sources.length > 0}
+                      <div class="flex flex-wrap gap-x-2 gap-y-2">
+                        {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
+                          {#if source.href && source.href !== actionHref(message.action)}
+                            <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
+                              {source.title}
+                            </a>
+                          {:else if !source.href}
+                            <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
+                          {/if}
+                        {/each}
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               </div>
-              {#if message.role === "assistant" && message.action?.kind === "navigate"}
-                <a
-                  href={message.action.href}
-                  class="guide-action"
-                  aria-label="Open {message.action.label}"
-                >
-                  <Icon name="hammer" class="w-4 h-4" />
-                  <span>{message.action.label}</span>
-                </a>
-              {/if}
             </div>
           </div>
         {/each}
@@ -462,20 +482,6 @@
     touch-action: manipulation;
   }
 
-  :global(.guide-action) {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.5rem 0.75rem;
-    border-top: 1px solid var(--color-bg-secondary);
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
-    font-size: 0.75rem;
-    line-height: 1;
-    text-decoration: none;
-  }
-
   .guide-launch,
   .guide-icon-button {
     position: relative;
@@ -521,10 +527,6 @@
 
     .guide-icon-button:hover {
       color: var(--color-primary);
-    }
-
-    :global(.guide-action:hover) {
-      background: var(--color-bg-secondary);
     }
 
     .guide-input {
