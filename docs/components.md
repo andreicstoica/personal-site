@@ -159,11 +159,37 @@ Full-width hero with personal statement text on the left and an ASCII art canvas
 - Canvas sizes: 350px (mobile), 500px (desktop), 650px (large desktop)
 - Glow animation: `ascii-glow` keyframes (brightness/contrast oscillation, 3s infinite)
 
-## FullPageChat
+## FloatingChat (the guide)
 
-**File**: `src/components/chat/FullPageChat.svelte`
+**File**: `src/components/chat/FloatingChat.svelte`
 
-Chat interface that fills the viewport. Uses Svelte for message state and streaming responses.
+The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once in `SiteLayout.astro` with `client:load`, so it is present on every page.
+
+- Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
+- Collapsed: `.guide-launch` button in the bottom corner. Expanded: `.guide-panel` with header, thread, and input form
+- Thread persists to `localStorage` under `andrei-guide-v1`
+- Cold start shows three starter prompts instead of an empty thread
+
+### Reply shape
+
+`POST /api/chat` returns a `ChatApiSuccess` (`src/lib/chatTypes.ts`):
+
+| Field | Meaning |
+| --- | --- |
+| `mode` | `notes` — answered from `src/content/memory` with no model involved; `model` — real inference |
+| `sources` | `ChatSource[]`, rendered as small links under the reply |
+| `action` | `none`, or `navigate { href, label, follow }` |
+
+A `navigate` action renders as `.guide-action` — a button with the `hammer` icon and the route label. When `follow` is `true` the guide also navigates after a delay.
+
+### Supporting modules
+
+- `src/lib/guideReply.ts` — decides mode, action, and route; handles small talk and navigation intent
+- `src/lib/memorySelect.ts` — selects `src/content/memory` sections and matches routes
+- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hf`)
+- `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
+
+The model is not called unless `GUIDE_MODEL=on`. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
 
