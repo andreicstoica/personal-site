@@ -50,7 +50,7 @@ These are color assignments, not semantic tokens. They are used in `experienceNa
 | `--color-ascii-dark` | (none) | `#333333` | Low-brightness chars |
 | `--color-ascii-medium` | (none) | `#888888` | Mid-brightness chars |
 
-Light mode uses `currentColor` with a `#5a6aff` fallback in `AsciiHero.astro`. Dark mode defines the full palette. The ASCII component overrides these with inline `color` and `text-shadow`.
+Light mode uses `currentColor` with a `#5a6aff` fallback; dark mode defines the full palette. Nothing renders ASCII since the hero became `WeatherBanner` (which has its own ramps in `src/lib/weather/palette.ts`), so these tokens are unreferenced today — see rough edge 6 in [DESIGN.md](./DESIGN.md).
 
 ## Fonts
 
@@ -111,9 +111,8 @@ Use `--page-padding-inline` for horizontal page margins. The layout grid (`layou
 | --- | --- | --- |
 | `--ease-out` | `cubic-bezier(0.23, 1, 0.32, 1)` | All UI transitions |
 | `--ease-in-out` | `cubic-bezier(0.77, 0, 0.175, 1)` | Symmetric transitions |
-| `--ease-drawer` | `cubic-bezier(0.32, 0.72, 0, 1)` | Mobile drawer slide |
 | `--duration-ui` | `180ms` | Buttons, links, hover states |
-| `--duration-drawer` | `280ms` | Mobile menu, social dropdown |
+| `--duration-drawer` | `280ms` | Modal enter |
 | `--duration-media` | `400ms` | Reserved — not currently referenced. Media reveal uses a 180ms literal |
 
 All transitions respect `prefers-reduced-motion: reduce`. When reduced motion is active, all animations and transitions are disabled.

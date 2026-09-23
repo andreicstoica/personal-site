@@ -74,154 +74,13 @@
 	/* Motion */
 	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 	--duration-ui: 180ms;
 	--duration-drawer: 280ms;
 	--duration-media: 400ms;
-
-	/* Navigation box styles */
-	--nav-box-styles: flex items-end justify-end h-12 w-[10vw] bg-[var(--color-bg-primary)] border border-[var(--color-text-secondary)] no-underline transition-all duration-200 text-[var(--color-text-primary)] p-2 box-border hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)];
-}
-
-/* Navigation box utility class */
-.nav-box {
-	display: flex;
-	align-items: flex-end;
-	justify-content: flex-end;
-	height: 3rem;
-	width: 10vw;
-	background-color: var(--color-bg-primary);
-	border: 1px solid var(--color-text-secondary);
-	text-decoration: none;
-	transition:
-		background-color var(--duration-ui) var(--ease-out),
-		border-color var(--duration-ui) var(--ease-out),
-		color var(--duration-ui) var(--ease-out),
-		transform 160ms var(--ease-out),
-		filter 80ms linear;
-	color: var(--color-text-primary);
-	padding: 0.5rem;
-	box-sizing: border-box;
-}
-
-.nav-box:active {
-	transform: scale(0.98);
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.nav-box:hover {
-		background-color: var(--color-primary);
-		border-color: var(--color-primary);
-		color: var(--color-text-inverse);
-	}
 }
 
 .nav-name {
 	transition: opacity var(--duration-ui) var(--ease-out);
-}
-
-.nav-pressable {
-	transition: opacity var(--duration-ui) var(--ease-out);
-}
-
-/* Desktop social dropdown */
-.social-dropdown-menu {
-	transform-origin: top right;
-	opacity: 0;
-	visibility: hidden;
-	pointer-events: none;
-	transition:
-		opacity 120ms var(--ease-out),
-		transform 120ms var(--ease-out),
-		visibility 0s linear 120ms;
-}
-
-.social-dropdown-panel {
-	transform: scale(0.98) translateY(-4px);
-	transition: transform 180ms var(--ease-out);
-}
-
-.social-dropdown-menu.is-open {
-	opacity: 1;
-	visibility: visible;
-	pointer-events: auto;
-	transition:
-		opacity 180ms var(--ease-out),
-		transform 180ms var(--ease-out),
-		visibility 0s;
-}
-
-.social-dropdown-menu.is-open .social-dropdown-panel {
-	transform: scale(1) translateY(0);
-}
-
-@media (hover: hover) and (pointer: fine) {
-	#desktop-social:hover .social-dropdown-menu,
-	.social-dropdown-menu.is-open {
-		opacity: 1;
-		visibility: visible;
-		pointer-events: auto;
-		transition:
-			opacity 180ms var(--ease-out),
-			transform 180ms var(--ease-out),
-			visibility 0s;
-	}
-
-	#desktop-social:hover .social-dropdown-panel,
-	.social-dropdown-menu.is-open .social-dropdown-panel {
-		transform: scale(1) translateY(0);
-	}
-
-	#desktop-social:hover #desktop-social-arrow,
-	#desktop-social-arrow.is-open {
-		transform: rotate(180deg) translateY(1px);
-	}
-}
-
-.social-dropdown-arrow {
-	transition: transform 180ms var(--ease-out);
-}
-
-.social-dropdown-arrow.is-open {
-	transform: rotate(180deg) translateY(1px);
-}
-
-/* Mobile drawer */
-.mobile-menu-overlay {
-	opacity: 0;
-	transition: opacity var(--duration-drawer) var(--ease-out);
-}
-
-.mobile-menu-overlay.is-open {
-	opacity: 1;
-}
-
-.mobile-menu-drawer {
-	transition: transform var(--duration-drawer) var(--ease-drawer);
-}
-
-.mobile-menu-link {
-	transition:
-		background-color var(--duration-ui) var(--ease-out),
-		color var(--duration-ui) var(--ease-out);
-}
-
-.social-submenu {
-	display: grid;
-	grid-template-rows: 0fr;
-	opacity: 0;
-	transition:
-		grid-template-rows 200ms var(--ease-out),
-		opacity 160ms var(--ease-out);
-}
-
-.social-submenu.is-open {
-	grid-template-rows: 1fr;
-	opacity: 1;
-}
-
-.social-submenu-inner {
-	overflow: hidden;
 }
 
 /* Media load reveal — images, video, gallery thumbs */
@@ -239,17 +98,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.nav-box,
-	.nav-box:active,
 	.nav-name,
-	.nav-pressable,
-	.social-dropdown-menu,
-	.social-dropdown-panel,
-	.social-dropdown-arrow,
-	.mobile-menu-overlay,
-	.mobile-menu-drawer,
-	.mobile-menu-link,
-	.social-submenu,
 	.media-reveal,
 	.media-reveal.is-loaded,
 	.image-inspect,
@@ -259,15 +108,6 @@
 	.btn-secondary:active {
 		animation: none;
 		transition: none;
-	}
-
-	.social-dropdown-menu.is-open {
-		opacity: 1;
-		visibility: visible;
-	}
-
-	.social-dropdown-menu.is-open .social-dropdown-panel {
-		transform: none;
 	}
 
 	.media-reveal,
@@ -306,7 +146,7 @@ html {
 	font-size: 16px;
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
-	scrollbar-gutter: stable;
+	height: 100%;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
@@ -319,6 +159,8 @@ html {
 body {
 	margin: 0;
 	padding: 0;
+	height: 100%;
+	overflow: hidden;
 	font-size: var(--text-base);
 	line-height: var(--leading-normal);
 	letter-spacing: var(--tracking-tight);
@@ -352,19 +194,6 @@ body {
 	color: var(--color-text-secondary);
 }
 
-.nav-label {
-	font-size: var(--text-sm);
-	font-weight: 500;
-	line-height: 1.5;
-}
-
-@media (min-width: 768px) {
-	.nav-label {
-		font-size: var(--text-xs);
-		line-height: 1.25;
-	}
-}
-
 ::selection {
 	background: color-mix(in srgb, var(--color-primary) 24%, transparent);
 	color: var(--color-text-primary);
@@ -376,10 +205,16 @@ body {
 }
 
 .layout-grid {
-	min-height: 100vh;
+	height: 100%;
+	min-height: 0;
 	display: grid;
 	grid-template-columns: repeat(12, minmax(0, 1fr));
-	padding-inline: var(--page-padding-inline);
+}
+
+.site-column {
+	width: min(64rem, calc(100% - 2 * var(--page-padding-inline)));
+	margin-inline: auto;
+	min-width: 0;
 }
 
 .full-bleed {
@@ -640,13 +475,10 @@ a:hover {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Navigation name link - override global link styles */
-.nav-name {
-	color: var(--color-text-inverse) !important;
-}
-
+/* Name sits on the page-background bar; keep it off the global green link color. */
+.nav-name,
 .nav-name:hover {
-	color: var(--color-text-inverse) !important;
+	color: var(--color-text-primary);
 }
 
 /* Gallery strip — horizontal scroll with snap on touch */
@@ -673,16 +505,6 @@ a:hover {
 
 	.scrollbar-always-visible {
 		scrollbar-width: none;
-	}
-
-	/* Drawer: promote to own compositor layer for jank-free slide */
-	.mobile-menu-drawer {
-		will-change: transform;
-	}
-
-	/* Prevent body scroll when overlay is visible */
-	.mobile-menu-overlay:not(.hidden) {
-		touch-action: none;
 	}
 }
 

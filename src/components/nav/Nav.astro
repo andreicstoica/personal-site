@@ -1,6 +1,19 @@
----
-import { mainNavItems, socialNavItems } from "../../lib/navLinks";
-import NavIsland from "./Nav.svelte";
----
+<header class="site-nav" transition:persist="site-nav">
+  <a href="/" class="nav-name">Andrei Stoica</a>
+</header>
 
-<NavIsland client:load mainNavItems={mainNavItems} socialNavItems={socialNavItems} />
+<style>
+  .site-nav {
+    padding-block: 0.35rem 0.55rem;
+  }
+
+  .site-nav .nav-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+</style>

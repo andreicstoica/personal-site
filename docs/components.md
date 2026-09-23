@@ -4,38 +4,41 @@ Components are split between Astro (static composition) and Svelte (client state
 
 ## Nav
 
-**File**: `src/components/nav/Nav.svelte`
+**File**: `src/components/nav/Nav.astro`
 
-Desktop: row of bordered boxes aligned to the bottom-right. Mobile: slide-in drawer from the right.
+Static header: the name link, and nothing else. No nav boxes, no dropdown, no drawer — the weather-banner rewrite emptied the header out, so this is Astro markup with a scoped `<style>` and no hydration.
 
-### Desktop nav boxes
-
-The `.nav-box` class is the core nav element. It is defined in `src/styles/global.css` as a plain CSS class. Do not use Tailwind utilities to recreate it.
-
-| State | Style |
-| --- | --- |
-| Default | White background, gray border, text primary |
-| Hover | Blue background, blue border, white text |
-| Active (pressed) | `transform: scale(0.98)`, 160ms |
-| Focus | 2px solid `--color-primary` outline |
-
-The "Social" item has a dropdown panel. It opens on hover (desktop) and click (pinned). The dropdown uses `transform: scale(0.98) translateY(-4px)` for enter and reverses for exit.
-
-### Mobile drawer
-
-Slides in from the right with `translate-x-full` to `translate-x-0`. Overlay fades in with `opacity 0` to `1`. Social links expand with `grid-template-rows: 0fr` to `1fr`.
-
-### Touch targets
-
-The name link, the mobile menu toggle, the drawer close button, and mobile links carry `min-h-[44px]` / `min-w-[44px]` so they meet the 44px minimum on touch.
+- `.site-nav` sets the row padding; `.nav-name` is the only link (`/`)
+- `.nav-name` sets `color: var(--color-text-primary)` so the global green `a` color doesn't apply
+- The bar sits on `--color-bg-primary` with a `border-b` hairline — no gradient wash, because it overlaps the top of the weather banner
+- The name link carries `min-h-[44px]` for the touch minimum
+- `transition:persist="site-nav"` keeps it mounted while `ClientRouter` swaps the page body
 
 ### Usage
 
 ```astro
-<Nav mainNavItems={mainNavItems} socialNavItems={socialNavItems} client:load />
+<Nav transition:persist="site-nav" />
 ```
 
-Nav is always hydrated with `client:load` because it manages open/close state.
+Page links live in the content instead of the header: the home statement links to `/about`, and social links sit in the footer. The `.nav-box` rules, social dropdown, and mobile drawer CSS were deleted along with `Nav.svelte`.
+
+## SiteFooter
+
+**Files**: `src/components/footer/SiteFooter.astro`, `src/components/footer/BeosIcon.astro`
+
+Global footer rendered inside the scroll region, below the page slot.
+
+- One list item per `socialNavItems` entry in `src/lib/navLinks.ts` (GitHub, LinkedIn, Substack, X)
+- Each link opens in a new tab with `rel="noopener noreferrer"`
+- `BeosIcon` maps the `icon` field (`person` / `mail` / `terminal` / `balloon`) to a 32px pixel-art SVG. The switch is exhaustive via `assertNever`, so a new `SocialIcon` without a glyph is a compile error
+- Hairline `border-top` from `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`, so it holds in both modes
+- `transition:persist="site-footer"`
+
+### Usage
+
+```astro
+<SiteFooter transition:persist="site-footer" />
+```
 
 ## ImageGallery
 
@@ -148,16 +151,32 @@ Renders markdown content with custom styling. Uses `.markdown-body` class with n
 <MarkdownBody content={content} />
 ```
 
-## AsciiHero
+## Home
 
-**File**: `src/components/home/AsciiHero.astro`
+**File**: `src/components/home/Home.astro`
 
-Full-width hero with personal statement text on the left and an ASCII art canvas on the right. The canvas renders a webcam/image as ASCII characters using `AsciiCanvas.svelte`.
+Top of the front page: the `.text-lead` personal statement (`personalStatement` in `src/lib/experience.ts`, whose inline links lead to `/about` and the blog), then the `ExperienceTable`.
 
-- Text: `.text-lead` class (17px, relaxed line height)
-- Canvas: monospace font, `line-height: 0.7`, blue glow effect
-- Canvas sizes: 350px (mobile), 500px (desktop), 650px (large desktop)
-- Glow animation: `ascii-glow` keyframes (brightness/contrast oscillation, 3s infinite)
+## WeatherBanner
+
+**File**: `src/components/weather/WeatherBanner.svelte`
+
+Dithered pixel strip that replaces the old ASCII hero. Mounted in `SiteLayout` as `client:only="svelte"`. Place is chosen once per visit; weather comes from coarse IP plus Open-Meteo, with a clear-sky fallback.
+
+- Rendered at 160×48 (`BANNER_WIDTH` / `BANNER_HEIGHT` in `src/lib/weather/buffer.ts`), Bayer-dithered, then scaled to the page column up to `MAX_BANNER_SCALE` (5×)
+- `src/lib/weather/glBanner.ts` composites it in a WebGL shader; `draw.ts` renders the same `PixelBuffer` for the plate and lab paths
+- `palette.ts` owns the color ramps; `landscapes.ts` and `effects.ts` paint terrain, rain, and fog
+- Place and last reading persist in `sessionStorage` (`oregon-banner-place-v1`, `oregon-banner-reading-v1`), so a reload doesn't re-pick the place
+- The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
+- `transition:persist="weather-banner"` keeps it mounted while the page body swaps
+- `src/pages/api/weather.ts` reads `x-vercel-ip-*` headers, calls Open-Meteo with a 4s timeout, and answers **503** when coordinates are missing or upstream fails — the client then paints a clear-sky fallback
+- `WeatherLab.svelte` is a dev/preview-only override panel, gated by `showWeatherLab()` in `src/lib/weather/lab.ts`
+
+### Usage
+
+```astro
+<WeatherBanner client:only="svelte" showLab={showLab} transition:persist="weather-banner" />
+```
 
 ## FloatingChat (the guide)
 

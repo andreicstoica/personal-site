@@ -67,8 +67,7 @@ Rule: never hardcode light-mode colors in component code. Always use tokens.
 
 - Global `:focus-visible` ring: `2px solid var(--color-primary)`, `offset: 2px`
 - Modal traps focus: `dialogRef.focus()` on open
-- Nav dropdown closes on outside click
-- Mobile drawer closes on link click
+- Guide panel closes on Escape, the close button, or an outside click, and hands focus back to `.guide-launch` when focus was inside (see [components.md](./components.md))
 
 ## Reduced motion
 
@@ -79,7 +78,7 @@ Rule: never hardcode light-mode colors in component code. Always use tokens.
 - Modal backdrop animation
 - Nav hover transitions
 
-Components that use `setTimeout` for animation (modal close, drawer close) still fire but the visual change is instant.
+Components that use `setTimeout` for animation (modal close) still fire but the visual change is instant.
 
 ## Custom scrollbar
 

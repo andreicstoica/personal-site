@@ -1,0 +1,68 @@
+---
+import { assertNever } from "../../lib/assertNever";
+import type { SocialIcon } from "../../lib/navLinks";
+
+interface Props {
+	kind: SocialIcon;
+}
+
+const { kind } = Astro.props;
+
+switch (kind) {
+	case "person":
+	case "mail":
+	case "terminal":
+	case "balloon":
+		break;
+	default:
+		assertNever(kind);
+}
+---
+
+<svg class="beos-icon" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+  {
+    kind === "person" && (
+      <>
+        <circle cx="16" cy="11" r="6" fill="#ffe14a" stroke="#1c1c1c" stroke-width="1.6" />
+        <path
+          d="M7.5 27.5c1.1-6.2 4.2-8.5 8.5-8.5s7.4 2.3 8.5 8.5"
+          fill="#3a6dff"
+          stroke="#1c1c1c"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        />
+      </>
+    )
+  }
+  {
+    kind === "mail" && (
+      <>
+        <rect x="4" y="8" width="24" height="16" rx="1.2" fill="#f6f6f1" stroke="#1c1c1c" stroke-width="1.6" />
+        <path d="M5 9.5 16 18l11-8.5" fill="none" stroke="#1c1c1c" stroke-width="1.6" stroke-linejoin="round" />
+        <rect x="20" y="11" width="5" height="4" fill="#e23b2f" stroke="#1c1c1c" stroke-width="1" />
+      </>
+    )
+  }
+  {
+    kind === "terminal" && (
+      <>
+        <rect x="3" y="4" width="26" height="20" rx="1.2" fill="#d7d7d2" stroke="#1c1c1c" stroke-width="1.6" />
+        <rect x="6" y="7" width="20" height="12" fill="#1b2430" />
+        <path d="M8 12h4M8 16h7" stroke="#7dff6b" stroke-width="1.6" stroke-linecap="square" />
+        <rect x="12" y="24" width="8" height="2.4" fill="#1c1c1c" />
+        <rect x="8" y="26.4" width="16" height="1.6" fill="#1c1c1c" />
+      </>
+    )
+  }
+  {
+    kind === "balloon" && (
+      <path
+        d="M6 5h15.5A4.5 4.5 0 0 1 26 9.5v8A4.5 4.5 0 0 1 21.5 22H13l-5.5 5v-5H6A4 4 0 0 1 2 18V9a4 4 0 0 1 4-4z"
+        fill="#ffe14a"
+        stroke="#1c1c1c"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+    )
+  }
+</svg>
