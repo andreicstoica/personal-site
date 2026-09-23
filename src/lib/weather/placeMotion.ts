@@ -22,8 +22,8 @@ export function baleMotion(time: number) {
 }
 
 /** Analytic motion uses elapsed time only, including backward seeks. */
-export function placeMotion(time: number, x = 0) {
-	const gustAge = (((time - 2 - x * 0.025) % 12) + 12) % 12;
+export function placeMotion(time: number) {
+	const gustAge = (((time - 2) % 12) + 12) % 12;
 	const gust = gustAge < 4 ? Math.sin((gustAge * Math.PI) / 4) ** 2 : 0;
 	const bale = baleMotion(time);
 	return {

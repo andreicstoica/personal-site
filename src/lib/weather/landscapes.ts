@@ -170,7 +170,7 @@ export function material(
 	time = 0,
 ): Rgb | null {
 	let color: Rgb | null = null;
-	const motion = placeMotion(time, x);
+	const motion = placeMotion(time);
 	switch (place) {
 		case "cascade-forest": {
 			if (layer === 0) {
@@ -215,9 +215,9 @@ export function material(
 					color = mix([124, 151, 66], [167, 183, 96], stone(x, y));
 				if (color && y > 38.5) {
 					const spacing = profile(y, [
-						[38.7, 6],
-						[42.1, 14],
-						[47.1, 22],
+						[39.3, 6],
+						[42.3, 12],
+						[45.7, 18],
 					]);
 					for (let lane = -1.5; lane <= 1.5; lane++) {
 						if (Math.abs(x - 81 - lane * spacing) < 0.3 + (y - 38.5) * 0.045)
@@ -225,13 +225,13 @@ export function material(
 					}
 				}
 				for (let depth = 0; depth < 3; depth++) {
-					const ground = [38.7, 42.1, 47.1][depth] ?? 47.1;
+					const ground = [39.3, 42.3, 45.7][depth] ?? 45.7;
 					const scale = 0.5 + depth * 0.3;
 					if (y < ground - 4.5 * scale || y > ground) continue;
 					for (let row = -2; row <= 2; row++) {
-						const cx = 81 + row * (6 + depth * 8);
+						const cx = 81 + row * (6 + depth * 6);
 						if (Math.abs(x - cx) > 3.7) continue;
-						const sway = placeMotion(time, cx).sway;
+						const sway = motion.sway * (0.7 + depth * 0.15);
 						const dx = x - cx - sway * Math.max(0, (ground - y) / 4);
 						if (
 							Math.abs(dx) < 0.22 * scale &&
@@ -249,12 +249,26 @@ export function material(
 								[77, 128, 43],
 								0.3 + stone(x, y) * 0.5 + motion.shimmer,
 							);
-							if (
-								hash(
-									Math.floor((x - sway) * 3) * 71 + Math.floor(y * 3) * 331,
-								) > 0.968
-							)
-								color = [206, 65, 36];
+							const seed = (row + 3) * 71 + depth * 331;
+							for (let cluster = 0; cluster < 2; cluster++) {
+								const ax =
+									(cluster * 1.3 - 0.65 + hash(seed + cluster) * 0.3) * scale;
+								const ay =
+									ground - (2.4 + hash(seed + cluster + 9) * 0.7) * scale;
+								for (
+									let apple = 0;
+									apple < 2 + Math.floor(hash(seed + cluster + 15) * 2);
+									apple++
+								) {
+									const ox = (apple - 1) * 0.42 * scale;
+									const oy = (apple % 2) * 0.35 * scale;
+									if (
+										Math.hypot(dx - ax - ox, y - ay - oy) <
+										0.19 * scale + 0.06
+									)
+										color = [206, 65, 36];
+								}
+							}
 						}
 					}
 				}
@@ -334,8 +348,24 @@ export function material(
 					color = mix([108, 100, 62], [156, 134, 88], stone(x, y));
 				if (y > ground - 0.25 && y < ground + 1.2)
 					color = mix([70, 121, 38], [127, 160, 57], stone(x, y));
-				if (fir(x, y, 14, 46, 22, 4, 10))
-					color = mix([20, 38, 36], [38, 58, 42], stone(x, y));
+				const trail = ground + 2.4 + 0.7 * Math.sin(x * 0.12);
+				if (y > ground && Math.abs(y - trail) < 0.35)
+					color = mix([177, 148, 103], [204, 179, 130], stone(x, y));
+				for (const cx of [5, 11, 26, 37, 57, 112, 147, 157]) {
+					const base = riverBank(cx) + 6.1;
+					const dx = x - cx,
+						dy = y - base;
+					if (
+						(dx / 1.8) ** 2 + ((dy + 0.65) / 1.05) ** 2 <
+						1 + 0.18 * Math.sin(x * 7 + y * 5)
+					)
+						color = mix([79, 98, 65], [133, 144, 97], stone(x, y));
+				}
+				for (const cx of [8, 23, 42]) {
+					const dy = y - riverBank(cx) - 7;
+					if (((x - cx) / 1.5) ** 2 + (dy / 0.7) ** 2 < 1)
+						color = mix([84, 81, 73], [154, 147, 126], Math.max(0, 0.5 - dy));
+				}
 				for (const cx of [18, 134]) {
 					const dx = x - cx;
 					const base = riverBank(cx) + 5.5;
@@ -581,52 +611,58 @@ export function material(
 		}
 	}
 	if (place === "bend-plateau" && layer === 0 && color) {
-		for (const [cx, base, phase] of [
-			[103, 25, 0],
-			[78, 20, 1.7],
-		] as const) {
-			const dx = x - cx,
-				dy = y - base + motion.climb;
-			if (Math.abs(dx) > 2 || dy < -4.2 || dy > 6) continue;
-			const reach = Math.sin(time * 0.12 + phase) * 0.2;
-			if (
-				dy > 0 &&
-				dy < 6 &&
-				Math.abs(dx - 0.35 - 0.22 * Math.sin(dy * 0.6)) < 0.1
-			)
-				color = [212, 200, 158];
-			if (Math.hypot(dx - 0.5, dy - 4.7) < 0.24) color = [33, 39, 46];
-			const limb = (
-				ax: number,
-				ay: number,
-				bx: number,
-				by: number,
-				width: number,
-			) => {
-				const vx = bx - ax,
-					vy = by - ay;
-				const t = Math.max(
-					0,
-					Math.min(1, ((dx - ax) * vx + (dy - ay) * vy) / (vx * vx + vy * vy)),
-				);
-				return Math.hypot(dx - ax - t * vx, dy - ay - t * vy) < width;
-			};
-			if (
-				Math.hypot(dx - 0.25, dy + 2.3) < 0.48 ||
-				limb(0, -1.4, -0.3, 0.5, 0.48) ||
-				limb(0.1, -1.3, 1.1, -2.2, 0.25) ||
-				limb(1.1, -2.2, 1.2 + reach, -3.8, 0.24) ||
-				limb(-0.2, -1.1, -1.25, -0.6, 0.25) ||
-				limb(-1.25, -0.6, -1.5, -1.5, 0.24) ||
-				limb(-0.3, 0.4, -1.25, 1.4, 0.3) ||
-				limb(-1.25, 1.4, -0.8, 2.6, 0.28) ||
-				limb(-0.1, 0.4, 1.3, 0.9, 0.3) ||
-				limb(1.3, 0.9, 1.2, 1.8, 0.28)
-			)
-				color = [24, 30, 39];
-			if (limb(-0.05, -1.25, -0.25, -0.05, 0.33)) color = [243, 190, 161];
-			if (Math.hypot(dx + 0.65, dy - 0.2) < 0.26) color = [219, 206, 172];
-		}
+		const cx = 103,
+			base = 25,
+			scale = 0.48;
+		const waist = base - motion.climb;
+		const ropeEnd = 35;
+		if (
+			y >= waist &&
+			y <= ropeEnd &&
+			Math.abs(
+				x -
+					cx -
+					0.15 -
+					0.16 * Math.sin(((y - waist) / (ropeEnd - waist)) * Math.PI),
+			) < 0.13
+		)
+			color = [221, 210, 170];
+		if (Math.hypot(x - cx - 0.15, y - ropeEnd) < 0.25) color = [33, 39, 46];
+		const dx = (x - cx) / scale,
+			dy = (y - waist) / scale;
+		if (Math.abs(dx) > 2 || dy < -4.2 || dy > 3) return texture(color, x, y);
+		const reach = Math.sin(time * 0.12) * 0.2;
+		const limb = (
+			ax: number,
+			ay: number,
+			bx: number,
+			by: number,
+			width: number,
+		) => {
+			const vx = bx - ax,
+				vy = by - ay;
+			const t = Math.max(
+				0,
+				Math.min(1, ((dx - ax) * vx + (dy - ay) * vy) / (vx * vx + vy * vy)),
+			);
+			return Math.hypot(dx - ax - t * vx, dy - ay - t * vy) < width;
+		};
+		if (
+			Math.hypot(dx - 0.25, dy + 2.3) < 0.48 ||
+			limb(0, -1.4, -0.3, 0.5, 0.48) ||
+			limb(0.1, -1.3, 1.1, -2.2, 0.25) ||
+			limb(1.1, -2.2, 1.2 + reach, -3.8, 0.24) ||
+			limb(-0.2, -1.1, -1.25, -0.6, 0.25) ||
+			limb(-1.25, -0.6, -1.5, -1.5, 0.24) ||
+			limb(-0.3, 0.4, -1.25, 1.4, 0.3) ||
+			limb(-1.25, 1.4, -0.8, 2.6, 0.28) ||
+			limb(-0.1, 0.4, 1.3, 0.9, 0.3) ||
+			limb(1.3, 0.9, 1.2, 1.8, 0.28)
+		)
+			color = [24, 30, 39];
+		if (limb(-0.05, -1.25, -0.25, -0.05, 0.33)) color = [247, 210, 106];
+		if (Math.hypot(dx - 0.25, dy + 2.3) < 0.32) color = [171, 112, 77];
+		if (Math.hypot(dx + 0.65, dy - 0.2) < 0.26) color = [219, 206, 172];
 	}
 	return color ? texture(color, x, y) : null;
 }

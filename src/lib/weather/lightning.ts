@@ -1,4 +1,5 @@
-export const LIGHTNING_DURATION = 0.26;
+export const LIGHTNING_DURATION = 0.175;
+export const DOUBLE_LIGHTNING_DURATION = 0.26;
 
 function random(index: number, seed: number): number {
 	let value = Math.imul(index + seed, 0x45d9f3b);
@@ -24,6 +25,7 @@ export function createLightningTimeline(seed = 731) {
 		origin: number;
 		cool: number;
 		delay: number;
+		duration: number;
 	} => {
 		if (time < start) {
 			index = 0;
@@ -35,12 +37,13 @@ export function createLightningTimeline(seed = 731) {
 			index++;
 			next += lightningGap(index + 1, seed);
 		}
+		const double = random(index + 3000, seed) < 0.3;
+		const duration = double ? DOUBLE_LIGHTNING_DURATION : LIGHTNING_DURATION;
 		const pulse = (age: number) => {
-			if (age < 0 || age > LIGHTNING_DURATION) return 0;
-			return Math.sin((age / LIGHTNING_DURATION) * Math.PI) ** 2;
+			if (age < 0 || age > duration) return 0;
+			return Math.sin((age / duration) * Math.PI) ** 2;
 		};
 		const age = time - start;
-		const double = random(index + 3000, seed) < 0.3;
 		const delay = 0.13 + random(index + 4000, seed) * 0.07;
 		const primary = index === 0 ? 0 : pulse(age);
 		const secondary =
@@ -53,11 +56,12 @@ export function createLightningTimeline(seed = 731) {
 			flash,
 			seed: random(index + 6000, seed) * 1000,
 			origin:
-				25 +
-				random(index + 7000, seed) * 110 +
+				8 +
+				random(index + 7000, seed) * 144 +
 				blend * (4 + random(index + 8000, seed) * 5),
 			cool: blend,
 			delay,
+			duration,
 		};
 	};
 }

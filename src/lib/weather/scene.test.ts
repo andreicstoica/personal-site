@@ -5,6 +5,7 @@ import { birdsAllowed } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
 import {
 	createLightningTimeline,
+	DOUBLE_LIGHTNING_DURATION,
 	LIGHTNING_DURATION,
 	lightningGap,
 } from "./lightning";
@@ -206,11 +207,19 @@ describe("weather raster and elapsed time", () => {
 		let doubles = 0;
 		for (const gap of gaps) {
 			start += gap;
-			expect(timeline(start + LIGHTNING_DURATION / 2).flash).toBeCloseTo(1);
-			expect(timeline(start + 0.22).flash).toBeGreaterThan(0);
+			expect(timeline(start + timeline(start).duration / 2).flash).toBeCloseTo(
+				1,
+			);
+			const duration = timeline(start).duration;
+			expect([LIGHTNING_DURATION, DOUBLE_LIGHTNING_DURATION]).toContain(
+				duration,
+			);
+			if (duration === LIGHTNING_DURATION)
+				expect(timeline(start + 0.18).flash).toBe(0);
+			else expect(timeline(start + 0.22).flash).toBeGreaterThan(0);
 			expect(timeline(start + 0.47).flash).toBe(0);
 			const first = timeline(start + LIGHTNING_DURATION / 2);
-			const second = timeline(start + first.delay + LIGHTNING_DURATION / 2);
+			const second = timeline(start + first.delay + first.duration / 2);
 			if (second.cool === 1 && second.flash > 0) {
 				doubles++;
 				expect(second.flash).toBeGreaterThanOrEqual(0.4);
@@ -268,8 +277,8 @@ describe("weather seam regression", () => {
 		const cases: [number, (t: number) => number][] = [
 			[960, (t) => baleMotion(t).x],
 			[960, (t) => baleMotion(t).angle],
-			[12, (t) => placeMotion(t, 80).sway],
-			[12, (t) => placeMotion(t, 80).shimmer],
+			[12, (t) => placeMotion(t).sway],
+			[12, (t) => placeMotion(t).shimmer],
 			[13, (t) => bubbleMotion(t).rise],
 			[13, (t) => bubbleMotion(t).ring],
 			[13, (t) => bubbleMotion(t).y * bubbleMotion(t).rise],
@@ -290,12 +299,10 @@ describe("weather seam regression", () => {
 				(2 * epsilon);
 			expect(Math.abs(incoming - outgoing)).toBeLessThan(0.001);
 		}
-		for (const x of [0, 40, 80, 120, 160]) {
-			const reset = 2 + x * 0.025;
+		for (const reset of [2, 14, 26]) {
 			expect(
 				Math.abs(
-					placeMotion(reset - epsilon, x).sway -
-						placeMotion(reset + epsilon, x).sway,
+					placeMotion(reset - epsilon).sway - placeMotion(reset + epsilon).sway,
 				),
 			).toBeLessThan(0.001);
 		}
@@ -337,27 +344,78 @@ describe("weather seam regression", () => {
 			}
 		}
 	});
-	test("climbers retain a head, raised hand, torso and separated footholds at time zero", () => {
-		for (const [cx, base] of [
-			[103, 25],
-			[78, 20],
+	test("one tiny climber retains limbs, head and contrasting shirt", () => {
+		const scale = 0.48;
+		for (const [dx, dy] of [
+			[1.2, -3.7],
+			[-1.2, 1.4],
+			[1.2, 1.8],
 		] as const) {
-			for (const [dx, dy] of [
-				[0.25, -2.3],
-				[1.2, -3.7],
-				[-1.2, 1.4],
-				[1.2, 1.8],
-			] as const) {
-				const pixel = material("bend-plateau", 0, cx + dx, base + dy);
-				expect(pixel).not.toBeNull();
-				expect(Math.max(...(pixel ?? []))).toBeLessThan(45);
-			}
-			const shirt = material("bend-plateau", 0, cx - 0.1, base - 1);
-			expect(shirt?.[0]).toBeGreaterThan(230);
-			expect(material("bend-plateau", 0, cx, base + 2.4)?.[0]).toBeGreaterThan(
-				45,
+			const pixel = material(
+				"bend-plateau",
+				0,
+				103 + dx * scale,
+				25 + dy * scale,
 			);
+			expect(Math.max(...(pixel ?? []))).toBeLessThan(45);
 		}
+		expect(
+			material("bend-plateau", 0, 103 + 0.25 * scale, 25 - 2.3 * scale)?.[0],
+		).toBeGreaterThan(150);
+		expect(
+			material("bend-plateau", 0, 103 - 0.1 * scale, 25 - scale)?.[0],
+		).toBeGreaterThan(230);
+		expect(material("bend-plateau", 0, 78, 20, 0)).toEqual(
+			material("bend-plateau", 0, 78, 20, 90),
+		);
+	});
+	test("climber rope reaches a fixed base throughout the ascent", () => {
+		for (const time of [0, 60, 600]) {
+			const waist = 25 - placeMotion(time).climb;
+			for (let y = waist + 2; y < 34.5; y += 0.5) {
+				const x =
+					103.15 + 0.16 * Math.sin(((y - waist) / (35 - waist)) * Math.PI);
+				expect(material("bend-plateau", 0, x, y, time)?.[0]).toBeGreaterThan(
+					200,
+				);
+			}
+			expect(
+				Math.max(...(material("bend-plateau", 0, 103.15, 35, time) ?? [])),
+			).toBeLessThan(50);
+		}
+	});
+	test("Smith Rock motion stays inside its upload patch", () => {
+		const patches = renderMotionPatches("bend-plateau", 0);
+		for (const time of [4, 60, 600]) {
+			for (let y = 0.125; y < 48; y += 0.25)
+				for (let x = 0.125; x < 160; x += 0.25) {
+					const before = material("bend-plateau", 0, x, y, 0);
+					const after = material("bend-plateau", 0, x, y, time);
+					if (JSON.stringify(before) !== JSON.stringify(after)) {
+						expect(
+							patches.some(
+								(p) =>
+									x >= p.x / DETAIL - ATLAS_MARGIN &&
+									x < p.x / DETAIL - ATLAS_MARGIN + p.width / DETAIL &&
+									y >= p.y / DETAIL &&
+									y < p.y / DETAIL + p.height / DETAIL,
+							),
+						).toBe(true);
+					}
+				}
+		}
+	});
+	test("lightning origins cover both sides and the center of the scene", () => {
+		const at = createLightningTimeline();
+		let start = 0;
+		const origins = [];
+		for (let i = 1; i <= 100; i++) {
+			start += lightningGap(i);
+			origins.push(at(start + 0.08).origin);
+		}
+		expect(Math.min(...origins)).toBeLessThan(20);
+		expect(Math.max(...origins)).toBeGreaterThan(140);
+		expect(origins.filter((x) => x > 60 && x < 100).length).toBeGreaterThan(10);
 	});
 	test("overlapping lightning pulses blend without a cutoff at secondary onset", () => {
 		const at = createLightningTimeline();

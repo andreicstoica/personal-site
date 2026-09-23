@@ -120,9 +120,11 @@ void main() {
     vec3 albedo = surface.rgb / max(surface.a, 0.001);
     float detail = noise(vec2((p.x - uOffsets[i]) * 1.4, p.y * 2.0));
     float direction = clamp(0.55 + (uSun.x - uv.x) * 0.25 + (detail - 0.5) * 0.35, 0.0, 1.0);
-    float falloff = exp(-pow((p.x - uFlashOrigin) / 30.0, 2.0) - pow((p.y - 24.0) / 38.0, 2.0));
-    float flashFacing = clamp(0.7 + (uFlashOrigin - p.x) * (detail - 0.5) * 0.04, 0.2, 1.0);
-    vec3 land = albedo * ((uAmbient + uDirect * direction) * (1.0 - flash * 0.72) + flashColor * flash * falloff * flashFacing * 2.4);
+    // Broad cloud light reaches the full silhouette without a fixed-height hotspot.
+    vec2 toFlash = vec2(uFlashOrigin - p.x, -18.0 - p.y);
+    float falloff = 0.12 + 0.88 * exp(-pow(toFlash.x / 60.0, 2.0) - pow(toFlash.y / 130.0, 2.0));
+    float flashFacing = 0.88 + 0.12 * normalize(toFlash).y;
+    vec3 land = albedo * ((uAmbient + uDirect * direction) * (1.0 - flash * 0.55) + flashColor * flash * falloff * flashFacing * 1.65);
     land *= 1.0 - uLandShade * clouds * 0.3;
     if (i == 1) {
       vec2 local = vec2(p.x - uOffsets[i], p.y);
