@@ -305,12 +305,12 @@
 
         {#each messages as message (message.id)}
           <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
-            <div class="flex max-w-[85%] flex-col items-start gap-2">
-              <div
-                class="px-3 py-2 text-sm border rounded-none whitespace-pre-wrap {message.role === 'user'
-                  ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-                  : 'bg-white text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
-              >
+            <div
+              class="max-w-[85%] border rounded-none {message.role === 'user'
+                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                : 'bg-white text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+            >
+              <div class="px-3 py-2 text-sm whitespace-pre-wrap">
                 <div>{message.content}</div>
                 {#if message.role === "assistant" && message.sources && message.sources.length > 0}
                   <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-1">
@@ -418,12 +418,13 @@
 
   :global(.guide-action),
   :global(.guide-action:hover) {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.55rem;
-    border: 1px solid var(--color-text-primary);
-    background: white;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid var(--color-bg-secondary);
+    background: var(--color-bg-primary);
     color: var(--color-text-primary);
     font-size: 0.75rem;
     line-height: 1;
