@@ -14,8 +14,6 @@
 
   let selectedImage = $state<GalleryMedia | null>(null);
   let isClosing = $state(false);
-  let containerRef = $state<HTMLDivElement | null>(null);
-  let isVisible = $state(false);
   let dialogRef = $state<HTMLDivElement | null>(null);
 
   const modalCloseMs = 180;
@@ -32,26 +30,6 @@
         return assertNever(variant);
     }
   })();
-
-  $effect(() => {
-    if (!containerRef) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          isVisible = true;
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(containerRef);
-
-    return () => {
-      observer.disconnect();
-    };
-  });
 
   const closeModal = () => {
     if (!selectedImage || isClosing) return;
@@ -91,51 +69,48 @@
 
 <div class={wrapperClass}>
   <div
-    bind:this={containerRef}
     aria-label={`${experienceName} media gallery`}
-    class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible px-2"
+    class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip px-2"
   >
-    {#if isVisible}
-      {#each images as image}
-        <div class="shrink-0 min-w-fit">
-          <button
-            type="button"
-            class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
-            aria-label={`Open ${experienceName} image`}
-            onclick={() => (selectedImage = image)}
-            onkeydown={(e: KeyboardEvent) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                selectedImage = image;
-              }
-            }}
-          >
-            {#if image.kind === "video"}
-              <video
-                src={image.src}
-                class="h-50 w-auto object-contain media-reveal"
-                use:mediaReveal
-                autoplay
-                loop
-                muted
-                playsinline
-              ></video>
-            {:else}
-              <img
-                src={image.src}
-                alt={image.alt}
-                class="h-50 w-auto object-contain media-reveal"
-                use:mediaReveal
-                loading="lazy"
-                width={image.width}
-                height={image.height}
-                decoding="async"
-              />
-            {/if}
-          </button>
-        </div>
-      {/each}
-    {/if}
+    {#each images as image}
+      <div class="shrink-0 min-w-fit">
+        <button
+          type="button"
+          class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
+          aria-label={`Open ${experienceName} image`}
+          onclick={() => (selectedImage = image)}
+          onkeydown={(e: KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectedImage = image;
+            }
+          }}
+        >
+          {#if image.kind === "video"}
+            <video
+              src={image.src}
+              class="h-50 w-auto object-contain media-reveal"
+              use:mediaReveal
+              autoplay
+              loop
+              muted
+              playsinline
+            ></video>
+          {:else}
+            <img
+              src={image.src}
+              alt={image.alt}
+              class="h-50 w-auto object-contain media-reveal"
+              use:mediaReveal
+              loading="lazy"
+              width={image.width}
+              height={image.height}
+              decoding="async"
+            />
+          {/if}
+        </button>
+      </div>
+    {/each}
   </div>
 </div>
 

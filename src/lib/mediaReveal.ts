@@ -5,7 +5,8 @@ export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
 
 	if (node instanceof HTMLImageElement) {
 		if (node.complete && node.naturalWidth > 0) {
-			markLoaded();
+			// Defer so the element renders at opacity: 0 first, then transitions in.
+			requestAnimationFrame(() => markLoaded());
 		}
 		node.addEventListener("load", markLoaded);
 		return {
@@ -16,7 +17,7 @@ export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
 	}
 
 	if (node.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-		markLoaded();
+		requestAnimationFrame(() => markLoaded());
 	}
 	node.addEventListener("loadeddata", markLoaded);
 	return {

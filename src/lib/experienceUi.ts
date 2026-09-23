@@ -10,7 +10,7 @@ export function displayFontStyle(name: string): string {
 
 export function experienceTypeStyles(type: ExperienceType): string {
 	const palette = experienceTypePalette(type);
-	return `background-color: var(${palette.bg}); color: #${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
+	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
 }
 
 export function experienceNameStyle(
@@ -40,13 +40,13 @@ function experienceTypePalette(type: ExperienceType): {
 } {
 	switch (type) {
 		case "personal":
-			return { bg: "--tag-personal", text: "272727" };
+			return { bg: "--tag-personal", text: "var(--color-text-primary)" };
 		case "work":
-			return { bg: "--tag-work", text: "fefefe" };
+			return { bg: "--tag-work", text: "var(--color-text-inverse)" };
 		case "school":
-			return { bg: "--tag-school", text: "272727" };
+			return { bg: "--tag-school", text: "var(--color-text-primary)" };
 		case "other":
-			return { bg: "--tag-other", text: "fefefe" };
+			return { bg: "--tag-other", text: "var(--color-text-inverse)" };
 		default: {
 			const _exhaustive: never = type;
 			return _exhaustive;
