@@ -77,7 +77,10 @@ export function lighting(scene: Scene): Lighting {
 		horizon: scale(mix(base.horizon, haze, overcast), mode),
 		ambient: scale(base.ambient, mode * (1 - overcast * 0.2)),
 		direct: scale(base.direct, mode * (1 - overcast)),
-		sun: base.sun,
+		sun:
+			scene.time === "night" && scene.place === "oregon-coast"
+				? [0.81, 0.18]
+				: base.sun,
 		windowLight: scale(base.windowLight, mode),
 		flashLight: scale(base.flashLight, mode),
 		flashCool: scale(base.flashCool, mode),

@@ -9,6 +9,7 @@ import {
 	LIGHTNING_DURATION,
 	lightningGap,
 } from "./lightning";
+import { MOON_RADIUS, moonColor } from "./moon";
 import {
 	ATLAS_MARGIN,
 	ATLAS_WIDTH,
@@ -16,7 +17,12 @@ import {
 	OSCILLATION_PERIOD,
 } from "./motion";
 import { lighting } from "./palette";
-import { baleMotion, bubbleMotion, placeMotion } from "./placeMotion";
+import {
+	baleMotion,
+	bubbleMotion,
+	placeMotion,
+	rapidMotion,
+} from "./placeMotion";
 import {
 	classifyWeather,
 	fallbackReading,
@@ -179,6 +185,11 @@ describe("layered terrain", () => {
 			nightLight += night.data[i] ?? 0;
 		}
 		expect(dayLight).toBeGreaterThan(nightLight * 2);
+		expect(MOON_RADIUS / (0.055 * 48)).toBeGreaterThan(1.5);
+		expect(MOON_RADIUS / (0.055 * 48)).toBeLessThan(2);
+		expect(moonColor(-1.5, -1)).toEqual([128, 151, 166]);
+		expect(moonColor(0, 0.8)).toEqual([214, 223, 218]);
+		expect(moonColor(5, 0)).toBeNull();
 	});
 });
 
@@ -277,6 +288,8 @@ describe("weather seam regression", () => {
 		const cases: [number, (t: number) => number][] = [
 			[960, (t) => baleMotion(t).x],
 			[960, (t) => baleMotion(t).angle],
+			[3, (t) => rapidMotion(t).foam],
+			[3, (t) => rapidMotion(t).x * rapidMotion(t).foam],
 			[12, (t) => placeMotion(t).sway],
 			[12, (t) => placeMotion(t).shimmer],
 			[13, (t) => bubbleMotion(t).rise],
@@ -311,6 +324,8 @@ describe("weather seam regression", () => {
 		for (const [place, boundaries] of [
 			["painted-hills", [480, 960]],
 			["cascade-forest", [12, 24]],
+			["bend-plateau", [3, 6]],
+			["columbia-gorge", [3, 6]],
 			["oregon-coast", [3, 3.6, 8.3, 13]],
 		] as const) {
 			for (const time of boundaries) {
@@ -384,25 +399,32 @@ describe("weather seam regression", () => {
 			).toBeLessThan(50);
 		}
 	});
-	test("Smith Rock motion stays inside its upload patch", () => {
-		const patches = renderMotionPatches("bend-plateau", 0);
-		for (const time of [4, 60, 600]) {
-			for (let y = 0.125; y < 48; y += 0.25)
-				for (let x = 0.125; x < 160; x += 0.25) {
-					const before = material("bend-plateau", 0, x, y, 0);
-					const after = material("bend-plateau", 0, x, y, time);
-					if (JSON.stringify(before) !== JSON.stringify(after)) {
-						expect(
-							patches.some(
-								(p) =>
-									x >= p.x / DETAIL - ATLAS_MARGIN &&
-									x < p.x / DETAIL - ATLAS_MARGIN + p.width / DETAIL &&
-									y >= p.y / DETAIL &&
-									y < p.y / DETAIL + p.height / DETAIL,
-							),
-						).toBe(true);
-					}
-				}
+	test("climber, orchard and river motion stay inside their upload patches", () => {
+		for (const [place, layers] of [
+			["bend-plateau", [0, 1]],
+			["cascade-forest", [2]],
+			["columbia-gorge", [1]],
+		] as const) {
+			const patches = renderMotionPatches(place, 0);
+			for (const time of [0.5, 3, 4.5, 5.5, 60, 600]) {
+				for (const layer of layers)
+					for (let y = 0.125; y < 48; y += 0.25)
+						for (let x = -3.875; x < 164; x += 0.25) {
+							const before = material(place, layer, x, y, 0);
+							const after = material(place, layer, x, y, time);
+							if (JSON.stringify(before) !== JSON.stringify(after)) {
+								expect(
+									patches.some(
+										(p) =>
+											x >= p.x / DETAIL - ATLAS_MARGIN &&
+											x < (p.x + p.width) / DETAIL - ATLAS_MARGIN &&
+											y + layer * 48 >= p.y / DETAIL &&
+											y + layer * 48 < (p.y + p.height) / DETAIL,
+									),
+								).toBe(true);
+							}
+						}
+			}
 		}
 	});
 	test("lightning origins cover both sides and the center of the scene", () => {

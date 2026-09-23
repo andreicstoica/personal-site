@@ -37,3 +37,9 @@ export function placeMotion(time: number) {
 		climb: 7 * (1 - Math.exp(-time / 120)),
 	};
 }
+
+/** Foam returns upstream only while invisible, with zero fade velocity. */
+export function rapidMotion(time: number, index = 0) {
+	const age = (((time / 3 + index / 3) % 1) + 1) % 1;
+	return { x: age * 5, foam: Math.sin(age * Math.PI) ** 2 };
+}

@@ -1,6 +1,11 @@
 import { hash } from "./buffer";
 import { mix, type Rgb } from "./palette";
-import { baleMotion, bubbleMotion, placeMotion } from "./placeMotion";
+import {
+	baleMotion,
+	bubbleMotion,
+	placeMotion,
+	rapidMotion,
+} from "./placeMotion";
 import type { Place } from "./scene";
 
 export const SKY_ROWS: Record<Place, number> = {
@@ -149,6 +154,41 @@ function riverBank(x: number): number {
 	return 33 + 7 * Math.exp(-(((x - 80) / 34) ** 2));
 }
 
+function riverRock(
+	color: Rgb,
+	x: number,
+	y: number,
+	cx: number,
+	cy: number,
+	size: number,
+	time: number,
+): Rgb {
+	const dx = x - cx,
+		dy = y - cy;
+	if (dx < -size - 1 || dx > size + 6 || Math.abs(dy) > size * 0.6 + 0.4)
+		return color;
+	for (let crest = 0; crest < 3; crest++) {
+		const flow = rapidMotion(time, crest);
+		const tail = dx - size * 0.45 - flow.x;
+		const side = (crest % 2 === 0 ? 1 : -1) * size * 0.43;
+		if (Math.abs(tail) < 0.7 && Math.abs(dy - side) < 0.13)
+			color = mix(
+				color,
+				[191, 216, 207],
+				flow.foam * (1 - Math.abs(tail) / 0.7),
+			);
+	}
+	if (
+		dx > -size * 0.6 &&
+		dx < size * 1.5 &&
+		Math.abs(Math.abs(dy) - size * 0.44) < 0.12
+	)
+		color = mix(color, [173, 202, 196], 0.55);
+	if ((dx / size) ** 2 + (dy / (size * 0.45)) ** 2 < 1)
+		return mix([42, 48, 57], [88, 92, 93], Math.max(0, 0.5 - dy));
+	return color;
+}
+
 export const VISTA_WINDOWS = [
 	[139.6, 140.4, 15.4, 16.7],
 	[141.6, 142.4, 15.4, 16.7],
@@ -215,24 +255,32 @@ export function material(
 					color = mix([124, 151, 66], [167, 183, 96], stone(x, y));
 				if (color && y > 38.5) {
 					const spacing = profile(y, [
-						[39.3, 6],
-						[42.3, 12],
-						[45.7, 18],
+						[39.3, 5.5],
+						[42.3, 9.5],
+						[45.7, 13.5],
 					]);
-					for (let lane = -1.5; lane <= 1.5; lane++) {
+					for (let lane = -3; lane <= 3; lane++) {
 						if (Math.abs(x - 81 - lane * spacing) < 0.3 + (y - 38.5) * 0.045)
 							color = mix(color, [189, 180, 113], 0.5);
 					}
 				}
 				for (let depth = 0; depth < 3; depth++) {
 					const ground = [39.3, 42.3, 45.7][depth] ?? 45.7;
-					const scale = 0.5 + depth * 0.3;
+					const scale = 0.6 + depth * 0.32;
 					if (y < ground - 4.5 * scale || y > ground) continue;
-					for (let row = -2; row <= 2; row++) {
-						const cx = 81 + row * (6 + depth * 6);
-						if (Math.abs(x - cx) > 3.7) continue;
+					for (let row = -3.5; row <= 3.5; row++) {
+						const cx = 81 + row * (5.5 + depth * 4);
+						if (Math.abs(x - cx) > 4.5) continue;
 						const sway = motion.sway * (0.7 + depth * 0.15);
-						const dx = x - cx - sway * Math.max(0, (ground - y) / 4);
+						const height = Math.max(0, (ground - y) / (4.5 * scale));
+						const branch = Math.sin((x - cx) * 1.8 + height * 5);
+						const dx =
+							x - cx - sway * height * (0.55 + height * 0.8 + branch * 0.28);
+						const leafY =
+							y +
+							motion.shimmer *
+								Math.sin((x - cx) * 2.4 + height * 7) *
+								(0.7 + depth * 0.2);
 						if (
 							Math.abs(dx) < 0.22 * scale &&
 							y > ground - 3 * scale &&
@@ -241,13 +289,16 @@ export function material(
 							color = [77, 55, 35];
 						if (
 							(dx / (2.25 * scale)) ** 2 +
-								((y - ground + 2.6 * scale) / (1.9 * scale)) ** 2 <
-							1
+								((leafY - ground + 2.6 * scale) / (1.9 * scale)) ** 2 <
+							1 + 0.12 * Math.sin((dx * 4) / scale + (leafY * 3) / scale)
 						) {
 							color = mix(
 								[27, 78, 38],
 								[77, 128, 43],
-								0.3 + stone(x, y) * 0.5 + motion.shimmer,
+								0.25 +
+									stone(cx + dx, leafY) * 0.5 +
+									0.15 * Math.sin((dx * 2.5) / scale + (leafY * 2) / scale) +
+									motion.shimmer * (0.6 + branch * 0.4),
 							);
 							const seed = (row + 3) * 71 + depth * 331;
 							for (let cluster = 0; cluster < 2; cluster++) {
@@ -263,7 +314,7 @@ export function material(
 									const ox = (apple - 1) * 0.42 * scale;
 									const oy = (apple % 2) * 0.35 * scale;
 									if (
-										Math.hypot(dx - ax - ox, y - ay - oy) <
+										Math.hypot(dx - ax - ox, leafY - ay - oy) <
 										0.19 * scale + 0.06
 									)
 										color = [206, 65, 36];
@@ -328,7 +379,7 @@ export function material(
 				color = mix(
 					[40, 87, 90],
 					[92, 132, 129],
-					0.5 + 0.5 * Math.sin(y * 5 + Math.sin(x * 0.3)),
+					0.4 + noise(x * 0.4, y * 3, 60) * 0.2,
 				);
 				if (y < riverBank(x) + 0.9)
 					color = mix([81, 136, 44], [129, 170, 67], stone(x, y));
@@ -338,9 +389,15 @@ export function material(
 					[91, 2.6, 1.8],
 					[121, 2, 1.2],
 				] as const) {
-					const dy = y - riverBank(cx) - offset;
-					if (((x - cx) / size) ** 2 + (dy / (size * 0.45)) ** 2 < 1)
-						color = mix([42, 48, 57], [88, 92, 93], Math.max(0, 0.5 - dy));
+					color = riverRock(
+						color,
+						x,
+						y,
+						cx,
+						riverBank(cx) + offset,
+						size,
+						time,
+					);
 				}
 			} else if (layer === 2) {
 				const ground = riverBank(x) + 5;
@@ -448,8 +505,18 @@ export function material(
 					color = mix(
 						[32, 79, 94],
 						[67, 122, 132],
-						0.5 + 0.5 * Math.sin(y * 4 + Math.sin(x * 0.4)),
+						0.4 + noise(x * 0.4, y * 3, 60) * 0.2,
 					);
+				if (y > 35) {
+					for (const [cx, cy, size] of [
+						[36, 37.4, 0.9],
+						[58, 39, 1.2],
+						[83, 36.8, 0.7],
+						[103, 40, 1.4],
+						[119, 38, 0.85],
+					] as const)
+						color = riverRock(color ?? [32, 79, 94], x, y, cx, cy, size, time);
+				}
 				const crown = profile(x, [
 					[-4, 49],
 					[120, 49],

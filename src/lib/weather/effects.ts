@@ -62,7 +62,10 @@ export function weatherEffect(scene: Scene): WeatherEffect {
 	};
 	const dust = placeCarriesDust(scene.place) ? WEATHER_KNOBS.dust : 0;
 	const bubbles = scene.place === "oregon-coast" ? WEATHER_KNOBS.bubbles : 0;
-	return { ...shared, ...atmosphere(scene, dust, bubbles) };
+	const effect = { ...shared, ...atmosphere(scene, dust, bubbles) };
+	if (scene.place === "bend-plateau" || scene.place === "columbia-gorge")
+		effect.shimmer = 0;
+	return effect;
 }
 
 type Atmosphere = Pick<

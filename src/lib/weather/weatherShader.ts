@@ -1,5 +1,6 @@
 import { DITHER_LEVELS } from "./dither";
 import { VISTA_WINDOWS } from "./landscapes";
+import { MOON_MARIA, MOON_RADIUS } from "./moon";
 
 export const BANNER_VERT = `#version 300 es
 in vec2 aPos;
@@ -85,12 +86,12 @@ void main() {
   vec2 sunDelta = (uv - uSun) * vec2(3.3333, 1.0);
   float sunDistance = length(sunDelta);
   float visibility = 1.0 - max(uCloud * 0.85, uFog);
-  float radius = mix(0.055 + uGolden * 0.035, 0.035, uNight);
+  float radius = mix(0.055 + uGolden * 0.035, 0.095, uNight);
   float core = exp(-pow(sunDistance / radius, 2.0) * 2.0);
   float glow = exp(-pow(sunDistance / (radius * 3.0), 2.0));
   vec3 sunColor = mix(mix(vec3(1.0, 0.91, 0.72), vec3(1.0, 0.68, 0.35), uGolden), vec3(0.65, 0.76, 0.86), uNight);
   color += sunColor * glow * visibility * mix(0.13 + uGolden * 0.13, 0.045, uNight);
-  color = mix(color, sunColor, core * visibility * mix(0.85, 0.55, uNight));
+  color = mix(color, sunColor, core * visibility * 0.85 * (1.0 - uNight));
 
   vec2 starCell = floor(p);
   vec2 starLocal = fract(p) - 0.5;
@@ -98,6 +99,16 @@ void main() {
   float twinkle = 0.78 + 0.22 * sin(uTime * mix(0.7, 2.1, hash(starCell + 37.0)) + hash(starCell + 53.0) * 6.283185);
   float stars = step(0.989, hash(starCell)) * (1.0 - smoothstep(mix(0.12, 0.3, magnitude), 0.48, length(starLocal)));
   color += stars * mix(0.65, 1.2, magnitude) * twinkle * uNight * visibility * (1.0 - skyRamp);
+
+  if (uNight > 0.5) {
+    vec2 m = floor(sunDelta * 48.0 * 2.0) / 2.0 + 0.25;
+    float limb = ${MOON_RADIUS} + 0.09 * sin(m.x * 3.0 + m.y * 2.0);
+    if (length(m) <= limb) {
+      float maria = 0.0;
+      ${MOON_MARIA.map(([x, y, rx, ry]) => `maria = max(maria, 1.0 - step(1.0, dot((m - vec2(${x}, ${y})) / vec2(${rx}, ${ry}), (m - vec2(${x}, ${y})) / vec2(${rx}, ${ry}))));`).join("\n      ")}
+      color = mix(color, mix(vec3(214.0, 223.0, 218.0), vec3(128.0, 151.0, 166.0), maria) / 255.0, visibility);
+    }
+  }
 
   float clouds = noise(vec2(p.x * 0.035 - uTime * uCloudSpeed, p.y * 0.10));
   clouds = clouds * 0.65 + noise(vec2(p.x * 0.095 - uTime * uCloudSpeed * 3.4, p.y * 0.23)) * 0.35;

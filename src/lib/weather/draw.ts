@@ -2,6 +2,7 @@ import { BANNER_HEIGHT, BANNER_WIDTH } from "./buffer";
 import { DITHER_CELL_CSS, quantize } from "./dither";
 import { weatherEffect } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
+import { moonColor } from "./moon";
 import { ATLAS_MARGIN, ATLAS_WIDTH, layerOffsets } from "./motion";
 import { grade, lighting, mix, type Rgb } from "./palette";
 import type { Place, Scene } from "./scene";
@@ -49,7 +50,7 @@ export function renderPlate(
 	const effect = weatherEffect(scene);
 	const golden = scene.time === "golden-hour" ? 1 : 0;
 	const night = scene.time === "night";
-	const radius = night ? 0.035 : 0.055 + golden * 0.035;
+	const radius = night ? 0.095 : 0.055 + golden * 0.035;
 	const sunColor: Rgb = night
 		? [0.65, 0.76, 0.86]
 		: golden
@@ -78,8 +79,15 @@ export function renderPlate(
 					(sky[2] + sunColor[2] * glow) * 255,
 				],
 				[sunColor[0] * 255, sunColor[1] * 255, sunColor[2] * 255],
-				core * visibility * (night ? 0.55 : 0.85),
+				core * visibility * (night ? 0 : 0.85),
 			);
+			if (night) {
+				const moon = moonColor(
+					(uvX - light.sun[0]) * 160,
+					(uvY - light.sun[1]) * 48,
+				);
+				if (moon) color = mix(color, moon, visibility);
+			}
 			let depth = 0;
 			for (let layer = 0; layer < 3; layer++) {
 				const shifted = uvX * BANNER_WIDTH - (offsets[layer] ?? 0);
@@ -140,14 +148,20 @@ export function renderMotionPatches(place: Place, time: number) {
 		readonly (readonly [number, number, number, number, number])[]
 	> = {
 		"cascade-forest": [[2, 30, 34, 104, 14]],
-		"columbia-gorge": [[1, 25, 20, 5, 16]],
+		"columbia-gorge": [
+			[1, 25, 20, 5, 16],
+			[1, 34, 35, 93, 7],
+		],
 		"oregon-coast": [
 			[0, -4, 22, 168, 11],
 			[1, -4, 28, 168, 9],
 			[2, 34, 41, 22, 7],
 		],
 		"painted-hills": [[1, -4, 25, 168, 15]],
-		"bend-plateau": [[0, 101, 15, 4, 21]],
+		"bend-plateau": [
+			[0, 101, 15, 4, 21],
+			[1, 27, 33, 102, 11],
+		],
 	};
 	return regions[place].map(([layer, left, top, w, h]) => {
 		const width = w * DETAIL,
