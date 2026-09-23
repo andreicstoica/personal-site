@@ -1,9 +1,12 @@
 ---
+import { lastUpdatedLabel } from "../lib/lastUpdated";
+
 interface Props {
 	title: string;
 }
 
 const { title } = Astro.props;
+const updated = lastUpdatedLabel();
 ---
 
 <main class="py-4 gap-6 flex flex-col pb-8">
@@ -13,4 +16,7 @@ const { title } = Astro.props;
   <div class="w-full text-pretty">
     <slot />
   </div>
+  {updated && (
+    <p class="mt-auto pt-6 text-end font-mono text-xs text-muted">{updated}</p>
+  )}
 </main>

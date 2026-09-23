@@ -7,11 +7,10 @@ import MarkdownSections from "./MarkdownSections.astro";
 interface Props {
 	slug: string;
 	layout?: "stack" | "grid";
-	lastUpdated?: string;
 	innerClass?: string;
 }
 
-const { slug, layout = "stack", lastUpdated, innerClass } = Astro.props;
+const { slug, layout = "stack", innerClass } = Astro.props;
 const entry = await getEntry("pages", slug);
 if (!entry) throw new Error(`${slug} entry not found`);
 ---
@@ -22,7 +21,6 @@ if (!entry) throw new Error(`${slug} entry not found`);
       <MarkdownSections
         body={entry.body ?? ""}
         description={entry.data.description}
-        lastUpdated={lastUpdated}
         layout={layout}
       >
         <slot />
