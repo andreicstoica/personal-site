@@ -14,7 +14,11 @@ interface Props {
 }
 
 const { experience } = Astro.props;
-const nameOffset = usesDisplayFont(experience.name) ? "-mt-1" : "-mt-0.25";
+// Chip cells run leading-none so cloned wrap fragments advance by 16px instead
+// of the inherited 1.55 line box — that's what closes the gap between lines.
+// It raises the first baseline by half the drop (4.4px), so the optical offsets
+// shift down by the same amount to keep the chip where it was tuned.
+const nameOffset = usesDisplayFont(experience.name) ? "mt-0" : "mt-0.75";
 ---
 
 <div
@@ -22,7 +26,7 @@ const nameOffset = usesDisplayFont(experience.name) ? "-mt-1" : "-mt-0.25";
   data-type={experience.type}
 >
   <div class="hidden lg:grid lg:grid-cols-10 gap-2 items-start">
-    <div class={`col-span-1 ${nameOffset}`}>
+    <div class={`col-span-1 leading-none ${nameOffset}`}>
       <span
         class="line-clamp-2"
         style={experienceNameStyle(experience.name, experience.type)}
@@ -39,7 +43,7 @@ const nameOffset = usesDisplayFont(experience.name) ? "-mt-1" : "-mt-0.25";
           </div>
         </div>
 
-        <div class={`col-span-2 ${nameOffset}`}>
+        <div class={`col-span-2 leading-none ${nameOffset}`}>
           <span
             class="font-serif text-sm leading-none bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
             style={displayFontStyle(experience.name)}

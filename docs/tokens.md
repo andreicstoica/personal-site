@@ -7,7 +7,7 @@ All tokens live in `src/styles/global.css` (TAB-indented, keep it that way). Com
 Two accepted ways to reference a token from a Tailwind class:
 
 - **Bracket form** — `border-[var(--color-bg-secondary)]`, `text-[var(--color-text-primary)]`. The house idiom; 17 matching lines in `FloatingChat.svelte` alone.
-- **Shorthand form** — `bg-(--color-bg-secondary)` (Tailwind v4). Same meaning; used in `ExperienceRow.astro:44`.
+- **Shorthand form** — `bg-(--color-bg-secondary)` (Tailwind v4). Same meaning; used in `ExperienceRow.astro:48`.
 
 Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--color-text-primary]`, `text-(color-text-primary)`) are bugs, not options — don't reintroduce them. In scoped `<style>` blocks write `var(--token)` directly.
 
