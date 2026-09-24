@@ -1,11 +1,16 @@
 ---
 import { personalStatement } from "../../lib/experience";
 import ExperienceTable from "./ExperienceTable.astro";
+
+// experience.ts holds the copy as one string; split it so the two independent
+// thoughts become columns instead of one narrow block over a full-width table.
+const [intro = "", focus = ""] = personalStatement.split("<br><br>");
 ---
 
 <div class="flex flex-col gap-12">
-  <div class="pt-4">
-    <p class="text-lead max-w-2xl" set:html={personalStatement} />
+  <div class="pt-4 grid gap-x-10 gap-y-5 md:grid-cols-[1.2fr_1fr]">
+    <p class="text-lead" set:html={intro} />
+    <p class="text-lead" set:html={focus} />
   </div>
   <ExperienceTable />
 </div>
