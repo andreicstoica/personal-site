@@ -152,7 +152,7 @@ Renders markdown content with custom styling. Uses `.markdown-body` class with n
 
 **File**: `src/components/home/Home.astro`
 
-Top of the front page: the `.text-lead` personal statement (`personalStatement` in `src/lib/experience.ts`, whose inline links lead to `/about` and the blog), then the `ExperienceTable`.
+Top of the front page: the `.text-lead` personal statement (`personalStatement` in `src/lib/experience.ts`), then the `ExperienceTable`. The statement is split on `<br><br>` into two columns, and its closing sentence is rewritten in `Home.astro` to point at `/about` and `/canon` — that file is never staged, so copy edits that must ship live in the component.
 
 ## WeatherBanner
 

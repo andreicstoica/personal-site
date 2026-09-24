@@ -5,11 +5,19 @@ import ExperienceTable from "./ExperienceTable.astro";
 // experience.ts holds the copy as one string; split it so the two independent
 // thoughts become columns instead of one narrow block over a full-width table.
 const [intro = "", focus = ""] = personalStatement.split("<br><br>");
+
+// The closing CTA is rewritten here because experience.ts is never staged.
+// If that sentence ever changes upstream, replace() no-ops and the original
+// copy renders — no breakage, just the old wording.
+const introCta = intro.replace(
+	"There's a short <a href='/about'>about</a>, mostly outside of work.",
+	"Learn more <a href='/about'>about</a> me outside of work, and my <a href='/canon'>canon</a> of people and ideas that inspire me.",
+);
 ---
 
 <div class="flex flex-col gap-12">
   <div class="pt-4 grid gap-x-10 gap-y-5 md:grid-cols-[1.2fr_1fr]">
-    <p class="text-lead" set:html={intro} />
+    <p class="text-lead" set:html={introCta} />
     <p class="text-lead" set:html={focus} />
   </div>
   <ExperienceTable />
