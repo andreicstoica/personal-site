@@ -37,14 +37,14 @@
 	--tag-work: #3848ff;
 	--tag-personal: #37ff8b;
 	--tag-school: #ffe438;
-	--tag-other: #ff39ac;
+	--tag-other: #e00493;
 
 	/* Text on a tag background. Deliberately absent from the dark block below:
 	   the tag colors never remap, so their text must not either. */
 	--tag-work-text: #fefefe;
 	--tag-personal-text: #272727;
 	--tag-school-text: #272727;
-	--tag-other-text: #272727;
+	--tag-other-text: #fefefe;
 
 	/* ASCII Art Colors */
 	--color-ascii-bright: #3848ff;
