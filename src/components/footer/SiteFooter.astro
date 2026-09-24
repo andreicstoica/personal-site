@@ -1,21 +1,35 @@
 ---
 import { socialNavItems } from "../../lib/navLinks";
 import BeosIcon from "./BeosIcon.astro";
+
+// Frozen at build time in astro.config.mjs — UTC keeps the rendered date
+// identical no matter where the request is served from.
+const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	timeZone: "UTC",
+});
 ---
 
 <footer class="site-footer" transition:persist="site-footer">
-  <ul class="site-footer-list">
-    {
-      socialNavItems.map((item) => (
-        <li>
-          <a href={item.href} target="_blank" rel="noopener noreferrer">
-            <BeosIcon kind={item.icon} />
-            <span>{item.label}</span>
-          </a>
-        </li>
-      ))
-    }
-  </ul>
+  <div class="site-footer-inner">
+    <ul class="site-footer-list">
+      {
+        socialNavItems.map((item) => (
+          <li>
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              <BeosIcon kind={item.icon} />
+              <span>{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="site-footer-updated">
+      Last updated <time datetime={__BUILD_DATE__.slice(0, 10)}>{updatedAt}</time>
+    </p>
+  </div>
 </footer>
 
 <style>
@@ -24,6 +38,21 @@ import BeosIcon from "./BeosIcon.astro";
     padding-block: 1.25rem 1.75rem;
     border-top: 1px solid
       color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  }
+
+  .site-footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1.25rem;
+  }
+
+  .site-footer-updated {
+    /* auto margin holds the right edge even after the row wraps */
+    margin: 0 0 0 auto;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    white-space: nowrap;
   }
 
   .site-footer-list {
