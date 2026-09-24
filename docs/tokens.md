@@ -51,12 +51,12 @@ What text color?
 
 `--color-text-inverse` is correct only on `--tag-*` fills in light mode; see the chip pairs in [DESIGN.md](./DESIGN.md).
 
-- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:347`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:482`, `SiteFooter.astro:43`).
+- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:347`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:482`, `SiteFooter.astro:73`).
 - **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:219`), and selection wash (primary at 24%).
 
 ## Borders — closed set of four
 
-1. **Section hairline** — `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`; the footer's divider (`SiteFooter.astro:25`). Holds in both modes from one rule.
+1. **Section hairline** — `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`; the footer's divider (`SiteFooter.astro:39`). Holds in both modes from one rule.
 2. **In-panel rule/input border** — `border-[var(--color-bg-secondary)]` (guide header, input, bubbles: `FloatingChat.svelte:349,444`).
 3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:499` popover) and outlined controls (`.btn-secondary`, `global.css:320`).
 4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:336`).

@@ -5,7 +5,7 @@
 | Token / face | Value | Where it's allowed |
 | --- | --- | --- |
 | `--font-sans` | IBM Plex Sans, system-ui | Everything. `html` sets it (`global.css:162`). |
-| `--font-mono` | IBM Plex Mono | Dates (`ExperienceRow.astro:52,88`), timestamps (`ContentDocument.astro:20`). Never body copy. |
+| `--font-mono` | IBM Plex Mono | Dates (`ExperienceRow.astro:52,88`), timestamps (`SiteFooter.astro:54`). Never body copy. |
 | `--font-serif` | IBM Plex Serif | Experience tag chips only (`ExperienceRow.astro:44`); plus the `src/proto` scratch pages. |
 | LumberSans | `/fonts/LumberSans.ttf` (local `@font-face`, `swap`) | Experience names, and only through `experienceNameStyle()` / `displayFontStyle()` (`experienceUi.ts:8-10`). Never body text or UI labels — it's an all-caps carved display face; a paragraph in it is unreadable. |
 
@@ -40,7 +40,7 @@ Rules:
 Defined once in `global.css` — compose, don't re-style:
 
 - `.text-lead` — the one lead paragraph per page: 17px / 1.65, `text-wrap: pretty`, **capped at `max-w-2xl`** so the measure stays ~65ch inside the wider `.site-column` (`Home.astro:8`, `MarkdownSections.astro:22`, `fitness.astro:19`). The cap is the measure, not a second container — don't narrow the container instead.
-- `.page-title` — 24px / 700 page heading (`ContentDocument.astro:13`).
+- `.page-title` — 24px / 700 page heading (`ContentDocument.astro:10`).
 - `.text-muted` — **maps to `--color-text-secondary` (5.7:1), not the `--color-text-muted` token (2.8:1)** (`global.css:210`). The name collision is deliberate history; the class is safe for text, the token is not.
 - Markdown body styles (`.markdown-*`, `.markdown-body`) own all rich-text sizing inside content — never inline font utilities into markdown-rendered HTML.
 

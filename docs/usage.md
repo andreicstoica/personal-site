@@ -4,14 +4,14 @@ Component decisions, in template form. What the components *are* lives in [compo
 
 ## Button
 
-Use for actions. Navigation is a Link — the nav name (`Nav.astro:2`), footer socials (`SiteFooter.astro:11`), and guide source chips (`FloatingChat.svelte:411`) are all links, and links are green (`--color-secondary`) by default.
+Use for actions. Navigation is a Link — the nav name (`Nav.astro:2`), footer socials (`SiteFooter.astro:21`), and guide source chips (`FloatingChat.svelte:411`) are all links, and links are green (`--color-secondary`) by default.
 
 Classes: `.btn-primary`, `.btn-secondary`, `.btn-secondary-custom`. Nothing else exists — a fourth class is a bug, not an option.
 
 - `.btn-secondary` — the default for a new button in Astro markup: transparent, `--color-text-primary`, hairline border; safe in both color modes (`global.css:316`).
 - `.btn-primary` — the single most important action on a screen; one per view. **Zero call sites today, and broken as-is**: its `color: var(--color-text-inverse)` (`global.css:289`) drops to #272727 on the unthemed blue in dark mode = 2.5:1. Do not add a usage until that color becomes `white`.
 - `.btn-secondary-custom` (green) — locked to the project page "Links" section (`ProjectLinks.astro:26,34,42`); all three links share it. Never use it anywhere else; it's page branding, not a style.
-- In a Svelte island there is no shared class — copy the guide's Send button (`FloatingChat.svelte:449`): `bg-[var(--color-primary)] text-white border rounded-none min-h-[44px]`. 44px is the site-wide touch minimum (also `Nav.astro:13`, `SiteFooter.astro:42`).
+- In a Svelte island there is no shared class — copy the guide's Send button (`FloatingChat.svelte:449`): `bg-[var(--color-primary)] text-white border rounded-none min-h-[44px]`. 44px is the site-wide touch minimum (also `Nav.astro:13`, `SiteFooter.astro:72`).
 
 ```
 Is it navigation? → Link (green by default; nav/footer override to --color-text-primary)
@@ -49,7 +49,7 @@ Does it need client JS?
            → client:visible                (MediaGallery.astro:64)
 ```
 
-- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `site-nav`, `cursor-trail`, `site-footer` (`SiteLayout.astro:25`, `Nav.astro:1`, `RootLayout.astro:35`, `SiteFooter.astro:6`); a fifth key needs a new persistent region, not a duplicate mount.
+- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `site-nav`, `cursor-trail`, `site-footer` (`SiteLayout.astro:25`, `Nav.astro:1`, `RootLayout.astro:35`, `SiteFooter.astro:15`); a fifth key needs a new persistent region, not a duplicate mount.
 - Why not `client:load` everywhere: it hydrates on every page view for content most visitors never touch. `client:visible`/`client:idle` defer that work; `client:only` avoids a hydration mismatch, not a perf win — reach for it only when the server markup is meaningless.
 
 ## Icon
