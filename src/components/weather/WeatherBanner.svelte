@@ -6,6 +6,7 @@
     loadOrCreatePlace,
     loadReading,
     randomPlace,
+    savePlace,
     saveReading,
   } from "../../lib/weather/session";
   import {
@@ -58,6 +59,17 @@
     colorMode: colorOverride === "system" ? systemMode : colorOverride,
   });
   const label = $derived(sceneLabel(scene));
+
+  /** Lab: clear every override, roll a fresh backdrop, refetch live weather. */
+  function localize(): void {
+    placeOverride = null;
+    weatherOverride = null;
+    timeOverride = null;
+    colorOverride = "system";
+    place = randomPlace();
+    if (storage) savePlace(storage, place);
+    readingSettled = false;
+  }
 
   async function fetchReading(): Promise<StoredReading> {
     try {
@@ -226,6 +238,7 @@
     onWeather={(next) => (weatherOverride = next)}
     onTime={(next) => (timeOverride = next)}
     onColorMode={(next) => (colorOverride = next)}
+    onLocalize={localize}
   />
 {/if}
 

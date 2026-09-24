@@ -20,6 +20,7 @@
     onWeather,
     onTime,
     onColorMode,
+    onLocalize,
   }: {
     place: Place;
     weather: Weather;
@@ -29,6 +30,7 @@
     onWeather: (weather: Weather) => void;
     onTime: (time: TimeOfDay) => void;
     onColorMode: (mode: ColorMode | "system") => void;
+    onLocalize: () => void;
   } = $props();
 
   const colorChoices = ["system", ...COLOR_MODES] as const;
@@ -95,6 +97,7 @@
       {/each}
     </select>
   </label>
+  <button type="button" onclick={onLocalize}>localize</button>
 </section>
 
 <style>
@@ -127,7 +130,8 @@
     gap: 0.1rem;
   }
 
-  select {
+  select,
+  button {
     width: 100%;
     font: inherit;
     color: inherit;
@@ -135,5 +139,16 @@
     border: 1px solid var(--color-text-muted);
     border-radius: 0;
     padding: 0.1rem 0.2rem;
+  }
+
+  button {
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.04em;
+  }
+
+  button:hover {
+    border-color: var(--color-text-secondary);
+    color: var(--color-primary);
   }
 </style>

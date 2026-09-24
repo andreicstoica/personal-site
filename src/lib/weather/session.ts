@@ -26,6 +26,14 @@ export function loadOrCreatePlace(storage: Storage): Place {
 	return place;
 }
 
+export function savePlace(storage: Storage, place: Place): void {
+	try {
+		storage.setItem(PLACE_KEY, place);
+	} catch {
+		// Best-effort session cache.
+	}
+}
+
 export function loadReading(storage: Storage): StoredReading | null {
 	const raw = storage.getItem(READING_KEY);
 	if (raw === null) return null;
