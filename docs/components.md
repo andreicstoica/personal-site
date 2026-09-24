@@ -102,18 +102,15 @@ Two custom variants (used in specific pages):
 
 | Class | Background | Usage |
 | --- | --- | --- |
-| `.btn-secondary-custom` | `--tag-personal` (green) | Project links |
-| `.btn-accent-custom` | `--tag-school` (yellow) | Project links |
+| `.btn-secondary-custom` | `--tag-personal` (green) | All three project links |
 
 All buttons: `padding: var(--spacing-sm) var(--spacing-md)`, `border-radius: var(--radius-md)`, `display: inline-flex`, `gap: var(--spacing-xs)`.
 
 ### When to use which
 
-Is it the primary action on the screen?
-- Yes: `btn-primary`. One per view.
-- No: `btn-secondary`. This is the default.
+**The decision rules now live in [usage.md](./usage.md) — follow that section** (it records that `.btn-primary`/`.btn-secondary` have zero call sites and that `.btn-primary` needs a dark-mode color fix before first use, and it gives the flowchart for link vs island button vs project-link class).
 
-The custom variants (`btn-secondary-custom`, `btn-accent-custom`) are exceptions for project link styling. Do not create new button variants without adding them to this file.
+The class set is closed: `btn-primary`, `btn-secondary`, `btn-secondary-custom`. Do not create a fourth without editing both this file and [usage.md](./usage.md).
 
 ## ExperienceTable
 
