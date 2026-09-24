@@ -93,7 +93,7 @@ describe("layered terrain", () => {
 			for (const x of place === "bend-plateau"
 				? [48, 67, 77, 85, 97, 107, 116]
 				: place === "oregon-coast"
-					? [93, 101, 107, 116, 130, 137, 143]
+					? [74.8, 79.3, 87, 93, 101, 107, 116, 124, 132.5]
 					: [8, 25, 40, 137, 140, 141, 142, 150, 164]) {
 				let entered = false;
 				for (let y = 0.125; y < 48; y += 0.25) {
@@ -103,6 +103,19 @@ describe("layered terrain", () => {
 					entered ||= covered;
 				}
 			}
+		}
+		for (const x of [100, 101, 102]) {
+			expect(material("oregon-coast", 0, x, 5.25)).toBeNull();
+			expect(material("oregon-coast", 0, x, 6)).not.toBeNull();
+		}
+		expect(material("oregon-coast", 0, 90, 18)).toBeNull();
+		expect(material("oregon-coast", 0, 115, 18)).not.toBeNull();
+		for (const x of [74.8, 79.3, 132.5]) {
+			const sea = material("oregon-coast", 0, x, 22.5);
+			const basalt = material("oregon-coast", 0, x, 24);
+			expect(sea?.[2] ?? 0).toBeGreaterThan(120);
+			expect(basalt?.[2] ?? 255).toBeLessThan(90);
+			expect(material("oregon-coast", 1, x, 27)).toBeNull();
 		}
 	});
 	test("Gorge foreground contains the river at every phase", () => {
@@ -326,7 +339,19 @@ describe("weather seam regression", () => {
 			["cascade-forest", [12, 24]],
 			["bend-plateau", [3, 6]],
 			["columbia-gorge", [3, 6]],
-			["oregon-coast", [3, 3.6, 8.3, 13]],
+			[
+				"oregon-coast",
+				[
+					3,
+					3.6,
+					8.3,
+					13,
+					1 / 0.19,
+					2 / 3 / 0.217,
+					1 / 3 / 0.244,
+					(Math.PI * 2) / 1.45,
+				],
+			],
 		] as const) {
 			for (const time of boundaries) {
 				const frames = [-1, 0, 1].map((step) =>
@@ -399,11 +424,12 @@ describe("weather seam regression", () => {
 			).toBeLessThan(50);
 		}
 	});
-	test("climber, orchard and river motion stay inside their upload patches", () => {
+	test("climber, orchard, river and coast motion stay inside their upload patches", () => {
 		for (const [place, layers] of [
 			["bend-plateau", [0, 1]],
 			["cascade-forest", [2]],
 			["columbia-gorge", [1]],
+			["oregon-coast", [0, 1, 2]],
 		] as const) {
 			const patches = renderMotionPatches(place, 0);
 			for (const time of [0.5, 3, 4.5, 5.5, 60, 600]) {

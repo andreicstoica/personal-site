@@ -5,6 +5,7 @@ import {
 	bubbleMotion,
 	placeMotion,
 	rapidMotion,
+	smoothstep,
 } from "./placeMotion";
 import type { Place } from "./scene";
 
@@ -138,16 +139,32 @@ const SMITH_CREST: Profile = [
 	[136, 35],
 ];
 const HAYSTACK_CREST: Profile = [
-	[87, 27],
-	[90, 20],
-	[93, 11],
-	[96, 7],
-	[101, 4.8],
-	[107, 4.2],
-	[112, 5.5],
-	[116, 9],
-	[119, 16],
-	[123, 27],
+	[83, 27.5],
+	[87, 24],
+	[90, 18.5],
+	[93, 12.5],
+	[96, 8.5],
+	[99, 6],
+	[101, 5.5],
+	[103, 5.8],
+	[106, 8.4],
+	[110, 12.4],
+	[115, 16.7],
+	[119, 21.2],
+	[124, 25.1],
+	[128, 27.5],
+];
+const NEEDLES_CREST: Profile = [
+	[71, 27.3],
+	[73, 26.1],
+	[74.5, 23.1],
+	[75.2, 23],
+	[76.5, 25.5],
+	[78, 25.6],
+	[79, 23.6],
+	[79.6, 23.4],
+	[80.6, 26.2],
+	[82, 27.3],
 ];
 
 function riverBank(x: number): number {
@@ -570,7 +587,10 @@ export function material(
 					color = mix(
 						[64, 116, 133],
 						[117, 156, 159],
-						0.4 + 0.15 * Math.sin(y * 2.3 - time * 1.1 + Math.sin(x * 0.09)),
+						0.4 +
+							(y < 33
+								? 0.15 * Math.sin(y * 2.3 - time * 1.1 + Math.sin(x * 0.09))
+								: 0),
 					);
 				for (let wave = 0; wave < 3; wave++) {
 					const age = (time * (0.19 + wave * 0.027) + wave / 3) % 1;
@@ -582,34 +602,72 @@ export function material(
 							Math.sin(age * Math.PI) ** 2 * 0.7,
 						);
 				}
-				const rock = x >= 87 && x <= 123 && y >= profile(x, HAYSTACK_CREST);
-				let needle = false;
-				for (const [cx, top, width] of [
-					[126, 20, 1.1],
-					[130, 21.5, 0.85],
-					[133, 19.7, 0.9],
-				] as const) {
-					if (
-						y >= top &&
-						Math.abs(x - cx + Math.sin(y * 1.3) * 0.12) <
-							width * Math.min(1, 0.16 + (y - top) * 0.18)
-					)
-						needle = true;
+				const crest = profile(x, HAYSTACK_CREST);
+				const rock = x >= 83 && x <= 128 && y >= crest;
+				const islet = x >= 71 && x <= 82 && y >= profile(x, NEEDLES_CREST);
+				const needle =
+					y >= 23.1 &&
+					Math.abs(x - 132.5 + Math.sin(y * 1.3) * 0.08) <
+						0.2 + (y - 23.1) * 0.2;
+				if ((rock || islet || needle) && y < 27.5) {
+					const grain = stone(x, y);
+					const face = smoothstep(100, 109, x + (y - 6) * 0.23);
+					color = mix(
+						mix([32, 44, 53], [57, 68, 73], grain),
+						mix([76, 75, 60], [128, 115, 83], grain),
+						face,
+					);
+					const chute = noise(x + (y - 10) * 0.035, y * 0.035, 260);
+					const cleft = smoothstep(0.48, 0.76, chute);
+					color = mix(color, [27, 38, 45], cleft * 0.65);
+					if (rock && y < 16) {
+						const cap = 0.6 + noise(x, y * 0.1, 170) * 1.5;
+						const gully = cleft * (1 - smoothstep(10, 16, y));
+						const moss = Math.max(
+							(1 - smoothstep(cap, cap + 0.7, y - crest)) *
+								(1 - smoothstep(11, 15, crest)),
+							gully * 0.75,
+						);
+						color = mix(color, mix([46, 67, 43], [105, 111, 61], face), moss);
+					}
 				}
-				if ((rock || needle) && y < 27.5) {
-					color = mix([34, 44, 48], [66, 72, 68], stone(x, y));
-					if (rock && y > 8 && y < 23 && noise(x, y * 0.07, 220) > 0.68)
-						color = mix(color, [130, 137, 121], 0.2);
+				if (color && y > 25 && y < 30 && x > 68 && x < 136) {
+					const mist =
+						Math.exp(-(((y - 26.9) / 0.8) ** 2)) *
+						(1 - smoothstep(25, 35, Math.abs(x - 102))) *
+						(0.26 + noise(x, y, 100) * 0.13);
+					color = mix(color, [180, 199, 194], mist);
+					for (const [cx, width] of [
+						[105.5, 23.5],
+						[76.5, 6.5],
+						[132.5, 1.9],
+					] as const) {
+						const flank = Math.abs((x - cx) / width);
+						if (flank >= 1.1) continue;
+						const impact = 0.5 + 0.5 * Math.sin(time * 1.45 - flank * 2.4);
+						const collar = 27.3 + 0.65 * Math.sqrt(Math.max(0, 1 - flank ** 2));
+						const edge = collar + impact * 0.24 + Math.sin(x * 2.1) * 0.1;
+						const foam =
+							(1 - smoothstep(0.08, 0.25 + impact * 0.18, Math.abs(y - edge))) *
+							(1 - smoothstep(0.95, 1.1, flank));
+						color = mix(color, [224, 233, 219], foam * (0.6 + impact * 0.35));
+					}
 				}
-				if (
-					y > 26.6 &&
-					y < 27.5 + Math.sin(x * 1.7 - time * 1.8) * 0.35 &&
-					((x > 86 && x < 124) || needle)
-				)
-					color = [170, 190, 183];
 			}
 			if (layer === 1 && y > ridge(x, 29.8, 1.2)) {
 				color = mix([121, 140, 136], [173, 163, 141], (y - 30) / 15);
+				const reflectedX = x + Math.sin(y * 7.1) * 0.8;
+				const reflectedY = 27.5 - (y - 27.5) * 1.65;
+				const reflection =
+					(1 -
+						smoothstep(
+							-0.8,
+							1.2,
+							profile(reflectedX, HAYSTACK_CREST) - reflectedY,
+						)) *
+					(1 - smoothstep(33, 41, y)) *
+					(0.22 + 0.05 * Math.sin(y * 9));
+				color = mix(color, [50, 68, 72], reflection);
 				const shore = ridge(x, 32, 1.2) + motion.surf;
 				if (y < shore + 1.3)
 					color = mix(
@@ -617,7 +675,8 @@ export function material(
 						[82, 129, 139],
 						Math.max(0, 0.5 - (y - shore) * 0.2),
 					);
-				if (y < shore) color = [95, 142, 150];
+				if (y < shore)
+					color = mix([95, 142, 150], [50, 68, 72], reflection * 0.7);
 				if (Math.abs(y - shore) < 0.25 + 0.08 * Math.sin(x * 1.7))
 					color = [211, 225, 212];
 			}
