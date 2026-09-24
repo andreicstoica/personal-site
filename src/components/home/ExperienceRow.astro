@@ -41,7 +41,7 @@ const nameOffset = usesDisplayFont(experience.name) ? "-mt-1" : "-mt-0.25";
 
         <div class={`col-span-2 ${nameOffset}`}>
           <span
-            class="font-serif text-sm bg-(--color-bg-secondary) p-0.75"
+            class="font-serif text-sm bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
             style={displayFontStyle(experience.name)}
           >
             {experience.tags.join(", ")}
