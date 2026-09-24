@@ -11,7 +11,7 @@ Classes: `.btn-primary`, `.btn-secondary`, `.btn-secondary-custom`. Nothing else
 - `.btn-secondary` — the default for a new button in Astro markup: transparent, `--color-text-primary`, hairline border; safe in both color modes (`global.css:316`).
 - `.btn-primary` — the single most important action on a screen; one per view. **Zero call sites today, and broken as-is**: its `color: var(--color-text-inverse)` (`global.css:289`) drops to #272727 on the unthemed blue in dark mode = 2.5:1. Do not add a usage until that color becomes `white`.
 - `.btn-secondary-custom` (green) — locked to the project page "Links" section (`ProjectLinks.astro:26,34,42`); all three links share it. Never use it anywhere else; it's page branding, not a style.
-- In a Svelte island there is no shared class — copy the guide's Send button (`FloatingChat.svelte:449`): `bg-[var(--color-primary)] text-white border rounded-none min-h-[44px]`. 44px is the site-wide touch minimum (also `Nav.astro:13`, `SiteFooter.astro:72`).
+- In a Svelte island there is no shared class — copy the guide's Send button (`FloatingChat.svelte:449`): `bg-[var(--color-primary)] text-white border rounded-none min-h-[44px]`. 44px is the site-wide touch minimum (`Nav.astro:13`); the footer social links sit at 40px (`SiteFooter.astro:72`), the one deliberate exception — they are text links with a full-width row, not standalone targets.
 
 ```
 Is it navigation? → Link (green by default; nav/footer override to --color-text-primary)
@@ -58,7 +58,7 @@ Pixel-art icon from the `pixelarticons` set. Use it *next to text* in interactiv
 
 - **`Icon.astro` in Astro markup, `Icon.svelte` only inside a Svelte island.** They're the same SVG; picking the Svelte one in an `.astro` file buys nothing and adds an import across the boundary. Real pair: `ProjectLinks.astro:59` (Astro), `FloatingChat.svelte:469` (Svelte).
 - Props: `name` (the `PixelarticonName` union — a new icon means new path data in `src/icons/pixelarticons.ts`, not a string), `class` (default `w-6 h-6`), `id`. Fill is `currentColor` — color comes from the surrounding text, never a `fill-` utility.
-- Alternative: the footer's four social glyphs are `BeosIcon.astro` (32px pixel art), whose `kind` union (`person`/`mail`/`terminal`/`balloon`, `navLinks.ts:6-11`) is `assertNever`-checked. New social entry without a glyph = compile error.
+- Alternative: the footer's four social glyphs are `BeosIcon.astro` (24px pixel art), whose `kind` union (`person`/`mail`/`terminal`/`balloon`, `navLinks.ts:6-11`) is `assertNever`-checked. New social entry without a glyph = compile error.
 
 ```astro
 <!-- Correct — ProjectLinks.astro:59: icon + text label -->

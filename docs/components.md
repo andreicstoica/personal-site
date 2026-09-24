@@ -30,7 +30,7 @@ Global footer rendered inside the scroll region, below the page slot.
 
 - One list item per `socialNavItems` entry in `src/lib/navLinks.ts` (GitHub, LinkedIn, Substack, X)
 - Each link opens in a new tab with `rel="noopener noreferrer"`
-- `BeosIcon` maps the `icon` field (`person` / `mail` / `terminal` / `balloon`) to a 32px pixel-art SVG. The switch is exhaustive via `assertNever`, so a new `SocialIcon` without a glyph is a compile error
+- `BeosIcon` maps the `icon` field (`person` / `mail` / `terminal` / `balloon`) to a 24px pixel-art SVG. The switch is exhaustive via `assertNever`, so a new `SocialIcon` without a glyph is a compile error
 - Hairline `border-top` from `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`, so it holds in both modes
 - `transition:persist="site-footer"`
 
