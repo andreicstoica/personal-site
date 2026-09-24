@@ -51,15 +51,15 @@ What text color?
 
 `--color-text-inverse` is correct only on `--tag-*` fills in light mode; see the chip pairs in [DESIGN.md](./DESIGN.md).
 
-- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:340`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:475`, `SiteFooter.astro:43`).
-- **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:212`), and selection wash (primary at 24%).
+- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:347`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:482`, `SiteFooter.astro:43`).
+- **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:219`), and selection wash (primary at 24%).
 
 ## Borders — closed set of four
 
 1. **Section hairline** — `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`; the footer's divider (`SiteFooter.astro:25`). Holds in both modes from one rule.
 2. **In-panel rule/input border** — `border-[var(--color-bg-secondary)]` (guide header, input, bubbles: `FloatingChat.svelte:349,444`).
-3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:499` popover) and outlined controls (`.btn-secondary`, `global.css:313`).
-4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:329`).
+3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:499` popover) and outlined controls (`.btn-secondary`, `global.css:320`).
+4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:336`).
 
 The experience table's row rules use **#1** (one `color-mix` hairline in `ExperienceRow.astro`'s scoped style) and its filter select uses **#2**. Neither reaches for `border-gray-*` + `dark:` swaps — don't reintroduce that shape.
 
@@ -72,15 +72,15 @@ The experience table's row rules use **#1** (one `color-mix` hairline in `Experi
 ## Motion
 
 - **UI transitions**: `var(--duration-ui)` 180ms + `var(--ease-out)`. Never a raw ms literal, never `ease-in`.
-- **Drawer/modal**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:616-641`, `global.css:571-597`).
-- **Press feedback**: `transform 160ms var(--ease-out)` → `scale(0.98)` (`global.css:290,305`).
+- **Drawer/modal**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:616-641`, `global.css:578-604`).
+- **Press feedback**: `transform 160ms var(--ease-out)` → `scale(0.98)` (`global.css:297,312`).
 - The only blessed literals beyond the tokens: `160ms` press and `80ms` filter inside `.btn-*`. Add a token before reusing any other number.
-- `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:106,604` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:644` exists).
+- `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:113,611` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:644` exists).
 - `--ease-in-out` and `--duration-media` are defined with zero references — dead until noted here with a use.
 
 ## Elevation
 
-`--elevation-drawer` is the only elevation token; sole consumer is the guide drawer (`FloatingChat.svelte:612`). Light: hairline + soft left shadow. Dark: collapses to one white 10% hairline (`global.css:139`) because a black shadow is invisible on `#272727` — that collapse is the token's job, don't re-derive it per component. The guide popover's `0 8px 24px rgb(0 0 0 / 16%)` (`FloatingChat.svelte:501,542`) is the only other shadow in the system; don't invent a third.
+`--elevation-drawer` is the only elevation token; sole consumer is the guide drawer (`FloatingChat.svelte:612`). Light: hairline + soft left shadow. Dark: collapses to one white 10% hairline (`global.css:146`) because a black shadow is invisible on `#272727` — that collapse is the token's job, don't re-derive it per component. The guide popover's `0 8px 24px rgb(0 0 0 / 16%)` (`FloatingChat.svelte:501,542`) is the only other shadow in the system; don't invent a third.
 
 ## Spacing
 

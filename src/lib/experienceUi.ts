@@ -41,13 +41,13 @@ function experienceTypePalette(type: ExperienceType): {
 } {
 	switch (type) {
 		case "personal":
-			return { bg: "--tag-personal", text: "var(--color-text-primary)" };
+			return { bg: "--tag-personal", text: "var(--tag-personal-text)" };
 		case "work":
-			return { bg: "--tag-work", text: "var(--color-text-inverse)" };
+			return { bg: "--tag-work", text: "var(--tag-work-text)" };
 		case "school":
-			return { bg: "--tag-school", text: "var(--color-text-primary)" };
+			return { bg: "--tag-school", text: "var(--tag-school-text)" };
 		case "other":
-			return { bg: "--tag-other", text: "var(--color-text-inverse)" };
+			return { bg: "--tag-other", text: "var(--tag-other-text)" };
 		default: {
 			const _exhaustive: never = type;
 			return _exhaustive;
