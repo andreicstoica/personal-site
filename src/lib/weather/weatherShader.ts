@@ -44,6 +44,10 @@ uniform vec3 uCloudShade;
 uniform vec3 uRainColor;
 uniform vec3 uFogColor;
 
+const float STAR_CELL_SIZE = 2.0;
+const float PHI_INVERSE = 0.61803398875;
+const float PHI_INVERSE_SQUARED = 0.38196601125;
+
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -90,15 +94,19 @@ void main() {
   float core = exp(-pow(sunDistance / radius, 2.0) * 2.0);
   float glow = exp(-pow(sunDistance / (radius * 3.0), 2.0));
   vec3 sunColor = mix(mix(vec3(1.0, 0.91, 0.72), vec3(1.0, 0.68, 0.35), uGolden), vec3(0.65, 0.76, 0.86), uNight);
-  color += sunColor * glow * visibility * mix(0.13 + uGolden * 0.13, 0.045, uNight);
-  color = mix(color, sunColor, core * visibility * 0.85 * (1.0 - uNight));
+  color += sunColor * glow * visibility * mix(0.16 + uGolden * 0.13, 0.045, uNight);
+  color = mix(color, sunColor, core * visibility * 0.90 * (1.0 - uNight));
 
-  vec2 starCell = floor(p);
-  vec2 starLocal = fract(p) - 0.5;
+  vec2 starCell = floor(p / STAR_CELL_SIZE);
+  float starIndex = starCell.x + starCell.y * 89.0;
+  // Golden-ratio offsets break the coarse cell grid without clustered randomness.
+  vec2 starOffset = vec2(fract((starIndex + 0.5) * PHI_INVERSE), fract((starIndex + 0.5) * PHI_INVERSE_SQUARED));
+  vec2 starCenter = (starCell + 0.5) * STAR_CELL_SIZE + (starOffset - 0.5) * 1.1;
+  vec2 starLocal = p - starCenter;
   float magnitude = hash(starCell + 19.0);
-  float twinkle = 0.78 + 0.22 * sin(uTime * mix(0.7, 2.1, hash(starCell + 37.0)) + hash(starCell + 53.0) * 6.283185);
-  float stars = step(0.989, hash(starCell)) * (1.0 - smoothstep(mix(0.12, 0.3, magnitude), 0.48, length(starLocal)));
-  color += stars * mix(0.65, 1.2, magnitude) * twinkle * uNight * visibility * (1.0 - skyRamp);
+  float twinkle = 0.90 + 0.07 * sin(uTime * mix(0.45, 1.25, hash(starCell + 37.0)) + hash(starCell + 53.0) * 6.283185);
+  float stars = step(0.958, hash(starCell)) * (1.0 - smoothstep(mix(0.10, 0.25, magnitude), 0.40, length(starLocal)));
+  color += stars * mix(0.68, 1.16, magnitude) * twinkle * uNight * visibility * (1.0 - skyRamp);
 
   if (uNight > 0.5) {
     vec2 m = floor(sunDelta * 48.0 * 2.0) / 2.0 + 0.25;
@@ -121,7 +129,6 @@ void main() {
   color = mix(color, uCloudLit, summitWisp * uHood * 0.25);
   float flash = uFlash * uLightning;
   vec3 flashColor = mix(uFlashLight, uFlashBlue, uFlashCool);
-  color *= 1.0 - flash * 0.6;
   float depth = 0.0;
   float sky = 1.0;
   for (int i = 0; i < 3; i++) {
@@ -131,11 +138,7 @@ void main() {
     vec3 albedo = surface.rgb / max(surface.a, 0.001);
     float detail = noise(vec2((p.x - uOffsets[i]) * 1.4, p.y * 2.0));
     float direction = clamp(0.55 + (uSun.x - uv.x) * 0.25 + (detail - 0.5) * 0.35, 0.0, 1.0);
-    // Broad cloud light reaches the full silhouette without a fixed-height hotspot.
-    vec2 toFlash = vec2(uFlashOrigin - p.x, -18.0 - p.y);
-    float falloff = 0.12 + 0.88 * exp(-pow(toFlash.x / 60.0, 2.0) - pow(toFlash.y / 130.0, 2.0));
-    float flashFacing = 0.88 + 0.12 * normalize(toFlash).y;
-    vec3 land = albedo * ((uAmbient + uDirect * direction) * (1.0 - flash * 0.55) + flashColor * flash * falloff * flashFacing * 1.65);
+    vec3 land = albedo * (uAmbient + uDirect * direction);
     land *= 1.0 - uLandShade * clouds * 0.3;
     if (i == 1) {
       vec2 local = vec2(p.x - uOffsets[i], p.y);
@@ -143,7 +146,7 @@ void main() {
       land += uWindowLight * windows;
     }
     float haze = (2.0 - layer) * 0.14 + uFog * (0.42 - layer * 0.13);
-    land = mix(land, uHorizon * (1.0 - flash * 0.6), haze);
+    land = mix(land, uHorizon, haze);
     color = mix(color, land, surface.a);
     depth = mix(depth, (layer + 1.0) / 3.0, surface.a);
     sky *= 1.0 - surface.a;
@@ -206,14 +209,24 @@ void main() {
     float origin = uFlashOrigin;
     float bolt = 0.0;
     vec2 a = vec2(origin, 1.0);
-    for (int i = 1; i <= 7; i++) {
+    for (int i = 1; i <= 10; i++) {
       float n = float(i);
-      vec2 b = vec2(origin + (hash(vec2(cycle, n)) - 0.5) * 9.0, n * 3.6);
-      bolt = max(bolt, 1.0 - smoothstep(0.08, 0.35, segment(p, a, b)));
-      if (i == 3 || i == 5) bolt = max(bolt, (1.0 - smoothstep(0.04, 0.2, segment(p, a, a + vec2(5.0, 4.0)))) * 0.7);
+      float drift = (hash(vec2(cycle + 17.0, n)) - 0.5) * 3.4;
+      vec2 b = vec2(a.x + drift + (origin - a.x) * 0.16, 1.0 + n * 2.8);
+      bolt = max(bolt, 1.0 - smoothstep(0.06, 0.28, segment(p, a, b)));
+      if (i == 3 || i == 6 || i == 8) {
+        vec2 forkRoot = mix(a, b, 0.55);
+        float forkSide = hash(vec2(cycle + 31.0, n)) < 0.5 ? -1.0 : 1.0;
+        vec2 forkTip = forkRoot + vec2(forkSide * mix(2.4, 4.6, hash(vec2(cycle + 47.0, n))), mix(2.0, 3.5, hash(vec2(cycle + 59.0, n))));
+        float firstFork = 1.0 - smoothstep(0.05, 0.22, segment(p, forkRoot, forkTip));
+        bolt = max(bolt, firstFork * 0.55);
+        vec2 nestedTip = forkTip + vec2(forkSide * mix(1.1, 2.5, hash(vec2(cycle + 71.0, n))), mix(1.2, 2.3, hash(vec2(cycle + 83.0, n))));
+        float nestedFork = 1.0 - smoothstep(0.04, 0.15, segment(p, forkTip, nestedTip));
+        bolt = max(bolt, nestedFork * 0.35);
+      }
       a = b;
     }
-    color += flashColor * flash * (bolt * sky + exp(-pow((p.x - origin) / 18.0, 2.0)) * sky * 0.18);
+    color += flashColor * flash * (0.1 + bolt * sky);
   }
 
   vec2 moteP = p * vec2(1.5, 2.0) - vec2(uTime * 0.18, uTime * 0.08);

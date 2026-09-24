@@ -1,6 +1,6 @@
 import type { Rgb } from "./palette";
 
-export const MOON_RADIUS = 4.56;
+export const MOON_RADIUS = 4.2;
 export const MOON_MARIA = [
 	[-1.5, -1.1, 1.35, 1.7],
 	[0.65, -1.65, 1.1, 0.85],

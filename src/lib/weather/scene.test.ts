@@ -5,7 +5,6 @@ import { birdsAllowed } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
 import {
 	createLightningTimeline,
-	DOUBLE_LIGHTNING_DURATION,
 	LIGHTNING_DURATION,
 	lightningGap,
 } from "./lightning";
@@ -231,23 +230,18 @@ describe("weather raster and elapsed time", () => {
 		let doubles = 0;
 		for (const gap of gaps) {
 			start += gap;
-			expect(timeline(start + timeline(start).duration / 2).flash).toBeCloseTo(
-				1,
-			);
-			const duration = timeline(start).duration;
-			expect([LIGHTNING_DURATION, DOUBLE_LIGHTNING_DURATION]).toContain(
-				duration,
-			);
-			if (duration === LIGHTNING_DURATION)
-				expect(timeline(start + 0.18).flash).toBe(0);
-			else expect(timeline(start + 0.22).flash).toBeGreaterThan(0);
+			const event = timeline(start);
+			expect(timeline(start + event.duration / 2).flash).toBeCloseTo(1);
+			expect(event.duration).toBe(LIGHTNING_DURATION);
+			if (!event.double)
+				expect(timeline(start + LIGHTNING_DURATION + 0.001).flash).toBe(0);
 			expect(timeline(start + 0.47).flash).toBe(0);
 			const first = timeline(start + LIGHTNING_DURATION / 2);
-			const second = timeline(start + first.delay + first.duration / 2);
-			if (second.cool === 1 && second.flash > 0) {
+			const second = timeline(start + first.delay + LIGHTNING_DURATION / 2);
+			if (event.double) {
 				doubles++;
-				expect(second.flash).toBeGreaterThanOrEqual(0.4);
-				expect(second.flash).toBeLessThanOrEqual(0.55);
+				expect(second.flash).toBeGreaterThanOrEqual(0.46);
+				expect(second.flash).toBeLessThanOrEqual(0.54);
 				expect(second.origin - first.origin).toBeGreaterThanOrEqual(4);
 				expect(second.cool).toBe(1);
 				expect(first.cool).toBe(0);
@@ -303,7 +297,15 @@ describe("weather seam regression", () => {
 			[960, (t) => baleMotion(t).angle],
 			[3, (t) => rapidMotion(t).foam],
 			[3, (t) => rapidMotion(t).x * rapidMotion(t).foam],
-			[12, (t) => placeMotion(t).sway],
+			[
+				12,
+				(t) => {
+					const motion = placeMotion(t);
+					return (
+						motion.gust * Math.sin(motion.gustPhase + 1.2 * Math.sin(t * 0.11))
+					);
+				},
+			],
 			[12, (t) => placeMotion(t).shimmer],
 			[13, (t) => bubbleMotion(t).rise],
 			[13, (t) => bubbleMotion(t).ring],
@@ -326,9 +328,12 @@ describe("weather seam regression", () => {
 			expect(Math.abs(incoming - outgoing)).toBeLessThan(0.001);
 		}
 		for (const reset of [2, 14, 26]) {
+			const before = placeMotion(reset - epsilon);
+			const after = placeMotion(reset + epsilon);
 			expect(
 				Math.abs(
-					placeMotion(reset - epsilon).sway - placeMotion(reset + epsilon).sway,
+					before.gust * Math.sin(before.gustPhase) -
+						after.gust * Math.sin(after.gustPhase),
 				),
 			).toBeLessThan(0.001);
 		}
@@ -384,47 +389,7 @@ describe("weather seam regression", () => {
 			}
 		}
 	});
-	test("one tiny climber retains limbs, head and contrasting shirt", () => {
-		const scale = 0.48;
-		for (const [dx, dy] of [
-			[1.2, -3.7],
-			[-1.2, 1.4],
-			[1.2, 1.8],
-		] as const) {
-			const pixel = material(
-				"bend-plateau",
-				0,
-				103 + dx * scale,
-				25 + dy * scale,
-			);
-			expect(Math.max(...(pixel ?? []))).toBeLessThan(45);
-		}
-		expect(
-			material("bend-plateau", 0, 103 + 0.25 * scale, 25 - 2.3 * scale)?.[0],
-		).toBeGreaterThan(150);
-		expect(
-			material("bend-plateau", 0, 103 - 0.1 * scale, 25 - scale)?.[0],
-		).toBeGreaterThan(230);
-		expect(material("bend-plateau", 0, 78, 20, 0)).toEqual(
-			material("bend-plateau", 0, 78, 20, 90),
-		);
-	});
-	test("climber rope reaches a fixed base throughout the ascent", () => {
-		for (const time of [0, 60, 600]) {
-			const waist = 25 - placeMotion(time).climb;
-			for (let y = waist + 2; y < 34.5; y += 0.5) {
-				const x =
-					103.15 + 0.16 * Math.sin(((y - waist) / (35 - waist)) * Math.PI);
-				expect(material("bend-plateau", 0, x, y, time)?.[0]).toBeGreaterThan(
-					200,
-				);
-			}
-			expect(
-				Math.max(...(material("bend-plateau", 0, 103.15, 35, time) ?? [])),
-			).toBeLessThan(50);
-		}
-	});
-	test("climber, orchard, river and coast motion stay inside their upload patches", () => {
+	test("orchard, river and coast motion stay inside their upload patches", () => {
 		for (const [place, layers] of [
 			["bend-plateau", [0, 1]],
 			["cascade-forest", [2]],

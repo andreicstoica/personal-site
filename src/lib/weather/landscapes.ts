@@ -18,6 +18,17 @@ export const SKY_ROWS: Record<Place, number> = {
 };
 export const DETAIL = 4;
 const TAU = Math.PI * 2;
+const PAINTED_BANDS: readonly Rgb[] = [
+	[151, 68, 48],
+	[184, 88, 50],
+	[204, 133, 61],
+	[221, 169, 91],
+	[225, 194, 142],
+	[123, 116, 84],
+	[91, 83, 67],
+	[195, 119, 57],
+	[112, 99, 72],
+];
 
 function ridge(x: number, base: number, amplitude: number, phase = 0): number {
 	return (
@@ -76,6 +87,12 @@ function texture(color: Rgb, x: number, y: number, strength = 0.05): Rgb {
 		color[1] * (1 + grain),
 		color[2] * (1 + grain),
 	];
+}
+
+function paintedCrest(x: number, layer: number): number {
+	if (layer === 0) return ridge(x, 23.5, 3.4, 0.45);
+	if (layer === 1) return ridge(x, 33, 4, 2);
+	return ridge(x, 42, 3, 4);
 }
 
 type Point = readonly [number, number];
@@ -283,12 +300,20 @@ export function material(
 				}
 				for (let depth = 0; depth < 3; depth++) {
 					const ground = [39.3, 42.3, 45.7][depth] ?? 45.7;
-					const scale = 0.6 + depth * 0.32;
-					if (y < ground - 4.5 * scale || y > ground) continue;
 					for (let row = -3.5; row <= 3.5; row++) {
-						const cx = 81 + row * (5.5 + depth * 4);
+						const treeSeed = (row + 3.5) * 97 + depth * 331;
+						const scale =
+							(0.6 + depth * 0.32) * (0.96 + hash(treeSeed + 19) * 0.08);
+						if (y < ground - 4.5 * scale || y > ground) continue;
+						const jitter = (hash(treeSeed + 7) - 0.5) * 0.42;
+						const cx = 81 + row * (5.5 + depth * 4) + jitter;
 						if (Math.abs(x - cx) > 4.5) continue;
-						const sway = motion.sway * (0.7 + depth * 0.15);
+						const gustLead = Math.sin(time * 0.11);
+						const sway =
+							motion.gust *
+							Math.sin(motion.gustPhase + row * 0.34 * gustLead) *
+							0.85 *
+							(0.7 + depth * 0.15);
 						const height = Math.max(0, (ground - y) / (4.5 * scale));
 						const branch = Math.sin((x - cx) * 1.8 + height * 5);
 						const dx =
@@ -346,24 +371,79 @@ export function material(
 			break;
 		}
 		case "painted-hills": {
-			const crest = ridge(x, 24 + layer * 9, 5 - layer, layer * 2);
-			if (y >= crest) {
-				const strata = (y - crest) * 0.9 + Math.sin((x / 160) * TAU * 5) * 0.3;
-				const bands: Rgb[] = [
-					[166, 80, 52],
-					[207, 151, 79],
-					[219, 182, 126],
-					[106, 74, 61],
-				];
-				const index = Math.floor(strata / 2) % bands.length;
+			const crest = paintedCrest(x, layer);
+			const depth = y - crest;
+			if (layer === 0 && depth >= 0) {
+				const distantFold = noise(x * 0.45, y * 0.3, 52);
+				color = mix([92, 111, 123], [142, 143, 128], 0.28 + distantFold * 0.3);
+				color = mix(color, [177, 181, 171], smoothstep(0, 18, depth) * 0.18);
+			} else if (layer === 1 && depth >= 0) {
+				const contour =
+					depth * (1.12 + 0.07 * Math.sin(x * 0.08 + 0.6)) +
+					Math.sin(x * 0.2 + depth * 0.11) * 0.2;
+				const bandPosition = contour / 0.78;
+				const bandNumber = Math.floor(bandPosition);
+				const bandIndex =
+					((bandNumber % PAINTED_BANDS.length) + PAINTED_BANDS.length) %
+					PAINTED_BANDS.length;
+				const nextBand = (bandIndex + 1) % PAINTED_BANDS.length;
+				const bandBlend = smoothstep(0.78, 1, bandPosition - bandNumber);
 				color = mix(
-					bands[index] ?? [166, 80, 52],
-					bands[(index + 1) % bands.length] ?? [166, 80, 52],
-					((strata / 2) % 1) * 0.35,
+					PAINTED_BANDS[bandIndex] ?? [151, 68, 48],
+					PAINTED_BANDS[nextBand] ?? [184, 88, 50],
+					bandBlend,
 				);
-				color = mix(color, [58, 53, 43], layer * 0.1);
-				if (layer === 2 && noise(x, y, 240) > 0.74)
-					color = mix(color, [54, 49, 33], 0.4);
+				const subBand = 0.5 + 0.5 * Math.sin(contour * 17 + x * 0.045);
+				color = mix(color, [91, 73, 58], subBand * 0.08);
+
+				const rillCell = Math.floor((x + 1.6) / 3.2);
+				const rillSeed = rillCell * 149 + 41;
+				const rillCenter =
+					rillCell * 3.2 +
+					1.6 +
+					(hash(rillSeed) - 0.5) * 1.15 +
+					Math.sin(depth * 0.3 + hash(rillSeed + 11) * TAU) * 0.25;
+				const rillDistance = x - rillCenter;
+				const rillFade = smoothstep(0.55, 3.2, depth);
+				const rillShadow =
+					1 - smoothstep(0.08, 0.34, Math.abs(rillDistance - 0.1));
+				const rillRim =
+					1 - smoothstep(0.06, 0.24, Math.abs(rillDistance + 0.25));
+				color = mix(color, [61, 56, 51], rillShadow * rillFade * 0.32);
+				color = mix(color, [229, 196, 139], rillRim * rillFade * 0.11);
+
+				const fineCell = Math.floor((x + 0.8) / 1.6);
+				const fineSeed = fineCell * 211 + 83;
+				const fineCenter =
+					fineCell * 1.6 +
+					0.8 +
+					(hash(fineSeed) - 0.5) * 0.48 +
+					Math.sin(depth * 0.42 + hash(fineSeed + 5) * TAU) * 0.13;
+				const fineRill = 1 - smoothstep(0.035, 0.16, Math.abs(x - fineCenter));
+				color = mix(color, [74, 64, 54], fineRill * rillFade * 0.16);
+			} else if (layer === 2) {
+				const bladeCell = Math.floor(x * 1.6);
+				const bladeX = (bladeCell + 0.2 + hash(bladeCell * 73) * 0.6) / 1.6;
+				const bladeHeight = 0.25 + hash(bladeCell * 97 + 17) * 1.05;
+				const blade = Math.abs(x - bladeX) < 0.055 && y >= crest - bladeHeight;
+				if (depth >= 0 || blade) {
+					color = mix(
+						[124, 105, 64],
+						[190, 157, 83],
+						0.28 + noise(x * 0.6, y * 2.2, 96) * 0.52,
+					);
+					if (blade) color = mix(color, [218, 182, 103], 0.42);
+				}
+				const shrubCell = Math.floor((x + 4) / 16);
+				const shrubX = shrubCell * 16 - 4 + 4 + hash(shrubCell * 107 + 23) * 8;
+				const shrubGround = paintedCrest(shrubX, 2);
+				const shrubDx = x - shrubX;
+				const shrubDy = y - shrubGround + 0.38;
+				if (
+					(shrubDx / 1.55) ** 2 + (shrubDy / 0.85) ** 2 < 1 &&
+					noise(x * 1.8, y * 2.4, 180) > 0.34
+				)
+					color = mix([112, 102, 51], [213, 173, 58], noise(x, y, 220));
 			}
 			break;
 		}
@@ -722,7 +802,7 @@ export function material(
 		for (const shift of [0, 235]) {
 			const bale = baleMotion(time + shift);
 			const cx = bale.x;
-			const ground = ridge(cx, 33, 4, 2) + 1;
+			const ground = paintedCrest(cx, 1) + 1;
 			const dx = x - cx,
 				dy = y - ground + 1.1 + Math.sin(cx * 1.7) * 0.12;
 			if ((dx / 1.9) ** 2 + ((y - ground) / 0.35) ** 2 < 1)
@@ -735,60 +815,6 @@ export function material(
 					0.5 + 0.3 * Math.sin(radius * 12 + Math.atan2(dy, dx) - bale.angle),
 				);
 		}
-	}
-	if (place === "bend-plateau" && layer === 0 && color) {
-		const cx = 103,
-			base = 25,
-			scale = 0.48;
-		const waist = base - motion.climb;
-		const ropeEnd = 35;
-		if (
-			y >= waist &&
-			y <= ropeEnd &&
-			Math.abs(
-				x -
-					cx -
-					0.15 -
-					0.16 * Math.sin(((y - waist) / (ropeEnd - waist)) * Math.PI),
-			) < 0.13
-		)
-			color = [221, 210, 170];
-		if (Math.hypot(x - cx - 0.15, y - ropeEnd) < 0.25) color = [33, 39, 46];
-		const dx = (x - cx) / scale,
-			dy = (y - waist) / scale;
-		if (Math.abs(dx) > 2 || dy < -4.2 || dy > 3) return texture(color, x, y);
-		const reach = Math.sin(time * 0.12) * 0.2;
-		const limb = (
-			ax: number,
-			ay: number,
-			bx: number,
-			by: number,
-			width: number,
-		) => {
-			const vx = bx - ax,
-				vy = by - ay;
-			const t = Math.max(
-				0,
-				Math.min(1, ((dx - ax) * vx + (dy - ay) * vy) / (vx * vx + vy * vy)),
-			);
-			return Math.hypot(dx - ax - t * vx, dy - ay - t * vy) < width;
-		};
-		if (
-			Math.hypot(dx - 0.25, dy + 2.3) < 0.48 ||
-			limb(0, -1.4, -0.3, 0.5, 0.48) ||
-			limb(0.1, -1.3, 1.1, -2.2, 0.25) ||
-			limb(1.1, -2.2, 1.2 + reach, -3.8, 0.24) ||
-			limb(-0.2, -1.1, -1.25, -0.6, 0.25) ||
-			limb(-1.25, -0.6, -1.5, -1.5, 0.24) ||
-			limb(-0.3, 0.4, -1.25, 1.4, 0.3) ||
-			limb(-1.25, 1.4, -0.8, 2.6, 0.28) ||
-			limb(-0.1, 0.4, 1.3, 0.9, 0.3) ||
-			limb(1.3, 0.9, 1.2, 1.8, 0.28)
-		)
-			color = [24, 30, 39];
-		if (limb(-0.05, -1.25, -0.25, -0.05, 0.33)) color = [247, 210, 106];
-		if (Math.hypot(dx - 0.25, dy + 2.3) < 0.32) color = [171, 112, 77];
-		if (Math.hypot(dx + 0.65, dy - 0.2) < 0.26) color = [219, 206, 172];
 	}
 	return color ? texture(color, x, y) : null;
 }

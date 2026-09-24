@@ -27,14 +27,14 @@ export function placeMotion(time: number) {
 	const gust = gustAge < 4 ? Math.sin((gustAge * Math.PI) / 4) ** 2 : 0;
 	const bale = baleMotion(time);
 	return {
-		sway: gust * Math.sin(gustAge * 2) * 0.85,
+		gust,
+		gustPhase: gustAge * 2,
 		shimmer: gust * 0.13,
 		surf: Math.sin(time * 0.73) * 1.15 + Math.sin(time * 0.31) * 0.45,
 		baleX: bale.x,
 		baleAngle: bale.angle,
 		crabX: 43 + 6 * Math.sin((time * 0.24 - Math.sin(time * 0.24)) * 0.35),
 		anemone: 0.85 + 0.15 * Math.sin(time * 0.43),
-		climb: 7 * (1 - Math.exp(-time / 120)),
 	};
 }
 

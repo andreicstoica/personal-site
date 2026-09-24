@@ -71,7 +71,7 @@ export function renderPlate(
 			const glow =
 				Math.exp(-((distance / (radius * 3)) ** 2)) *
 				visibility *
-				(night ? 0.045 : 0.13 + golden * 0.13);
+				(night ? 0.045 : 0.16 + golden * 0.13);
 			let color: Rgb = mix(
 				[
 					(sky[0] + sunColor[0] * glow) * 255,
@@ -79,7 +79,7 @@ export function renderPlate(
 					(sky[2] + sunColor[2] * glow) * 255,
 				],
 				[sunColor[0] * 255, sunColor[1] * 255, sunColor[2] * 255],
-				core * visibility * (night ? 0 : 0.85),
+				core * visibility * (night ? 0 : 0.9),
 			);
 			if (night) {
 				const moon = moonColor(
@@ -158,10 +158,7 @@ export function renderMotionPatches(place: Place, time: number) {
 			[2, 34, 41, 22, 7],
 		],
 		"painted-hills": [[1, -4, 25, 168, 15]],
-		"bend-plateau": [
-			[0, 101, 15, 4, 21],
-			[1, 27, 33, 102, 11],
-		],
+		"bend-plateau": [[1, 27, 33, 102, 11]],
 	};
 	return regions[place].map(([layer, left, top, w, h]) => {
 		const width = w * DETAIL,
