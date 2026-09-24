@@ -179,7 +179,7 @@ Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"
 - The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
 - `transition:persist="weather-banner"` keeps it mounted while the page body swaps
 - `src/pages/api/weather.ts` reads `x-vercel-ip-*` headers, calls Open-Meteo with a 4s timeout, and answers **503** when coordinates are missing or upstream fails — the client then paints a clear-sky fallback
-- `WeatherLab.svelte` is a dev/preview-only override panel, gated by `showWeatherLab()` in `src/lib/weather/lab.ts`
+- `WeatherLab.svelte` is a dev/preview-only override panel, gated by `showWeatherLab()` in `src/lib/weather/lab.ts`. Its **localize** button clears every override, rolls a fresh random backdrop (persisted via `savePlace`), and re-fetches the live IP-synced reading — what a real visitor sees, minus the once-per-tab place roll
 
 ### Usage
 
@@ -194,13 +194,17 @@ Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"
 The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once in `SiteLayout.astro` with `client:load`, so it is present on every page.
 
 - Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
-- Collapsed: `.guide-launch` button in the bottom corner. Expanded: `.guide-panel` with header, thread, and input form
+- Trigger: `.guide-launch` button in the bottom corner. `.guide-panel` (header, thread, input form) is always mounted and gated by CSS, so `aria-controls="guide-panel"` is constant
+- Below 768px the panel is a floating popover: `display` toggled when opened, no enter/exit motion
+- From 768px up it is a full-height drawer docked to the viewport's right edge (`min(24rem, 100vw)`), overlaying the white gutter without shifting content. Closed: `translateX(100%)` + `visibility: hidden`. Surface is `--color-bg-sunken` (reads as a "lower state" against the page) with the `--elevation-drawer` left-edge shadow — light: hairline plus soft ambient; dark: one white hairline ring
+- Drawer motion uses the shared tokens: open `--duration-drawer` (280ms), close `--duration-ui` (180ms), both `--ease-out`; `visibility` flips are delayed by the matching duration so the exit slide can play; `prefers-reduced-motion` disables both; a guide restored from `sessionStorage` or `?chat=1` appears in place without sliding
+- On desktop the launcher hides only after the drawer has arrived (280ms delay) so no bare corner shows mid-slide; the panel outranks it in the dock's stacking order (`z-index: 2`)
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
-- Cold start shows three starter prompts instead of an empty thread
+- An empty thread shows a one-line hint, or the offline contact copy when the inference server is down
 
 ### Interaction and accessibility
 
-- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel
+- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel, after a tick so the launcher is visible and focusable again on desktop
 - On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
 - The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
 - Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`; source chips use `--color-text-secondary` (`--color-text-muted` cannot reach 4.5:1 on a light surface)

@@ -31,6 +31,7 @@
 	/* Background colors */
 	--color-bg-primary: #fefefe;
 	--color-bg-secondary: #c4c4c4;
+	--color-bg-sunken: #f5f5f5;
 
 	/* Tag Colors */
 	--tag-work: #3848ff;
@@ -77,6 +78,11 @@
 	--duration-ui: 180ms;
 	--duration-drawer: 280ms;
 	--duration-media: 400ms;
+
+	/* Elevation */
+	--elevation-drawer:
+		-1px 0 0 rgb(0 0 0 / 0.05),
+		-12px 0 32px -16px rgb(0 0 0 / 0.22);
 }
 
 .nav-name {
@@ -127,6 +133,10 @@
 		--color-bg-primary: #272727;
 		--color-bg-secondary: #333333;
 		--color-bg-tertiary: #404040;
+		--color-bg-sunken: #1f1f1f;
+
+		/* Depth flattens to a single ring against dark surfaces */
+		--elevation-drawer: -1px 0 0 rgb(255 255 255 / 0.1);
 
 		/* ASCII Art Colors - Dark Mode */
 		--color-ascii-dark: #333333;

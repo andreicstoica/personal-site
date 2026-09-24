@@ -67,7 +67,7 @@ Rule: never hardcode light-mode colors in component code. Always use tokens.
 
 - Global `:focus-visible` ring: `2px solid var(--color-primary)`, `offset: 2px`
 - Modal traps focus: `dialogRef.focus()` on open
-- Guide panel closes on Escape, the close button, or an outside click, and hands focus back to `.guide-launch` when focus was inside (see [components.md](./components.md))
+- Guide panel closes on Escape, the close button, or an outside click, and hands focus back to `.guide-launch` when focus was inside — after a tick, so the launcher is visible and focusable again on desktop (see [components.md](./components.md))
 
 ## Reduced motion
 
