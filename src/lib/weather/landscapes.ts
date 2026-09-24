@@ -91,8 +91,8 @@ function texture(color: Rgb, x: number, y: number, strength = 0.05): Rgb {
 
 function paintedCrest(x: number, layer: number): number {
 	if (layer === 0) return ridge(x, 23.5, 3.4, 0.45);
-	if (layer === 1) return ridge(x, 33, 4, 2);
-	return ridge(x, 42, 3, 4);
+	if (layer === 1) return ridge(x, 30.5, 4, 2);
+	return ridge(x, 44, 3, 4);
 }
 
 type Point = readonly [number, number];

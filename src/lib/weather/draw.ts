@@ -157,7 +157,7 @@ export function renderMotionPatches(place: Place, time: number) {
 			[1, -4, 28, 168, 9],
 			[2, 34, 41, 22, 7],
 		],
-		"painted-hills": [[1, -4, 25, 168, 15]],
+		"painted-hills": [[1, -4, 23, 168, 17]],
 		"bend-plateau": [[1, 27, 33, 102, 11]],
 	};
 	return regions[place].map(([layer, left, top, w, h]) => {
