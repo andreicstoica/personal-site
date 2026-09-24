@@ -19,12 +19,12 @@ const groups = [
   {
     groups.map((group) => (
       <div class="mb-6">
-        <h3 class="text-md font-semibold text-[--color-text-primary] mb-2">
+        <h3 class="font-semibold mb-2">
           {group.title}
         </h3>
         <ul class="list-disc list-inside space-y-1">
           {group.items.map((item) => (
-            <li class="text-md text-[--color-text-secondary]">{item}</li>
+            <li>{item}</li>
           ))}
         </ul>
       </div>

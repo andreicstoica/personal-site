@@ -10,7 +10,8 @@ export function displayFontStyle(name: string): string {
 
 export function experienceTypeStyles(type: ExperienceType): string {
 	const palette = experienceTypePalette(type);
-	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
+	// line-height 1 keeps cloned wrap fragments overlapping instead of leaving a gap.
+	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; line-height: 1; display: inline; padding: 0.2rem 0.1rem;`;
 }
 
 export function experienceNameStyle(

@@ -471,20 +471,6 @@ a:hover {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.btn-accent-custom {
-	background: var(--tag-school);
-	color: var(--color-text-primary) !important;
-	font-weight: 500;
-	transition: all 0.2s ease;
-}
-
-.btn-accent-custom:hover {
-	background: var(--tag-school);
-	filter: brightness(0.9);
-	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 /* Name sits on the page-background bar; keep it off the global green link color. */
 .nav-name,
 .nav-name:hover {

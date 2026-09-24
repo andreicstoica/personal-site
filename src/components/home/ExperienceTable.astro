@@ -10,20 +10,20 @@ const allTypes = EXPERIENCE_TYPES.filter((type) =>
 const filterCss = experienceFilterCss();
 ---
 
-<section id="experience-table" class="w-full text-(color-text-primary) dark:text-(color-text-inverse)" data-filter="">
-  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10" >
-    <div class="col-span-1 text-sm ">Experience</div>
-    <div class="col-span-2 text-sm ">Role</div>
-    <div class="col-span-2 text-sm ">
-      <select id="typeFilter" class="experience-filter w-full border max-w-30 border-gray-300 dark:border-gray-600 px-2 text-sm bg-transparent uppercase">
+<section id="experience-table" class="w-full" data-filter="">
+  <div class="hidden lg:grid lg:grid-cols-10 gap-2 pb-3 font-semibold text-sm uppercase tracking-wider sticky top-0 bg-[var(--color-bg-primary)] z-10">
+    <div class="col-span-1">Experience</div>
+    <div class="col-span-2">Role</div>
+    <div class="col-span-2">
+      <select id="typeFilter" class="experience-filter w-full border max-w-30 border-[var(--color-bg-secondary)] px-2 bg-transparent uppercase">
         <option value="">all</option>
         {allTypes.map(type => (
           <option value={type}>{type}</option>
         ))}
       </select>
     </div>
-    <div class="col-span-1 text-sm text-end mr-2">Date</div>
-    <div class="col-span-4 text-sm">Media</div>
+    <div class="col-span-1 text-end mr-2">Date</div>
+    <div class="col-span-4">Media</div>
   </div>
 
   <div id="experience-rows" class="experience-rows">

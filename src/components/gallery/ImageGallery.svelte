@@ -143,12 +143,6 @@
           class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
           aria-label={`Open ${experienceName} image`}
           onclick={(event) => openImage(image, event.currentTarget)}
-          onkeydown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              openImage(image, event.currentTarget);
-            }
-          }}
         >
           {#if image.kind === "video"}
             <video
@@ -179,6 +173,7 @@
 </div>
 
 {#if selectedImage}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
     bind:this={dialogRef}
     use:portal
@@ -188,9 +183,6 @@
     aria-label={`${experienceName} image`}
     tabindex="-1"
     onclick={onStageClick}
-    onkeydown={(e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
-    }}
   >
     <div class="image-inspect-stage">
       {#if selectedImage.kind === "video"}
@@ -212,12 +204,6 @@
           type="button"
           class="image-inspect-trigger"
           onclick={closeModal}
-          onkeydown={(e: KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              closeModal();
-            }
-          }}
         >
           <img
             bind:this={mediaRef}

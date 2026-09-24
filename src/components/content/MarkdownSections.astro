@@ -19,19 +19,13 @@ const sectionsClass =
 ---
 
 <div class="flex flex-col gap-2">
-	{
-		description && (
-			<section>
-				<p class="text-lead max-w-2xl mb-3">{description}</p>
-			</section>
-		)
-	}
+	{description && <p class="text-lead max-w-2xl mb-3">{description}</p>}
 
 	<div class={sectionsClass}>
 		{
 			parsedContent.map((section) => (
 				<section>
-					<h2 class="text-xl font-medium mb-3 text-[--color-text-primary] capitalize">
+					<h2 class="text-xl font-medium mb-3 capitalize">
 						{section.title}
 					</h2>
 					<div class="space-y-2">

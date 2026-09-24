@@ -446,7 +446,7 @@
       <button
         type="submit"
         disabled={sending || input.trim().length === 0}
-        class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm border border-[var(--color-primary)] bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
+        class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
       >
         Send
       </button>
