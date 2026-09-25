@@ -39,7 +39,7 @@ Rules:
 
 Defined once in `global.css` — compose, don't re-style:
 
-- `.text-lead` — the one lead paragraph per page: 17px / 1.65, `text-wrap: pretty`. Where the measure needs capping, the call site adds `max-w-2xl` itself (`MarkdownSections.astro:22`, `fitness.astro:19`) — the class carries no width. The home hero (`Home.astro:20,21`) deliberately omits it: its two columns each set their own measure inside `.site-column`. The cap is the measure, not a second container — don't narrow the container instead.
+- `.text-lead` — the one lead paragraph per page: 17px / 1.65, `text-wrap: pretty`. Where the measure needs capping, the call site adds `max-w-2xl` itself (`MarkdownSections.astro:22`, `fitness.astro:19`) — the class carries no width. The home hero (`Home.astro:28,29`) deliberately omits it: its two columns each set their own measure inside `.site-column`. The cap is the measure, not a second container — don't narrow the container instead.
 - `.page-title` — 24px / 700 page heading (`ContentDocument.astro:10`).
 - `.text-muted` — **maps to `--color-text-secondary` (5.7:1), not the `--color-text-muted` token (2.8:1)** (`global.css:210`). The name collision is deliberate history; the class is safe for text, the token is not.
 - Markdown body styles (`.markdown-*`, `.markdown-body`) own all rich-text sizing inside content — never inline font utilities into markdown-rendered HTML.
