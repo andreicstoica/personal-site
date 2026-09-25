@@ -5,8 +5,8 @@
 | Token / face | Value | Where it's allowed |
 | --- | --- | --- |
 | `--font-sans` | IBM Plex Sans, system-ui | Everything. `html` sets it (`global.css:162`). |
-| `--font-mono` | IBM Plex Mono | Dates (`ExperienceRow.astro:55,91`), timestamps (`SiteFooter.astro:54`). Never body copy. |
-| `--font-serif` | IBM Plex Serif | Experience tag chips only (`ExperienceRow.astro:47`); plus the `src/proto` scratch pages. |
+| `--font-mono` | IBM Plex Mono | Dates (`ExperienceRow.astro:56,92`), timestamps (`SiteFooter.astro:54`). Never body copy. |
+| `--font-serif` | IBM Plex Serif | Experience tag chips only (`ExperienceRow.astro:48`); plus the `src/proto` scratch pages. |
 | LumberSans | `/fonts/LumberSans.ttf` (local `@font-face`, `swap`) | Experience names, and only through `experienceNameStyle()` / `displayFontStyle()` (`experienceUi.ts:8-10`). Never body text or UI labels — it's an all-caps carved display face; a paragraph in it is unreadable. |
 
 Because the unlayered `:root` overrides Tailwind's theme (see [tokens.md](./tokens.md)), the utilities `font-sans` / `font-mono` / `font-serif` all resolve to these Plex faces, not Tailwind's defaults.
@@ -28,7 +28,7 @@ Rules:
 
 - **Body is 16px, labels/captions 14px, never below 12px.** The single exception: guide source chips are 11px (`FloatingChat.svelte:401,411,415`) — do not create new 11px text.
 - **Text inputs are 16px on touch, 14px on fine pointers** (`FloatingChat.svelte:513,570`). Below 16px iOS Safari auto-zooms on focus.
-- `text-[.92rem]` (14.7px, `ExperienceRow.astro:40,55`) is a legacy literal — don't copy it; use `text-sm`/`text-base` in new code.
+- `text-[.92rem]` (14.7px, `ExperienceRow.astro:41,56`) is a legacy literal — don't copy it; use `text-sm`/`text-base` in new code.
 
 ## Leading and tracking
 

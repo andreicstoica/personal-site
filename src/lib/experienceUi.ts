@@ -10,8 +10,8 @@ export function displayFontStyle(name: string): string {
 
 export function experienceTypeStyles(type: ExperienceType): string {
 	const palette = experienceTypePalette(type);
-	// inline-block paints a wrapped name as one continuous box instead of cloned fragments, and vertical-align: top starts that box at the cell's line-box top — a chip's painted height is font ascent, so this is what keeps name and tag chips level across faces (docs/usage.md).
-	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; line-height: 1; display: inline-block; vertical-align: top; padding: 0.2rem 0.1rem;`;
+	// line-height 1 keeps cloned wrap fragments overlapping instead of leaving a gap — but the wrapping cell needs `leading-none` too, or the inherited 1.55 strut wins and reopens it (docs/usage.md).
+	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; line-height: 1; display: inline; padding: 0.2rem 0.1rem;`;
 }
 
 export function experienceNameStyle(

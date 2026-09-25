@@ -3,6 +3,7 @@ import {
 	displayFontStyle,
 	experienceNameStyle,
 	formatDateRange,
+	usesDisplayFont,
 } from "../../lib/experienceUi";
 import type { Experience } from "../../lib/types";
 import MediaGallery from "../gallery/MediaGallery.astro";
@@ -13,11 +14,11 @@ interface Props {
 }
 
 const { experience } = Astro.props;
-// Chips are inline-block and top-aligned to this cell's line box, so the painted
-// box starts here regardless of the face's ascent — name and tag chips stay level,
-// and a wrapped name paints as one continuous box. leading-none keeps the cell's
-// own line box short; mt-1 is the single optical knob for both cells.
-const chipOffset = "mt-1";
+// The chip is inline, so its painted top sits at its face's ascent above the
+// baseline — Plex Sans, Plex Serif and LumberSans each need their own drop to
+// land flush under the row's separator. leading-none keeps the cell's strut
+// short so wrapped fragments stack with no gap between them.
+const chipOffset = usesDisplayFont(experience.name) ? "mt-0" : "mt-0.75";
 ---
 
 <div
@@ -44,7 +45,7 @@ const chipOffset = "mt-1";
 
         <div class={`col-span-2 leading-none ${chipOffset}`}>
           <span
-            class="font-serif text-sm leading-none inline-block align-top bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
+            class="font-serif text-sm leading-none bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
             style={displayFontStyle(experience.name)}
           >
             {experience.tags.join(", ")}
