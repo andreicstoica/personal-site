@@ -588,19 +588,20 @@ html.image-inspect-open [data-page-scroll] {
 	transition: opacity var(--duration-ui) var(--ease-out);
 }
 
+/*
+ * The media morphs from the thumbnail it was clicked from, so the start
+ * transform is a FLIP written by ImageGallery.svelte before the first paint —
+ * JS owns the start value, CSS owns the travel. Origin is 0 0 because the start
+ * transform carries its own translation; travel is on-screen movement, hence
+ * ease-in-out rather than the backdrop's ease-out.
+ */
 .modal-backdrop .image-inspect-media {
-	transform: scale(1);
-	transform-origin: var(--inspect-origin, center);
-	transition: transform var(--duration-drawer) var(--ease-out);
-
-	@starting-style {
-		transform: scale(0.96);
-	}
+	transform-origin: 0 0;
+	transition: transform var(--duration-drawer) var(--ease-in-out);
 }
 
 .modal-backdrop.closing .image-inspect-media {
-	transform: scale(0.96);
-	transition: transform var(--duration-ui) var(--ease-out);
+	transition: transform var(--duration-ui) var(--ease-in-out);
 }
 
 /*

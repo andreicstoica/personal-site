@@ -18,7 +18,7 @@
   let dialogRef = $state<HTMLDivElement | null>(null);
   let mediaRef = $state<HTMLElement | null>(null);
   let triggerEl = $state<HTMLButtonElement | null>(null);
-  let triggerPoint = $state<{ x: number; y: number } | null>(null);
+  let triggerRect: DOMRect | null = null;
   let stripVideo = $state<HTMLVideoElement | null>(null);
   let videoStartAt = 0;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -39,6 +39,19 @@
     }
   })();
 
+  /**
+   * Thumb rect → media box, both viewport coords, origin 0 0. Null when either
+   * has no geometry yet, so an unsized box never produces a bogus morph.
+   */
+  function flipStartFor(rect: DOMRect, box: DOMRect): string | null {
+    if (rect.width < 1 || box.width < 1 || box.height < 1) return null;
+    const scale = rect.width / box.width;
+    return `translate(${rect.left - box.left}px, ${rect.top - box.top}px) scale(${scale})`;
+  }
+
+  /* Start transform from the open effect; reused verbatim on close. */
+  let flipStart = "";
+
   function openImage(image: GalleryMedia, trigger: EventTarget | null) {
     if (!(trigger instanceof HTMLButtonElement)) return;
     if (isClosing) {
@@ -48,8 +61,8 @@
       stripVideo?.play().catch(() => {});
     }
     triggerEl = trigger;
-    const rect = trigger.getBoundingClientRect();
-    triggerPoint = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    // Written before `selectedImage` below, so the open effect reads it fresh.
+    triggerRect = trigger.getBoundingClientRect();
     const thumbVideo = trigger.querySelector("video");
     stripVideo = thumbVideo;
     videoStartAt = thumbVideo?.currentTime ?? 0;
@@ -59,8 +72,11 @@
 
   const closeModal = () => {
     if (!selectedImage || isClosing) return;
-    isClosing = true;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    isClosing = true;
+    // Retarget the open transition instead of snapping: with the transform still
+    // set, changing it interrupts and eases back to the thumbnail it came from.
+    if (!reduced && flipStart && mediaRef) mediaRef.style.transform = flipStart;
     closeTimer = setTimeout(() => {
       closeTimer = undefined;
       selectedImage = null;
@@ -70,7 +86,8 @@
         stripVideo?.play().catch(() => {});
         stripVideo = null;
         triggerEl = null;
-        triggerPoint = null;
+        triggerRect = null;
+        flipStart = "";
       });
     }, reduced ? 0 : modalCloseMs);
   };
@@ -121,13 +138,28 @@
 
   $effect(() => {
     const media = mediaRef;
-    const point = triggerPoint;
-    if (!selectedImage || !media || !point) return;
-    const box = media.getBoundingClientRect();
-    media.style.setProperty(
-      "--inspect-origin",
-      `${point.x - box.left}px ${point.y - box.top}px`,
-    );
+    const rect = triggerRect;
+    if (!selectedImage || !media || !rect) return;
+    // Video has no intrinsic geometry until its metadata lands, so it fades in
+    // with the backdrop instead of morphing.
+    if (!(media instanceof HTMLImageElement)) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const start = flipStartFor(rect, media.getBoundingClientRect());
+    flipStart = start ?? "";
+    if (!start) return;
+
+    // Commit the start frame with transitions off. Measuring above forces the
+    // style recalc that would otherwise start the transition from a state this
+    // effect has not written yet — that mid-flight jump was the stutter.
+    media.style.transition = "none";
+    media.style.transform = start;
+    media.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      if (mediaRef !== media || isClosing) return;
+      media.style.transition = "";
+      media.style.transform = "";
+    });
   });
 </script>
 
@@ -210,6 +242,8 @@
             src={selectedImage.src}
             alt={selectedImage.alt}
             class="image-inspect-media"
+            width={selectedImage.width}
+            height={selectedImage.height}
             decoding="async"
             fetchpriority="high"
             draggable={false}
