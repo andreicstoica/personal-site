@@ -36,6 +36,12 @@ const { title, description = "Andrei's Portfolio" } = Astro.props;
   </body>
 </html>
 
+<script>
+  import { installMediaReveal } from "../lib/mediaReveal";
+
+  installMediaReveal();
+</script>
+
 <script
   is:inline
   data-goatcounter="https://andreistoica.goatcounter.com/count"
