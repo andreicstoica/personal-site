@@ -86,10 +86,12 @@
 	--duration-drawer: 280ms;
 	--duration-media: 400ms;
 
-	/* Elevation */
+	/* Elevation. The guide drawer is docked to the viewport edge, so its depth
+	   reads from the inside: cast inward from the page-facing edge, never
+	   outward onto the page. */
 	--elevation-drawer:
-		-1px 0 0 rgb(0 0 0 / 0.05),
-		-12px 0 32px -16px rgb(0 0 0 / 0.22);
+		inset 1px 0 0 rgb(0 0 0 / 0.06),
+		inset 14px 0 34px -18px rgb(0 0 0 / 0.3);
 }
 
 .nav-name {
@@ -143,7 +145,9 @@
 		--color-bg-sunken: #1f1f1f;
 
 		/* Depth flattens to a single ring against dark surfaces */
-		--elevation-drawer: -1px 0 0 rgb(255 255 255 / 0.1);
+		--elevation-drawer:
+			inset 1px 0 0 rgb(255 255 255 / 0.1),
+			inset 14px 0 34px -18px rgb(0 0 0 / 0.5);
 
 		/* ASCII Art Colors - Dark Mode */
 		--color-ascii-dark: #333333;

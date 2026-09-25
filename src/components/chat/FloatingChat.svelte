@@ -1,12 +1,10 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { assertNever } from "../../lib/assertNever";
   import { portal } from "../../lib/portal";
   import {
     isColdStart,
     parseChatApiSuccess,
     type ChatAction,
-    type ChatMode,
     type ChatSource,
   } from "../../lib/chatTypes";
   import Icon from "../ui/Icon.svelte";
@@ -26,7 +24,6 @@
   let input = $state("");
   let sending = $state(false);
   let waking = $state(false);
-  let mode = $state<ChatMode | null>(null);
   let offline = $state(false);
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
@@ -212,7 +209,6 @@
         appendReply(errorText(payload));
         return;
       }
-      mode = parsed.mode;
       appendReply(parsed.response, { sources: parsed.sources, action: parsed.action });
       scheduleFollow(parsed.action);
     } catch (error) {
@@ -229,16 +225,6 @@
     event.preventDefault();
     void send(input);
   };
-
-  const subtitle = $derived(
-    mode === null
-      ? "Projects, work, and the site"
-      : mode === "model"
-        ? "From the model"
-        : mode === "notes"
-          ? "From site notes"
-          : assertNever(mode),
-  );
 
   const onWindowKeydown = (event: KeyboardEvent) => {
     if (!open || event.key !== "Escape") return;
@@ -346,14 +332,11 @@
     bind:this={panelRef}
     class="guide-panel"
   >
-    <header class="flex items-center justify-between gap-3 border-b border-[var(--color-bg-secondary)] px-4 py-2.5">
-      <div class="flex min-w-0 items-baseline gap-2">
-        <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
-        <span class="truncate text-xs text-[var(--color-text-secondary)]">{subtitle}</span>
-      </div>
+    <header class="flex items-center justify-between gap-3 px-4 py-2.5">
+      <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
       <button
         type="button"
-        class="guide-icon-button text-[var(--color-text-primary)]"
+        class="guide-icon-button bg-[var(--color-primary)] text-white rounded-none"
         aria-label="Close guide"
         onclick={closeGuide}
       >
@@ -431,7 +414,7 @@
       {/if}
     </div>
 
-    <form onsubmit={onSubmit} class="flex gap-2 border-t border-[var(--color-bg-secondary)] p-3">
+    <form onsubmit={onSubmit} class="flex gap-2 p-3">
       <label class="sr-only" for="guide-input">Message</label>
       <input
         id="guide-input"
@@ -555,6 +538,7 @@
   .guide-icon-button {
     width: 2.75rem;
     height: 2.75rem;
+    transition: background-color var(--duration-ui) var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -563,7 +547,7 @@
     }
 
     .guide-icon-button:hover {
-      color: var(--color-primary);
+      background: var(--color-primary-hover);
     }
 
     .guide-input {
@@ -596,7 +580,8 @@
 
   /* Desktop: a full-height drawer docked to the viewport's right edge. It
      overlays the white gutter (and the content edge on narrower screens)
-     with a sunken surface and an edge shadow — the page never shifts. */
+     with a sunken surface and a shadow cast inward from the page's edge —
+     the recess reads as under the page, and the page never shifts. */
   @media (min-width: 768px) {
     .guide-panel {
       position: fixed;

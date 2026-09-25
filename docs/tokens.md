@@ -6,13 +6,13 @@ All tokens live in `src/styles/global.css` (TAB-indented, keep it that way). Com
 
 Two accepted ways to reference a token from a Tailwind class:
 
-- **Bracket form** — `border-[var(--color-bg-secondary)]`, `text-[var(--color-text-primary)]`. The house idiom; 17 matching lines in `FloatingChat.svelte` alone.
+- **Bracket form** — `border-[var(--color-bg-secondary)]`, `text-[var(--color-text-primary)]`. The house idiom; 14 matching lines in `FloatingChat.svelte` alone.
 - **Shorthand form** — `bg-(--color-bg-secondary)` (Tailwind v4). Same meaning; used in `ExperienceRow.astro:48`.
 
 Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--color-text-primary]`, `text-(color-text-primary)`) are bugs, not options — don't reintroduce them. In scoped `<style>` blocks write `var(--token)` directly.
 
 ```astro
-<!-- Correct — FloatingChat.svelte:444 -->
+<!-- Correct — FloatingChat.svelte:427 -->
 <input class="border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)]" />
 
 <!-- Incorrect — Tailwind's palette instead of a site token; this is the shape to avoid -->
@@ -29,8 +29,8 @@ Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--c
 What background?
  ├── Page, nav, card, input, popover, message bubble → --color-bg-primary   (#fefefe / #272727)
  ├── Chip, tag, subtle fill inside a page           → --color-bg-secondary  (#c4c4c4 / #333333)
- └── Overlay drawer floating above the page         → --color-bg-sunken     (#f5f5f5 / #1f1f1f)
-      └ one consumer: the guide drawer (FloatingChat.svelte:611), paired with
+ └── Viewport-edge drawer that reads sunken        → --color-bg-sunken     (#f5f5f5 / #1f1f1f)
+      └ one consumer: the guide drawer (FloatingChat.svelte:596), paired with
         --elevation-drawer. Never use sunken for in-flow sections.
 ```
 
@@ -51,36 +51,36 @@ What text color?
 
 `--color-text-inverse` is correct only on `--tag-*` fills in light mode; see the chip pairs in [DESIGN.md](./DESIGN.md).
 
-- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:347`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:482`, `SiteFooter.astro:73`).
-- **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:219`), and selection wash (primary at 24%).
+- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:350`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:486`, `SiteFooter.astro:73`).
+- **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:223`), and selection wash (primary at 24%).
 
 ## Borders — closed set of four
 
 1. **Section hairline** — `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`; the footer's divider (`SiteFooter.astro:39`). Holds in both modes from one rule.
-2. **In-panel rule/input border** — `border-[var(--color-bg-secondary)]` (guide header, input, bubbles: `FloatingChat.svelte:349,444`).
-3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:499` popover) and outlined controls (`.btn-secondary`, `global.css:320`).
-4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:336`).
+2. **In-panel rule/input border** — `border-[var(--color-bg-secondary)]` (assistant bubbles, their citation rule, and the input: `FloatingChat.svelte:374,379,427`). The drawer's own header and form carry no rule — space separates them.
+3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:482` popover) and outlined controls (`.btn-secondary`, `global.css:324`).
+4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:340`).
 
 The experience table's row rules use **#1** (one `color-mix` hairline in `ExperienceRow.astro`'s scoped style) and its filter select uses **#2**. Neither reaches for `border-gray-*` + `dark:` swaps — don't reintroduce that shape.
 
 ## Radius
 
 - **Default is 0.** Square is the house style — pixel cursor, `*` bullets, dithered banner; rounded cards would read as the polished marketing page this site deliberately isn't.
-- Form controls get explicit `rounded-none` (`FloatingChat.svelte:389,444,449`) because Safari gives native controls a radius.
+- Form controls get explicit `rounded-none` (`FloatingChat.svelte:372,427,432`) because Safari gives native controls a radius.
 - `--radius-md` (0.5rem) is used only by `.btn-primary/.btn-secondary`; `--radius-sm` has zero references.
 
 ## Motion
 
 - **UI transitions**: `var(--duration-ui)` 180ms + `var(--ease-out)`. Never a raw ms literal, never `ease-in`.
-- **Drawer/modal**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:616-641`, `global.css:578-604`).
-- **Press feedback**: `transform 160ms var(--ease-out)` → `scale(0.98)` (`global.css:297,312`).
+- **Drawer/modal**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:601-626`, `global.css:582-608`).
+- **Press feedback**: `transform 160ms var(--ease-out)` → `scale(0.98)` (`global.css:301,316`).
 - The only blessed literals beyond the tokens: `160ms` press and `80ms` filter inside `.btn-*`. Add a token before reusing any other number.
-- `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:113,611` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:644` exists).
+- `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:115,616` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:629` exists).
 - `--ease-in-out` and `--duration-media` are defined with zero references — dead until noted here with a use.
 
 ## Elevation
 
-`--elevation-drawer` is the only elevation token; sole consumer is the guide drawer (`FloatingChat.svelte:612`). Light: hairline + soft left shadow. Dark: collapses to one white 10% hairline (`global.css:146`) because a black shadow is invisible on `#272727` — that collapse is the token's job, don't re-derive it per component. The guide popover's `0 8px 24px rgb(0 0 0 / 16%)` (`FloatingChat.svelte:501,542`) is the only other shadow in the system; don't invent a third.
+`--elevation-drawer` is the only elevation token; sole consumer is the guide drawer (`FloatingChat.svelte:597`). Both directions point inward — the drawer never shadows the page, the page's edge shadows it. Light: hairline plus a soft inset along the page-facing edge. Dark: the same inset deepened, plus one white 10% hairline (`global.css:148`) — a black shadow is invisible on `#272727` from outside, but reads as depth from inside. The direction and the collapse are the token's job, don't re-derive them per component. The guide popover's `0 8px 24px rgb(0 0 0 / 16%)` (`FloatingChat.svelte:484,525`) is the only other shadow in the system; don't invent a third.
 
 ## Spacing
 
