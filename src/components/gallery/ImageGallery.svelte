@@ -23,7 +23,6 @@
   /* The bar needs 44px buttons plus a 12px gap beside the media, inside the dialog padding. */
   const controlsBandPx = 56;
   const stagePaddingPx = 16;
-  const desktopMinPx = 768;
   /* Media may give up this much height to make room for the bar; beyond it the bar moves to the sides. */
   const maxShrinkRatio = 0.08;
   const swipeCommitPx = 60;
@@ -62,15 +61,15 @@
     return media.width && media.height ? media.width / media.height : 16 / 9;
   }
 
-  /* One placement per gallery, from its tallest media, so the buttons do not
-     jump between slides. Without room above or below, they sit at the sides. */
-  const controlsPlacement = $derived.by((): "above" | "below" | "sides" => {
+  /* One placement per gallery, from its tallest media. The bar is pinned to the
+     bottom edge so it never moves between slides; without room for it there,
+     the buttons sit at the sides. */
+  const controlsPlacement = $derived.by((): "bottom" | "sides" => {
     if (!viewportW || !viewportH) return "sides";
     const tallest = Math.min(...images.map((_, i) => ratioAt(i)));
     const mediaHeight = Math.min(viewportH * 0.9, (viewportW * 0.95) / tallest);
     const room = viewportH - 2 * stagePaddingPx - controlsBandPx;
-    if (mediaHeight - room > mediaHeight * maxShrinkRatio) return "sides";
-    return viewportW >= desktopMinPx ? "above" : "below";
+    return mediaHeight - room > mediaHeight * maxShrinkRatio ? "sides" : "bottom";
   });
 
   const wrapperClass = (() => {
@@ -486,7 +485,7 @@
     bind:this={dialogRef}
     use:portal
     class="image-inspect modal-backdrop {fadingOut ? 'closing' : ''}"
-    data-controls={hasCarousel ? controlsPlacement : "sides"}
+    data-controls={hasCarousel ? controlsPlacement : "none"}
     role="dialog"
     aria-modal="true"
     aria-label={`${experienceName} image`}
