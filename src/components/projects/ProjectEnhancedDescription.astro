@@ -13,26 +13,31 @@ const htmlContent = renderMarkdown(processedDescription);
 ---
 
 <div class="project-enhanced-description">
-  <div class="text-pretty text-sm text-(--color-text-secondary)">
+  <div class="text-pretty text-sm leading-(--leading-normal) text-(--description-text)">
     <div set:html={htmlContent} />
   </div>
 </div>
 
 <style>
-  /* Project cross-references: neutral at rest, the dotted underline carries the affordance. */
-  .project-enhanced-description :global(.project-link) {
-    color: var(--color-text-secondary);
-    text-decoration: underline;
-    text-decoration-style: dotted;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
-    transition: color 0.2s ease;
+  /* A row's description is its content, so it sits at 6.9:1 instead of the
+     shared secondary grey (5.7:1), which is thin at 14px regular. */
+  .project-enhanced-description {
+    --description-text: oklch(0.464 0 0);
   }
 
-  /* Hover turns the dots into a line at the same 1px weight; 2px read too heavy against the dotted rest state. */
+  @media (prefers-color-scheme: dark) {
+    .project-enhanced-description {
+      --description-text: var(--color-text-secondary);
+    }
+  }
+
+  /* Project cross-references match the description; the dotted underline carries the affordance. */
+  .project-enhanced-description :global(.project-link) {
+    color: inherit;
+  }
+
   .project-enhanced-description :global(.project-link:hover) {
     color: var(--color-text-primary);
-    text-decoration-style: solid;
   }
 
   .project-enhanced-description :global(.project-link:focus:not(:focus-visible)) {

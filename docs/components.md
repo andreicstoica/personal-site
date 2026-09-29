@@ -128,6 +128,9 @@ A spreadsheet-like layout on a shared `.experience-grid` from 1024px: a 1.25fr n
 - Header row is `sticky top-0` with a type filter dropdown
 - Filter uses `data-filter` attribute on the container; CSS rules hide rows by `data-type`
 - The table reserves height for the unfiltered view to prevent layout shift when filtering
+- The section sets `tracking-normal`: the global −0.015em is for headings and crowds 14px cell text. The header labels keep their own uppercase tracking, and the date cell sets `tracking-[-0.02em]` because the 71px Date column wraps `2024-2025` at any looser value
+- A row's description (`ProjectEnhancedDescription.astro`) is 14px on `--leading-normal` (1.55) in `--description-text`, `oklch(0.464 0 0)` in light mode (6.9:1, APCA Lc 84), and `--color-text-secondary` in dark mode. Project links inside it inherit that color
+- An ongoing row's date reads `2026-now` (`formatDateRange` in `experienceUi.ts`); the data sentinel `endDate: "..."` is unchanged
 
 ### ExperienceRow
 

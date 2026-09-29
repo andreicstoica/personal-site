@@ -47,7 +47,7 @@ export function formatDateRange(startDate: string, endDate?: string): string {
 	if (endDate && endDate !== "...") {
 		return `${startDate}-${endDate}`;
 	}
-	return endDate === "..." ? `${startDate}-...` : startDate;
+	return endDate === "..." ? `${startDate}-now` : startDate;
 }
 
 export function experienceFilterCss(): string {

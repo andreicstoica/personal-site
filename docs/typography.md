@@ -33,7 +33,7 @@ Rules:
 ## Leading and tracking
 
 - `--leading-tight` 1.25 — headings. `--leading-normal` 1.55 — body (`html` default). `--leading-relaxed` 1.65 — lead paragraphs and markdown content.
-- `--tracking-tight` −0.015em — applied to body and headings globally (`global.css:187`). It overrides Tailwind's `tracking-tight` (−0.025em) via the same `:root` mechanism; don't re-add tracking utilities to headings.
+- `--tracking-tight` −0.015em — applied to body and headings globally (`global.css:187`). It overrides Tailwind's `tracking-tight` (−0.025em) via the same `:root` mechanism; don't re-add tracking utilities to headings. The `em` resolves against the 16px body and is inherited as a length, so 14px text carries −0.24px. That crowds small text: the experience table resets it with `tracking-normal`, and any new dense small-text surface should do the same.
 
 ## Page-chrome text classes
 
