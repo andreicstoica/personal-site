@@ -23,11 +23,28 @@
     weatherApiSchema,
   } from "../../lib/weather/scene";
   import WeatherLab from "./WeatherLab.svelte";
+  import {
+    GEIST_STYLESHEET,
+    parseTypeface,
+    TYPEFACE_KEY,
+    type Typeface,
+  } from "../../lib/typeface";
 
   let { showLab }: { showLab: boolean } = $props();
 
-  // A slow lookup must not hold the banner back forever.
-  const REVEAL_DEADLINE_MS = 2000;
+  // Past this, a cold lookup opens on the fallback scene. The slide pushes the
+  // page down, so a late open is worse than a brief weather swap.
+  const REVEAL_DEADLINE_MS = 1200;
+
+  // The latch covers a layout script that binds after this fires; the layout
+  // owns the open attribute so the slide class is on before the height changes
+  // (SiteLayout.astro).
+  function announceBannerOpen(): void {
+    const scope = window as Window & { __weatherBannerOpened?: boolean };
+    if (scope.__weatherBannerOpened) return;
+    scope.__weatherBannerOpened = true;
+    window.dispatchEvent(new Event("weather-banner:ready"));
+  }
 
   function browserStorage(): Storage | null {
     try {
@@ -40,17 +57,12 @@
   const storage = browserStorage();
 
   const LAB_KEY = "oregon-banner-lab-v1";
-  // Dev and preview builds show the lab by default; any build can toggle it
-  // from the chat launcher's context menu (FloatingChat.svelte).
-  const storedLab = storage?.getItem(LAB_KEY);
-  let labToggled = $state<boolean | null>(
-    storedLab == null ? null : storedLab === "on",
-  );
-  const labVisible = $derived(labToggled ?? showLab);
+  let labToggled = $state(storage?.getItem(LAB_KEY) === "on");
+  const labVisible = $derived(showLab && labToggled);
 
   $effect(() => {
     const onToggle = () => {
-      labToggled = !(labToggled ?? showLab);
+      labToggled = !labToggled;
       try {
         storage?.setItem(LAB_KEY, labToggled ? "on" : "off");
       } catch {
@@ -60,6 +72,44 @@
     window.addEventListener("weather-lab:toggle", onToggle);
     return () => window.removeEventListener("weather-lab:toggle", onToggle);
   });
+  // `?type=areal` works in any build, because `local()` only resolves where the
+  // font is installed.
+  const typeParam = new URLSearchParams(location.search).get("type");
+  let typeface = $state<Typeface>(
+    parseTypeface(
+      typeParam ??
+        (import.meta.env.DEV ? storage?.getItem(TYPEFACE_KEY) : null),
+    ),
+  );
+
+  // The island persists across ClientRouter swaps, but each swap replaces the
+  // root attributes and drops head nodes the new page lacks, so apply again.
+  $effect(() => {
+    const apply = () => {
+      if (typeface === "geist" && !document.getElementById("typeface-geist")) {
+        const link = document.createElement("link");
+        link.id = "typeface-geist";
+        link.rel = "stylesheet";
+        link.href = GEIST_STYLESHEET;
+        document.head.append(link);
+      }
+      if (typeface === "plex") delete document.documentElement.dataset.typeface;
+      else document.documentElement.dataset.typeface = typeface;
+    };
+    apply();
+    document.addEventListener("astro:after-swap", apply);
+    return () => document.removeEventListener("astro:after-swap", apply);
+  });
+
+  function chooseTypeface(next: Typeface): void {
+    typeface = next;
+    try {
+      storage?.setItem(TYPEFACE_KEY, next);
+    } catch {
+      // Blocked storage: the choice still lasts for this page.
+    }
+  }
+
   const cachedReading = storage ? loadReading(storage) : null;
   let place = $state<Place>(
     storage ? loadOrCreatePlace(storage) : randomPlace(),
@@ -82,8 +132,12 @@
   // One way: the lab's localize resets readingSettled and must not hide a live banner.
   let revealed = $state(false);
 
+  // Wait for the located weather so the scene does not open on the fallback and
+  // then swap. The frame is collapsed meanwhile, so the wait shows no empty box.
   $effect(() => {
-    if (framePainted && (readingSettled || revealDeadline)) revealed = true;
+    if (revealed || !framePainted || !(readingSettled || revealDeadline)) return;
+    revealed = true;
+    announceBannerOpen();
   });
 
   $effect(() => {
@@ -297,6 +351,7 @@
   class="banner-slot"
   role="img"
   aria-label={label}
+  data-banner-slot
   data-place={scene.place}
   data-weather={scene.weather}
   data-time={scene.time}
@@ -318,10 +373,12 @@
     weather={scene.weather}
     time={scene.time}
     colorMode={colorOverride}
+    {typeface}
     onPlace={(next) => (placeOverride = next)}
     onWeather={(next) => (weatherOverride = next)}
     onTime={(next) => (timeOverride = next)}
     onColorMode={(next) => (colorOverride = next)}
+    onTypeface={chooseTypeface}
     onLocalize={localize}
   />
 {/if}
@@ -331,35 +388,19 @@
     width: 100%;
     min-width: 0;
     display: block;
+    /* Keeps its height while `.banner-frame` is collapsed, so the renderer
+       measures a real box and the slide clips rather than resizes. */
+    aspect-ratio: 160 / 48;
     /* Quick repeat taps cycle the scene instead of zooming the page. */
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
 
-  /* Hidden until the first frame has the located weather, then it comes into
-     focus once. The frame in SiteLayout holds the box and its tint meanwhile. */
   .banner-canvas {
     display: block;
     max-width: 100%;
     height: auto;
     aspect-ratio: 160 / 48;
-    opacity: 0;
-    filter: blur(4px);
-    transition:
-      opacity var(--duration-media) var(--ease-out),
-      filter var(--duration-media) var(--ease-out);
-  }
-
-  .banner-slot[data-ready="true"] .banner-canvas {
-    opacity: 1;
-    filter: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .banner-canvas {
-      filter: none;
-      transition: opacity var(--duration-ui) var(--ease-out);
-    }
   }
 </style>

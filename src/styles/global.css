@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 
 @font-face {
   font-family: "LumberSans";
@@ -6,6 +6,17 @@
   font-display: swap;
   font-weight: normal;
   font-style: normal;
+}
+
+/* ABC Areal's license forbids hosting the file on a public server, so this
+   resolves only where it is installed. Everyone else falls back to Plex. */
+@font-face {
+  font-family: "Areal Local";
+  src:
+    local("ABC Areal Superfamily Variable Regular"),
+    local("ABCArealSuperfamilyVariable-Regular");
+  font-weight: 400 700;
+  font-style: oblique 0deg 12deg;
 }
 
 @import "tailwindcss";
@@ -52,7 +63,6 @@
 
 	/* Fonts */
 	--font-sans: "IBM Plex Sans", system-ui, sans-serif;
-	--font-serif: "IBM Plex Serif", serif;
 	--font-mono: "IBM Plex Mono", monospace;
 
 	/* Type scale */
@@ -110,8 +120,8 @@
 	opacity: 0;
 	filter: blur(4px);
 	transition:
-		opacity 180ms var(--ease-out),
-		filter 180ms var(--ease-out);
+		opacity var(--duration-ui) var(--ease-out),
+		filter var(--duration-ui) var(--ease-out);
 }
 
 .media-reveal.is-loaded {
@@ -128,6 +138,7 @@
 	.modal-backdrop.closing,
 	.btn-primary:active,
 	.btn-secondary:active,
+	.btn-secondary-custom,
 	[data-page-scroll] {
 		animation: none;
 		transition: none;
@@ -142,7 +153,8 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	:root {
-		--color-text-primary: #fefefe;
+		/* Pure white on the dark page glares; this still clears 12:1. */
+		--color-text-primary: oklch(0.93 0 0);
 		--color-text-secondary: #cccccc;
 		--color-text-muted: #999999;
 		--color-text-inverse: #272727;
@@ -192,6 +204,15 @@
 	button:disabled {
 		cursor: not-allowed;
 	}
+
+	/* Display sizes tighten; reading sizes keep the font's own spacing. */
+	h1,
+	h2,
+	h3 {
+		line-height: var(--leading-tight);
+		letter-spacing: var(--tracking-tight);
+		text-wrap: balance;
+	}
 }
 
 p,
@@ -202,8 +223,50 @@ figcaption {
 	text-wrap: pretty;
 }
 
+:root {
+	--font-label: var(--font-sans);
+	--font-label-axes: normal;
+}
+
+:root[data-typeface="areal"],
+:root[data-typeface="geist"] {
+	--font-label: var(--font-mono);
+	--font-label-axes: var(--font-mono-axes, normal);
+}
+
+.type-label {
+	font-family: var(--font-label);
+	font-variation-settings: var(--font-label-axes);
+}
+
+/* Monos run about 17% wider than Plex Sans. A full match (about -0.09em) jams
+   the glyphs, so this closes half the gap. Small uppercase labels keep their
+   positive tracking, or the capitals clump. */
+:root[data-typeface="areal"] .type-label:not(.uppercase) {
+	letter-spacing: -0.05em;
+}
+
+:root[data-typeface="geist"] .type-label:not(.uppercase) {
+	letter-spacing: -0.045em;
+}
+
+/* Areal's mono is the same file on its MONO axis, which `--font-mono-axes` sets
+   wherever `--font-mono` is used. */
+:root[data-typeface="areal"] {
+	--font-sans: "Areal Local", "IBM Plex Sans", system-ui, sans-serif;
+	--font-mono: "Areal Local", "IBM Plex Mono", monospace;
+	--font-mono-axes: "MONO" 100;
+}
+
+:root[data-typeface="geist"] {
+	--font-sans: "Geist", "IBM Plex Sans", system-ui, sans-serif;
+	--font-mono: "Geist Mono", "IBM Plex Mono", monospace;
+}
+
 html {
 	font-family: var(--font-sans);
+	/* Geist ships no italic, so its <em> renders upright rather than faked. */
+	font-synthesis: none;
 	font-size: 16px;
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
@@ -224,7 +287,6 @@ body {
 	overflow: hidden;
 	font-size: var(--text-base);
 	line-height: var(--leading-normal);
-	letter-spacing: var(--tracking-tight);
 }
 
 .cursor-pixel {
@@ -546,14 +608,18 @@ a {
 	color: var(--tag-personal-text) !important;
 	font-weight: 500;
 	text-decoration: none;
-	transition: all 0.2s ease;
+	transition:
+		filter var(--duration-ui) var(--ease-out),
+		transform var(--duration-ui) var(--ease-out),
+		box-shadow var(--duration-ui) var(--ease-out);
 }
 
-.btn-secondary-custom:hover {
-	background: var(--tag-personal);
-	filter: brightness(0.9);
-	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+@media (hover: hover) and (pointer: fine) {
+	.btn-secondary-custom:hover {
+		filter: brightness(0.9);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
 }
 
 /* Gallery strip — horizontal scroll with snap on touch */
@@ -564,6 +630,12 @@ a {
 
 .gallery-strip > * {
 	scroll-snap-align: start;
+}
+
+/* On phones the strip runs to the screen edge; snapping still lands on the
+   text column. */
+.gallery-strip.full-bleed {
+	scroll-padding-inline: var(--page-padding-inline);
 }
 
 /* The strip has no inline padding, so media sits flush with its column

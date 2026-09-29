@@ -5,7 +5,6 @@ import Nav from "../components/nav/Nav.astro";
 import WeatherBanner from "../components/weather/WeatherBanner.svelte";
 import { GUIDE_STORAGE_KEY } from "../lib/guideState";
 import type { NavItem } from "../lib/navLinks";
-import { showWeatherLab } from "../lib/weather/lab";
 import RootLayout from "./RootLayout.astro";
 
 interface Props {
@@ -15,7 +14,7 @@ interface Props {
 }
 
 const { title, description, parent } = Astro.props;
-const showLab = showWeatherLab(import.meta.env.DEV);
+const showLab = import.meta.env.DEV;
 const isHome = Astro.url.pathname === "/";
 ---
 
@@ -43,7 +42,7 @@ const isHome = Astro.url.pathname === "/";
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
     <div class="flex min-h-full flex-col">
       <div class="site-column">
-        <div class="banner-frame">
+        <div class="banner-frame" data-banner-frame>
           <WeatherBanner
             client:only="svelte"
             showLab={showLab}
@@ -67,14 +66,38 @@ const isHome = Astro.url.pathname === "/";
 </RootLayout>
 
 <style>
-  /* The banner island renders nothing on the server. This box holds its size
-     and tint so the nav does not jump when the island mounts, and clips the
-     blur of its enter. Ratio matches BANNER_WIDTH x BANNER_HEIGHT. */
+  /* Collapsed until the client-only banner is ready, so the server page has no
+     empty hole above the fold. */
   .banner-frame {
-    aspect-ratio: 160 / 48;
-    margin-top: 0.5rem;
+    height: 0;
+    margin-top: 0;
     overflow: hidden;
     background: var(--color-bg-sunken);
+  }
+
+  :global(html[data-weather-banner="open"]) .banner-frame {
+    height: var(--banner-height);
+    margin-top: 0.5rem;
+  }
+
+  /* Added only for the first reveal, then removed, so a viewport resize settles
+     the banner instead of animating it again. In-out because the page content
+     is already on screen and moves with it. */
+  .banner-frame.is-opening {
+    transition:
+      height var(--duration-media) var(--ease-in-out),
+      margin-top var(--duration-media) var(--ease-in-out);
+  }
+
+  /* Scroll anchoring would otherwise pull content back to cancel the slide. */
+  :global([data-page-scroll].is-banner-opening) {
+    overflow-anchor: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .banner-frame.is-opening {
+      transition: none;
+    }
   }
 
   /* Subpages have no eyebrow above the title, so the header's breadcrumb needs
@@ -96,4 +119,75 @@ const isHome = Astro.url.pathname === "/";
 
   resetPageScroll();
   document.addEventListener("astro:page-load", resetPageScroll);
+
+  let bannerFrameBound: HTMLElement | null = null;
+
+  function installBannerSlide(): void {
+    const frame = document.querySelector<HTMLElement>("[data-banner-frame]");
+    if (!frame) return;
+    // Called on the first load and again on every swap; a frame is re-rendered
+    // each time, so identity is what tells a fresh bind from a repeat one.
+    if (bannerFrameBound === frame) return;
+    bannerFrameBound = frame;
+
+    const scroller = document.querySelector<HTMLElement>("[data-page-scroll]");
+    const observer = new ResizeObserver((entries) => {
+      const size = entries[0]?.borderBoxSize[0];
+      if (size) frame.style.setProperty("--banner-height", `${size.blockSize}px`);
+    });
+    document.addEventListener("astro:before-swap", () => observer.disconnect(), {
+      once: true,
+    });
+
+    const open = (slide: boolean): void => {
+      // The client-only island may not have rendered its slot when this script
+      // binds, so measure at open time. Without a length here the open height
+      // is `auto`, which cannot transition, and the banner snaps in.
+      const slot = frame.querySelector<HTMLElement>("[data-banner-slot]");
+      if (!slot) return;
+      frame.style.setProperty("--banner-height", `${slot.offsetHeight}px`);
+      observer.observe(slot);
+      if (!slide) {
+        document.documentElement.dataset.weatherBanner = "open";
+        return;
+      }
+      frame.classList.add("is-opening");
+      scroller?.classList.add("is-banner-opening");
+      document.documentElement.dataset.weatherBanner = "open";
+
+      const settle = (): void => {
+        frame.classList.remove("is-opening");
+        scroller?.classList.remove("is-banner-opening");
+      };
+      // Reduced motion means no transition ever runs, so waiting on one alone
+      // would strand the class and let a later resize animate the banner.
+      const backstop = window.setTimeout(settle, 600);
+      void Promise.all(frame.getAnimations().map((a) => a.finished))
+        .then(settle)
+        .catch(settle)
+        .finally(() => window.clearTimeout(backstop));
+    };
+
+    // Ready is the island's signal; slid survives ClientRouter swaps so later
+    // pages open at once instead of replaying the slide.
+    const scope = window as Window & {
+      __weatherBannerOpened?: boolean;
+      __weatherBannerSlid?: boolean;
+    };
+    const slideOnce = (): void => {
+      if (scope.__weatherBannerSlid) return;
+      scope.__weatherBannerSlid = true;
+      open(true);
+    };
+    if (scope.__weatherBannerSlid) {
+      open(false);
+      return;
+    }
+    // The island can finish before this script runs on a warm cache.
+    if (scope.__weatherBannerOpened) slideOnce();
+    else window.addEventListener("weather-banner:ready", slideOnce, { once: true });
+  }
+
+  installBannerSlide();
+  document.addEventListener("astro:page-load", installBannerSlide);
 </script>

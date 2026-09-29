@@ -448,8 +448,7 @@
       open = !open;
     }}
     oncontextmenu={(event) => {
-      // Hidden UAT affordance: right-click (or long-press) toggles the
-      // weather lab in any build (WeatherBanner.svelte).
+      if (!import.meta.env.DEV) return;
       event.preventDefault();
       window.dispatchEvent(new CustomEvent("weather-lab:toggle"));
     }}

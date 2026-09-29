@@ -10,26 +10,31 @@
     type TimeOfDay,
     type Weather,
   } from "../../lib/weather/scene";
+  import { TYPEFACES, type Typeface } from "../../lib/typeface";
 
   let {
     place,
     weather,
     time,
     colorMode,
+    typeface,
     onPlace,
     onWeather,
     onTime,
     onColorMode,
+    onTypeface,
     onLocalize,
   }: {
     place: Place;
     weather: Weather;
     time: TimeOfDay;
     colorMode: ColorMode | "system";
+    typeface: Typeface;
     onPlace: (place: Place) => void;
     onWeather: (weather: Weather) => void;
     onTime: (time: TimeOfDay) => void;
     onColorMode: (mode: ColorMode | "system") => void;
+    onTypeface: (typeface: Typeface) => void;
     onLocalize: () => void;
   } = $props();
 
@@ -97,6 +102,18 @@
       {/each}
     </select>
   </label>
+  <label>
+    type
+    <select
+      id="lab-typeface"
+      value={typeface}
+      onchange={(event) => choose(event, TYPEFACES, onTypeface)}
+    >
+      {#each TYPEFACES as option}
+        <option value={option}>{option}</option>
+      {/each}
+    </select>
+  </label>
   <button type="button" onclick={onLocalize}>localize</button>
 </section>
 
@@ -117,6 +134,7 @@
     color: var(--color-text-primary);
     border: 1px solid var(--color-text-secondary);
     font-family: var(--font-mono);
+    font-variation-settings: var(--font-mono-axes, normal);
     font-size: 11px;
     line-height: 1.3;
   }

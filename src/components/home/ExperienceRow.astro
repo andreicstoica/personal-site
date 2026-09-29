@@ -57,7 +57,7 @@ const { experience } = Astro.props;
         <div class="col-span-2 leading-none">
           <span class="block overflow-hidden">
             <span
-              class="row-chip text-sm leading-[1.6] bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
+              class="row-chip type-label text-sm leading-[1.6] bg-(--color-bg-secondary) p-0.75 box-decoration-clone [-webkit-box-decoration-break:clone]"
               style={displayRowStyle(experience.name)}
             >
               {experience.tags.join(", ")}
@@ -66,7 +66,7 @@ const { experience } = Astro.props;
         </div>
 
         <div class="col-span-1">
-          <div class="text-sm tabular-nums tracking-[-0.02em] text-end mr-2">
+          <div class="type-label text-sm tabular-nums tracking-[-0.02em] text-end mr-2">
             {formatDateRange(experience.startDate, experience.endDate)}
           </div>
         </div>
@@ -87,8 +87,8 @@ const { experience } = Astro.props;
   </div>
 
   <div class="lg:hidden">
-    <div class="flex justify-between gap-4 mb-3">
-      <span class="line-clamp-2">
+    <div class="flex justify-between gap-4 mb-2">
+      <span class="line-clamp-2 leading-none min-w-min">
         <span
           class="row-chip break-words"
           style={experienceNameStyle(experience.name, experience.type)}
@@ -100,13 +100,13 @@ const { experience } = Astro.props;
       </span>
 
       <div
-        class="text-sm flex-none mt-1"
+        class="text-sm flex-1 min-w-0 mt-px"
         style={displayRowStyle(experience.name)}
       >
         {experience.role}
       </div>
 
-      <div class="text-sm tabular-nums flex-shrink-0 mt-1">
+      <div class="text-sm tabular-nums flex-shrink-0 mt-px">
         {formatDateRange(experience.startDate, experience.endDate)}
       </div>
     </div>

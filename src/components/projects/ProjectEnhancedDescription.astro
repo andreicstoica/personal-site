@@ -44,6 +44,14 @@ const htmlContent = renderMarkdown(processedDescription);
     outline: none;
   }
 
+  /* A wrapped line hangs under its own text, so it cannot be read as the next
+     project. Greedy wrapping: `pretty` breaks short items early, at hyphens. */
+  .project-enhanced-description :global(li) {
+    padding-inline-start: 1em;
+    text-indent: -1em;
+    text-wrap: wrap;
+  }
+
   /* Speed highlight styling */
   .project-enhanced-description :global(.speed-highlight) {
     text-decoration: underline;
