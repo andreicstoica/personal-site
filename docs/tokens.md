@@ -27,10 +27,10 @@ Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--c
 
 ```
 What background?
- ├── Page, nav, card, input, popover, message bubble → --color-bg-primary   (#fefefe / #272727)
+ ├── Page, nav, card, input, phone sheet, bubble    → --color-bg-primary   (#fefefe / #272727)
  ├── Chip, tag, subtle fill inside a page           → --color-bg-secondary  (#c4c4c4 / #333333)
  └── Viewport-edge drawer that reads sunken        → --color-bg-sunken     (#f5f5f5 / #1f1f1f)
-      └ one consumer: the guide drawer (FloatingChat.svelte:596), paired with
+      └ one consumer: the desktop guide drawer (FloatingChat.svelte), paired with
         --elevation-drawer. Never use sunken for in-flow sections.
 ```
 
@@ -58,7 +58,7 @@ What text color?
 ## Borders — closed set of three
 
 1. **Shared gray** — `var(--color-bg-secondary)`: section hairlines (footer divider `SiteFooter.astro:41`, experience-row rules), in-panel rules/input borders (assistant bubbles, their citation rule, and the input), and the neutral tags chips. One gray for dividers and labels; holds in both modes.
-2. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:482` popover) and outlined controls (`.btn-secondary`, `global.css:324`).
+2. **Strong edge** — `1px solid var(--color-text-secondary)`: outlined controls (`.btn-secondary`) and the weather lab panel.
 3. **Accent/focus border** — `var(--color-primary-text)` (`btn-secondary:hover`).
 
 The experience table's row rules use **#1** (one `color-mix` hairline in `ExperienceRow.astro`'s scoped style) and its filter select uses **#2**. Neither reaches for `border-gray-*` + `dark:` swaps — don't reintroduce that shape.
@@ -66,21 +66,26 @@ The experience table's row rules use **#1** (one `color-mix` hairline in `Experi
 ## Radius
 
 - **Default is 0.** Square is the house style — pixel cursor, `*` bullets, dithered banner; rounded cards would read as the polished marketing page this site deliberately isn't.
-- Form controls get explicit `rounded-none` (`FloatingChat.svelte:372,427,432`) because Safari gives native controls a radius.
+- Form controls get explicit `rounded-none` (the guide input and bubbles in `FloatingChat.svelte`) because Safari gives native controls a radius.
 - `--radius-md` (0.5rem) is used only by `.btn-primary/.btn-secondary`; `--radius-sm` has zero references.
 
 ## Motion
 
 - **UI transitions**: `var(--duration-ui)` 180ms + `var(--ease-out)`. Never a raw ms literal, never `ease-in`.
-- **Drawer**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:601-626`). **Gallery modal**: FLIP morph + scrim fade, open 250ms, close 150ms, both `--ease-out` (`global.css:582-608`, close mirrored by `modalCloseMs` in `ImageGallery.svelte:27`).
+- **Drawer and sheet**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte`). The page's `padding-inline-end` uses the same drawer timing when it makes room. **Gallery modal**: FLIP morph + scrim fade, open 250ms, close 150ms, both `--ease-out` (`global.css:582-608`, close mirrored by `modalCloseMs` in `ImageGallery.svelte:27`).
 - **Press feedback**: removed globally — no `:active` scale/opacity treatments anywhere (`btn-*`, gallery thumbs, footer links, guide launch, proto sandbox).
 - The only blessed literals beyond the tokens: `80ms` filter inside `.btn-*`, plus the gallery modal's `250ms` open / `150ms` close. Add a token before reusing any other number.
-- `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:115,616` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:629` exists).
+- `prefers-reduced-motion: reduce` kills all transitions — global rules in `global.css` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte` has one).
 - `--ease-in-out` and `--duration-media` are defined with zero references — dead until noted here with a use.
 
 ## Elevation
 
-`--elevation-drawer` is the only elevation token; sole consumer is the guide drawer (`FloatingChat.svelte:597`). Both directions point inward — the drawer never shadows the page, the page's edge shadows it. Light: hairline plus a soft inset along the page-facing edge. Dark: the same inset deepened, plus one white 10% hairline (`global.css:148`) — a black shadow is invisible on `#272727` from outside, but reads as depth from inside. The direction and the collapse are the token's job, don't re-derive them per component. The guide popover's `0 8px 24px rgb(0 0 0 / 16%)` (`FloatingChat.svelte:484,525`) is the only other shadow in the system; don't invent a third.
+Two elevation tokens, one per guide geometry:
+
+- `--elevation-drawer` (desktop drawer) points inward — the drawer never shadows the page, the page's edge shadows it, so it reads as a recess. Light: hairline plus a soft inset along the page-facing edge. Dark: the same inset deepened, plus one white 10% hairline — a black shadow is invisible on `#272727` from outside, but reads as depth from inside.
+- `--elevation-sheet` (phone bottom sheet) points outward and up, so the sheet reads as a layer on top of the page. Light: a tight plus a soft layered shadow. Dark: a deeper 55% black shadow plus a white 8% top edge, since a shadow alone barely shows on dark ground.
+
+The direction and the dark-mode collapse are the tokens' job; don't re-derive them per component. The guide launcher's `0 8px 24px rgb(0 0 0 / 16%)` is the only other shadow in the system; don't invent another.
 
 ## Spacing
 

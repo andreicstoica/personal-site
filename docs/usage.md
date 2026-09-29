@@ -4,14 +4,14 @@ Component decisions, in template form. What the components *are* lives in [compo
 
 ## Button
 
-Use for actions. Navigation is a Link — the nav name (`Nav.astro:2`), footer socials (`SiteFooter.astro:22`), and guide source chips (`FloatingChat.svelte:394`) are all links, and links are green (`--color-secondary`) by default.
+Use for actions. Navigation is a Link — the nav name (`Nav.astro`), footer socials (`SiteFooter.astro`), and guide sources (`FloatingChat.svelte`) are all links, and links are green (`--color-secondary`) by default. Every button shows the pointer from one base-layer rule in `global.css`, so Tailwind cursor utilities still override it.
 
 Classes: `.btn-primary`, `.btn-secondary`, `.btn-secondary-custom`. Nothing else exists — a fourth class is a bug, not an option.
 
 - `.btn-secondary` — the default for a new button in Astro markup: transparent, `--color-text-primary`, hairline border; safe in both color modes (`global.css:320`).
 - `.btn-primary` — the single most important action on a screen; one per view. **Zero call sites today, and broken as-is**: its `color: var(--color-text-inverse)` (`global.css:293`) drops to #272727 on the unthemed blue in dark mode = 2.5:1. Do not add a usage until that color becomes `white`.
 - `.btn-secondary-custom` (green) — locked to the project page "Links" section (`ProjectLinks.astro:26,34,42`); all three links share it. Never use it anywhere else; it's page branding, not a style.
-- In a Svelte island there is no shared class — copy the guide's Send button (`FloatingChat.svelte:432`): `bg-[var(--color-primary)] text-white rounded-none min-h-[44px]`. 44px is the site-wide touch minimum (`Nav.astro:13`); the footer social links sit at 40px (`SiteFooter.astro:74`), the one deliberate exception — they are text links with a full-width row, not standalone targets.
+- In a Svelte island there is no shared class — copy the guide's `.guide-send` (`FloatingChat.svelte`): primary fill, white text, 44px tall on touch and 36px on fine pointers. 44px is the site-wide touch minimum. Small text links (footer socials, the back link, the guide close glyph) keep their layout box at the text and reach 44px with a `::before` hit area instead of padding.
 
 ```
 Is it navigation? → Link (green by default; nav/footer override to --color-text-primary)
