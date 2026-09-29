@@ -631,8 +631,11 @@ a:hover {
 	width: 100%;
 	height: 100%;
 	min-height: 100vh;
+	flex-direction: column;
 	min-height: 100dvh;
 	padding: 1rem;
+	--inspect-max-w: 95vw;
+	--inspect-max-h: 90dvh;
 	background: rgb(0 0 0 / 0.8);
 	backdrop-filter: blur(4px);
 	overscroll-behavior: none;
@@ -643,9 +646,22 @@ a:hover {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 100%;
-	height: 100%;
+/* ImageGallery.svelte picks one placement per gallery. Above and below reserve
+   the bar's band; sides give the media extra padding so the buttons never sit
+   on the image. */
+.image-inspect[data-controls="above"],
+.image-inspect[data-controls="below"] {
+	--inspect-max-h: calc(100dvh - 2rem - 3.5rem);
 }
+
+.image-inspect[data-controls="sides"] {
+	--inspect-max-w: calc(100vw - 7.5rem);
+}
+
+	width: 100%;
+	min-height: 0;
+}
+	flex: 0 1 auto;
 
 .image-inspect-trigger {
 	background: transparent;
@@ -655,15 +671,13 @@ a:hover {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	max-width: 95vw;
-	max-height: 90vh;
-	max-height: 90dvh;
+	max-width: var(--inspect-max-w);
+	max-height: var(--inspect-max-h);
 }
 
 .image-inspect-media {
-	max-width: 95vw;
-	max-height: 90vh;
-	max-height: 90dvh;
+	max-width: var(--inspect-max-w);
+	max-height: var(--inspect-max-h);
 	width: auto;
 	height: auto;
 	object-fit: contain;
@@ -674,10 +688,134 @@ html.image-inspect-open body,
 html.image-inspect-open [data-page-scroll] {
 	overflow: hidden !important;
 }
+/* Horizontal drags belong to the carousel; vertical pan and pinch stay native. */
+.image-inspect-stage.is-swipeable {
+	touch-action: pan-y pinch-zoom;
+}
 
-/* Modal transitions — scrim fades while media morphs from the clicked thumbnail. */
+.image-inspect-slide {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect-slide.is-dragging {
+	transition: none;
+}
+
+.image-inspect-slide[data-from="next"] {
+	animation: image-inspect-slide-next var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect-slide[data-from="prev"] {
+	animation: image-inspect-slide-prev var(--duration-ui) var(--ease-out);
+}
+
+@keyframes image-inspect-slide-next {
+	from {
+		opacity: 0;
+		transform: translateX(2rem);
+	}
+}
+
+@keyframes image-inspect-slide-prev {
+	from {
+		opacity: 0;
+		transform: translateX(-2rem);
+	}
+}
+
+.image-inspect-bar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+}
+
+.image-inspect[data-controls="above"] .image-inspect-bar {
+	order: -1;
+	margin-bottom: 0.75rem;
+}
+
+.image-inspect[data-controls="below"] .image-inspect-bar {
+	margin-top: 0.75rem;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-bar {
+	display: contents;
+}
+
+.image-inspect-nav {
+	display: grid;
+	place-items: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	padding: 0;
+	border: 1px solid rgb(255 255 255 / 0.18);
+	border-radius: 0;
+	background: rgb(255 255 255 / 0.12);
+	color: rgb(255 255 255 / 0.9);
+	cursor: pointer;
+	touch-action: manipulation;
+	transition:
+		background-color var(--duration-ui) var(--ease-out),
+		color var(--duration-ui) var(--ease-out),
+		opacity var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav {
+	position: absolute;
+	top: 50%;
+	translate: 0 -50%;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav[data-dir="prev"] {
+	left: max(0.5rem, env(safe-area-inset-left));
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav[data-dir="next"] {
+	right: max(0.5rem, env(safe-area-inset-right));
+}
+
+.image-inspect-nav[aria-disabled="true"] {
+	opacity: 0.3;
+	cursor: default;
+}
+
+.image-inspect-nav:focus-visible {
+	outline-color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.image-inspect-nav:not([aria-disabled="true"]):hover {
+		background: rgb(255 255 255 / 0.24);
+		color: white;
+	}
+}
+
+.image-inspect-count {
+	min-width: 4.5rem;
+	margin: 0;
+	color: rgb(255 255 255 / 0.75);
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	pointer-events: none;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-count {
+	position: absolute;
+	bottom: max(0.5rem, env(safe-area-inset-bottom));
+	left: 50%;
+	translate: -50% 0;
+	min-width: 0;
+}
+
+
+/* Scrim-only fade: used when the media cannot morph (no API, thumb off screen). */
 .modal-backdrop {
-	transition: opacity 250ms var(--ease-out);
+	transition: opacity var(--duration-drawer) var(--ease-out);
 
 	@starting-style {
 		opacity: 0;
@@ -686,23 +824,32 @@ html.image-inspect-open [data-page-scroll] {
 
 .modal-backdrop.closing {
 	opacity: 0;
-	transition: opacity 150ms var(--ease-out);
+	transition: opacity 140ms var(--ease-out);
 }
 
 /*
- * The media morphs from the thumbnail it was clicked from, so the start
- * transform is a FLIP written by ImageGallery.svelte before the first paint —
- * JS owns the start value, CSS owns the travel. Origin is 0 0 because the start
- * transform carries its own translation; open travels (250ms), close snaps
- * (150ms), both on the backdrop's ease-out.
+ * Media morph. ImageGallery.svelte sets data-image-inspect-vt on <html> for
+ * the length of one view transition. The root crossfade carries the scrim, so
+ * the backdrop's own fade must not stack on it. Open is the drawer duration;
+ * close answers faster, so the dismissal feels like a response.
  */
-.modal-backdrop .image-inspect-media {
-	transform-origin: 0 0;
-	transition: transform 250ms var(--ease-out);
+html[data-image-inspect-vt] .modal-backdrop {
+	transition: none;
 }
 
-.modal-backdrop.closing .image-inspect-media {
-	transition: transform 150ms var(--ease-out);
+html[data-image-inspect-vt="open"] {
+	--image-inspect-vt-duration: var(--duration-drawer);
+}
+
+html[data-image-inspect-vt="close"] {
+	--image-inspect-vt-duration: 140ms;
+}
+
+html[data-image-inspect-vt]::view-transition-group(*),
+html[data-image-inspect-vt]::view-transition-old(*),
+html[data-image-inspect-vt]::view-transition-new(*) {
+	animation-duration: var(--image-inspect-vt-duration);
+	animation-timing-function: var(--ease-out);
 }
 
 /*
@@ -713,8 +860,9 @@ html.image-inspect-open [data-page-scroll] {
 @media (prefers-reduced-motion: reduce) {
 	.modal-backdrop,
 	.modal-backdrop.closing,
-	.modal-backdrop .image-inspect-media,
-	.modal-backdrop.closing .image-inspect-media,
+	.image-inspect-slide,
+	.image-inspect-slide[data-from],
+	.image-inspect-nav,
 	.gallery-strip button,
 	.gallery-strip button:active {
 		animation: none;

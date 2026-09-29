@@ -59,9 +59,12 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 
 - Portal-mounted to `document.body` via `portal` action
 - Full-screen overlay: `position: fixed; inset: 0; background: rgb(0 0 0 / 0.8); backdrop-filter: blur(4px)`
-- Images max out at `95vw` x `90dvh`
+- Media max out at `95vw` x `90dvh`. With the controls above or below, the height cap drops by the bar's band (`100dvh - 2rem - 3.5rem`). With them at the sides, the width cap is `100vw - 7.5rem`, so the buttons never sit on the image
 - Close: click backdrop or press Escape
-- Animation: FLIP morph from the clicked thumbnail + paired scrim fade, 250ms in / 150ms out, both `--ease-out`
+- Animation: same-document view transition. The clicked thumbnail and the lightbox media share one `view-transition-name` (`image-inspect-media`), never both at once. `<html>` is renamed `root` for the transition so the scrim crossfades; Astro's own root name has animations off. Open 220ms (`--duration-drawer`), close 140ms, both `--ease-out`. Close morphs back to the thumbnail of the image shown now, after scrolling its strip to reveal it.
+- Fallback: scrim-only fade (220ms in / 140ms out) when `document.startViewTransition` is missing, an Astro navigation is running, or the thumbnail is still off screen. Reduced motion swaps with no animation.
+- Carousel (galleries with more than one item): square previous and next buttons (44px) with a counter between them, ArrowLeft and ArrowRight, touch swipe on the stage (pointer events, 60px or a flick commits, rubber band at the ends), and a polite live counter. No wrap: the end button is `aria-disabled`. Neighbor images preload. Only the current video mounts and plays. Tab stays inside the dialog. Focus returns to the current item's thumbnail.
+- Controls placement is chosen once per gallery from its tallest media, so the buttons do not jump between slides: `data-controls="above"` from 768px wide, `"below"` (centered) on phones, and `"sides"` (vertically centered at the edges, media padded by 3.75rem per side) only when making room for the bar would shrink the media by more than 8%, for example a landscape phone. Video ratios are unknown until metadata loads and default to 16:9.
 
 ### Usage
 
@@ -69,14 +72,14 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 <MediaGallery images={experience.images} experienceName={experience.name} variant="desktop" />
 ```
 
-`MediaGallery.astro` is the Astro wrapper. It processes image paths and passes `GalleryMedia[]` to the Svelte island. Hydrated with `client:visible`.
+`MediaGallery.astro` is the Astro wrapper. It processes image paths and passes `GalleryMedia[]` to the Svelte island. Hydrated with `client:visible`. Public `.webp` files are not processed by Astro, so it reads their real width and height with `sharp`; a wrong `width`/`height` attribute gives a strip thumbnail the wrong box until it loads.
 
 ### Known issues
 
-- **No prev/next navigation.** Users must close and reopen to see another image.
-- **No swipe on mobile.** The gallery strip scrolls horizontally, but the modal has no gesture support.
 - **No zoom/pan.** Images display at fixed max dimensions.
-- **No keyboard nav in modal.** Only Escape works; no arrow keys to cycle images.
+- **Swipe shows one slide.** The dragged slide moves alone; neighbors do not peek in from the side.
+- **Video scrub on touch can swipe.** A horizontal drag on a lightbox video's native controls also counts as a carousel swipe.
+- **An Astro navigation during a morph** skips the morph. That one navigation then uses the default root crossfade.
 
 ## Icon
 
