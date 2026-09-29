@@ -2,6 +2,8 @@
   import { untrack } from "svelte";
   import { mountBanner, whenBannerReady } from "../../lib/weather/bannerSurface";
   import { BANNER_HEIGHT, BANNER_WIDTH } from "../../lib/weather/buffer";
+  import { playClick } from "../../lib/weather/clickSound";
+  import { advanceScene, bannerTarget } from "../../lib/weather/interact";
   import {
     loadOrCreatePlace,
     loadReading,
@@ -71,6 +73,9 @@
   let timeOverride = $state<TimeOfDay | null>(null);
   let colorOverride = $state<ColorMode | "system">("system");
   let canvasEl = $state<HTMLCanvasElement | null>(null);
+  let slotEl = $state<HTMLDivElement | null>(null);
+  // The animation time of the last painted frame, for click hit tests.
+  let paintedSeconds = 0;
   let drawRaf = 0;
   let framePainted = $state(false);
   let revealDeadline = $state(false);
@@ -188,7 +193,8 @@
         rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       surface.resize(width, height, dpr);
-      surface.frame(current, still ? 0 : elapsed);
+      paintedSeconds = still ? 0 : elapsed;
+      surface.frame(current, paintedSeconds);
       framePainted = true;
       return still || canvas.dataset.renderer === "plate";
     };
@@ -254,9 +260,40 @@
       surface?.destroy();
     };
   });
+
+  // Hidden toy: sky cycles weather, land cycles place, the sun or moon cycles
+  // time. Pointer only and unannounced on purpose; the lab and a reload cover
+  // every state, and overrides never persist past this page.
+  $effect(() => {
+    const slot = slotEl;
+    if (!slot) return;
+    const onClick = (event: MouseEvent) => {
+      if (!revealed) return;
+      const rect = slot.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      const cssPerPixel = rect.width / BANNER_WIDTH;
+      const current = untrack(() => scene);
+      const target = bannerTarget(
+        current,
+        ((event.clientX - rect.left) / rect.width) * BANNER_WIDTH,
+        ((event.clientY - rect.top) / rect.height) * BANNER_HEIGHT,
+        paintedSeconds,
+        // A 44 CSS px target on small screens, about the glow on large ones.
+        Math.max(7, 22 / cssPerPixel),
+      );
+      const next = advanceScene(current, target);
+      if (target === "sky") weatherOverride = next.weather;
+      if (target === "land") placeOverride = next.place;
+      if (target === "sun") timeOverride = next.time;
+      playClick(target);
+    };
+    slot.addEventListener("click", onClick);
+    return () => slot.removeEventListener("click", onClick);
+  });
 </script>
 
 <div
+  bind:this={slotEl}
   class="banner-slot"
   role="img"
   aria-label={label}
@@ -294,6 +331,10 @@
     width: 100%;
     min-width: 0;
     display: block;
+    /* Quick repeat taps cycle the scene instead of zooming the page. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 
   /* Hidden until the first frame has the located weather, then it comes into
