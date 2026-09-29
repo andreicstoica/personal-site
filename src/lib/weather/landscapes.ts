@@ -330,7 +330,7 @@ export function material(
 										row * 0.34 * gustLead +
 										treePhase,
 								)) *
-							1.9 *
+							1.5 *
 							(0.4 + depth * 0.3);
 						const height = Math.max(0, (ground - y) / (4.5 * scale));
 						const branch = Math.sin((x - cx) * 1.8 + height * 5);

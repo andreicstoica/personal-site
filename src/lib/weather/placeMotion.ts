@@ -1,3 +1,5 @@
+import { hash } from "./buffer";
+
 const TAU = Math.PI * 2;
 
 export function smoothstep(from: number, to: number, value: number): number {
@@ -21,14 +23,37 @@ export function baleMotion(time: number) {
 	return { x, angle: (x + 8) / 1.25 };
 }
 
+export const GUST_SLOT = 12;
+
+/**
+ * One seeded gust per 12 s slot, with its own start, length, strength, sway
+ * rate, and flutter, so no two gusts match. Every gust ends by 5.5 s into its
+ * slot and fades with zero velocity, so each slot keeps a calm, static tail.
+ */
+export function gustMotion(time: number) {
+	const shifted = time - 2;
+	const slot = Math.floor(shifted / GUST_SLOT);
+	const age = shifted - slot * GUST_SLOT;
+	const seed = slot * 7919;
+	const start = hash(seed + 1) * 1.5;
+	const length = 2.5 + hash(seed + 2) * 1.5;
+	// About one slot in six stays calm, so the rhythm has longer lulls.
+	const strength = hash(seed + 3) < 0.17 ? 0 : 0.45 + hash(seed + 4) * 0.55;
+	const gustPhase = age * (1.7 + hash(seed + 5) * 0.6);
+	const u = (age - start) / length;
+	if (u <= 0 || u >= 1) return { gust: 0, gustPhase };
+	const flutter =
+		0.8 + 0.2 * Math.sin(u * TAU * (1.5 + hash(seed + 6) * 1.5) + slot);
+	return { gust: strength * Math.sin(u * Math.PI) ** 2 * flutter, gustPhase };
+}
+
 /** Analytic motion uses elapsed time only, including backward seeks. */
 export function placeMotion(time: number) {
-	const gustAge = (((time - 2) % 12) + 12) % 12;
-	const gust = gustAge < 4 ? Math.sin((gustAge * Math.PI) / 4) ** 2 : 0;
+	const { gust, gustPhase } = gustMotion(time);
 	const bale = baleMotion(time);
 	return {
 		gust,
-		gustPhase: gustAge * 2,
+		gustPhase,
 		shimmer: gust * 0.13,
 		surf: Math.sin(time * 0.73) * 1.15 + Math.sin(time * 0.31) * 0.45,
 		baleX: bale.x,
