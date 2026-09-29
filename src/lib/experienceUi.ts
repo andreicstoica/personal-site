@@ -15,7 +15,16 @@ export function displayFontStyle(name: string): string {
  */
 export function displayRowStyle(name: string): string {
 	if (!usesDisplayFont(name)) return "";
-	return `${displayFontStyle(name)} font-size: 0.8rem;`;
+	// line-height matches the chips' 1.6 so role text sits level with them.
+	return `${displayFontStyle(name)} font-size: 0.8rem; line-height: 1.6;`;
+}
+
+/**
+ * Split a name where a line may break without splitting a word mid-way:
+ * after an acronym ("NBC|Universal") or at a camelCase step.
+ */
+export function nameBreakParts(name: string): string[] {
+	return name.split(/(?<=[A-Z]{2,})(?=[A-Z][a-z])|(?<=[a-z])(?=[A-Z])/);
 }
 
 export function experienceTypeStyles(type: ExperienceType): string {

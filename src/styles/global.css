@@ -428,6 +428,16 @@ a:hover {
 	color: var(--color-secondary-hover);
 }
 
+/* Experience table columns, shared by the header and every row. The name
+   column runs 1.25x so single-word names like NBCUniversal fit one line; the
+   other nine stay equal, so the rows' inner five-column grid still lines up
+   with the header. */
+@media (min-width: 1024px) {
+	.experience-grid {
+		grid-template-columns: 1.25fr repeat(9, minmax(0, 1fr));
+	}
+}
+
 /* Intro links (about/canon/blog): plain text with a quiet underline, so the
    lead reads as one calm paragraph. Hover only changes underline color, which
    never moves the hit target. External ones get the ↗ mark below. */
