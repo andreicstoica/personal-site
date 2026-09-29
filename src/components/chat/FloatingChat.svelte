@@ -372,8 +372,8 @@
               ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
               : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
           >
-            <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
-              <div>{message.content}</div>
+            <div class="px-3 py-2 text-sm break-words">
+              <div class="whitespace-pre-wrap">{message.content}</div>
               {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
                 <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] space-y-1">
                   {#if message.action?.kind === "navigate"}
@@ -558,9 +558,12 @@
 
   /* Close is secondary: a quiet 32px glyph, with ::before keeping a 44px
      tap area (inset -0.375rem on each side). */
+  /* The negative margin pulls the 16px glyph flush with the header's right
+     padding, mirroring the title on the left. */
   .guide-icon-button {
     width: 2rem;
     height: 2rem;
+    margin-inline-end: -0.5rem;
     background: transparent;
     color: var(--color-text-secondary);
     transition:
