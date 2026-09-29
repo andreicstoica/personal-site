@@ -11,7 +11,7 @@ Classes: `.btn-primary`, `.btn-secondary`, `.btn-secondary-custom`. Nothing else
 - `.btn-secondary` — the default for a new button in Astro markup: transparent, `--color-text-primary`, hairline border; safe in both color modes (`global.css:320`).
 - `.btn-primary` — the single most important action on a screen; one per view. **Zero call sites today, and broken as-is**: its `color: var(--color-text-inverse)` (`global.css:293`) drops to #272727 on the unthemed blue in dark mode = 2.5:1. Do not add a usage until that color becomes `white`.
 - `.btn-secondary-custom` (green) — locked to the project page "Links" section (`ProjectLinks.astro:26,34,42`); all three links share it. Never use it anywhere else; it's page branding, not a style.
-- In a Svelte island there is no shared class — copy the guide's `.guide-send` (`FloatingChat.svelte`): primary fill, white text, 44px tall on touch and 36px on fine pointers. 44px is the site-wide touch minimum. Small text links (footer socials, the back link, the guide close glyph) keep their layout box at the text and reach 44px with a `::before` hit area instead of padding.
+- In a Svelte island there is no shared class — copy the guide's `.guide-send` (`FloatingChat.svelte`): primary fill, white text, 44px tall on touch and 36px on fine pointers. 44px is the site-wide touch minimum. Small text links (footer socials, the guide close glyph) keep their layout box at the text and reach 44px with a `::before` hit area instead of padding.
 
 ```
 Is it navigation? → Link (green by default; nav/footer override to --color-text-primary)
@@ -49,7 +49,7 @@ Does it need client JS?
            → client:visible                (MediaGallery.astro:64)
 ```
 
-- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `site-nav`, `cursor-trail`, `site-footer` (`SiteLayout.astro:25`, `Nav.astro:1`, `RootLayout.astro:35`, `SiteFooter.astro:15`); a fifth key needs a new persistent region, not a duplicate mount.
+- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `cursor-trail`, `site-footer` (`SiteLayout.astro`, `RootLayout.astro`, `SiteFooter.astro`); a fourth key needs a new persistent region, not a duplicate mount. The header is not persisted because its crumb changes per page.
 - Why not `client:load` everywhere: it hydrates on every page view for content most visitors never touch. `client:visible`/`client:idle` defer that work; `client:only` avoids a hydration mismatch, not a perf win — reach for it only when the server markup is meaningless.
 
 ## Icon

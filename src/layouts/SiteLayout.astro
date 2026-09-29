@@ -4,15 +4,17 @@ import SiteFooter from "../components/footer/SiteFooter.astro";
 import Nav from "../components/nav/Nav.astro";
 import WeatherBanner from "../components/weather/WeatherBanner.svelte";
 import { GUIDE_STORAGE_KEY } from "../lib/guideState";
+import type { NavItem } from "../lib/navLinks";
 import { showWeatherLab } from "../lib/weather/lab";
 import RootLayout from "./RootLayout.astro";
 
 interface Props {
 	title: string;
 	description?: string;
+	parent?: NavItem;
 }
 
-const { title, description } = Astro.props;
+const { title, description, parent } = Astro.props;
 const showLab = showWeatherLab(import.meta.env.DEV);
 const isHome = Astro.url.pathname === "/";
 ---
@@ -48,20 +50,13 @@ const isHome = Astro.url.pathname === "/";
             transition:persist="weather-banner"
           />
         </div>
-        <Nav />
+        <Nav crumb={isHome ? undefined : title} parent={parent} />
       </div>
       <div class="site-column flex flex-1 flex-col">
         <div
-          class="page-island flex w-full flex-1 flex-col"
+          class:list={["page-island flex w-full flex-1 flex-col", { "page-island-sub": !isHome }]}
           data-page-island
         >
-          {
-            !isHome && (
-              <a href="/" class="back-home">
-                <span aria-hidden="true">←</span> Home
-              </a>
-            )
-          }
           <slot />
         </div>
         <SiteFooter />
@@ -82,38 +77,11 @@ const isHome = Astro.url.pathname === "/";
     background: var(--color-bg-sunken);
   }
 
-  /* Same voice as the table's column labels: small uppercase secondary.
-     It sits tight above the page title it belongs to; ::before keeps a
-     44px-tall tap area without padding the layout. */
-  .back-home {
-    position: relative;
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin-block: var(--spacing-xs) calc(-1 * var(--spacing-xs));
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-decoration: none;
-  }
-
+  /* Subpages have no eyebrow above the title, so the header's breadcrumb needs
+     the room the eyebrow used to take. */
   @media (min-width: 768px) {
-    .back-home {
-      margin-top: var(--spacing-md);
-    }
-  }
-
-  .back-home::before {
-    content: "";
-    position: absolute;
-    inset: -0.875rem -0.5rem;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .back-home:hover {
-      color: var(--color-text-primary);
+    .page-island-sub {
+      padding-top: var(--spacing-sm);
     }
   }
 </style>

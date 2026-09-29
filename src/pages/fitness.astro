@@ -4,6 +4,7 @@ import MarkdownBody from "../components/content/MarkdownBody.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
 import ContentDocument from "../layouts/ContentDocument.astro";
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { aboutCrumb } from "../lib/navLinks";
 
 const raceEntry = await getEntry("pages", "race");
 const outdoorsEntry = await getEntry("pages", "outdoors");
@@ -13,7 +14,11 @@ const RaceContent = race?.Content;
 const OutdoorsContent = outdoors?.Content;
 ---
 
-<SiteLayout title="Fitness" description="Running and outdoor activities">
+<SiteLayout
+  title="Fitness"
+  description="Running and outdoor activities"
+  parent={aboutCrumb}
+>
   <ContentDocument title="Fitness">
     <div class="flex flex-col gap-8">
       <p class="text-lead max-w-2xl mb-3">

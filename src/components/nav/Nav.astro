@@ -1,5 +1,50 @@
-<header class="site-nav" transition:persist="site-nav">
-  <a href="/" class="nav-name">Andrei Stoica</a>
+---
+import type { NavItem } from "../../lib/navLinks";
+
+interface Props {
+	crumb?: string;
+	parent?: NavItem;
+}
+
+const { crumb, parent } = Astro.props;
+---
+
+<header class="site-nav">
+  {
+    crumb ? (
+      <nav aria-label="Breadcrumb">
+        <ol class="trail">
+          <li class="trail-home">
+            <a href="/" class="nav-name">
+              Andrei Stoica
+            </a>
+          </li>
+          {
+            parent && (
+              <li class="trail-parent">
+                <span class="trail-sep" aria-hidden="true">
+                  /
+                </span>
+                <a href={parent.href} class="trail-link">
+                  {parent.label}
+                </a>
+              </li>
+            )
+          }
+          <li class="trail-current" aria-current="page">
+            <span class="trail-sep" aria-hidden="true">
+              /
+            </span>
+            <span class="trail-page">{crumb}</span>
+          </li>
+        </ol>
+      </nav>
+    ) : (
+      <a href="/" class="nav-name">
+        Andrei Stoica
+      </a>
+    )
+  }
 </header>
 
 <style>
@@ -14,6 +59,60 @@
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    text-decoration: none;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: transparent;
+    transition: text-decoration-color var(--duration-ui) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .site-nav .nav-name:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  .trail {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+  }
+
+  .trail-home,
+  .trail-parent {
+    flex-shrink: 0;
+  }
+
+  .trail-parent {
+    display: flex;
+    align-items: center;
+  }
+
+
+  /* The page title below shows the full name, so the crumb may truncate. */
+  .trail-current {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    color: var(--color-text-secondary);
+  }
+
+  .trail-sep {
+    flex-shrink: 0;
+    padding-inline: 0.4em;
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .trail-page {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 </style>

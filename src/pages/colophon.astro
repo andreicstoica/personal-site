@@ -1,9 +1,10 @@
 ---
 import CollectionPage from "../components/content/CollectionPage.astro";
 import MediaGallery from "../components/gallery/MediaGallery.astro";
+import { aboutCrumb } from "../lib/navLinks";
 ---
 
-<CollectionPage slug="colophon" layout="grid">
+<CollectionPage slug="colophon" layout="grid" parent={aboutCrumb}>
   <div class="mt-4 mb-4">
     <h2 class="text-xl font-medium mb-3">
       Memorial to my old sites (rip)

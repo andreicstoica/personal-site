@@ -3,6 +3,9 @@ export type NavItem = {
 	label: string;
 };
 
+/** Parent crumb for pages the About page lists as its sub-pages. */
+export const aboutCrumb: NavItem = { href: "/about", label: "About" };
+
 export const socialIconKinds = [
 	"person",
 	"mail",

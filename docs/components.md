@@ -6,18 +6,21 @@ Components are split between Astro (static composition) and Svelte (client state
 
 **File**: `src/components/nav/Nav.astro`
 
-Static header: the name link, and nothing else. No nav boxes, no dropdown, no drawer — the weather-banner rewrite emptied the header out, so this is Astro markup with a scoped `<style>` and no hydration.
+Static header: the name link on the home page, and a breadcrumb on subpages (`Andrei Stoica / Page title`). No nav boxes, no dropdown, no drawer. This is Astro markup with a scoped `<style>` and no hydration.
 
-- `.site-nav` sets the row padding; `.nav-name` is the only link (`/`)
+- `.site-nav` sets the row padding; `.nav-name` is the only link (`/`). It shows a 1px underline on hover, since it is the only way home
+- `SiteLayout` passes the page `title` as the `crumb` prop on every page except `/`. The crumb is an `<ol>` inside `<nav aria-label="Breadcrumb">`, and the current page is `aria-current="page"`. A long crumb truncates with an ellipsis; the page title below shows the full name
+- Pages the About page lists as its sub-pages (Fitness, Colophon) pass `parent={aboutCrumb}` (`src/lib/navLinks.ts`) to `SiteLayout` or `CollectionPage`, which adds a middle crumb: `Andrei Stoica / About / Fitness`. The parent is a link in regular weight and the primary color, between the bold name and the grey current page. Canon stays top-level because the home page links to it directly. Add a parent only for pages reached from another page
+- Subpages have no back link. `SiteLayout` adds `.page-island-sub` (extra top padding from 768px) in its place
 - `.nav-name` sets `color: var(--color-text-primary)` so the global green `a` color doesn't apply
 - The bar sits on `--color-bg-primary` with a `border-b` hairline — no gradient wash, because it overlaps the top of the weather banner
 - The name link carries `min-h-[44px]` for the touch minimum
-- `transition:persist="site-nav"` keeps it mounted while `ClientRouter` swaps the page body
+- No `transition:persist`: the crumb changes on every page, so a persisted header would go stale
 
 ### Usage
 
 ```astro
-<Nav transition:persist="site-nav" />
+<Nav crumb={isHome ? undefined : title} />
 ```
 
 Page links live in the content instead of the header: the home statement links to `/about`, and social links sit in the footer. The `.nav-box` rules, social dropdown, and mobile drawer CSS were deleted along with `Nav.svelte`.
