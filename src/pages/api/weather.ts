@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
+import { DEFAULT_COORDS, resolveCoordinates } from "../../lib/weather/location";
 import { classifyWeather, type WeatherApi } from "../../lib/weather/scene";
 
 export const prerender = false;
@@ -22,26 +23,13 @@ function unavailable(): Response {
 	});
 }
 
-function coordinate(
-	request: Request,
-	name: string,
-	min: number,
-	max: number,
-): number | null {
-	const raw = request.headers.get(name);
-	if (raw === null || raw.trim() === "") return null;
-	const value = Number(raw);
-	if (!Number.isFinite(value) || value < min || value > max) return null;
-	return value;
-}
-
 export const GET: APIRoute = async ({ request }) => {
-	const latitude = coordinate(request, "x-vercel-ip-latitude", -90, 90);
-	const longitude = coordinate(request, "x-vercel-ip-longitude", -180, 180);
-	if (latitude === null || longitude === null) return unavailable();
-	if (Math.abs(latitude) < 0.01 && Math.abs(longitude) < 0.01) {
-		return unavailable();
-	}
+	const coords =
+		resolveCoordinates(request) ??
+		// Dev has no Vercel IP headers; fall back so the banner shows real weather.
+		(import.meta.env.DEV ? DEFAULT_COORDS : null);
+	if (coords === null) return unavailable();
+	const { latitude, longitude } = coords;
 
 	const url = new URL("https://api.open-meteo.com/v1/forecast");
 	url.searchParams.set("latitude", String(latitude));
