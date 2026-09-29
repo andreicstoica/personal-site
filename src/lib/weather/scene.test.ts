@@ -83,6 +83,20 @@ describe("layered terrain", () => {
 			expect(material("cascade-forest", 2, x, 47.9)).not.toBeNull();
 		}
 	});
+	test("Mount Hood edge firs run to the bottom of the frame", () => {
+		for (const [from, to] of [
+			[0, 24],
+			[138, 160],
+		] as const) {
+			let trunkColumns = 0;
+			for (let x = from; x < to; x += 0.25) {
+				const color = material("cascade-forest", 2, x, 47.9);
+				// Fir texels are dark green. Grass reds start above 120.
+				if (color && color[0] < 60) trunkColumns++;
+			}
+			expect(trunkColumns).toBeGreaterThan(20);
+		}
+	});
 	test("Smith Rock, Haystack, and Crown Point retain continuous bases", () => {
 		for (const [place, layer] of [
 			["bend-plateau", 0],
@@ -179,6 +193,14 @@ describe("layered terrain", () => {
 		expect(layerOffsets(7.5)).toEqual([0.75, 1.5, 3]);
 		expect(layerOffsets(22.5)).toEqual([-0.75, -1.5, -3]);
 	});
+	test("Mount Hood sways at 35% so the orchard gust leads", () => {
+		const [back, middle, front] = layerOffsets(7.5, "cascade-forest");
+		expect(back).toBeCloseTo(0.75 * 0.35);
+		expect(middle).toBeCloseTo(1.5 * 0.35);
+		expect(front).toBeCloseTo(3 * 0.35);
+		expect(layerOffsets(7.5, "painted-hills")).toEqual([0.75, 1.5, 3]);
+		expect(layerOffsets(0, "cascade-forest")).toEqual([0, 0, 0]);
+	});
 
 	test("CPU fallback remains opaque and follows day/night lighting", () => {
 		const scene = {
@@ -197,8 +219,8 @@ describe("layered terrain", () => {
 			nightLight += night.data[i] ?? 0;
 		}
 		expect(dayLight).toBeGreaterThan(nightLight * 2);
-		expect(MOON_RADIUS / (0.055 * 48)).toBeGreaterThan(1.5);
-		expect(MOON_RADIUS / (0.055 * 48)).toBeLessThan(2);
+		expect(MOON_RADIUS / (0.055 * 48)).toBeGreaterThan(1.25);
+		expect(MOON_RADIUS / (0.055 * 48)).toBeLessThan(1.5);
 		expect(moonColor(-1.5, -1)).toEqual([128, 151, 166]);
 		expect(moonColor(0, 0.8)).toEqual([214, 223, 218]);
 		expect(moonColor(5, 0)).toBeNull();
@@ -231,24 +253,42 @@ describe("weather raster and elapsed time", () => {
 		for (const gap of gaps) {
 			start += gap;
 			const event = timeline(start);
-			expect(timeline(start + event.duration / 2).flash).toBeCloseTo(1);
+			// A flash, not a swell: the peak lands within one 60 Hz frame.
+			expect(timeline(start + 0.001).flash).toBe(1);
+			expect(timeline(start + 0.011).flash).toBe(1);
+			expect(timeline(start + event.duration / 2).flash).toBeLessThan(0.5);
 			expect(event.duration).toBe(LIGHTNING_DURATION);
-			if (!event.double)
-				expect(timeline(start + LIGHTNING_DURATION + 0.001).flash).toBe(0);
-			expect(timeline(start + 0.47).flash).toBe(0);
+			expect(timeline(start + LIGHTNING_DURATION + 0.001).flash).toBe(0);
+			expect(timeline(start + 0.7).flash + timeline(start + 0.7).second).toBe(
+				0,
+			);
 			const first = timeline(start + LIGHTNING_DURATION / 2);
-			const second = timeline(start + first.delay + LIGHTNING_DURATION / 2);
+			const second = timeline(start + first.delay + 0.005);
+			expect(first.second).toBe(0);
 			if (event.double) {
 				doubles++;
-				expect(second.flash).toBeGreaterThanOrEqual(0.46);
-				expect(second.flash).toBeLessThanOrEqual(0.54);
-				expect(second.origin - first.origin).toBeGreaterThanOrEqual(4);
-				expect(second.cool).toBe(1);
-				expect(first.cool).toBe(0);
+				// Two strikes, not one moving bolt: a dark beat, then the repeat.
+				expect(first.delay).toBeGreaterThan(LIGHTNING_DURATION + 0.04);
+				const beat = timeline(start + LIGHTNING_DURATION + 0.02);
+				expect(beat.flash).toBe(0);
+				expect(beat.second).toBe(0);
+				expect(second.flash).toBe(0);
+				expect(second.second).toBe(second.strength);
+				expect(
+					timeline(start + first.delay + LIGHTNING_DURATION + 0.001).second,
+				).toBe(0);
+				expect(second.strength).toBeGreaterThanOrEqual(0.5);
+				expect(second.strength).toBeLessThanOrEqual(2 / 3);
+				expect(second.origin).toBe(first.origin);
+				expect(second.split).toBeGreaterThanOrEqual(4);
+				expect(second.split).toBeLessThanOrEqual(6);
+			} else {
+				expect(second.second).toBe(0);
 			}
 		}
-		expect(doubles).toBeGreaterThan(10);
-		expect(doubles).toBeLessThan(50);
+		// About one in four strikes doubles: inside one in three to one in five.
+		expect(doubles).toBeGreaterThan(100 / 5 - 8);
+		expect(doubles).toBeLessThan(100 / 3 + 8);
 		const sample = timeline(20);
 		expect(timeline(20)).toEqual(sample);
 		timeline(500);
@@ -430,16 +470,44 @@ describe("weather seam regression", () => {
 		expect(Math.max(...origins)).toBeGreaterThan(140);
 		expect(origins.filter((x) => x > 60 && x < 100).length).toBeGreaterThan(10);
 	});
-	test("overlapping lightning pulses blend without a cutoff at secondary onset", () => {
+	test("lightning decays fast with return-stroke flicker", () => {
 		const at = createLightningTimeline();
 		let start = 0;
-		for (let i = 1; i < 40; i++) {
+		for (let i = 1; i <= 60; i++) {
 			start += lightningGap(i);
-			const delay = at(start).delay;
-			const before = at(start + delay - 0.00001);
-			const after = at(start + delay + 0.00001);
-			expect(Math.abs(before.flash - after.flash)).toBeLessThan(0.001);
-			expect(Math.abs(before.origin - after.origin)).toBeLessThan(0.001);
+			const frames = Array.from({ length: 254 }, (_, ms) =>
+				at(start + ms / 1000),
+			);
+			const flash = frames.map((frame) => frame.flash);
+			expect(Math.max(...flash)).toBe(1);
+			expect(Math.min(...flash)).toBeGreaterThanOrEqual(0);
+			// At least one re-brightening after the peak reads as electric.
+			const rises = flash.filter(
+				(v, ms) => ms > 20 && v > (flash[ms - 1] ?? v) + 0.05,
+			);
+			expect(rises.length).toBeGreaterThanOrEqual(1);
+			const event = at(start);
+			if (event.double) {
+				const second = Array.from({ length: 254 }, (_, ms) =>
+					at(start + event.delay + ms / 1000),
+				).map((frame) => frame.second);
+				expect(Math.max(...second)).toBe(event.strength);
+				expect(
+					second.filter((v, ms) => ms > 20 && v > (second[ms - 1] ?? v) + 0.02)
+						.length,
+				).toBeGreaterThanOrEqual(1);
+			}
+		}
+	});
+	test("lightning strikes never overlap, so the bolt never slides", () => {
+		const at = createLightningTimeline();
+		let start = 0;
+		for (let i = 1; i < 60; i++) {
+			start += lightningGap(i);
+			for (let t = 0; t < 0.7; t += 0.005) {
+				const frame = at(start + t);
+				expect(frame.flash > 0 && frame.second > 0).toBe(false);
+			}
 		}
 	});
 });

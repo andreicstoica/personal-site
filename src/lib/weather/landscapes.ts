@@ -69,15 +69,17 @@ function fir(
 	height: number,
 	minCenter = -Infinity,
 	maxCenter = Infinity,
+	sink = 0,
 ): boolean {
 	const cell = Math.floor(x / spacing);
 	const center = cell * spacing + spacing * (0.35 + hash(cell * 43) * 0.3);
 	if (center < minCenter || center > maxCenter) return false;
 	const dx = x - center;
 	const h = height * (0.65 + hash(cell * 19 + ground) * 0.35);
-	const top = ground - h;
+	const base = ground + sink * hash(cell * 31 + 5);
+	const top = base - h;
 	const width = (y - top) * 0.24 * (0.8 + 0.2 * Math.sin(y * 9));
-	return y > top && y < ground && (Math.abs(dx) < width || Math.abs(dx) < 0.16);
+	return y > top && y < base && (Math.abs(dx) < width || Math.abs(dx) < 0.16);
 }
 function texture(color: Rgb, x: number, y: number, strength = 0.05): Rgb {
 	const grain =
@@ -298,9 +300,13 @@ export function material(
 							color = mix(color, [189, 180, 113], 0.5);
 					}
 				}
+				const gustLead = Math.sin(time * 0.11);
 				for (let depth = 0; depth < 3; depth++) {
 					const ground = [39.3, 42.3, 45.7][depth] ?? 45.7;
-					for (let row = -3.5; row <= 3.5; row++) {
+					// Centered on the lanes. Back rows carry more, smaller trees so
+					// every depth spans about the front row's width.
+					const half = [6.5, 4.5, 3.5][depth] ?? 3.5;
+					for (let row = -half; row <= half; row++) {
 						const treeSeed = (row + 3.5) * 97 + depth * 331;
 						const scale =
 							(0.6 + depth * 0.32) * (0.96 + hash(treeSeed + 19) * 0.08);
@@ -308,10 +314,15 @@ export function material(
 						const jitter = (hash(treeSeed + 7) - 0.5) * 0.42;
 						const cx = 81 + row * (5.5 + depth * 4) + jitter;
 						if (Math.abs(x - cx) > 4.5) continue;
-						const gustLead = Math.sin(time * 0.11);
+						// Per-tree phase and rate keep neighbors out of lockstep while
+						// the gust still travels across the columns.
+						const treePhase = (hash(treeSeed + 29) - 0.5) * 1.4 + depth * 0.55;
+						const treeRate = 0.9 + hash(treeSeed + 41) * 0.2;
 						const sway =
 							motion.gust *
-							Math.sin(motion.gustPhase + row * 0.34 * gustLead) *
+							Math.sin(
+								motion.gustPhase * treeRate + row * 0.34 * gustLead + treePhase,
+							) *
 							0.85 *
 							(0.7 + depth * 0.15);
 						const height = Math.max(0, (ground - y) / (4.5 * scale));
@@ -365,7 +376,11 @@ export function material(
 						}
 					}
 				}
-				if (fir(x, y, 11, 47, 13, -Infinity, 24) || fir(x, y, 11, 47, 13, 138))
+				// Bases sit at or below the frame edge so the crop roots each tree.
+				if (
+					fir(x, y, 11, 48, 16, -Infinity, 24, 3) ||
+					fir(x, y, 11, 48, 16, 138, Infinity, 3)
+				)
 					color = mix([18, 43, 35], [46, 70, 43], stone(x, y));
 			}
 			break;

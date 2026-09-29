@@ -44,9 +44,10 @@ const UNIFORMS = [
 	"uShimmer",
 	"uLightning",
 	"uFlash",
+	"uFlashSecond",
 	"uFlashSeed",
 	"uFlashOrigin",
-	"uFlashCool",
+	"uFlashSplit",
 	"uBirds",
 	"uHood",
 	"uGolden",
@@ -234,7 +235,10 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			gl.uniform3fv(uniform("uHorizon"), light.horizon);
 			gl.uniform3fv(uniform("uAmbient"), light.ambient);
 			gl.uniform3fv(uniform("uDirect"), light.direct);
-			gl.uniform3fv(uniform("uOffsets"), layerOffsets(timeSeconds));
+			gl.uniform3fv(
+				uniform("uOffsets"),
+				layerOffsets(timeSeconds, current.place),
+			);
 			gl.uniform1f(uniform("uAtlasWidth"), ATLAS_WIDTH);
 			gl.uniform1f(uniform("uDitherSize"), ditherSize);
 			gl.uniform2fv(uniform("uSun"), light.sun);
@@ -255,8 +259,9 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			const lightning = lightningAt(timeSeconds);
 			gl.uniform1f(uniform("uFlash"), lightning.flash);
 			gl.uniform1f(uniform("uFlashSeed"), lightning.seed);
+			gl.uniform1f(uniform("uFlashSecond"), lightning.second);
 			gl.uniform1f(uniform("uFlashOrigin"), lightning.origin);
-			gl.uniform1f(uniform("uFlashCool"), lightning.cool);
+			gl.uniform1f(uniform("uFlashSplit"), lightning.split);
 			gl.uniform1f(
 				uniform("uBirds"),
 				birdsAllowed(current.weather, effect.rain) ? 1 : 0,

@@ -11,7 +11,7 @@ import type { Place, Scene, Weather } from "./scene";
 export const WEATHER_KNOBS = {
 	clearCloud: 0.28,
 	cloudyCloud: 0.78,
-	rainyCloud: 0.94,
+	rainyCloud: 1,
 	clearCloudSpeed: 0.025,
 	cloudyCloudSpeed: 0.045,
 	rainyCloudSpeed: 0.11,
