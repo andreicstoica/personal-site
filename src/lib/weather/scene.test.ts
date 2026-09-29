@@ -390,6 +390,10 @@ describe("weather seam regression", () => {
 		}
 	});
 	test("orchard, river and coast motion stay inside their upload patches", () => {
+		const times = [0.5, 3, 4.5, 5.5, 60, 600];
+		const same = (a: readonly number[] | null, b: readonly number[] | null) =>
+			a === b || (a !== null && b !== null && a.every((v, i) => v === b[i]));
+		const escapes: string[] = [];
 		for (const [place, layers] of [
 			["bend-plateau", [0, 1]],
 			["cascade-forest", [2]],
@@ -397,27 +401,28 @@ describe("weather seam regression", () => {
 			["oregon-coast", [0, 1, 2]],
 		] as const) {
 			const patches = renderMotionPatches(place, 0);
-			for (const time of [0.5, 3, 4.5, 5.5, 60, 600]) {
-				for (const layer of layers)
-					for (let y = 0.125; y < 48; y += 0.25)
-						for (let x = -3.875; x < 164; x += 0.25) {
-							const before = material(place, layer, x, y, 0);
-							const after = material(place, layer, x, y, time);
-							if (JSON.stringify(before) !== JSON.stringify(after)) {
-								expect(
-									patches.some(
-										(p) =>
-											x >= p.x / DETAIL - ATLAS_MARGIN &&
-											x < (p.x + p.width) / DETAIL - ATLAS_MARGIN &&
-											y + layer * 48 >= p.y / DETAIL &&
-											y + layer * 48 < (p.y + p.height) / DETAIL,
-									),
-								).toBe(true);
-							}
+			const inPatch = (x: number, y: number) =>
+				patches.some(
+					(p) =>
+						x >= p.x / DETAIL - ATLAS_MARGIN &&
+						x < (p.x + p.width) / DETAIL - ATLAS_MARGIN &&
+						y >= p.y / DETAIL &&
+						y < (p.y + p.height) / DETAIL,
+				);
+			for (const layer of layers)
+				for (let y = 0.125; y < 48; y += 0.25)
+					for (let x = -3.875; x < 164; x += 0.25) {
+						// Time zero is the static atlas; sample it once per texel.
+						const before = material(place, layer, x, y, 0);
+						if (inPatch(x, y + layer * 48)) continue;
+						for (const time of times) {
+							if (!same(before, material(place, layer, x, y, time)))
+								escapes.push(`${place} L${layer} (${x}, ${y}) t=${time}`);
 						}
-			}
+					}
 		}
-	});
+		expect(escapes).toEqual([]);
+	}, 20_000);
 	test("lightning origins cover both sides and the center of the scene", () => {
 		const at = createLightningTimeline();
 		let start = 0;
