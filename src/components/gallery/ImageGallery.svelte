@@ -23,8 +23,8 @@
   let videoStartAt = 0;
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-  /* Keep in sync with --duration-ui so unmount lands with the CSS exit. */
-  const modalCloseMs = 180;
+  /* Keep in sync with the modal close duration so unmount lands with the CSS exit. */
+  const modalCloseMs = 150;
   const mediaShadow =
     "0 0 50px rgba(0, 0, 0, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 25px -5px rgba(0, 0, 0, 0.1)";
 
@@ -102,12 +102,63 @@
     }
   }
 
-  function seedVideoStart(event: Event) {
+  function onVideoMetadata(event: Event) {
     const video = event.currentTarget;
     if (!(video instanceof HTMLVideoElement)) return;
     if (videoStartAt > 0 && Number.isFinite(video.duration)) {
       video.currentTime = Math.min(videoStartAt, Math.max(0, video.duration - 0.1));
     }
+    // Geometry lands with the metadata — morph from the thumbnail like images.
+    morphMedia(video);
+  }
+
+  /** Strip previews only move while visible; hidden duplicates stay parked. */
+  function viewportPlay(node: HTMLVideoElement) {
+    if (typeof IntersectionObserver === `undefined`) {
+      node.play().catch(() => {});
+      return {};
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) node.play().catch(() => {});
+        else node.pause();
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(node);
+    return {
+      destroy() {
+        observer.disconnect();
+      },
+    };
+  }
+
+  /**
+   * FLIP the open transition: thumb rect → media box, committed with
+   * transitions off before first paint, then released so CSS runs the travel.
+   * Same morph for images and video; video callers wait for loadedmetadata
+   * so the measured box is the real frame, not the pre-metadata default.
+   */
+  function morphMedia(media: HTMLElement): void {
+    const rect = triggerRect;
+    if (!rect) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const start = flipStartFor(rect, media.getBoundingClientRect());
+    flipStart = start ?? "";
+    if (!start) return;
+
+    // Measuring above forces the style recalc that would otherwise start the
+    // transition from a state this effect has not written yet — that
+    // mid-flight jump was the stutter.
+    media.style.transition = "none";
+    media.style.transform = start;
+    media.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      if (mediaRef !== media || isClosing) return;
+      media.style.transition = "";
+      media.style.transform = "";
+    });
   }
 
   $effect(() => {
@@ -138,35 +189,23 @@
 
   $effect(() => {
     const media = mediaRef;
-    const rect = triggerRect;
-    if (!selectedImage || !media || !rect) return;
-    // Video has no intrinsic geometry until its metadata lands, so it fades in
-    // with the backdrop instead of morphing.
-    if (!(media instanceof HTMLImageElement)) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const start = flipStartFor(rect, media.getBoundingClientRect());
-    flipStart = start ?? "";
-    if (!start) return;
-
-    // Commit the start frame with transitions off. Measuring above forces the
-    // style recalc that would otherwise start the transition from a state this
-    // effect has not written yet — that mid-flight jump was the stutter.
-    media.style.transition = "none";
-    media.style.transform = start;
-    media.getBoundingClientRect();
-    requestAnimationFrame(() => {
-      if (mediaRef !== media || isClosing) return;
-      media.style.transition = "";
-      media.style.transform = "";
-    });
+    if (!selectedImage || !media) return;
+    // Video geometry is a placeholder until metadata lands; the
+    // loadedmetadata handler morphs it then. Images morph immediately —
+    // width/height attrs hold their box before decode.
+    if (
+      media instanceof HTMLVideoElement &&
+      media.readyState < HTMLMediaElement.HAVE_METADATA
+    )
+      return;
+    morphMedia(media);
   });
 </script>
 
 <div class={wrapperClass}>
   <div
     aria-label={`${experienceName} media gallery`}
-    class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip px-2"
+    class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip"
   >
     {#each images as image}
       <div class="shrink-0 min-w-fit">
@@ -181,10 +220,12 @@
               src={image.src}
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal
+              use:viewportPlay
               autoplay
               loop
               muted
               playsinline
+              preload="metadata"
             ></video>
           {:else}
             <img
@@ -227,8 +268,9 @@
           muted
           playsinline
           controls
+          preload="auto"
           draggable={false}
-          onloadedmetadata={seedVideoStart}
+          onloadedmetadata={onVideoMetadata}
           style="box-shadow: {mediaShadow};"
         ></video>
       {:else}

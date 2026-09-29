@@ -103,8 +103,11 @@
 <style>
   #weather-lab {
     position: fixed;
-    right: 0.75rem;
-    bottom: 0.75rem;
+    right: var(--guide-launch-inset);
+    /* Stack above the chat launcher instead of on it. */
+    bottom: calc(
+      var(--guide-launch-inset) + var(--guide-launch-size) + var(--spacing-xs)
+    );
     z-index: 40;
     display: grid;
     gap: 0.3rem;
@@ -149,6 +152,6 @@
 
   button:hover {
     border-color: var(--color-text-secondary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 </style>

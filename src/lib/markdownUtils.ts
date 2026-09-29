@@ -1,5 +1,4 @@
 // Parse markdown content to extract sections by headers
-import { iconSvg } from "../icons/pixelarticons";
 
 function formatMarkdownLink(
 	_match: string,
@@ -10,9 +9,8 @@ function formatMarkdownLink(
 	const externalAttrs = isExternal
 		? ' target="_blank" rel="noopener noreferrer"'
 		: "";
-	const linkIcon = isExternal ? iconSvg("external-link", "inline-icon") : "";
 
-	return `<a href="${href}" class="markdown-link"${externalAttrs}>${text}${linkIcon}</a>`;
+	return `<a href="${href}" class="markdown-link"${externalAttrs}>${text}</a>`;
 }
 export function parseMarkdownContent(
 	content: string,

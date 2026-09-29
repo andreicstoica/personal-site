@@ -31,7 +31,8 @@ Global footer rendered inside the scroll region, below the page slot.
 - One list item per `socialNavItems` entry in `src/lib/navLinks.ts` (GitHub, LinkedIn, Substack, X)
 - Each link opens in a new tab with `rel="noopener noreferrer"`
 - `BeosIcon` maps the `icon` field (`person` / `mail` / `terminal` / `balloon`) to a 24px pixel-art SVG. The switch is exhaustive via `assertNever`, so a new `SocialIcon` without a glyph is a compile error
-- Hairline `border-top` from `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`, so it holds in both modes
+- Hairline `border-top` in `var(--color-bg-secondary)` — the shared divider gray; holds in both modes from one token
+- Links render at `text-sm` (14px) so the footer recedes below body copy; the list sits in a `<nav aria-label="Social links">` landmark
 - `transition:persist="site-footer"`
 
 ### Usage
@@ -48,8 +49,8 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 
 ### Gallery strip
 
-- `flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip px-2`
-- `.gallery-strip` adds `scroll-snap-type: x proximity` and `touch-action: pan-x`
+- `flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip`, with no inline padding, so media sits flush with its column edge. Snap-to-start would ignore padding anyway and shift multi-image strips 8px left of single-image ones.
+- `.gallery-strip` adds `scroll-snap-type: x proximity` and `touch-action: pan-x`; thumbnail buttons use an inset focus ring (`outline-offset: -2px`) so the overflow clip never hides it
 - Thumbnails are `h-50 w-auto object-contain` (200px tall, natural width)
 - All thumbnails render on mount; there is no `IntersectionObserver` gate. Offscreen images defer via native `loading="lazy"`
 - Each thumbnail is a `<button>` with `cursor-zoom-in`
@@ -60,7 +61,7 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 - Full-screen overlay: `position: fixed; inset: 0; background: rgb(0 0 0 / 0.8); backdrop-filter: blur(4px)`
 - Images max out at `95vw` x `90dvh`
 - Close: click backdrop or press Escape
-- Animation: `modal-enter` / `modal-exit` keyframes (opacity fade, 280ms)
+- Animation: FLIP morph from the clicked thumbnail + paired scrim fade, 250ms in / 150ms out, both `--ease-out`
 
 ### Usage
 

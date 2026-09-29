@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
+  import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import { portal } from "../../lib/portal";
   import {
     isColdStart,
@@ -17,7 +18,7 @@
     action?: ChatAction;
   };
 
-  const storageKey = "andrei-guide-v1";
+  const storageKey = GUIDE_STORAGE_KEY;
 
   let open = $state(false);
   let messages = $state<GuideMessage[]>([]);
@@ -32,7 +33,6 @@
   let panelRef = $state<HTMLDivElement | null>(null);
   let launchRef = $state<HTMLButtonElement | null>(null);
   let noSlide = $state(false);
-  let desktop = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
   let abortRef: AbortController | null = null;
 
@@ -113,7 +113,7 @@
       rootRef.contains(document.activeElement);
     abortRef?.abort();
     open = false;
-    // On desktop the launcher is hidden while the drawer is open; wait a tick
+    // The launcher is hidden while the guide is open; wait a tick
     // so it is visible and focusable again before handing focus back.
     if (focusWasInside) void tick().then(() => launchRef?.focus());
   }
@@ -276,6 +276,16 @@
     );
   });
 
+  // The page reserves room for the open drawer (global.css). SiteLayout sets
+  // the same attribute before paint on load and on page swaps.
+  $effect(() => {
+    if (!hydrated) return;
+    const root = document.documentElement;
+    root.dataset.guide = open ? "open" : "closed";
+    if (noSlide) root.dataset.guideInstant = "";
+    else delete root.dataset.guideInstant;
+  });
+
   $effect(() => {
     if (!open && followTimer) {
       clearTimeout(followTimer);
@@ -283,15 +293,6 @@
     }
   });
 
-  $effect(() => {
-    const query = window.matchMedia("(min-width: 768px)");
-    const apply = () => {
-      desktop = query.matches;
-    };
-    apply();
-    query.addEventListener("change", apply);
-    return () => query.removeEventListener("change", apply);
-  });
 
   $effect(() => {
     if (!open || typeof window === "undefined") return;
@@ -336,11 +337,11 @@
       <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
       <button
         type="button"
-        class="guide-icon-button bg-[var(--color-primary)] text-white rounded-none"
+        class="guide-icon-button"
         aria-label="Close guide"
         onclick={closeGuide}
       >
-        <Icon name="close" class="w-5 h-5" />
+        <Icon name="close" class="w-4 h-4" />
       </button>
     </header>
 
@@ -350,20 +351,18 @@
       aria-live="polite"
     >
       {#if messages.length === 0}
-        {#if offline}
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            The inference server is currently down - it is expensive to run!
-          </p>
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            Reach out directly and I'll spin it up for you:
-            <br />
-            <em>andrei c stoica (at) icloud (dot) com</em>
-          </p>
-        {:else}
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            Ask about a project or a job. Say “show me Refract” and I'll open the page.
-          </p>
-        {/if}
+        <div class="guide-empty">
+          {#if offline}
+            <p>The inference server is currently down - it is expensive to run!</p>
+            <p>
+              Reach out directly and I'll spin it up for you:
+              <br />
+              <em class="text-[var(--color-text-primary)]">andrei c stoica (at) icloud (dot) com</em>
+            </p>
+          {:else}
+            <p>Ask about a project or a job. Say “show me Refract” and I'll open the page.</p>
+          {/if}
+        </div>
       {/if}
 
       {#each messages as message (message.id)}
@@ -391,7 +390,7 @@
                     <div class="flex flex-wrap gap-x-2 gap-y-2">
                       {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
                         {#if source.href && source.href !== actionHref(message.action)}
-                          <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
+                          <a href={source.href} class="text-[11px] text-[var(--color-primary-text)] underline">
                             {source.title}
                           </a>
                         {:else if !source.href}
@@ -429,7 +428,7 @@
       <button
         type="submit"
         disabled={sending || input.trim().length === 0}
-        class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
+        class="guide-send"
       >
         Send
       </button>
@@ -442,11 +441,17 @@
     bind:this={launchRef}
     aria-expanded={open}
     aria-controls="guide-panel"
-    inert={open && desktop}
+    inert={open}
     aria-label={open ? "Close guide" : "Ask Andrei"}
     onclick={(event) => {
       event.stopPropagation();
       open = !open;
+    }}
+    oncontextmenu={(event) => {
+      // Hidden UAT affordance: right-click (or long-press) toggles the
+      // weather lab in any build (WeatherBanner.svelte).
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent("weather-lab:toggle"));
     }}
   >
     <Icon name={open ? "close" : "chat"} class="w-4 h-4" />
@@ -457,8 +462,8 @@
   .guide-dock {
     position: fixed;
     z-index: 70;
-    right: 0.75rem;
-    bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    right: max(var(--guide-launch-inset), env(safe-area-inset-right, 0px));
+    bottom: max(var(--guide-launch-inset), env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -471,21 +476,38 @@
     pointer-events: auto;
   }
 
-  /* Base popover state — also the fallback for fractional viewport widths
-     between the two media blocks: hidden until opened, no enter/exit
-     motion. The desktop block below replaces the surface with the drawer. */
+  /* One surface, two geometries: a bottom sheet on phones and a right drawer
+     on desktop. Both slide in from --guide-hide; closing uses the shorter UI
+     duration and hides with visibility once the slide ends. */
   .guide-panel {
-    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    display: flex;
     flex-direction: column;
-    width: min(26rem, calc(100vw - 1.5rem));
-    height: min(36rem, calc(100dvh - 5.5rem));
-    border: 1px solid var(--color-text-secondary);
-    background: var(--color-bg-primary);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border: none;
+    transform: var(--guide-hide);
+    visibility: hidden;
+    transition:
+      transform var(--duration-ui) var(--ease-out),
+      visibility 0s linear var(--duration-ui);
   }
 
   .guide-dock[data-open="true"] .guide-panel {
-    display: flex;
+    transform: none;
+    visibility: visible;
+    transition:
+      transform var(--duration-drawer) var(--ease-out),
+      visibility 0s;
+  }
+
+  .guide-dock[data-no-slide="true"] .guide-panel {
+    transition: none;
+  }
+
+  .guide-dock[data-open="true"] .guide-launch {
+    visibility: hidden;
   }
 
   .guide-thread {
@@ -517,15 +539,14 @@
   }
 
   .guide-launch {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: var(--guide-launch-size);
+    height: var(--guide-launch-size);
     background: var(--color-primary);
     color: white;
     border: 1px solid var(--color-primary);
     box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
     transition:
-      background-color var(--duration-ui) var(--ease-out),
-      scale 160ms var(--ease-out);
+      background-color var(--duration-ui) var(--ease-out);
   }
 
   .guide-launch::before,
@@ -535,10 +556,54 @@
     inset: -0.25rem;
   }
 
+  /* Close is secondary: a quiet 32px glyph, with ::before keeping a 44px
+     tap area (inset -0.375rem on each side). */
   .guide-icon-button {
-    width: 2.75rem;
-    height: 2.75rem;
-    transition: background-color var(--duration-ui) var(--ease-out);
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    color: var(--color-text-secondary);
+    transition:
+      background-color var(--duration-ui) var(--ease-out),
+      color var(--duration-ui) var(--ease-out);
+  }
+
+  .guide-icon-button::before {
+    inset: -0.375rem;
+  }
+
+  .guide-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 100%;
+    max-width: 38ch;
+    margin-inline: auto;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    text-align: center;
+  }
+
+  .guide-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    background: var(--color-primary);
+    color: white;
+    font-size: var(--text-sm);
+  }
+
+  .guide-send:disabled {
+    opacity: 0.5;
+  }
+
+  /* The ring sits on the border, so focus reads as one edge, not two boxes. */
+  .guide-input:focus-visible {
+    outline-offset: -1px;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -547,82 +612,50 @@
     }
 
     .guide-icon-button:hover {
-      background: var(--color-primary-hover);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
     }
 
     .guide-input {
       font-size: 0.875rem;
     }
+
+    .guide-send {
+      min-height: 2.25rem;
+    }
   }
 
-  .guide-launch:active {
-    scale: 0.98;
-  }
-
-  @media (max-width: 767px) {
-    .guide-dock {
-      right: max(10%, env(safe-area-inset-right, 0px));
-      bottom: max(10%, env(safe-area-inset-bottom, 0px));
-    }
-
-    .guide-dock[data-open="true"] {
-      top: max(10%, env(safe-area-inset-top, 0px));
-      left: max(10%, env(safe-area-inset-left, 0px));
-    }
-
+  /* Phones: a bottom sheet over the lower two thirds. The sheet's own close
+     button replaces the launcher while open. */
+  @media (max-width: 767.98px) {
     .guide-panel {
-      width: 100%;
-      height: auto;
-      flex: 1 1 auto;
-      min-height: 0;
+      --guide-hide: translateY(100%);
+      left: 0;
+      height: 66dvh;
+      background: var(--color-bg-primary);
+      box-shadow: var(--elevation-sheet);
     }
   }
 
-  /* Desktop: a full-height drawer docked to the viewport's right edge. It
-     overlays the white gutter (and the content edge on narrower screens)
-     with a sunken surface and a shadow cast inward from the page's edge —
-     the recess reads as under the page, and the page never shifts. */
+  /* Desktop: a full-height drawer as wide as the page's two gutters
+     (--guide-width). The page makes room for it (global.css), so no content
+     sits under it. The sunken surface and inward shadow read as a recess. */
   @media (min-width: 768px) {
     .guide-panel {
-      position: fixed;
+      --guide-hide: translateX(100%);
       top: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      width: min(24rem, 100vw);
-      height: auto;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      border: none;
+      z-index: 2;
+      width: var(--guide-width);
       background: var(--color-bg-sunken);
       box-shadow: var(--elevation-drawer);
-      transform: translateX(100%);
-      visibility: hidden;
-      z-index: 2;
-      transition:
-        transform var(--duration-ui) var(--ease-out),
-        visibility 0s linear var(--duration-ui);
-    }
-
-    .guide-dock[data-open="true"] .guide-panel {
-      transform: translateX(0);
-      visibility: visible;
-      transition:
-        transform var(--duration-drawer) var(--ease-out),
-        visibility 0s;
-    }
-
-    .guide-dock[data-no-slide="true"] .guide-panel {
-      transition: none;
     }
 
     /* The launcher sits under the drawer's footprint; hide it only once
        the drawer has arrived so no bare corner shows mid-slide. */
     .guide-dock[data-open="true"] .guide-launch {
-      visibility: hidden;
       transition:
         visibility 0s linear var(--duration-drawer),
-        background-color var(--duration-ui) var(--ease-out),
-        scale 160ms var(--ease-out);
+        background-color var(--duration-ui) var(--ease-out);
     }
   }
 
@@ -635,10 +668,6 @@
     .guide-launch,
     .guide-dock[data-open="true"] .guide-launch {
       transition: none;
-    }
-
-    .guide-launch:active {
-      scale: 1;
     }
   }
 </style>

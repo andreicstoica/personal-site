@@ -21,7 +21,7 @@ Two layers: the thumbnail strip (inline) and the modal inspect (portal).
 - Full-viewport overlay with blur backdrop
 - Close: click anywhere on backdrop, or Escape key
 - Body scroll locked via `html.image-inspect-open` class
-- Animation: opacity fade 280ms in, 180ms out
+- Animation: FLIP morph from the clicked thumbnail + paired scrim fade, 250ms in / 150ms out, both `--ease-out`
 - `overscroll-behavior: none` prevents browser back gesture
 
 ### What's missing (improvement targets)

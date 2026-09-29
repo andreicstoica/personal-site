@@ -3,6 +3,7 @@ import FloatingChat from "../components/chat/FloatingChat.svelte";
 import SiteFooter from "../components/footer/SiteFooter.astro";
 import Nav from "../components/nav/Nav.astro";
 import WeatherBanner from "../components/weather/WeatherBanner.svelte";
+import { GUIDE_STORAGE_KEY } from "../lib/guideState";
 import { showWeatherLab } from "../lib/weather/lab";
 import RootLayout from "./RootLayout.astro";
 
@@ -13,9 +14,30 @@ interface Props {
 
 const { title, description } = Astro.props;
 const showLab = showWeatherLab(import.meta.env.DEV);
+const isHome = Astro.url.pathname === "/";
 ---
 
 <RootLayout title={title} description={description}>
+  <script is:inline define:vars={{ guideKey: GUIDE_STORAGE_KEY }}>
+    // Reserve room for an open chat drawer before paint, so the page does not
+    // flash full width on load or on a ClientRouter swap (FloatingChat.svelte).
+    (() => {
+      const apply = () => {
+        let open = false;
+        try {
+          open = JSON.parse(sessionStorage.getItem(guideKey) || "{}").open === true;
+        } catch {}
+        document.documentElement.dataset.guide = open ? "open" : "closed";
+        document.documentElement.dataset.guideInstant = "";
+      };
+      apply();
+      // ClientRouter re-runs inline scripts on each page; listen once.
+      if (!window.__guideReserve) {
+        window.__guideReserve = true;
+        document.addEventListener("astro:after-swap", apply);
+      }
+    })();
+  </script>
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
     <div class="flex min-h-full flex-col">
       <div class="site-column">
@@ -30,9 +52,14 @@ const showLab = showWeatherLab(import.meta.env.DEV);
         <div
           class="page-island flex w-full flex-1 flex-col"
           data-page-island
-          transition:name="page"
-          transition:animate="fade"
         >
+          {
+            !isHome && (
+              <a href="/" class="back-home">
+                <span aria-hidden="true">←</span> Home
+              </a>
+            )
+          }
           <slot />
         </div>
         <SiteFooter />
@@ -41,6 +68,43 @@ const showLab = showWeatherLab(import.meta.env.DEV);
     <FloatingChat client:load />
   </div>
 </RootLayout>
+
+<style>
+  /* Same voice as the table's column labels: small uppercase secondary.
+     It sits tight above the page title it belongs to; ::before keeps a
+     44px-tall tap area without padding the layout. */
+  .back-home {
+    position: relative;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-block: var(--spacing-xs) calc(-1 * var(--spacing-xs));
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  @media (min-width: 768px) {
+    .back-home {
+      margin-top: var(--spacing-md);
+    }
+  }
+
+  .back-home::before {
+    content: "";
+    position: absolute;
+    inset: -0.875rem -0.5rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .back-home:hover {
+      color: var(--color-text-primary);
+    }
+  }
+</style>
 
 <script>
   function resetPageScroll(): void {

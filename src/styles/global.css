@@ -15,8 +15,12 @@
 	/* Colors */
 	--color-primary: #3848ff;
 	--color-primary-hover: #2a37cc;
-	--color-secondary: #00a647;
-	--color-secondary-hover: #008a3d;
+	/* Blue as text or a focus ring. Equals the fill in light mode; dark mode
+	   lifts L so it clears 4.5:1 on dark surfaces (the fill keeps white text). */
+	--color-primary-text: var(--color-primary);
+	/* Link green, darkened to 4.6:1 on the light page (was #00a647, 3.2:1). */
+	--color-secondary: oklch(0.545 0.145 150.5);
+	--color-secondary-hover: oklch(0.48 0.13 150.5);
 	--color-accent: #c23b23;
 	--color-accent-hover: #a12f1c;
 	--color-warning: #fcc605;
@@ -92,6 +96,10 @@
 	--elevation-drawer:
 		inset 1px 0 0 rgb(0 0 0 / 0.06),
 		inset 14px 0 34px -18px rgb(0 0 0 / 0.3);
+	/* Phone sheet sits on top of the page: layered shadow cast upward. */
+	--elevation-sheet:
+		0 -1px 3px rgb(0 0 0 / 0.08),
+		0 -10px 28px rgb(0 0 0 / 0.14);
 }
 
 .nav-name {
@@ -120,7 +128,8 @@
 	.modal-backdrop,
 	.modal-backdrop.closing,
 	.btn-primary:active,
-	.btn-secondary:active {
+	.btn-secondary:active,
+	[data-page-scroll] {
 		animation: none;
 		transition: none;
 	}
@@ -144,10 +153,20 @@
 		--color-bg-tertiary: #404040;
 		--color-bg-sunken: #1f1f1f;
 
+		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
+		--color-primary-text: oklch(0.66 0.18 272);
+		/* The original green already clears 4.6:1 on dark; hover lightens. */
+		--color-secondary: #00a647;
+		--color-secondary-hover: oklch(0.7 0.17 150.5);
+
 		/* Depth flattens to a single ring against dark surfaces */
 		--elevation-drawer:
 			inset 1px 0 0 rgb(255 255 255 / 0.1),
 			inset 14px 0 34px -18px rgb(0 0 0 / 0.5);
+		/* Shadows barely read on dark ground; a faint lit edge marks the layer. */
+		--elevation-sheet:
+			inset 0 1px 0 rgb(255 255 255 / 0.08),
+			0 -12px 36px rgb(0 0 0 / 0.55);
 
 		/* ASCII Art Colors - Dark Mode */
 		--color-ascii-dark: #333333;
@@ -162,6 +181,30 @@
 }
 
 /* Global base styles */
+/* Every clickable control shows the pointer. In the base layer so Tailwind
+   cursor utilities (the gallery's zoom-in) still override it. */
+@layer base {
+	button:not(:disabled),
+	[role="button"],
+	select,
+	summary,
+	label[for] {
+		cursor: pointer;
+	}
+
+	button:disabled {
+		cursor: not-allowed;
+	}
+}
+
+p,
+li,
+dd,
+blockquote,
+figcaption {
+	text-wrap: pretty;
+}
+
 html {
 	font-family: var(--font-sans);
 	font-size: 16px;
@@ -208,7 +251,13 @@ body {
 	font-size: var(--text-lg);
 	line-height: var(--leading-relaxed);
 	color: var(--color-text-primary);
-	text-wrap: pretty;
+}
+
+/* On phones the 17px lead fills the first screen; step down to body size. */
+@media (max-width: 767px) {
+	.text-lead {
+		font-size: var(--text-base);
+	}
 }
 
 .text-muted {
@@ -221,8 +270,40 @@ body {
 }
 
 :focus-visible {
-	outline: 2px solid var(--color-primary);
+	outline: 2px solid var(--color-primary-text);
 	outline-offset: 2px;
+}
+
+/* Chat launcher: one size and corner inset, shared by the chat dock and the
+   weather lab stacked above it (FloatingChat.svelte, WeatherLab.svelte). */
+:root {
+	--guide-launch-size: 2.25rem;
+	--guide-launch-inset: var(--spacing-sm);
+}
+
+/* Desktop chat drawer: as wide as the page's two gutters, minus the page
+   padding, so opening it slides the content left with no overlap. The clamp
+   keeps it usable on narrow windows and narrow on very wide ones. */
+@media (min-width: 768px) {
+	:root {
+		--guide-width: clamp(
+			20rem,
+			100vw - 64rem - 2 * var(--page-padding-inline),
+			28rem
+		);
+	}
+
+	[data-page-scroll] {
+		transition: padding-inline-end var(--duration-drawer) var(--ease-out);
+	}
+
+	:root[data-guide="open"] [data-page-scroll] {
+		padding-inline-end: var(--guide-width);
+	}
+
+	:root[data-guide-instant] [data-page-scroll] {
+		transition: none;
+	}
 }
 
 .layout-grid {
@@ -298,7 +379,6 @@ body {
 	transition:
 		background-color var(--duration-ui) var(--ease-out),
 		box-shadow var(--duration-ui) var(--ease-out),
-		transform 160ms var(--ease-out),
 		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
@@ -313,10 +393,6 @@ body {
 	}
 }
 
-.btn-primary:active {
-	transform: scale(0.98);
-}
-
 .btn-secondary {
 	background: transparent;
 	color: var(--color-text-primary);
@@ -327,7 +403,6 @@ body {
 	transition:
 		border-color var(--duration-ui) var(--ease-out),
 		color var(--duration-ui) var(--ease-out),
-		transform 160ms var(--ease-out),
 		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
@@ -337,13 +412,9 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
 	.btn-secondary:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
+		border-color: var(--color-primary-text);
+		color: var(--color-primary-text);
 	}
-}
-
-.btn-secondary:active {
-	transform: scale(0.98);
 }
 
 /* Global link styles */
@@ -355,6 +426,32 @@ a {
 
 a:hover {
 	color: var(--color-secondary-hover);
+}
+
+/* Intro links (about/canon/blog): plain text with a quiet underline, so the
+   lead reads as one calm paragraph. Hover only changes underline color, which
+   never moves the hit target. External ones get the ↗ mark below. */
+.lead-link {
+	color: inherit;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+	text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+	white-space: nowrap;
+	transition: text-decoration-color var(--duration-ui) var(--ease-out);
+}
+
+/* Link-out mark for links that open another site. The no-break space keeps
+   the arrow on the last word's line; the empty alt text keeps it silent. */
+.markdown-link[target="_blank"]::after,
+.lead-link[target="_blank"]::after {
+	content: "\00a0↗";
+	content: "\00a0↗" / "";
+}
+
+.lead-link:hover {
+	color: inherit;
+	text-decoration-color: currentColor;
 }
 
 /* Markdown content styling */
@@ -390,14 +487,6 @@ a:hover {
 .markdown-link {
 	color: var(--color-secondary);
 	transition: color 0.2s ease;
-}
-
-.inline-icon {
-	display: inline-block;
-	width: 0.875em;
-	height: 0.875em;
-	vertical-align: -0.125em;
-	margin-left: 0.2em;
 }
 
 .markdown-link:hover {
@@ -498,12 +587,10 @@ a:hover {
 	scroll-snap-align: start;
 }
 
-.gallery-strip button {
-	transition: transform 160ms var(--ease-out);
-}
-
-.gallery-strip button:active {
-	transform: scale(0.98);
+/* The strip has no inline padding, so media sits flush with its column
+   edge. An inset ring stays visible inside the overflow clip. */
+.gallery-strip button:focus-visible {
+	outline-offset: -2px;
 }
 
 /* Mobile refinements */
@@ -578,9 +665,9 @@ html.image-inspect-open [data-page-scroll] {
 	overflow: hidden !important;
 }
 
-/* Modal transitions — scrim fades while media scales from the clicked thumbnail. */
+/* Modal transitions — scrim fades while media morphs from the clicked thumbnail. */
 .modal-backdrop {
-	transition: opacity var(--duration-drawer) var(--ease-out);
+	transition: opacity 250ms var(--ease-out);
 
 	@starting-style {
 		opacity: 0;
@@ -589,23 +676,23 @@ html.image-inspect-open [data-page-scroll] {
 
 .modal-backdrop.closing {
 	opacity: 0;
-	transition: opacity var(--duration-ui) var(--ease-out);
+	transition: opacity 150ms var(--ease-out);
 }
 
 /*
  * The media morphs from the thumbnail it was clicked from, so the start
  * transform is a FLIP written by ImageGallery.svelte before the first paint —
  * JS owns the start value, CSS owns the travel. Origin is 0 0 because the start
- * transform carries its own translation; travel is on-screen movement, hence
- * ease-in-out rather than the backdrop's ease-out.
+ * transform carries its own translation; open travels (250ms), close snaps
+ * (150ms), both on the backdrop's ease-out.
  */
 .modal-backdrop .image-inspect-media {
 	transform-origin: 0 0;
-	transition: transform var(--duration-drawer) var(--ease-in-out);
+	transition: transform 250ms var(--ease-out);
 }
 
 .modal-backdrop.closing .image-inspect-media {
-	transition: transform var(--duration-ui) var(--ease-in-out);
+	transition: transform 150ms var(--ease-out);
 }
 
 /*

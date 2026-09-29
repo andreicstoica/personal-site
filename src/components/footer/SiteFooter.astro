@@ -14,18 +14,20 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
 
 <footer class="site-footer" transition:persist="site-footer">
   <div class="site-footer-inner">
-    <ul class="site-footer-list">
-      {
-        socialNavItems.map((item) => (
-          <li>
-            <a href={item.href} target="_blank" rel="noopener noreferrer">
-              <BeosIcon kind={item.icon} />
-              <span>{item.label}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    <nav aria-label="Social links">
+      <ul class="site-footer-list">
+        {
+          socialNavItems.map((item) => (
+            <li>
+              <a href={item.href} target="_blank" rel="noopener noreferrer">
+                <BeosIcon kind={item.icon} />
+                <span>{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
     <p class="site-footer-updated">
       Last updated <time datetime={__BUILD_DATE__.slice(0, 10)}>{updatedAt}</time>
     </p>
@@ -35,16 +37,15 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
 <style>
   .site-footer {
     margin-top: 2.5rem;
-    padding-block: 1.25rem 1.75rem;
-    border-top: 1px solid
-      color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    padding-block: var(--spacing-lg);
+    border-top: 1px solid var(--color-bg-secondary);
   }
 
   .site-footer-inner {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 1.25rem;
+    gap: 0.5rem 1.25rem;
   }
 
   .site-footer-updated {
@@ -59,23 +60,68 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
   .site-footer-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
+    gap: 0.5rem 1.25rem;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  /* The ::before keeps a 44px-tall tap area while the layout box matches the
+     visible text, so the footer spaces with plain tokens. */
   .site-footer-list a {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    min-height: 40px;
     color: var(--color-text-primary);
+    font-size: var(--text-sm);
     text-decoration: none;
   }
 
-  .site-footer-list a:active {
-    opacity: 0.72;
+  .site-footer-list a::before {
+    content: "";
+    position: absolute;
+    inset: -0.75rem -0.375rem;
+  }
+
+  /* Below 768px the footer stacks and centers on the spacing scale.
+     Centered, the date clears the corner chat button (FloatingChat.svelte). */
+  @media (max-width: 767.98px) {
+    .site-footer {
+      margin-top: var(--spacing-lg);
+      padding-block: var(--spacing-lg)
+        calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
+    }
+
+    .site-footer-inner {
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .site-footer-list {
+      justify-content: center;
+    }
+
+    .site-footer-updated {
+      margin: 0;
+    }
+  }
+
+  /* Phones: all four links fit one row. */
+  @media (max-width: 40rem) {
+    .site-footer-list {
+      gap: 0.25rem 0.875rem;
+    }
+
+    .site-footer-list a {
+      gap: 0.375rem;
+      font-size: var(--text-xs);
+    }
+
+    .site-footer-list :global(.beos-icon) {
+      width: 18px;
+      height: 18px;
+    }
   }
 
   @media (hover: hover) and (pointer: fine) {

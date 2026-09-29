@@ -24,6 +24,7 @@
 
   let { showLab }: { showLab: boolean } = $props();
 
+
   function browserStorage(): Storage | null {
     try {
       return sessionStorage;
@@ -33,6 +34,28 @@
   }
 
   const storage = browserStorage();
+
+  const LAB_KEY = "oregon-banner-lab-v1";
+  // Dev and preview builds show the lab by default; any build can toggle it
+  // from the chat launcher's context menu (FloatingChat.svelte).
+  const storedLab = storage?.getItem(LAB_KEY);
+  let labToggled = $state<boolean | null>(
+    storedLab == null ? null : storedLab === "on",
+  );
+  const labVisible = $derived(labToggled ?? showLab);
+
+  $effect(() => {
+    const onToggle = () => {
+      labToggled = !(labToggled ?? showLab);
+      try {
+        storage?.setItem(LAB_KEY, labToggled ? "on" : "off");
+      } catch {
+        // Blocked storage: the toggle still lasts for this page.
+      }
+    };
+    window.addEventListener("weather-lab:toggle", onToggle);
+    return () => window.removeEventListener("weather-lab:toggle", onToggle);
+  });
   const cachedReading = storage ? loadReading(storage) : null;
   let place = $state<Place>(
     storage ? loadOrCreatePlace(storage) : randomPlace(),
@@ -233,7 +256,7 @@
   ></canvas>
 </div>
 
-{#if showLab}
+{#if labVisible}
   <WeatherLab
     place={scene.place}
     weather={scene.weather}

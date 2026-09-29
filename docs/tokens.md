@@ -7,7 +7,7 @@ All tokens live in `src/styles/global.css` (TAB-indented, keep it that way). Com
 Two accepted ways to reference a token from a Tailwind class:
 
 - **Bracket form** — `border-[var(--color-bg-secondary)]`, `text-[var(--color-text-primary)]`. The house idiom; 14 matching lines in `FloatingChat.svelte` alone.
-- **Shorthand form** — `bg-(--color-bg-secondary)` (Tailwind v4). Same meaning; used in `ExperienceRow.astro:48`.
+- **Shorthand form** — `bg-(--color-bg-secondary)` (Tailwind v4). Same meaning; used in `ExperienceRow.astro:52`.
 
 Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--color-text-primary]`, `text-(color-text-primary)`) are bugs, not options — don't reintroduce them. In scoped `<style>` blocks write `var(--token)` directly.
 
@@ -51,15 +51,15 @@ What text color?
 
 `--color-text-inverse` is correct only on `--tag-*` fills in light mode; see the chip pairs in [DESIGN.md](./DESIGN.md).
 
-- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:350`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:486`, `SiteFooter.astro:73`).
-- **Interactive/focus**: `--color-primary` for hover borders, focus rings (`:focus-visible` = 2px solid `--color-primary`, offset 2px, `global.css:223`), and selection wash (primary at 24%).
+- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:350`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:486`, `SiteFooter.astro:75`).
+- **Interactive/focus**: `--color-primary-text` for blue text, hover borders and focus rings (`:focus-visible` = 2px solid `--color-primary-text`, offset 2px). It equals `--color-primary` in light mode and lifts to `oklch(0.66 0.18 272)` in dark mode, where the fill blue is only 2.5:1. Fills (launcher, Send, user bubbles) keep `--color-primary` with white text. Selection wash stays primary at 24%.
+- **Links**: `--color-secondary` green is `oklch(0.545 0.145 150.5)` in light mode (4.6:1) and `#00a647` in dark mode (4.7:1).
 
-## Borders — closed set of four
+## Borders — closed set of three
 
-1. **Section hairline** — `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`; the footer's divider (`SiteFooter.astro:39`). Holds in both modes from one rule.
-2. **In-panel rule/input border** — `border-[var(--color-bg-secondary)]` (assistant bubbles, their citation rule, and the input: `FloatingChat.svelte:374,379,427`). The drawer's own header and form carry no rule — space separates them.
-3. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:482` popover) and outlined controls (`.btn-secondary`, `global.css:324`).
-4. **Accent/focus border** — `var(--color-primary)` (`btn-secondary:hover`, `global.css:340`).
+1. **Shared gray** — `var(--color-bg-secondary)`: section hairlines (footer divider `SiteFooter.astro:41`, experience-row rules), in-panel rules/input borders (assistant bubbles, their citation rule, and the input), and the neutral tags chips. One gray for dividers and labels; holds in both modes.
+2. **Strong edge** — `1px solid var(--color-text-secondary)`: elevated shells (`FloatingChat.svelte:482` popover) and outlined controls (`.btn-secondary`, `global.css:324`).
+3. **Accent/focus border** — `var(--color-primary-text)` (`btn-secondary:hover`).
 
 The experience table's row rules use **#1** (one `color-mix` hairline in `ExperienceRow.astro`'s scoped style) and its filter select uses **#2**. Neither reaches for `border-gray-*` + `dark:` swaps — don't reintroduce that shape.
 
@@ -72,9 +72,9 @@ The experience table's row rules use **#1** (one `color-mix` hairline in `Experi
 ## Motion
 
 - **UI transitions**: `var(--duration-ui)` 180ms + `var(--ease-out)`. Never a raw ms literal, never `ease-in`.
-- **Drawer/modal**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:601-626`, `global.css:582-608`).
-- **Press feedback**: `transform 160ms var(--ease-out)` → `scale(0.98)` (`global.css:301,316`).
-- The only blessed literals beyond the tokens: `160ms` press and `80ms` filter inside `.btn-*`. Add a token before reusing any other number.
+- **Drawer**: open `var(--duration-drawer)` 280ms, close `--duration-ui` 180ms, both `--ease-out`, with `visibility` delays mirroring them (`FloatingChat.svelte:601-626`). **Gallery modal**: FLIP morph + scrim fade, open 250ms, close 150ms, both `--ease-out` (`global.css:582-608`, close mirrored by `modalCloseMs` in `ImageGallery.svelte:27`).
+- **Press feedback**: removed globally — no `:active` scale/opacity treatments anywhere (`btn-*`, gallery thumbs, footer links, guide launch, proto sandbox).
+- The only blessed literals beyond the tokens: `80ms` filter inside `.btn-*`, plus the gallery modal's `250ms` open / `150ms` close. Add a token before reusing any other number.
 - `prefers-reduced-motion: reduce` kills all transitions — global rules at `global.css:115,616` plus a component block when the transition is defined in a scoped `<style>` (why `FloatingChat.svelte:629` exists).
 - `--ease-in-out` and `--duration-media` are defined with zero references — dead until noted here with a use.
 
