@@ -41,11 +41,13 @@ const isHome = Astro.url.pathname === "/";
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
     <div class="flex min-h-full flex-col">
       <div class="site-column">
-        <WeatherBanner
-          client:only="svelte"
-          showLab={showLab}
-          transition:persist="weather-banner"
-        />
+        <div class="banner-frame">
+          <WeatherBanner
+            client:only="svelte"
+            showLab={showLab}
+            transition:persist="weather-banner"
+          />
+        </div>
         <Nav />
       </div>
       <div class="site-column flex flex-1 flex-col">
@@ -70,6 +72,16 @@ const isHome = Astro.url.pathname === "/";
 </RootLayout>
 
 <style>
+  /* The banner island renders nothing on the server. This box holds its size
+     and tint so the nav does not jump when the island mounts, and clips the
+     blur of its enter. Ratio matches BANNER_WIDTH x BANNER_HEIGHT. */
+  .banner-frame {
+    aspect-ratio: 160 / 48;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    background: var(--color-bg-sunken);
+  }
+
   /* Same voice as the table's column labels: small uppercase secondary.
      It sits tight above the page title it belongs to; ::before keeps a
      44px-tall tap area without padding the layout. */

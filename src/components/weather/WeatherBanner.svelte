@@ -24,6 +24,8 @@
 
   let { showLab }: { showLab: boolean } = $props();
 
+  // A slow lookup must not hold the banner back forever.
+  const REVEAL_DEADLINE_MS = 2000;
 
   function browserStorage(): Storage | null {
     try {
@@ -70,6 +72,21 @@
   let colorOverride = $state<ColorMode | "system">("system");
   let canvasEl = $state<HTMLCanvasElement | null>(null);
   let drawRaf = 0;
+  let framePainted = $state(false);
+  let revealDeadline = $state(false);
+  // One way: the lab's localize resets readingSettled and must not hide a live banner.
+  let revealed = $state(false);
+
+  $effect(() => {
+    if (framePainted && (readingSettled || revealDeadline)) revealed = true;
+  });
+
+  $effect(() => {
+    const timer = window.setTimeout(() => {
+      revealDeadline = true;
+    }, REVEAL_DEADLINE_MS);
+    return () => window.clearTimeout(timer);
+  });
 
   const liveTime = $derived(
     timeOfDay(now, reading.sunrise, reading.sunset),
@@ -172,6 +189,7 @@
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       surface.resize(width, height, dpr);
       surface.frame(current, still ? 0 : elapsed);
+      framePainted = true;
       return still || canvas.dataset.renderer === "plate";
     };
 
@@ -246,6 +264,7 @@
   data-weather={scene.weather}
   data-time={scene.time}
   data-color={scene.colorMode}
+  data-ready={revealed}
 >
   <canvas
     bind:this={canvasEl}
@@ -274,14 +293,32 @@
   .banner-slot {
     width: 100%;
     min-width: 0;
-    margin: 0.5rem 0 0;
     display: block;
   }
 
+  /* Hidden until the first frame has the located weather, then it comes into
+     focus once. The frame in SiteLayout holds the box and its tint meanwhile. */
   .banner-canvas {
     display: block;
     max-width: 100%;
     height: auto;
     aspect-ratio: 160 / 48;
+    opacity: 0;
+    filter: blur(4px);
+    transition:
+      opacity var(--duration-media) var(--ease-out),
+      filter var(--duration-media) var(--ease-out);
+  }
+
+  .banner-slot[data-ready="true"] .banner-canvas {
+    opacity: 1;
+    filter: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .banner-canvas {
+      filter: none;
+      transition: opacity var(--duration-ui) var(--ease-out);
+    }
   }
 </style>
