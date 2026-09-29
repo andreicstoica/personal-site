@@ -84,15 +84,17 @@
 	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 	--duration-ui: 180ms;
-	--duration-drawer: 280ms;
+	--duration-drawer: 220ms;
 	--duration-media: 400ms;
 
 	/* Elevation. The guide drawer is docked to the viewport edge, so its depth
-	   reads from the inside: cast inward from the page-facing edge, never
-	   outward onto the page. */
-	--elevation-drawer:
-		inset 1px 0 0 rgb(0 0 0 / 0.06),
-		inset 14px 0 34px -18px rgb(0 0 0 / 0.3);
+	   reads from the inside: a hairline on the page-facing edge plus an eased
+	   shade that fades inward from that edge only (--drawer-shade, drawn by
+	   FloatingChat.svelte). A blurred inset box-shadow would also darken the
+	   top, bottom, and far edges, where the drawer meets the viewport and
+	   nothing sits above it. */
+	--elevation-drawer: inset 1px 0 0 rgb(0 0 0 / 0.06);
+	--drawer-shade: rgb(0 0 0 / 0.1);
 	/* Phone sheet sits on top of the page: layered shadow cast upward. */
 	--elevation-sheet:
 		0 -1px 3px rgb(0 0 0 / 0.08),
@@ -154,9 +156,8 @@
 		--color-primary-text: oklch(0.66 0.18 272);
 
 		/* Depth flattens to a single ring against dark surfaces */
-		--elevation-drawer:
-			inset 1px 0 0 rgb(255 255 255 / 0.1),
-			inset 14px 0 34px -18px rgb(0 0 0 / 0.5);
+		--elevation-drawer: inset 1px 0 0 rgb(255 255 255 / 0.1);
+		--drawer-shade: rgb(0 0 0 / 0.4);
 		/* Shadows barely read on dark ground; a faint lit edge marks the layer. */
 		--elevation-sheet:
 			inset 0 1px 0 rgb(255 255 255 / 0.08),
@@ -268,8 +269,10 @@ body {
 	outline-offset: 2px;
 }
 
-/* Chat launcher: one size and corner inset, shared by the chat dock and the
-   weather lab stacked above it (FloatingChat.svelte, WeatherLab.svelte). */
+/* Chat launcher: one size and corner inset, shared by the chat dock, the
+   desktop drawer header (so its close button lands on the top-corner
+   launcher), and the weather lab stacked above the bottom-corner launcher
+   (FloatingChat.svelte, WeatherLab.svelte). */
 :root {
 	--guide-launch-size: 2.25rem;
 	--guide-launch-inset: var(--spacing-sm);
@@ -288,7 +291,7 @@ body {
 	}
 
 	[data-page-scroll] {
-		transition: padding-inline-end var(--duration-drawer) var(--ease-out);
+		transition: padding-inline-end var(--duration-drawer) var(--ease-in-out);
 	}
 
 	:root[data-guide="open"] [data-page-scroll] {

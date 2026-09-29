@@ -81,7 +81,7 @@ The experience table's row rules use **#1** (one `color-mix` hairline in `Experi
 
 Two elevation tokens, one per guide geometry:
 
-- `--elevation-drawer` (desktop drawer) points inward — the drawer never shadows the page, the page's edge shadows it, so it reads as a recess. Light: hairline plus a soft inset along the page-facing edge. Dark: the same inset deepened, plus one white 10% hairline — a black shadow is invisible on `#272727` from outside, but reads as depth from inside.
+- `--elevation-drawer` (desktop drawer) points inward — the drawer never shadows the page, the page's edge shadows it, so it reads as a recess. `--elevation-drawer` is only the 1px hairline; `--drawer-shade` colors an eased 2rem gradient drawn by `.guide-panel::before` in `FloatingChat.svelte`, on the page-facing edge only. A blurred inset box-shadow was rejected because it also darkened the top, bottom, and far edges, where the drawer meets the viewport. Light: black 6% hairline, 10% shade. Dark: white 10% hairline, 40% black shade — a black shadow is invisible on the dark page (L 0.273) from outside, but reads as depth from inside.
 - `--elevation-sheet` (phone bottom sheet) points outward and up, so the sheet reads as a layer on top of the page. Light: a tight plus a soft layered shadow. Dark: a deeper 55% black shadow plus a white 8% top edge, since a shadow alone barely shows on dark ground.
 
 The direction and the dark-mode collapse are the tokens' job; don't re-derive them per component. The guide launcher's `0 8px 24px rgb(0 0 0 / 16%)` is the only other shadow in the system; don't invent another.

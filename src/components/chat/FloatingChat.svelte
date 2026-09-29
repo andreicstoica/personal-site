@@ -333,7 +333,7 @@
     bind:this={panelRef}
     class="guide-panel"
   >
-    <header class="flex items-center justify-between gap-3 px-4 py-2.5">
+    <header class="guide-header flex items-center justify-between gap-3 px-4 py-2.5">
       <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
       <button
         type="button"
@@ -390,7 +390,7 @@
                     <div class="flex flex-wrap gap-x-2 gap-y-2">
                       {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
                         {#if source.href && source.href !== actionHref(message.action)}
-                          <a href={source.href} class="text-[11px] text-[var(--color-primary-text)] underline">
+                          <a href={source.href} class="text-[11px]">
                             {source.title}
                           </a>
                         {:else if !source.href}
@@ -477,8 +477,9 @@
   }
 
   /* One surface, two geometries: a bottom sheet on phones and a right drawer
-     on desktop. Both slide in from --guide-hide; closing uses the shorter UI
-     duration and hides with visibility once the slide ends. */
+     on desktop. Both slide in from --guide-hide on the same ease-in-out and
+     duration in both directions, matching the page shift (global.css), and
+     hide with visibility once the slide ends. */
   .guide-panel {
     position: fixed;
     right: 0;
@@ -490,15 +491,15 @@
     transform: var(--guide-hide);
     visibility: hidden;
     transition:
-      transform var(--duration-ui) var(--ease-out),
-      visibility 0s linear var(--duration-ui);
+      transform var(--duration-drawer) var(--ease-in-out),
+      visibility 0s linear var(--duration-drawer);
   }
 
   .guide-dock[data-open="true"] .guide-panel {
     transform: none;
     visibility: visible;
     transition:
-      transform var(--duration-drawer) var(--ease-out),
+      transform var(--duration-drawer) var(--ease-in-out),
       visibility 0s;
   }
 
@@ -653,12 +654,68 @@
       box-shadow: var(--elevation-drawer);
     }
 
+    /* Eased stops, not a plain two-color ramp, so the shade does not band. It
+       sits under the content (z-index -1 inside the panel's stacking context). */
+    .guide-panel::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: -1;
+      width: 2rem;
+      pointer-events: none;
+      background: linear-gradient(
+        to right,
+        var(--drawer-shade),
+        color-mix(in srgb, var(--drawer-shade) 75%, transparent) 12%,
+        color-mix(in srgb, var(--drawer-shade) 45%, transparent) 30%,
+        color-mix(in srgb, var(--drawer-shade) 20%, transparent) 55%,
+        color-mix(in srgb, var(--drawer-shade) 6%, transparent) 80%,
+        transparent
+      );
+    }
+
+    /* The drawer header takes the launcher's inset and size, so where the
+       launcher sits in the top corner (below) the close button lands exactly
+       on it: open and close stay in one spot. */
+    .guide-header {
+      padding-block-start: max(
+        var(--guide-launch-inset),
+        env(safe-area-inset-top, 0px)
+      );
+      padding-block-end: var(--guide-launch-inset);
+      padding-inline-end: max(
+        var(--guide-launch-inset),
+        env(safe-area-inset-right, 0px)
+      );
+    }
+
+    .guide-icon-button {
+      width: var(--guide-launch-size);
+      height: var(--guide-launch-size);
+      margin-inline-end: 0;
+    }
+
+    .guide-icon-button::before {
+      inset: -0.25rem;
+    }
+
     /* The launcher sits under the drawer's footprint; hide it only once
        the drawer has arrived so no bare corner shows mid-slide. */
     .guide-dock[data-open="true"] .guide-launch {
       transition:
         visibility 0s linear var(--duration-drawer),
         background-color var(--duration-ui) var(--ease-out);
+    }
+  }
+
+  /* Top corner only once each gutter beside the 64rem column holds the
+     launcher (inset + size + clearance, 4rem); narrower, it would cover the
+     banner's top corner, so it stays in the bottom corner. */
+  @media (min-width: 72rem) {
+    .guide-dock {
+      top: max(var(--guide-launch-inset), env(safe-area-inset-top, 0px));
+      bottom: auto;
     }
   }
 

@@ -201,13 +201,14 @@ Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"
 The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once in `SiteLayout.astro` with `client:load`, so it is present on every page.
 
 - Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
-- Trigger: `.guide-launch` button in the bottom corner. `.guide-panel` (header, thread, input form) is always mounted and gated by CSS, so `aria-controls="guide-panel"` is constant
+- Trigger: `.guide-launch` button in the bottom-right corner, or the top-right corner from 72rem (1152px) up. `.guide-panel` (header, thread, input form) is always mounted and gated by CSS, so `aria-controls="guide-panel"` is constant
 - One surface, two geometries. Both slide in from `--guide-hide` and hide with `visibility` once the slide ends:
   - Below 768px: a bottom sheet over the lower two thirds (`66dvh`), `--color-bg-primary` with `--elevation-sheet` cast upward, so it reads as a layer on top of the page. Closed: `translateY(100%)`.
-  - From 768px up: a full-height drawer on the right edge, `--guide-width` wide (the page's two gutters minus page padding, clamped to 20–28rem). The page makes room: `:root[data-guide="open"] [data-page-scroll]` gets that much `padding-inline-end`, so content slides left and nothing sits under the drawer. Surface is `--color-bg-sunken` with `--elevation-drawer` cast inward from the page-facing edge. Closed: `translateX(100%)`.
-- Motion uses the shared tokens: open `--duration-drawer` (280ms), close `--duration-ui` (180ms), both `--ease-out`; `prefers-reduced-motion` disables both; a guide restored from `sessionStorage` or `?chat=1` appears in place without sliding
+  - From 768px up: a full-height drawer on the right edge, `--guide-width` wide (the page's two gutters minus page padding, clamped to 20–28rem). The page makes room: `:root[data-guide="open"] [data-page-scroll]` gets that much `padding-inline-end`, so content slides left and nothing sits under the drawer. Surface is `--color-bg-sunken` with a hairline (`--elevation-drawer`) and an eased shade (`--drawer-shade`, `.guide-panel::before`) fading inward from the page-facing edge only. Closed: `translateX(100%)`.
+- Motion uses the shared tokens: open and close both `--duration-drawer` (220ms) on `--ease-in-out`, the same timing as the page shift; `prefers-reduced-motion` disables both; a guide restored from `sessionStorage` or `?chat=1` appears in place without sliding
 - `SiteLayout.astro` sets `data-guide` on `<html>` before paint (on load and on every ClientRouter swap) from the stored state, so an open drawer never flashes the page full width. The island owns the attribute after hydration. Both read the key from `src/lib/guideState.ts`.
 - The launcher (`--guide-launch-size` 2.25rem at a `--guide-launch-inset` corner inset) hides while the guide is open; the panel's close button replaces it. On desktop it hides only after the drawer has arrived, so no bare corner shows mid-slide.
+- On desktop the drawer header uses the launcher's geometry: padding equals `--guide-launch-inset` (at least the safe-area inset) and the close button is `--guide-launch-size`. From 72rem up the launcher sits in the top-right corner, so the close button lands exactly on it and opening and closing happen in one spot. Below 72rem each gutter beside the 64rem column is too narrow to hold the launcher without covering the banner's top corner, so it stays bottom-right. Phones keep the bottom-right launcher and the sheet's top-right close.
 - Right-clicking the launcher dispatches `weather-lab:toggle`, which shows or hides the weather lab in any build (remembered for the tab session)
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
 - An empty thread shows a centered empty state (max 38ch): a one-line hint, or the offline contact copy when the inference server is down
@@ -218,7 +219,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
 - The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
 - Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`, and only the message text is `whitespace-pre-wrap` (on the whole bubble it rendered the template's own newlines as a blank last line); linked sources use `--color-primary-text`, unlinked ones `--color-text-secondary`
-- The close control is a quiet 32px glyph button pulled flush with the header padding; a `::before` keeps its tap area at 44px. Send is 44px tall on touch and 36px on fine pointers, matching the input. Interactive elements in the panel set `touch-action: manipulation`
+- The close control is a quiet glyph button: 32px and pulled flush with the header padding on phones, 36px (`--guide-launch-size`) with no pull on desktop; a `::before` keeps its tap area at 44px on both. Send is 44px tall on touch and 36px on fine pointers, matching the input. Interactive elements in the panel set `touch-action: manipulation`
 
 ### Reply shape
 
