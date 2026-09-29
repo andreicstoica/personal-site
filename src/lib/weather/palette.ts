@@ -46,6 +46,9 @@ export const LIGHTING: Record<TimeOfDay, Lighting> = {
 	},
 };
 
+/** Linear scale on dark-mode night sky and land light, in place of 0.88. */
+export const DARK_NIGHT_LIFT = 1.35;
+
 export function mix(a: Rgb, b: Rgb, t: number): Rgb {
 	const amount = Math.min(1, Math.max(0, t));
 	return [
@@ -66,6 +69,12 @@ export function lighting(scene: Scene): Lighting {
 					? 0.65
 					: 0;
 	const mode = scene.colorMode === "dark" ? 0.88 : 1;
+	// A dark page is lighter than the night scene, so the banner would read as
+	// a hole in its frame; lift only the dark-mode night sky and land.
+	const sceneMode =
+		scene.colorMode === "dark" && scene.time === "night"
+			? DARK_NIGHT_LIFT
+			: mode;
 	const scale = (c: Rgb, n: number): Rgb => [c[0] * n, c[1] * n, c[2] * n];
 	const sky = mix(base.horizon, base.zenith, 0.4);
 	const gray =
@@ -73,10 +82,10 @@ export function lighting(scene: Scene): Lighting {
 		(scene.weather === "rainy" ? 0.75 : 1);
 	const haze: Rgb = [gray * 0.88, gray * 0.95, gray];
 	return {
-		zenith: scale(mix(base.zenith, haze, overcast), mode),
-		horizon: scale(mix(base.horizon, haze, overcast), mode),
-		ambient: scale(base.ambient, mode * (1 - overcast * 0.2)),
-		direct: scale(base.direct, mode * (1 - overcast)),
+		zenith: scale(mix(base.zenith, haze, overcast), sceneMode),
+		horizon: scale(mix(base.horizon, haze, overcast), sceneMode),
+		ambient: scale(base.ambient, sceneMode * (1 - overcast * 0.2)),
+		direct: scale(base.direct, sceneMode * (1 - overcast)),
 		sun:
 			scene.time === "night" && scene.place === "oregon-coast"
 				? [0.81, 0.18]
@@ -103,9 +112,14 @@ export function grade(color: Rgb, scene: Scene): Rgb {
 }
 export function cloudColors(scene: Scene): { lit: Rgb; shade: Rgb } {
 	const light = lighting(scene);
+	const lit = bytes(mix(light.horizon, light.direct, 0.2));
+	const shade = mix(light.zenith, light.horizon, 0.35);
+	if (scene.weather !== "rainy") return { lit, shade: bytes(shade) };
+	// Overcast rain shows the shade between billows; blue there reads as sky.
+	const gray = (shade[0] * 0.3 + shade[1] * 0.5 + shade[2] * 0.2) * 0.9;
 	return {
-		lit: bytes(mix(light.horizon, light.direct, 0.2)),
-		shade: bytes(mix(light.zenith, light.horizon, 0.35)),
+		lit,
+		shade: bytes(mix(shade, [gray * 0.94, gray * 0.97, gray], 0.75)),
 	};
 }
 export function rainColor(scene: Scene): Rgb {

@@ -147,10 +147,12 @@
 		--color-text-muted: #999999;
 		--color-text-inverse: #272727;
 
-		--color-bg-primary: #272727;
-		--color-bg-secondary: #333333;
-		--color-bg-tertiary: #404040;
-		--color-bg-sunken: #1f1f1f;
+		/* A faint cool tint keeps neutral grey from reading warm beside the
+		   mostly blue weather scenes. */
+		--color-bg-primary: oklch(0.273 0.009 255);
+		--color-bg-secondary: oklch(0.321 0.009 255);
+		--color-bg-tertiary: oklch(0.372 0.009 255);
+		--color-bg-sunken: oklch(0.239 0.009 255);
 
 		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
 		--color-primary-text: oklch(0.66 0.18 272);

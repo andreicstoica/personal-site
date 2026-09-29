@@ -27,14 +27,16 @@ Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--c
 
 ```
 What background?
- ├── Page, nav, card, input, phone sheet, bubble    → --color-bg-primary   (#fefefe / #272727)
- ├── Chip, tag, subtle fill inside a page           → --color-bg-secondary  (#c4c4c4 / #333333)
- └── Viewport-edge drawer that reads sunken        → --color-bg-sunken     (#f5f5f5 / #1f1f1f)
+ ├── Page, nav, card, input, phone sheet, bubble    → --color-bg-primary   (#fefefe / oklch(0.273 0.009 255))
+ ├── Chip, tag, subtle fill inside a page           → --color-bg-secondary  (#c4c4c4 / oklch(0.321 0.009 255))
+ └── Viewport-edge drawer that reads sunken        → --color-bg-sunken     (#f5f5f5 / oklch(0.239 0.009 255))
       └ one consumer: the desktop guide drawer (FloatingChat.svelte), paired with
         --elevation-drawer. Never use sunken for in-flow sections.
 ```
 
-`--color-bg-tertiary` (#404040) exists only inside the dark block and has zero references — do not use it.
+`--color-bg-tertiary` (oklch(0.372 0.009 255)) exists only inside the dark block and has zero references — do not use it.
+
+The dark background ramp keeps the old neutral greys' lightness (#272727, #333333, #404040, #1f1f1f) with a faint cool tint, chroma 0.009 at hue 255. Pure grey read warm beside the mostly blue weather scenes. Dark text colors stay neutral.
 
 ## Text
 

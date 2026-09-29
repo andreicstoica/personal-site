@@ -313,24 +313,38 @@ export function material(
 						if (y < ground - 4.5 * scale || y > ground) continue;
 						const jitter = (hash(treeSeed + 7) - 0.5) * 0.42;
 						const cx = 81 + row * (5.5 + depth * 4) + jitter;
-						if (Math.abs(x - cx) > 4.5) continue;
+						// Canopy half-width plus peak bend; the cascade-forest motion
+						// patch in draw.ts must cover every row's cx ± this reach.
+						if (Math.abs(x - cx) > 5.5) continue;
 						// Per-tree phase and rate keep neighbors out of lockstep while
 						// the gust still travels across the columns.
 						const treePhase = (hash(treeSeed + 29) - 0.5) * 1.4 + depth * 0.55;
 						const treeRate = 0.9 + hash(treeSeed + 41) * 0.2;
+						// A downwind lean under the oscillation reads as wind rather than
+						// wobble; the gust envelope still returns both to zero.
 						const sway =
 							motion.gust *
-							Math.sin(
-								motion.gustPhase * treeRate + row * 0.34 * gustLead + treePhase,
-							) *
-							0.85 *
-							(0.7 + depth * 0.15);
+							(0.4 +
+								Math.sin(
+									motion.gustPhase * treeRate +
+										row * 0.34 * gustLead +
+										treePhase,
+								)) *
+							1.9 *
+							(0.4 + depth * 0.3);
 						const height = Math.max(0, (ground - y) / (4.5 * scale));
 						const branch = Math.sin((x - cx) * 1.8 + height * 5);
-						const dx =
-							x - cx - sway * height * (0.55 + height * 0.8 + branch * 0.28);
+						// The trunk bends and carries the crown as one mass, and tips lead.
+						// A pure height shear flattens the small crowns into wedges.
+						const bend =
+							sway *
+							(0.7 * smoothstep(0, 0.45, height) +
+								height * height * (0.5 + branch * 0.25));
+						const dx = x - cx - bend;
+						// The bent crown dips slightly, as a fixed-length stem would.
 						const leafY =
-							y +
+							y -
+							(bend * bend * 0.12) / scale +
 							motion.shimmer *
 								Math.sin((x - cx) * 2.4 + height * 7) *
 								(0.7 + depth * 0.2);
