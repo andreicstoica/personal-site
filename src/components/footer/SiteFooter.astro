@@ -75,7 +75,6 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
     gap: 0.5rem;
     color: var(--color-text-primary);
     font-size: var(--text-sm);
-    text-decoration: none;
   }
 
   .site-footer-list a::before {
@@ -121,14 +120,6 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
     .site-footer-list :global(.beos-icon) {
       width: 18px;
       height: 18px;
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .site-footer-list a:hover {
-      color: var(--color-text-primary);
-      text-decoration: underline;
-      text-underline-offset: 0.2em;
     }
   }
 </style>

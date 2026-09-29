@@ -145,7 +145,7 @@ Experience names use `experienceNameStyle()` which applies Lumber Sans font for 
 
 Renders markdown content with custom styling. Uses `.markdown-body` class with nested selectors for h1, h2, h3, ul, li, a, p.
 
-- Links use `--color-secondary` (green)
+- Links inherit the surrounding text color and carry the shared dotted underline
 - Lists use `*` bullets (not default markers)
 - Line height: 1.625
 

@@ -4,7 +4,7 @@ Component decisions, in template form. What the components *are* lives in [compo
 
 ## Button
 
-Use for actions. Navigation is a Link — the nav name (`Nav.astro`), footer socials (`SiteFooter.astro`), and guide sources (`FloatingChat.svelte`) are all links, and links are green (`--color-secondary`) by default. Every button shows the pointer from one base-layer rule in `global.css`, so Tailwind cursor utilities still override it.
+Use for actions. Navigation is a Link — the nav name (`Nav.astro`), footer socials (`SiteFooter.astro`), and guide sources (`FloatingChat.svelte`) are all links, and links inherit the surrounding text color, marked by the shared dotted underline (`a` in `global.css`). Every button shows the pointer from one base-layer rule in `global.css`, so Tailwind cursor utilities still override it.
 
 Classes: `.btn-primary`, `.btn-secondary`, `.btn-secondary-custom`. Nothing else exists — a fourth class is a bug, not an option.
 

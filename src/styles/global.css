@@ -18,9 +18,6 @@
 	/* Blue as text or a focus ring. Equals the fill in light mode; dark mode
 	   lifts L so it clears 4.5:1 on dark surfaces (the fill keeps white text). */
 	--color-primary-text: var(--color-primary);
-	/* Link green, darkened to 4.6:1 on the light page (was #00a647, 3.2:1). */
-	--color-secondary: oklch(0.545 0.145 150.5);
-	--color-secondary-hover: oklch(0.48 0.13 150.5);
 	--color-accent: #c23b23;
 	--color-accent-hover: #a12f1c;
 	--color-warning: #fcc605;
@@ -155,9 +152,6 @@
 
 		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
 		--color-primary-text: oklch(0.66 0.18 272);
-		/* The original green already clears 4.6:1 on dark; hover lightens. */
-		--color-secondary: #00a647;
-		--color-secondary-hover: oklch(0.7 0.17 150.5);
 
 		/* Depth flattens to a single ring against dark surfaces */
 		--elevation-drawer:
@@ -417,15 +411,22 @@ body {
 	}
 }
 
-/* Global link styles */
+/* Global link styles. A link keeps the color of the text around it; the mark is
+   a 1px dotted underline that turns solid on hover, so a bold or inline link
+   never gets lost. Buttons, chips, and the site name set text-decoration: none
+   themselves. */
 a {
-	color: var(--color-secondary);
-	text-decoration: none;
-	transition: color 0.2s ease;
+	color: inherit;
+	text-decoration-line: underline;
+	text-decoration-style: dotted;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
 }
 
-a:hover {
-	color: var(--color-secondary-hover);
+@media (hover: hover) and (pointer: fine) {
+	a:hover {
+		text-decoration-style: solid;
+	}
 }
 
 /* Experience table columns, shared by the header and every row. The name
@@ -438,17 +439,10 @@ a:hover {
 	}
 }
 
-/* Intro links (about/canon/blog): plain text with a quiet underline, so the
-   lead reads as one calm paragraph. Hover only changes underline color, which
-   never moves the hit target. External ones get the ↗ mark below. */
+/* Intro links (about/canon/blog) never break across lines, so the lead reads as
+   one calm paragraph. External ones get the ↗ mark below. */
 .lead-link {
-	color: inherit;
-	text-decoration: underline;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 0.2em;
-	text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
 	white-space: nowrap;
-	transition: text-decoration-color var(--duration-ui) var(--ease-out);
 }
 
 /* Link-out mark for links that open another site. The no-break space keeps
@@ -457,11 +451,6 @@ a:hover {
 .lead-link[target="_blank"]::after {
 	content: "\00a0↗";
 	content: "\00a0↗" / "";
-}
-
-.lead-link:hover {
-	color: inherit;
-	text-decoration-color: currentColor;
 }
 
 /* Markdown content styling */
@@ -492,16 +481,6 @@ a:hover {
 	display: inline-block;
 	position: relative;
 	top: 0.25rem;
-}
-
-.markdown-link {
-	color: var(--color-secondary);
-	transition: color 0.2s ease;
-}
-
-.markdown-link:hover {
-	color: var(--color-secondary-hover);
-	text-decoration: underline;
 }
 
 .markdown-p {
@@ -551,16 +530,6 @@ a:hover {
 	top: 0.25rem;
 }
 
-.markdown-body :where(a) {
-	color: var(--color-secondary);
-	text-decoration: none;
-}
-
-.markdown-body :where(a:hover) {
-	color: var(--color-secondary-hover);
-	text-decoration: underline;
-}
-
 .markdown-body :where(p) {
 	color: var(--color-text-primary);
 	line-height: 1.625;
@@ -571,6 +540,7 @@ a:hover {
 	background: var(--tag-personal);
 	color: var(--tag-personal-text) !important;
 	font-weight: 500;
+	text-decoration: none;
 	transition: all 0.2s ease;
 }
 
@@ -579,12 +549,6 @@ a:hover {
 	filter: brightness(0.9);
 	transform: translateY(-1px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Name sits on the page-background bar; keep it off the global green link color. */
-.nav-name,
-.nav-name:hover {
-	color: var(--color-text-primary);
 }
 
 /* Gallery strip — horizontal scroll with snap on touch */

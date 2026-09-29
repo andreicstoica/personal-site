@@ -51,9 +51,8 @@ What text color?
 
 `--color-text-inverse` is correct only on `--tag-*` fills in light mode; see the chip pairs in [DESIGN.md](./DESIGN.md).
 
-- **Links**: `--color-secondary` (green) is the global `a` color (`global.css:350`), hover `--color-secondary-hover`. That's its only job — it is not a "success" color. The nav name and footer links override it back to `--color-text-primary` because green on the header/footer bar breaks the chrome (`global.css:486`, `SiteFooter.astro:75`).
+- **Links**: a link keeps the color of the text around it (`color: inherit` on `a` in `global.css`). The mark is a 1px dotted underline, solid on hover (hover-gated), offset `0.2em`. Buttons and chips opt out with `text-decoration: none`; the site name is a wordmark with no rest underline. There is no link color token.
 - **Interactive/focus**: `--color-primary-text` for blue text, hover borders and focus rings (`:focus-visible` = 2px solid `--color-primary-text`, offset 2px). It equals `--color-primary` in light mode and lifts to `oklch(0.66 0.18 272)` in dark mode, where the fill blue is only 2.5:1. Fills (launcher, Send, user bubbles) keep `--color-primary` with white text. Selection wash stays primary at 24%.
-- **Links**: `--color-secondary` green is `oklch(0.545 0.145 150.5)` in light mode (4.6:1) and `#00a647` in dark mode (4.7:1).
 
 ## Borders — closed set of three
 
