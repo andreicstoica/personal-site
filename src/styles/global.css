@@ -44,6 +44,7 @@
 	--color-bg-primary: #fefefe;
 	--color-bg-secondary: #c4c4c4;
 	--color-bg-sunken: #f5f5f5;
+	--color-divider: var(--color-bg-secondary);
 
 	/* Tag Colors */
 	--tag-work: #3848ff;
@@ -165,6 +166,9 @@
 		--color-bg-secondary: oklch(0.321 0.009 255);
 		--color-bg-tertiary: oklch(0.372 0.009 255);
 		--color-bg-sunken: oklch(0.239 0.009 255);
+		/* The chip gray is 1.18:1 on the dark page; rules need about the 1.7:1
+		   they get in light mode. */
+		--color-divider: oklch(0.42 0.009 255);
 
 		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
 		--color-primary-text: oklch(0.66 0.18 272);
@@ -487,12 +491,15 @@ a {
 	text-decoration-line: underline;
 	text-decoration-style: dotted;
 	text-decoration-thickness: 1px;
-	text-underline-offset: 0.2em;
+	/* Clears Plex descenders, so skip-ink never breaks the dots around g, y, p. */
+	text-underline-offset: 0.3em;
+	text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	a:hover {
 		text-decoration-style: solid;
+		text-decoration-color: currentColor;
 	}
 }
 
@@ -516,8 +523,12 @@ a {
    the arrow on the last word's line; the empty alt text keeps it silent. */
 .markdown-link[target="_blank"]::after,
 .lead-link[target="_blank"]::after {
-	content: "\00a0↗";
-	content: "\00a0↗" / "";
+	content: "↗";
+	content: "↗" / "";
+	/* An underline does not reach into an inline-block. Left in the link's own
+	   underline, the arrow is a second box whose dots restart out of phase. */
+	display: inline-block;
+	margin-inline-start: 0.25em;
 }
 
 /* Markdown content styling */

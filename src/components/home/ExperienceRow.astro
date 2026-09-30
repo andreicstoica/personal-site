@@ -4,6 +4,7 @@ import {
 	experienceNameStyle,
 	formatDateRange,
 	nameBreakParts,
+	rowEasterEgg,
 	usesDisplayFont,
 } from "../../lib/experienceUi";
 import type { Experience } from "../../lib/types";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const { experience } = Astro.props;
+const egg = rowEasterEgg(experience.name);
 // Name and tags chips are inline boxes inside an overflow-hidden wrapper, so
 // every face's painted top clips flush right under the row's separator — no
 // per-face margin tuning. The name wrapper adds line-clamp-2 (never on the
@@ -31,6 +33,7 @@ const { experience } = Astro.props;
   class="experience-row border-t"
   data-type={experience.type}
   data-display-font={usesDisplayFont(experience.name) ? "" : undefined}
+  data-egg={egg}
 >
   <div class="experience-grid hidden lg:grid gap-x-4 xl:gap-x-6 items-start">
     <div class="col-span-1 leading-none">
@@ -44,12 +47,61 @@ const { experience } = Astro.props;
           ))}
         </span>
       </span>
+      {
+        egg === "latte" && (
+          <svg class="latte-egg" viewBox="0 0 48 60" aria-hidden="true">
+            <defs>
+              <clipPath id="latte-glass">
+                <path d="M11 18h26l-2.4 33.2a3 3 0 0 1-3 2.8H16.4a3 3 0 0 1-3-2.8z" />
+              </clipPath>
+              <linearGradient id="latte-body" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="oklch(0.95 0.025 85)" />
+                <stop offset="0.16" stop-color="oklch(0.93 0.03 80)" />
+                <stop offset="0.26" stop-color="oklch(0.8 0.06 70)" />
+                <stop offset="0.7" stop-color="oklch(0.66 0.08 60)" />
+                <stop offset="1" stop-color="oklch(0.55 0.08 55 / 0)" />
+              </linearGradient>
+              <linearGradient id="latte-shot" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="oklch(0.42 0.07 50 / 0)" />
+                <stop offset="0.3" stop-color="oklch(0.4 0.07 50)" />
+                <stop offset="1" stop-color="oklch(0.28 0.05 45)" />
+              </linearGradient>
+              <linearGradient id="latte-sheen" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="white" stop-opacity="0" />
+                <stop offset="0.5" stop-color="white" stop-opacity="0.55" />
+                <stop offset="1" stop-color="white" stop-opacity="0" />
+              </linearGradient>
+              <filter id="latte-soft" x="-50%" y="-20%" width="200%" height="140%">
+                <feGaussianBlur stdDeviation="0.7" />
+              </filter>
+            </defs>
+            <g class="latte-steam-group" filter="url(#latte-soft)">
+              <path class="latte-steam" d="M19 15c-3-3.5 3-6 0-10" />
+              <path class="latte-steam" d="M24 15c-3-3.5 3-6 0-10" />
+              <path class="latte-steam" d="M29 15c-3-3.5 3-6 0-10" />
+            </g>
+            <rect class="latte-stream" x="23.2" y="0" width="1.6" height="46" rx="0.8" />
+            <g clip-path="url(#latte-glass)">
+              <rect class="latte-backwall" x="8" y="18" width="32" height="37" />
+              <rect class="latte-milk" x="8" y="18" width="32" height="30" fill="url(#latte-body)" />
+              <rect class="latte-espresso" x="8" y="36" width="32" height="19" fill="url(#latte-shot)" />
+              <rect class="latte-sheen" x="13" y="18" width="4" height="36" fill="url(#latte-sheen)" />
+            </g>
+            <g class="latte-top">
+              <ellipse cx="24" cy="18" rx="12.6" ry="2.6" class="latte-foam-top" />
+              <path class="latte-art" d="M24 17.1c-.8-.9-2.4-.3-1.6.8l1.6 1.3 1.6-1.3c.8-1.1-.8-1.7-1.6-.8z" />
+            </g>
+            <path class="latte-glass" d="M11 18h26l-2.4 33.2a3 3 0 0 1-3 2.8H16.4a3 3 0 0 1-3-2.8z" />
+            <ellipse class="latte-rim" cx="24" cy="18" rx="13" ry="2.8" />
+          </svg>
+        )
+      }
     </div>
 
     <div class="col-span-5">
       <div class="grid grid-cols-5 gap-x-4 xl:gap-x-6 mb-4 text-pretty">
         <div class="col-span-2">
-          <div class="text-sm" style={displayRowStyle(experience.name)}>
+          <div class="text-sm leading-[1.6]" style={displayRowStyle(experience.name)}>
             {experience.role}
           </div>
         </div>
@@ -66,7 +118,7 @@ const { experience } = Astro.props;
         </div>
 
         <div class="col-span-1">
-          <div class="type-label text-sm tabular-nums tracking-[-0.02em] text-end mr-2">
+          <div class="type-label text-sm leading-[1.6] tabular-nums tracking-[-0.02em] text-end mr-2">
             {formatDateRange(experience.startDate, experience.endDate)}
           </div>
         </div>
@@ -131,7 +183,7 @@ const { experience } = Astro.props;
   /* Table rules use the shared divider gray — holds in both modes from one
      token. */
   .experience-row {
-    border-top-color: var(--color-bg-secondary);
+    border-top-color: var(--color-divider);
   }
 
   /* LumberSans ships taller ascent metrics than Plex, so its chips paint
@@ -141,4 +193,209 @@ const { experience } = Astro.props;
     position: relative;
     top: -2px;
   }
+
+  /* Easter eggs: mouse-only, and off for reduced motion. */
+  .latte-egg {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    /* Sfânt Coffee: on row hover, milk pours into a glass of espresso, rises
+       and blends, crowns in foam with a heart, then steams. */
+    .latte-egg {
+      display: block;
+      width: 3rem;
+      margin-top: 0.6rem;
+      overflow: visible;
+      opacity: 0;
+      transform: translateY(4px);
+      transition:
+        opacity var(--duration-ui) var(--ease-out),
+        transform var(--duration-ui) var(--ease-out);
+    }
+
+    .latte-backwall {
+      fill: color-mix(in oklch, var(--color-text-secondary) 8%, transparent);
+    }
+
+    .latte-glass,
+    .latte-rim {
+      fill: none;
+      stroke: color-mix(in oklch, var(--color-text-secondary) 70%, transparent);
+      stroke-width: 1;
+    }
+
+    .latte-foam-top {
+      fill: oklch(0.95 0.025 85);
+    }
+
+    .latte-art {
+      fill: oklch(0.62 0.08 58);
+    }
+
+    .latte-stream {
+      fill: oklch(0.86 0.045 75);
+      transform-box: fill-box;
+      transform-origin: 50% 0;
+      transform: scaleY(0);
+    }
+
+    .latte-milk {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+
+    .latte-top {
+      opacity: 0;
+    }
+
+    .latte-steam {
+      fill: none;
+      stroke: var(--color-text-secondary);
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      opacity: 0;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-egg {
+      opacity: 1;
+      transform: none;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-stream {
+      animation: latte-stream 1600ms var(--ease-in-out) 150ms forwards;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-milk {
+      animation: latte-rise 1300ms var(--ease-in-out) 400ms forwards;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-top {
+      animation: latte-crown var(--duration-ui) var(--ease-out) 1650ms forwards;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-steam {
+      animation: latte-steam 2.6s var(--ease-out) 1800ms infinite;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-steam:nth-child(2) {
+      animation-delay: 2.65s;
+    }
+
+    .experience-row[data-egg="latte"]:hover .latte-steam:nth-child(3) {
+      animation-delay: 3.5s;
+    }
+
+    /* RunChuck: an LED glow beats lub-dub and climbs green to red, like the
+       project's heart-rate lights. On the cell, because the chip's own
+       line-clamp wrapper would clip a glow drawn on the chip. */
+    .experience-row[data-egg="heartbeat"]:hover .experience-grid > .col-span-1 {
+      filter: drop-shadow(0 0 var(--beat) var(--led))
+        drop-shadow(0 0 calc(var(--beat) / 2) var(--led));
+      animation:
+        heartbeat-pulse 900ms ease-out infinite,
+        heartbeat-effort 8s linear forwards;
+    }
+  }
+
+  /* The stream drops in, holds while the glass fills, then lifts away. */
+  @keyframes latte-stream {
+    0% {
+      transform: scaleY(0);
+      transform-origin: 50% 0;
+    }
+    25% {
+      transform: scaleY(1);
+      transform-origin: 50% 0;
+    }
+    75% {
+      transform: scaleY(1);
+      transform-origin: 50% 100%;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: 50% 100%;
+    }
+  }
+
+  @keyframes latte-rise {
+    0% {
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes latte-crown {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Rise with a slight sway, thinning out as it goes. */
+  @keyframes latte-steam {
+    0% {
+      opacity: 0;
+      transform: translate(0, 2px);
+    }
+    30% {
+      opacity: 0.7;
+    }
+    60% {
+      transform: translate(1px, -4px);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-1px, -8px);
+    }
+  }
+
+  @property --led {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: oklch(0.78 0.2 145);
+  }
+
+  @property --beat {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @keyframes heartbeat-pulse {
+    0%,
+    100% {
+      --beat: 0px;
+    }
+    12% {
+      --beat: 7px;
+    }
+    24% {
+      --beat: 1px;
+    }
+    36% {
+      --beat: 5px;
+    }
+    55% {
+      --beat: 0px;
+    }
+  }
+
+  @keyframes heartbeat-effort {
+    from {
+      --led: oklch(0.78 0.2 145);
+    }
+    50% {
+      --led: oklch(0.8 0.17 85);
+    }
+    to {
+      --led: oklch(0.63 0.24 27);
+    }
+  }
+
 </style>

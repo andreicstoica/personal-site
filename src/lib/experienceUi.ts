@@ -4,6 +4,13 @@ export function usesDisplayFont(name: string): boolean {
 	return name === "Lumber Sans";
 }
 
+/** Hover easter eggs, keyed by experience name. */
+export function rowEasterEgg(name: string): "latte" | "heartbeat" | undefined {
+	if (name === "Sfânt Coffee") return "latte";
+	if (name === "RunChuck") return "heartbeat";
+	return undefined;
+}
+
 export function displayFontStyle(name: string): string {
 	return usesDisplayFont(name) ? 'font-family: "LumberSans";' : "";
 }

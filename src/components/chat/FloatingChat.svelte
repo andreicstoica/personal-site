@@ -370,12 +370,12 @@
           <div
             class="max-w-[85%] border rounded-none {message.role === 'user'
               ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-(--color-divider)'}"
           >
             <div class="px-3 py-2 text-sm break-words">
               <div class="whitespace-pre-wrap">{message.content}</div>
               {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
-                <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] space-y-1">
+                <div class="mt-2 pt-2 border-t border-(--color-divider) space-y-1">
                   {#if message.action?.kind === "navigate"}
                     <div>
                       <a
@@ -423,7 +423,7 @@
         autocomplete="off"
         placeholder="Ask about a project…"
         disabled={sending}
-        class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+        class="guide-input flex-1 min-w-0 px-3 py-2 border border-(--color-divider) bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
       />
       <button
         type="submit"

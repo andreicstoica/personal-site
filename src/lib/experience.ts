@@ -12,7 +12,7 @@ export const experiences: Experience[] = [
 		startDate: "2026",
 		endDate: "...",
 		description:
-			"Building end-to-end AI-powered features at [Liftoff](https://onliftoff.com). Example: an MVP LinkedIn connections analysis feature that uses LLMs to suggest relevant connectors to Hiring Managers.",
+			"Building end-to-end AI-powered features at [Liftoff](https://onliftoff.com)<br><br>Example: an MVP LinkedIn connections analysis feature that uses LLMs to suggest relevant connectors to Hiring Managers.",
 		images: ["liftoff-1.webp"],
 	},
 	{

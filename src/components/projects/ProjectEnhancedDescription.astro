@@ -52,11 +52,329 @@ const htmlContent = renderMarkdown(processedDescription);
     text-wrap: wrap;
   }
 
-  /* Speed highlight styling */
+  /* "All built within 6 days": on hover a wheel rolls in under the phrase,
+     locks, skids, and leaves a fading tire mark. One line, so the wheel has a
+     single road to run along. */
   .project-enhanced-description :global(.speed-highlight) {
-    text-decoration: underline;
-    text-decoration-color: var(--color-warning);
-    text-decoration-style: dashed;
-    text-underline-offset: 3px;
+    position: relative;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .project-enhanced-description :global(.speed-highlight:hover)::after {
+      content: "";
+      position: absolute;
+      top: calc(100% - 0.1em);
+      left: 0;
+      width: 0.5em;
+      height: 0.5em;
+      box-sizing: border-box;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      background:
+        linear-gradient(currentColor, currentColor) center / 100% 1px no-repeat,
+        linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
+      /* Parks for half a second after the skid, then fades. */
+      animation:
+        speed-wheel 900ms forwards,
+        speed-wheel-out var(--duration-media) var(--ease-out) 1400ms forwards;
+      pointer-events: none;
+    }
+
+    .project-enhanced-description :global(.speed-highlight:hover)::before {
+      content: "";
+      position: absolute;
+      top: calc(100% + 0.4em - 1.5px);
+      left: 65%;
+      right: 0;
+      height: 1.5px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        color-mix(in oklch, currentColor 55%, transparent)
+      );
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: speed-skid 2100ms forwards;
+      pointer-events: none;
+    }
+  }
+
+  /* Accelerate in, lock at 65% (rotation holds while it slides), then rock
+     back a hair as it settles. The tire mark grows with the slide. */
+  @keyframes speed-wheel {
+    0% {
+      left: -0.5em;
+      transform: rotate(0deg);
+      opacity: 0;
+      animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5);
+    }
+    10% {
+      opacity: 1;
+    }
+    50% {
+      left: calc(65% - 0.5em);
+      transform: rotate(900deg);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    88% {
+      left: calc(100% - 0.5em);
+      transform: rotate(900deg);
+      animation-timing-function: ease-in-out;
+    }
+    100% {
+      left: calc(100% - 0.55em);
+      transform: rotate(880deg);
+      opacity: 1;
+    }
+  }
+
+  /* Blob Game: a keycap hangs in the gutter left of the item. Pressing it
+     clicks like a mechanical switch and squashes it into jelly; 600ms later it
+     is gone for the session. Out of flow, so the hidden key never leaves a gap
+     in the line. */
+  .project-enhanced-description :global(.blob-key) {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .project-enhanced-description :global(li:has(> .blob-key)) {
+      position: relative;
+    }
+
+    .project-enhanced-description :global(.blob-key) {
+      --key-side: color-mix(in oklch, var(--color-text-secondary) 55%, var(--color-bg-primary));
+      display: block;
+      position: absolute;
+      top: 0.1em;
+      right: calc(100% + 0.45em);
+      width: 1.2em;
+      height: 1.1em;
+      padding: 0;
+      border: 1px solid var(--key-side);
+      border-radius: 0.24em;
+      /* Top face: a lit, slightly dished cap. */
+      background: radial-gradient(
+        ellipse at 50% 35%,
+        var(--color-bg-primary) 35%,
+        var(--color-bg-sunken) 100%
+      );
+      /* Highlight, dish, the cap's side, then its shadow on the desk. */
+      box-shadow:
+        inset 0 1px 0 color-mix(in oklch, white 70%, transparent),
+        inset 0 -1.5px 0 color-mix(in oklch, var(--key-side) 40%, transparent),
+        0 3px 0 var(--key-side),
+        0 4px 4px color-mix(in oklch, black 18%, transparent);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(-2px);
+      /* Hide after a short grace, so a pointer crossing from the text to the
+         key does not flicker it away. */
+      transition:
+        opacity var(--duration-ui) var(--ease-out) 200ms,
+        transform 60ms var(--ease-out),
+        box-shadow 60ms var(--ease-out);
+    }
+
+    /* Bridges the gap to the text, so the item stays hovered on the way over. */
+    .project-enhanced-description :global(.blob-key)::after {
+      content: "";
+      position: absolute;
+      inset: -0.4em -0.8em -0.4em -0.3em;
+    }
+
+    .project-enhanced-description :global(li:hover > .blob-key) {
+      opacity: 1;
+      transform: none;
+      transition-delay: 0s;
+    }
+
+    /* Bottomed out: the cap drops by its side height. */
+    .project-enhanced-description :global(li:hover > .blob-key:active) {
+      transform: translateY(3px);
+      box-shadow:
+        inset 0 1px 0 color-mix(in oklch, white 70%, transparent),
+        inset 0 -1.5px 0 color-mix(in oklch, var(--key-side) 40%, transparent),
+        0 0 0 var(--key-side),
+        0 1px 1px color-mix(in oklch, black 18%, transparent);
+    }
+
+    .project-enhanced-description :global(li > .blob-key.is-jelly) {
+      opacity: 1;
+      border-color: transparent;
+      background: radial-gradient(
+        ellipse at 40% 30%,
+        oklch(0.9 0.12 150 / 0.95),
+        oklch(0.72 0.18 150 / 0.9)
+      );
+      box-shadow: inset 0 -2px 3px oklch(0.5 0.15 150 / 0.5);
+      transform-origin: 50% 100%;
+      animation:
+        blob-jelly 420ms var(--ease-out) forwards,
+        blob-melt 180ms var(--ease-out) 420ms forwards;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes blob-jelly {
+    0% {
+      transform: translateY(3px) scale(1.35, 0.65);
+      border-radius: 0.24em;
+    }
+    30% {
+      transform: scale(0.85, 1.2);
+      border-radius: 45%;
+    }
+    60% {
+      transform: scale(1.1, 0.9);
+    }
+    100% {
+      transform: scale(1);
+      border-radius: 50% 50% 45% 45%;
+    }
+  }
+
+  @keyframes blob-melt {
+    to {
+      opacity: 0;
+      transform: scale(1.2, 0.35);
+    }
+  }
+
+  @keyframes speed-wheel-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* 2100ms total: grows 450 to 792ms with the slide, then fades. */
+  @keyframes speed-skid {
+    0%,
+    21.4% {
+      transform: scaleX(0);
+      opacity: 1;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    37.7% {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleX(1);
+      opacity: 0;
+    }
   }
 </style>
+
+<script>
+  const SPENT_KEY = "blob-key-spent";
+  let audio: AudioContext | null = null;
+
+  function noiseBurst(ctx: AudioContext, seconds: number, decay: number): AudioBuffer {
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * seconds), ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) {
+      samples[i] = (Math.random() * 2 - 1) * Math.exp(-i / decay);
+    }
+    return buffer;
+  }
+
+  function band(
+    ctx: AudioContext,
+    at: number,
+    buffer: AudioBuffer,
+    frequency: number,
+    q: number,
+    level: number,
+  ): void {
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = frequency;
+    filter.Q.value = q;
+    const gain = ctx.createGain();
+    gain.gain.value = level;
+    source.connect(filter).connect(gain).connect(ctx.destination);
+    source.start(at);
+  }
+
+  // A clicky switch, synthesized: a bright click, a mid clack for body, and a
+  // low thock on press; a quieter, higher click on release.
+  function playSwitch(release: boolean): void {
+    try {
+      audio ??= new AudioContext();
+      if (audio.state === "suspended") void audio.resume();
+      const ctx = audio;
+      const now = ctx.currentTime;
+      const jitter = Math.random() * 600;
+
+      if (release) {
+        band(ctx, now, noiseBurst(ctx, 0.01, 60), 5600 + jitter, 3, 0.9);
+        return;
+      }
+      band(ctx, now, noiseBurst(ctx, 0.012, 70), 4400 + jitter, 3, 1.4);
+      band(ctx, now, noiseBurst(ctx, 0.025, 160), 1800, 1.2, 0.7);
+
+      const thock = ctx.createOscillator();
+      thock.type = "sine";
+      thock.frequency.setValueAtTime(210, now);
+      thock.frequency.exponentialRampToValueAtTime(90, now + 0.045);
+      const thockGain = ctx.createGain();
+      thockGain.gain.setValueAtTime(0.6, now);
+      thockGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      thock.connect(thockGain).connect(ctx.destination);
+      thock.start(now);
+      thock.stop(now + 0.07);
+    } catch {
+      // No Web Audio: the key still squishes, silently.
+    }
+  }
+
+  function isSpent(): boolean {
+    try {
+      return sessionStorage.getItem(SPENT_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function markSpent(): void {
+    try {
+      sessionStorage.setItem(SPENT_KEY, "1");
+    } catch {
+      // Blocked storage: the key is still gone from this page.
+    }
+  }
+
+  // The key is a toy, not a control: hidden from assistive tech and the tab
+  // order. One press per session.
+  function mountBlobKeys(): void {
+    if (isSpent()) return;
+    for (const link of document.querySelectorAll<HTMLAnchorElement>(
+      '.project-enhanced-description a.project-link[href$="/blob-game"]',
+    )) {
+      const item = link.closest("li");
+      if (!item || item.querySelector(":scope > .blob-key")) continue;
+      const key = document.createElement("button");
+      key.type = "button";
+      key.className = "blob-key";
+      key.tabIndex = -1;
+      key.setAttribute("aria-hidden", "true");
+      key.addEventListener("pointerdown", () => playSwitch(false));
+      key.addEventListener("pointerup", () => {
+        playSwitch(true);
+        markSpent();
+        key.classList.add("is-jelly");
+        // The desktop and mobile copies share the session: drop both.
+        window.setTimeout(() => {
+          for (const each of document.querySelectorAll(".blob-key")) each.remove();
+        }, 600);
+      });
+      item.prepend(key);
+    }
+  }
+
+  mountBlobKeys();
+  document.addEventListener("astro:page-load", mountBlobKeys);
+</script>

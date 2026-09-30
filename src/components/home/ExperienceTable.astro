@@ -15,7 +15,7 @@ const filterCss = experienceFilterCss();
     <div class="col-span-1">Experience</div>
     <div class="col-span-2">Role</div>
     <div class="col-span-2">
-      <select id="typeFilter" class="experience-filter w-full border max-w-30 border-[var(--color-bg-secondary)] px-2 bg-transparent uppercase">
+      <select id="typeFilter" class="experience-filter w-full border max-w-30 border-(--color-divider) px-2 bg-transparent uppercase">
         <option value="">all</option>
         {allTypes.map(type => (
           <option value={type}>{type}</option>
