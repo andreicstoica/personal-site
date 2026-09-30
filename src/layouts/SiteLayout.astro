@@ -21,22 +21,48 @@ const isHome = Astro.url.pathname === "/";
 <RootLayout title={title} description={description}>
   <script is:inline define:vars={{ guideKey: GUIDE_STORAGE_KEY }}>
     // Reserve room for an open chat drawer before paint, so the page does not
-    // flash full width on load or on a ClientRouter swap (FloatingChat.svelte).
+    // flash full width on load (FloatingChat.svelte).
+    //
+    // Astro's swap replaces every <html> attribute with the incoming
+    // document's, so anything set imperatively is lost on every navigation.
+    // Restoring it on astro:after-swap is close enough to pre-paint, but
+    // astro:page-load is not, and a frame painted without these is the jump
+    // this site used to show. Writing them onto the incoming document instead
+    // hands them to swapRootAttributes, which applies them in the same
+    // synchronous step as the body swap.
     (() => {
-      const apply = () => {
-        let open = false;
+      if (window.__guideReserve) return;
+      window.__guideReserve = true;
+
+      const storedOpen = () => {
         try {
-          open = JSON.parse(sessionStorage.getItem(guideKey) || "{}").open === true;
-        } catch {}
-        document.documentElement.dataset.guide = open ? "open" : "closed";
-        document.documentElement.dataset.guideInstant = "";
+          return JSON.parse(sessionStorage.getItem(guideKey) || "{}").open === true;
+        } catch {
+          return false;
+        }
       };
-      apply();
-      // ClientRouter re-runs inline scripts on each page; listen once.
-      if (!window.__guideReserve) {
-        window.__guideReserve = true;
-        document.addEventListener("astro:after-swap", apply);
-      }
+
+      document.documentElement.dataset.guide = storedOpen() ? "open" : "closed";
+      document.documentElement.dataset.guideInstant = "";
+
+      document.addEventListener("astro:before-swap", (event) => {
+        const live = document.documentElement;
+        const next = event.newDocument.documentElement;
+        // Mirror the live value, never a guess: the island owns the toggle, and
+        // a page without the drawer must not reserve room for one.
+        if (event.newDocument.querySelector('[data-astro-transition-persist="guide"]')) {
+          next.dataset.guide = live.dataset.guide ?? (storedOpen() ? "open" : "closed");
+        } else {
+          delete next.dataset.guide;
+        }
+        // The incoming page element has no previous padding to animate from, so
+        // the instant flag would never be needed again, only left behind to
+        // silence the next real open.
+        delete next.dataset.guideInstant;
+        // Same for the banner frame, whose height is 0 without this attribute.
+        if (live.dataset.weatherBanner === "open") next.dataset.weatherBanner = "open";
+        else delete next.dataset.weatherBanner;
+      });
     })();
   </script>
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
@@ -61,8 +87,11 @@ const isHome = Astro.url.pathname === "/";
         <SiteFooter />
       </div>
     </div>
-    <FloatingChat client:load />
   </div>
+  <!-- Body level, outside the scroll region, and persisted so navigation keeps
+       the drawer's DOM, thread, draft and focus instead of rebuilding them
+       from sessionStorage a frame after the new page paints. -->
+  <FloatingChat slot="guide" client:load transition:persist="guide" />
 </RootLayout>
 
 <style>
@@ -135,9 +164,30 @@ const isHome = Astro.url.pathname === "/";
       const size = entries[0]?.borderBoxSize[0];
       if (size) frame.style.setProperty("--banner-height", `${size.blockSize}px`);
     });
-    document.addEventListener("astro:before-swap", () => observer.disconnect(), {
-      once: true,
-    });
+    // Ready is the island's signal; slid survives ClientRouter swaps so later
+    // pages open at once instead of replaying the slide.
+    const scope = window as Window & {
+      __weatherBannerOpened?: boolean;
+      __weatherBannerSlid?: boolean;
+    };
+    const slideOnce = (): void => {
+      if (scope.__weatherBannerSlid) return;
+      scope.__weatherBannerSlid = true;
+      open(true);
+    };
+
+    // The outgoing frame is about to be detached, so drop what it is still
+    // waiting on. Keeping the ready listener would spend the one-shot reveal on
+    // the detached frame, leaving the incoming one collapsed for good when a
+    // visitor navigates inside the banner's first second.
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        observer.disconnect();
+        window.removeEventListener("weather-banner:ready", slideOnce);
+      },
+      { once: true },
+    );
 
     const open = (slide: boolean): void => {
       // The client-only island may not have rendered its slot when this script
@@ -168,17 +218,6 @@ const isHome = Astro.url.pathname === "/";
         .finally(() => window.clearTimeout(backstop));
     };
 
-    // Ready is the island's signal; slid survives ClientRouter swaps so later
-    // pages open at once instead of replaying the slide.
-    const scope = window as Window & {
-      __weatherBannerOpened?: boolean;
-      __weatherBannerSlid?: boolean;
-    };
-    const slideOnce = (): void => {
-      if (scope.__weatherBannerSlid) return;
-      scope.__weatherBannerSlid = true;
-      open(true);
-    };
     if (scope.__weatherBannerSlid) {
       open(false);
       return;
@@ -189,5 +228,7 @@ const isHome = Astro.url.pathname === "/";
   }
 
   installBannerSlide();
-  document.addEventListener("astro:page-load", installBannerSlide);
+  // after-swap, not page-load: the incoming frame must carry its measured
+  // height before the first paint, and page-load is past that point.
+  document.addEventListener("astro:after-swap", installBannerSlide);
 </script>

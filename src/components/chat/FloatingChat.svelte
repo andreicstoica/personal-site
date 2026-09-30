@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
+  import { navigate } from "astro:transitions/client";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
-  import { portal } from "../../lib/portal";
   import {
     isColdStart,
     parseChatApiSuccess,
@@ -148,9 +148,12 @@
     if (window.location.pathname === action.href) return;
     if (followTimer) clearTimeout(followTimer);
     followTimer = setTimeout(() => {
+      followTimer = undefined;
       // Never yank the page out from under a question the visitor is typing.
       if (input.trim().length > 0 || document.activeElement === inputRef) return;
-      window.location.assign(action.href);
+      // ClientRouter, not a full load: a reload would tear the thread down and
+      // rebuild it from storage, dropping scroll and focus for no reason.
+      void navigate(action.href);
     }, 900);
   }
 
@@ -231,31 +234,46 @@
     closeGuide();
   };
 
-  const onWindowClick = (event: MouseEvent) => {
-    if (!open || !rootRef) return;
-    if (event.target instanceof Node && rootRef.contains(event.target)) return;
-    closeGuide();
-  };
+  function cancelFollow(): void {
+    if (followTimer) clearTimeout(followTimer);
+    followTimer = undefined;
+  }
+
+  /** `/chat` redirects here with `?chat=1`, so this can arrive on any
+   *  navigation now that the island persists instead of remounting. */
+  function openFromUrl(): void {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("chat") !== "1") return;
+    open = true;
+    url.searchParams.delete("chat");
+    // Keep Astro's history metadata: it tracks the index it needs to tell a
+    // push from a traverse, and replacing it with {} breaks that.
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  }
 
   onMount(() => {
     void checkHealth();
     let alive = true;
-    // Hydration and ClientRouter remounts restore an open guide onto an
-    // already-styled element; suppress the transition so it appears in place.
+    // Only hydration restores onto an already-styled element (the drawer is
+    // open in the markup), so the slide is suppressed just for that frame.
+    // Persisting the island means later navigations keep the same element, and
+    // this flag never has to come back.
     noSlide = true;
     const stored = readStored();
     if (stored) {
       messages = stored.messages;
       open = stored.open;
     }
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("chat") === "1") {
-      open = true;
-      const url = new URL(window.location.href);
-      url.searchParams.delete("chat");
-      const next = `${url.pathname}${url.search}${url.hash}`;
-      window.history.replaceState({}, "", next);
-    }
+    openFromUrl();
+    // The island no longer remounts, so mount-time work that navigation can
+    // invalidate has to re-arm: a follow can land on the next page, and a
+    // manual navigation must cancel a pending one instead of racing it.
+    document.addEventListener("astro:page-load", openFromUrl);
+    document.addEventListener("astro:before-preparation", cancelFollow);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (alive) noSlide = false;
@@ -264,20 +282,29 @@
     hydrated = true;
     return () => {
       alive = false;
-      if (followTimer) clearTimeout(followTimer);
+      cancelFollow();
+      abortRef?.abort();
+      document.removeEventListener("astro:page-load", openFromUrl);
+      document.removeEventListener("astro:before-preparation", cancelFollow);
     };
   });
 
   $effect(() => {
     if (!hydrated) return;
-    sessionStorage.setItem(
-      storageKey,
-      JSON.stringify({ open, messages: messages.slice(-30) }),
-    );
+    // Private-mode and storage-quota failures are not worth breaking an effect
+    // over; the guide just stops surviving a reload.
+    try {
+      sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({ open, messages: messages.slice(-30) }),
+      );
+    } catch {
+      // Storage unavailable.
+    }
   });
 
-  // The page reserves room for the open drawer (global.css). SiteLayout sets
-  // the same attribute before paint on load and on page swaps.
+  // The page reserves room for the open drawer (global.css). SiteLayout mirrors
+  // this attribute onto each incoming document before the swap paints.
   $effect(() => {
     if (!hydrated) return;
     const root = document.documentElement;
@@ -287,10 +314,7 @@
   });
 
   $effect(() => {
-    if (!open && followTimer) {
-      clearTimeout(followTimer);
-      followTimer = undefined;
-    }
+    if (!open) cancelFollow();
   });
 
 
@@ -316,10 +340,9 @@
   });
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
+<svelte:window onkeydown={onWindowKeydown} />
 
 <div
-  use:portal
   bind:this={rootRef}
   class="guide-dock"
   data-open={open ? "true" : "false"}
