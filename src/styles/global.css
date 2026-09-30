@@ -265,6 +265,16 @@ figcaption {
 :root[data-typeface="geist"] {
 	--font-sans: "Geist", "IBM Plex Sans", system-ui, sans-serif;
 	--font-mono: "Geist Mono", "IBM Plex Mono", monospace;
+	/* Geist sets wider and more open than Plex at the same size, so the same
+	   leading reads airier and lines wrap sooner. Tighten both a step. */
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.58;
+	letter-spacing: -0.01em;
+}
+
+/* Role titles run about 3% wider in Geist; this closes it to Plex's width. */
+:root[data-typeface="geist"] .row-role {
+	letter-spacing: -0.02em;
 }
 
 html {
