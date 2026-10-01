@@ -21,12 +21,13 @@ import {
 	classifyWeather,
 	fallbackReading,
 	PLACES,
+	type StoredReading,
 	sceneLabel,
 	timeFromClock,
 	timeOfDay,
 	WEATHERS,
 } from "./scene";
-import { loadReading } from "./session";
+import { loadReading, READING_MAX_AGE_MS, saveReading } from "./session";
 
 const minute = 60_000;
 
@@ -267,6 +268,27 @@ describe("place motion and merged clear weather", () => {
 		expect(loadReading(storage) ?? fallbackReading()).toEqual(
 			fallbackReading(),
 		);
+	});
+	test("cached reading expires so a long-lived tab does not paint night at noon", () => {
+		const reading: StoredReading = {
+			weather: "cloudy",
+			sunrise: 1_000,
+			sunset: 2_000,
+		};
+		const items = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => items.get(key) ?? null,
+			setItem: (key: string, value: string) => void items.set(key, value),
+		} as unknown as Storage;
+		const savedAt = 10_000_000;
+		saveReading(storage, reading, savedAt);
+		expect(loadReading(storage, savedAt + READING_MAX_AGE_MS)).toEqual(reading);
+		expect(loadReading(storage, savedAt + READING_MAX_AGE_MS + 1)).toBeNull();
+		// A clock set back is also stale, not fresh forever.
+		expect(loadReading(storage, savedAt - 1)).toBeNull();
+		// The old unstamped shape is dropped, not trusted.
+		items.set("oregon-banner-reading-v2", JSON.stringify(reading));
+		expect(loadReading(storage, savedAt)).toBeNull();
 	});
 });
 

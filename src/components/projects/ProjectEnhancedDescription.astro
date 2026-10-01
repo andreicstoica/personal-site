@@ -131,7 +131,7 @@ const htmlContent = renderMarkdown(processedDescription);
 
   /* Blob Game: a keycap hangs in the gutter left of the item. Pressing it
      clicks like a mechanical switch and squashes it into jelly; 600ms later it
-     is gone for the session. Out of flow, so the hidden key never leaves a gap
+     is gone for this visit. Out of flow, so the hidden key never leaves a gap
      in the line. */
   .project-enhanced-description :global(.blob-key) {
     display: none;
@@ -143,7 +143,10 @@ const htmlContent = renderMarkdown(processedDescription);
     }
 
     .project-enhanced-description :global(.blob-key) {
-      --key-side: color-mix(in oklch, var(--color-text-secondary) 55%, var(--color-bg-primary));
+      /* Fixed light-cap colors: a theme-tinted dark cap vanishes on a dark page. */
+      --key-face: oklch(0.99 0.002 90);
+      --key-dish: oklch(0.92 0.004 90);
+      --key-side: oklch(0.74 0.01 260);
       display: block;
       position: absolute;
       top: 0.1em;
@@ -156,8 +159,8 @@ const htmlContent = renderMarkdown(processedDescription);
       /* Top face: a lit, slightly dished cap. */
       background: radial-gradient(
         ellipse at 50% 35%,
-        var(--color-bg-primary) 35%,
-        var(--color-bg-sunken) 100%
+        var(--key-face) 35%,
+        var(--key-dish) 100%
       );
       /* Highlight, dish, the cap's side, then its shadow on the desk. */
       box-shadow:
@@ -267,7 +270,9 @@ const htmlContent = renderMarkdown(processedDescription);
 </style>
 
 <script>
-  const SPENT_KEY = "blob-key-spent";
+  // In memory on purpose: the key returns on every fresh load, and stays gone
+  // only across ClientRouter navigations within this visit.
+  let spent = false;
   let audio: AudioContext | null = null;
 
   function noiseBurst(ctx: AudioContext, seconds: number, decay: number): AudioBuffer {
@@ -331,26 +336,10 @@ const htmlContent = renderMarkdown(processedDescription);
     }
   }
 
-  function isSpent(): boolean {
-    try {
-      return sessionStorage.getItem(SPENT_KEY) === "1";
-    } catch {
-      return false;
-    }
-  }
-
-  function markSpent(): void {
-    try {
-      sessionStorage.setItem(SPENT_KEY, "1");
-    } catch {
-      // Blocked storage: the key is still gone from this page.
-    }
-  }
-
   // The key is a toy, not a control: hidden from assistive tech and the tab
-  // order. One press per session.
+  // order. One press per visit.
   function mountBlobKeys(): void {
-    if (isSpent()) return;
+    if (spent) return;
     for (const link of document.querySelectorAll<HTMLAnchorElement>(
       '.project-enhanced-description a.project-link[href$="/blob-game"]',
     )) {
@@ -364,7 +353,7 @@ const htmlContent = renderMarkdown(processedDescription);
       key.addEventListener("pointerdown", () => playSwitch(false));
       key.addEventListener("pointerup", () => {
         playSwitch(true);
-        markSpent();
+        spent = true;
         key.classList.add("is-jelly");
         // The desktop and mobile copies share the session: drop both.
         window.setTimeout(() => {
