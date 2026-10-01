@@ -10,7 +10,8 @@ export function displayFontStyle(name: string): string {
 
 export function experienceTypeStyles(type: ExperienceType): string {
 	const palette = experienceTypePalette(type);
-	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; display: inline; padding: 0.2rem 0.1rem;`;
+	// line-height 1 keeps cloned wrap fragments overlapping instead of leaving a gap — but the wrapping cell needs `leading-none` too, or the inherited 1.55 strut wins and reopens it (docs/usage.md).
+	return `background-color: var(${palette.bg}); color: ${palette.text}; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-size: 0.875rem; font-weight: 400; line-height: 1; display: inline; padding: 0.2rem 0.1rem;`;
 }
 
 export function experienceNameStyle(
@@ -40,13 +41,13 @@ function experienceTypePalette(type: ExperienceType): {
 } {
 	switch (type) {
 		case "personal":
-			return { bg: "--tag-personal", text: "var(--color-text-primary)" };
+			return { bg: "--tag-personal", text: "var(--tag-personal-text)" };
 		case "work":
-			return { bg: "--tag-work", text: "var(--color-text-inverse)" };
+			return { bg: "--tag-work", text: "var(--tag-work-text)" };
 		case "school":
-			return { bg: "--tag-school", text: "var(--color-text-primary)" };
+			return { bg: "--tag-school", text: "var(--tag-school-text)" };
 		case "other":
-			return { bg: "--tag-other", text: "var(--color-text-inverse)" };
+			return { bg: "--tag-other", text: "var(--tag-other-text)" };
 		default: {
 			const _exhaustive: never = type;
 			return _exhaustive;

@@ -1,0 +1,88 @@
+---
+import { socialNavItems } from "../../lib/navLinks";
+import BeosIcon from "./BeosIcon.astro";
+
+// Frozen at build time in astro.config.mjs — UTC keeps the rendered date
+// identical no matter where the request is served from.
+const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	timeZone: "UTC",
+});
+---
+
+<footer class="site-footer" transition:persist="site-footer">
+  <div class="site-footer-inner">
+    <ul class="site-footer-list">
+      {
+        socialNavItems.map((item) => (
+          <li>
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              <BeosIcon kind={item.icon} />
+              <span>{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="site-footer-updated">
+      Last updated <time datetime={__BUILD_DATE__.slice(0, 10)}>{updatedAt}</time>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 2.5rem;
+    padding-block: 1.25rem 1.75rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  }
+
+  .site-footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1.25rem;
+  }
+
+  .site-footer-updated {
+    /* auto margin holds the right edge even after the row wraps */
+    margin: 0 0 0 auto;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+
+  .site-footer-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+
+  .site-footer-list a:active {
+    opacity: 0.72;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .site-footer-list a:hover {
+      color: var(--color-text-primary);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+</style>

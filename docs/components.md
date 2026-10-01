@@ -4,38 +4,41 @@ Components are split between Astro (static composition) and Svelte (client state
 
 ## Nav
 
-**File**: `src/components/nav/Nav.svelte`
+**File**: `src/components/nav/Nav.astro`
 
-Desktop: row of bordered boxes aligned to the bottom-right. Mobile: slide-in drawer from the right.
+Static header: the name link, and nothing else. No nav boxes, no dropdown, no drawer — the weather-banner rewrite emptied the header out, so this is Astro markup with a scoped `<style>` and no hydration.
 
-### Desktop nav boxes
-
-The `.nav-box` class is the core nav element. It is defined in `src/styles/global.css` as a plain CSS class. Do not use Tailwind utilities to recreate it.
-
-| State | Style |
-| --- | --- |
-| Default | White background, gray border, text primary |
-| Hover | Blue background, blue border, white text |
-| Active (pressed) | `transform: scale(0.98)`, 160ms |
-| Focus | 2px solid `--color-primary` outline |
-
-The "Social" item has a dropdown panel. It opens on hover (desktop) and click (pinned). The dropdown uses `transform: scale(0.98) translateY(-4px)` for enter and reverses for exit.
-
-### Mobile drawer
-
-Slides in from the right with `translate-x-full` to `translate-x-0`. Overlay fades in with `opacity 0` to `1`. Social links expand with `grid-template-rows: 0fr` to `1fr`.
-
-### Touch targets
-
-The name link, the mobile menu toggle, the drawer close button, and mobile links carry `min-h-[44px]` / `min-w-[44px]` so they meet the 44px minimum on touch.
+- `.site-nav` sets the row padding; `.nav-name` is the only link (`/`)
+- `.nav-name` sets `color: var(--color-text-primary)` so the global green `a` color doesn't apply
+- The bar sits on `--color-bg-primary` with a `border-b` hairline — no gradient wash, because it overlaps the top of the weather banner
+- The name link carries `min-h-[44px]` for the touch minimum
+- `transition:persist="site-nav"` keeps it mounted while `ClientRouter` swaps the page body
 
 ### Usage
 
 ```astro
-<Nav mainNavItems={mainNavItems} socialNavItems={socialNavItems} client:load />
+<Nav transition:persist="site-nav" />
 ```
 
-Nav is always hydrated with `client:load` because it manages open/close state.
+Page links live in the content instead of the header: the home statement links to `/about`, and social links sit in the footer. The `.nav-box` rules, social dropdown, and mobile drawer CSS were deleted along with `Nav.svelte`.
+
+## SiteFooter
+
+**Files**: `src/components/footer/SiteFooter.astro`, `src/components/footer/BeosIcon.astro`
+
+Global footer rendered inside the scroll region, below the page slot.
+
+- One list item per `socialNavItems` entry in `src/lib/navLinks.ts` (GitHub, LinkedIn, Substack, X)
+- Each link opens in a new tab with `rel="noopener noreferrer"`
+- `BeosIcon` maps the `icon` field (`person` / `mail` / `terminal` / `balloon`) to a 24px pixel-art SVG. The switch is exhaustive via `assertNever`, so a new `SocialIcon` without a glyph is a compile error
+- Hairline `border-top` from `color-mix(in srgb, var(--color-text-primary) 12%, transparent)`, so it holds in both modes
+- `transition:persist="site-footer"`
+
+### Usage
+
+```astro
+<SiteFooter transition:persist="site-footer" />
+```
 
 ## ImageGallery
 
@@ -99,18 +102,15 @@ Two custom variants (used in specific pages):
 
 | Class | Background | Usage |
 | --- | --- | --- |
-| `.btn-secondary-custom` | `--tag-personal` (green) | Project links |
-| `.btn-accent-custom` | `--tag-school` (yellow) | Project links |
+| `.btn-secondary-custom` | `--tag-personal` (green) | All three project links |
 
 All buttons: `padding: var(--spacing-sm) var(--spacing-md)`, `border-radius: var(--radius-md)`, `display: inline-flex`, `gap: var(--spacing-xs)`.
 
 ### When to use which
 
-Is it the primary action on the screen?
-- Yes: `btn-primary`. One per view.
-- No: `btn-secondary`. This is the default.
+**The decision rules now live in [usage.md](./usage.md) — follow that section** (it records that `.btn-primary`/`.btn-secondary` have zero call sites and that `.btn-primary` needs a dark-mode color fix before first use, and it gives the flowchart for link vs island button vs project-link class).
 
-The custom variants (`btn-secondary-custom`, `btn-accent-custom`) are exceptions for project link styling. Do not create new button variants without adding them to this file.
+The class set is closed: `btn-primary`, `btn-secondary`, `btn-secondary-custom`. Do not create a fourth without editing both this file and [usage.md](./usage.md).
 
 ## ExperienceTable
 
@@ -148,16 +148,41 @@ Renders markdown content with custom styling. Uses `.markdown-body` class with n
 <MarkdownBody content={content} />
 ```
 
-## AsciiHero
+## Home
 
-**File**: `src/components/home/AsciiHero.astro`
+**File**: `src/components/home/Home.astro`
 
-Full-width hero with personal statement text on the left and an ASCII art canvas on the right. The canvas renders a webcam/image as ASCII characters using `AsciiCanvas.svelte`.
+Top of the front page: the `.text-lead` personal statement (`personalStatement` in `src/lib/experience.ts`), then the `ExperienceTable`. The statement is split on `<br><br>` into two columns, and its closing sentence is rewritten in `Home.astro` to point at `/about` and `/canon` — that file is never staged, so copy edits that must ship live in the component.
 
-- Text: `.text-lead` class (17px, relaxed line height)
-- Canvas: monospace font, `line-height: 0.7`, blue glow effect
-- Canvas sizes: 350px (mobile), 500px (desktop), 650px (large desktop)
-- Glow animation: `ascii-glow` keyframes (brightness/contrast oscillation, 3s infinite)
+## WeatherBanner
+
+**File**: `src/components/weather/WeatherBanner.svelte`
+
+Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"`. Place is chosen once per visit; weather comes from coarse IP plus Open-Meteo, with a clear-sky fallback.
+
+- `landscapes.ts` defines opaque back, middle, and foreground terrain. Each layer continues below its silhouette. Mount Hood has an asymmetric snow profile with dark ravines, a blue foothill ridge, varied fir clusters, and eight apple orchard lanes with three closely spaced depth rows that converge uphill toward the summit. Seeded tree spacing and size variation soften the planted grid. Larger, lobed tree canopies fill narrower lane gaps. Whole-tree silhouettes remain distinct, with seeded groups of two or three apples near canopy centers. Pale meadow, green canopies, and a darker cool forest band keep separate values. Foreground fir selection uses each tree center to preserve whole silhouettes. Painted Hills has a hazy blue-grey back range, thin contour-following rust, ochre, cream, and olive strata, downhill rills, and a straw foreground with rabbitbrush. Smith Rock has unequal towers and V notches, a separate Monkey Face pillar, warm ochre planes, cooler mauve-grey shaded faces, and deep cracks. Green banks border both sides of the curved Crooked River. Rounded boulders sit in the water, and low sagebrush and junipers frame a dirt riverbank trail with rounded bank boulders. The Gorge has asymmetric overlapping blue ridges, stepped basalt headlands, a flowing waterfall, and Crown Point with a domed Vista House above a steep columnar basalt wall. An opaque basalt and brush bank contains the river above the bottom edge. Haystack Rock has a broad flared basalt base, a blunt pyramid summit, a steeper left face, and a longer right ridge. A detached two-pinnacle islet sits in the water to the left, with one thin needle to the right, each about one fifth of the main rock height. Vertical chutes divide the cool left face and warm tan-olive right face; green vegetation caps the summit and enters the upper gullies. A soft waterline mist band and pulsing white breakers surround the bases. Shoreward waves cross a wide beach with a faint vertical rock reflection in the wet sand. Coastal tide pools contain a fixed starfish, breathing anemones, rising bubbles that pop, and a crab with pauses.
+- `draw.ts` samples terrain at 672×192 per layer, including four logical pixels of margin on each side, into one RGBA atlas. WebGL uploads the full atlas when the place changes. At 24 samples per elapsed second, it updates bounded rectangles for moving materials. Each patch repaints the underlying material before adding moving subjects, then uploads the complete patch. Repeated draws within a sample reuse the atlas. All material colors receive the shared lighting and final dither. `buffer.ts` retains the 160×48 logical coordinate system and deterministic noise seed.
+- `glBanner.ts` uses linear texture filtering and renders at the displayed size, capped at 2× device pixel ratio. `weatherShader.ts` applies sky gradients, terrain light, atmospheric depth, sun or moon glow, weather tint, vignette, then quantizes the complete shaded frame to 24 levels per channel. A 4×4 Bayer matrix selects adjacent levels in fixed 2 CSS-pixel screen cells, including at DPR 2. Terrain, clouds, rain, and glow move through this pattern. No noise overlay is added.
+- `palette.ts` provides one lighting table for **day**, **golden hour**, and **night**. Dawn and dusk both select golden hour. The table supplies sky, ambient terrain light, direct light, and weather colors. Two Vista House windows receive warm light at night from this table in WebGL and the CPU fallback, before haze and final quantization. Their bounds come from `landscapes.ts` and follow the middle layer. Dark mode scales this shared light. Live golden hour runs from 45 minutes before sunrise to 50 minutes after, and from 50 minutes before sunset to 45 minutes after. Without solar data, local clock ranges are 05:00–07:30 and 17:30–20:00.
+- Layers oscillate with a shared **30-second sine cycle**. Amplitudes are **±0.75 / ±1.5 / ±3 logical pixels**, back to front. Time zero is centered. The 160-pixel window samples a 168-pixel atlas with `CLAMP_TO_EDGE`; landmarks never wrap or repeat. The margins also contain the linear filter footprint at both extremes.
+- Reduced motion holds time at zero. The animation loop stops when the document is hidden or the banner leaves the viewport. It resumes from the held time. Scene overrides and resize events still repaint a reduced-motion frame.
+- Rain has three angled depth layers, ground ripples, smooth gust-driven density and speed, and continuously changing streak lengths. `lightning.ts` uses seeded exponential waiting times after a four-second quiet period, with a seven-second exponential mean and a 30% chance of a double flash. The schedule does not loop; seeks reproduce the same frame. Each pulse lasts 253 ms. The first flash peaks at 1.0. A secondary peak follows 130–200 ms later at 0.46–0.54, with a shifted origin and bluer light. Overlapping pulses blend intensity, origin, and color without cutting off the primary pulse. Origins span the scene from 8 to 152 logical pixels. A tight main channel carries diminishing forks that split again. The palette flash lifts the scene without darkening or washing the terrain. Flash colors come from `lighting()`. Time zero has no flash. Birds are absent for any positive rain intensity and appear only in clear weather or fog. Fog breathes slowly around three small birds with varied crossing speeds, heights, smooth wing strokes, and haze fades. Clear skies have drifting wisps, including a summit banner cloud at Mount Hood. Cloudy skies combine cloud layers at different speeds. All variation uses the same elapsed time as the terrain. Motes remain.
+- Place motion uses deterministic elapsed time: waterfall streaks descend through a gently changing thread and base mist; an envelope-gated orchard gust travels gently across the seeded tree rows and reverses its lead over time, with depth-based amplitude and layered branch, leaf-height, and canopy shading variation; rock-local river crests and short downstream wakes travel left to right with smooth three-second fade resets; coastal swells advance into a washing foam edge and wet-sand sheen; small striped hay bales roll and bounce along a 960-second sine path, slowing to reverse outside the visible region. These subjects live in their terrain layers and follow the layer oscillation. The same pause and time-zero rules apply to every subject. Orchard gusts repeat every 12 seconds with zero value and slope at the boundary. Bubble births, pops, wave resets, rain splashes, and drifting motes fade out with zero slope before wrapping. Bird crossings reset off-screen; rain streaks fade before cell boundaries. Waterfall, surf, crab, and anemone motion use continuous phases.
+- Weather states are `clear`, `cloudy`, `rainy`, and `fog`. Codes 0 and 1 map directly to `clear`; temperature and visibility no longer affect classification. A cached `sunny` reading fails schema validation and uses the clear fallback without logging. WeatherLab reads its selectors from this enum.
+- Night stars have varied sizes and brightness. Golden-ratio offsets scatter them inside a coarse two-pixel lattice. Hashed phases and speeds drive a gentle bounded sine twinkle on the shared elapsed clock. Each star stays inside its cell; reduced motion holds varied static brightness at time zero. Stars pass through the same final dither at DPR 1 and 2.
+- The sun uses a Gaussian core and wider radial glow. Golden hour has a larger warm bloom and daylight a gentle halo. The moon has an 8.4-logical-pixel disc, about 1.6 times the daylight sun reference diameter, with a stepped uneven limb, four dark maria, and a dim halo. CPU and WebGL share its radius and crater layout. Final quantization preserves the solid disc and crater contrast.
+- `bannerSurface.ts` provides a still CPU fallback with the same terrain and lighting table when WebGL is unavailable. It approximates fog and radial sun or moon light, then uses the same 24-level Bayer quantizer at the displayed size. It uses a separate 2D canvas, including after shader initialization failure, and repaints on scene or size changes. The fallback remains still and does not draw rain, birds, or cloud animation.
+- Place and last reading persist in `sessionStorage` (`oregon-banner-place-v1`, `oregon-banner-reading-v1`), so a reload doesn't re-pick the place
+- The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
+- `transition:persist="weather-banner"` keeps it mounted while the page body swaps
+- `src/pages/api/weather.ts` reads `x-vercel-ip-*` headers, calls Open-Meteo with a 4s timeout, and answers **503** when coordinates are missing or upstream fails — the client then paints a clear-sky fallback
+- `WeatherLab.svelte` is a dev/preview-only override panel, gated by `showWeatherLab()` in `src/lib/weather/lab.ts`. Its **localize** button clears every override, rolls a fresh random backdrop (persisted via `savePlace`), and re-fetches the live IP-synced reading — what a real visitor sees, minus the once-per-tab place roll
+
+### Usage
+
+```astro
+<WeatherBanner client:only="svelte" showLab={showLab} transition:persist="weather-banner" />
+```
 
 ## FloatingChat (the guide)
 
@@ -166,13 +191,17 @@ Full-width hero with personal statement text on the left and an ASCII art canvas
 The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once in `SiteLayout.astro` with `client:load`, so it is present on every page.
 
 - Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
-- Collapsed: `.guide-launch` button in the bottom corner. Expanded: `.guide-panel` with header, thread, and input form
+- Trigger: `.guide-launch` button in the bottom corner. `.guide-panel` (header, thread, input form) is always mounted and gated by CSS, so `aria-controls="guide-panel"` is constant
+- Below 768px the panel is a floating popover: `display` toggled when opened, no enter/exit motion
+- From 768px up it is a full-height drawer docked to the viewport's right edge (`min(24rem, 100vw)`), overlaying the white gutter without shifting content. Closed: `translateX(100%)` + `visibility: hidden`. Surface is `--color-bg-sunken` (reads as a "lower state" against the page) with `--elevation-drawer` cast inward from the page-facing edge, so the drawer reads as a recess under the page rather than a layer over it — light: hairline plus soft ambient inside the edge; dark: one white hairline ring plus a deeper black inset
+- Drawer motion uses the shared tokens: open `--duration-drawer` (280ms), close `--duration-ui` (180ms), both `--ease-out`; `visibility` flips are delayed by the matching duration so the exit slide can play; `prefers-reduced-motion` disables both; a guide restored from `sessionStorage` or `?chat=1` appears in place without sliding
+- On desktop the launcher hides only after the drawer has arrived (280ms delay) so no bare corner shows mid-slide; the panel outranks it in the dock's stacking order (`z-index: 2`)
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
-- Cold start shows three starter prompts instead of an empty thread
+- An empty thread shows a one-line hint, or the offline contact copy when the inference server is down
 
 ### Interaction and accessibility
 
-- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel
+- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel, after a tick so the launcher is visible and focusable again on desktop
 - On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
 - The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
 - Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`; source chips use `--color-text-secondary` (`--color-text-muted` cannot reach 4.5:1 on a light surface)

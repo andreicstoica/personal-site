@@ -3,8 +3,8 @@
 ## Project Structure & Module Organization
 
 - `src/pages`: thin route entrypoints. Collection routes compose `CollectionPage`; others wrap `SiteLayout` and a page component.
-- Layout layers: `RootLayout` (document + idle cursor island) → `SiteLayout` (nav island + scroll) → `ContentDocument` (markdown page chrome).
-- `src/components`: Astro owns static composition; Svelte islands own client state (`Nav`, `CursorTrail`, `AsciiCanvas`, `ImageGallery`, `FullPageChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS.
+- Layout layers: `RootLayout` (document + `ClientRouter` + idle cursor island) → `SiteLayout` (weather banner, static nav, page scroll region with footer, guide island) → `ContentDocument` (markdown page chrome).
+- `src/components`: Astro owns static composition; Svelte islands own client state (`WeatherBanner`, `CursorTrail`, `ImageGallery`, `FloatingChat`). Hydrate with `client:load` / `client:idle` / `client:visible` only where interaction needs JS; `WeatherBanner` is `client:only`. Its WebGL terrain layers use a shared 30-second sine oscillation (back ±0.75, middle ±1.5, front ±3 logical pixels) in a wider clamped atlas with no wrapping, pause off-screen or in hidden tabs, and hold centered time zero for reduced motion. Place-specific material motion updates bounded atlas regions at 24 samples per elapsed second and shares the same pause, seek, and time-zero rules. Moving patches repaint their underlying material, and visible loop resets use smooth fades or off-screen reversals. Smith Rock has unequal ochre towers, a separate Monkey Face pillar, and low shrubs beside a riverbank trail. The dense Mount Hood orchard has eight lanes of larger trees with seeded spacing jitter and one gust that travels across the rows and reverses its lead over time, with depth-based amplitude, layered canopy motion, and clustered apples. Painted Hills has a hazy back range over contour-following banded strata with downhill rills and a straw foreground. Horizontal rivers have rock-local rapids flowing left to right; coastal waves advance toward shore. The night moon has a stepped disc and dark maria. Night stars scatter on golden-ratio offsets inside a coarse two-pixel lattice, with varied sizes and gentle twinkle. Final composite colors use 24-level screen-space Bayer quantization with 2 CSS-pixel cells. Weather states are clear, cloudy, rainy, and fog. Rain excludes birds; lightning lifts the scene with a cool palette flash and a fractal bolt without dimming the terrain, and every pulse lasts 253 ms, with a weaker shifted blue secondary that blends during overlaps. Lighting states are day, golden hour, and night. WebGL failure uses a still CPU plate. `Nav.astro` and `SiteFooter.astro` are static markup, not islands.
 - `src/layouts`: page shells; `src/lib`: helpers; `src/styles`: Tailwind tokens/extracted class groups.
 - Content lives in `src/content`; acceptance references in `specs`; public assets in `public` (e.g., `public/images`). Never edit `dist`.
 - Stay on Astro islands rather than a React/Next rewrite unless a page needs shared client state across the whole tree. Swap an island to React later without changing the layout hierarchy.
@@ -12,6 +12,7 @@
 ## Build, Test, and Development Commands
 
 - `bun run lint` / `bun run check` / `bun run test` / `bun run verify`: Biome on `src/`, `astro check`, `svelte-check`, `bun test`, then production build. `verify` is the CI gate (`/.github/workflows/check.yml`).
+- `bun run lint:ui`: `@shadcn/lint` via ESLint on Svelte templates and `src/**/*.ts`. No design-system rules are enabled yet; add them in `eslint.config.mjs`. This does not replace Biome.
 - `bun run dev`: start Astro locally at `http://localhost:4321` with hot reload.
 - `bun run build`: production build to `dist`.
 - `bun run preview`: serve the built output for final verification.
@@ -21,14 +22,14 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Coding Style & Naming Conventions
 
 - Two-space indentation; prefer single quotes in JS/TS.
-- Components in PascalCase (`AsciiHero.astro`, `ImageGallery.svelte`); utilities camelCase in `src/lib`.
+- Components in PascalCase (`WeatherBanner.svelte`, `ImageGallery.svelte`); utilities camelCase in `src/lib`.
 - Keep Tailwind classes inline unless reused, then extract to `src/styles`.
 - Format with `bun run lint:fix` (Biome; ignores Svelte/CSS). Types and islands are gated by `bun run check`.
 
 ## Testing Guidelines
 
 - `bun test` runs the unit suite (`*.test.ts`, Bun's built-in runner — no extra config). It is part of `bun run verify`, so CI gates on it.
-- Existing coverage: `src/lib/guide.test.ts` covers memory note parsing, route matching, guide reply/mode/action decisions, and inference config gating.
+- Existing coverage: `src/lib/guide.test.ts` covers memory note parsing, route matching, guide reply/mode/action decisions, and inference config gating. `src/lib/weather/scene.test.ts` covers golden-hour boundaries, terrain ground coverage, and CPU fallback lighting.
 - Add co-located `*.test.ts` files next to the module under test. For UI specs, prefer `src/components/__tests__/` (Vitest/Playwright welcome) and document run steps in the PR.
 
 ## Commit & Pull Request Guidelines

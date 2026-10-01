@@ -1,0 +1,83 @@
+---
+import Home from "../../components/home/Home.astro";
+import Nav from "../../components/nav/Nav.astro";
+import WeatherBanner from "../../components/weather/WeatherBanner.svelte";
+import RootLayout from "../../layouts/RootLayout.astro";
+import { showWeatherLab } from "../../lib/weather/lab";
+import DocName from "../../proto/nav/DocName.svelte";
+import NavProto from "../../proto/nav/NavProto.svelte";
+import QuietLinks from "../../proto/nav/QuietLinks.svelte";
+
+if (!showWeatherLab(import.meta.env.DEV)) {
+	return Astro.redirect("/");
+}
+---
+
+<RootLayout title="Nav placement">
+  <script is:inline>
+    const picked = Number(new URLSearchParams(location.search).get("v") || "1");
+    const names = ["bar", "margin", "colophon"];
+    const index = picked >= 1 && picked <= names.length ? picked - 1 : 0;
+    document.documentElement.dataset.protoNav = names[index];
+  </script>
+  <div class="proto-shell col-span-12 flex h-dvh min-w-0 flex-col overflow-hidden">
+    <div class="proto-margin-links">
+      <QuietLinks client:load className="margin-links" />
+    </div>
+    <WeatherBanner client:only="svelte" showLab={false} />
+    <div class="proto-bar-nav">
+      <Nav />
+    </div>
+    <div
+      class="proto-scroll flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-gutter-stable"
+      data-page-scroll
+    >
+      <div class="proto-docname">
+        <DocName client:load />
+      </div>
+      <Home />
+      <div class="proto-colophon">
+        <QuietLinks client:load className="colophon-links" />
+      </div>
+    </div>
+  </div>
+  <NavProto client:load />
+</RootLayout>
+
+<style>
+  .proto-margin-links :global(.margin-links) {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    right: var(--page-padding-inline);
+    justify-content: flex-end;
+    max-width: min(18rem, 42vw);
+  }
+
+  .proto-colophon {
+    max-width: 42rem;
+    margin-top: 2rem;
+    margin-bottom: 4.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  }
+
+  :global(html[data-proto-nav="bar"]) .proto-margin-links,
+  :global(html[data-proto-nav="bar"]) .proto-docname,
+  :global(html[data-proto-nav="bar"]) .proto-colophon,
+  :global(html[data-proto-nav="margin"]) .proto-bar-nav,
+  :global(html[data-proto-nav="margin"]) .proto-colophon,
+  :global(html[data-proto-nav="colophon"]) .proto-bar-nav,
+  :global(html[data-proto-nav="colophon"]) .proto-margin-links {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .proto-margin-links :global(.margin-links) {
+      position: static;
+      max-width: none;
+      margin-bottom: 0.15rem;
+    }
+  }
+</style>

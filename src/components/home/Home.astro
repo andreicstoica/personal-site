@@ -1,11 +1,32 @@
 ---
-import AsciiHero from "./AsciiHero.astro";
+import { personalStatement } from "../../lib/experience";
 import ExperienceTable from "./ExperienceTable.astro";
+
+// experience.ts holds the copy as one string; split it so the two independent
+// thoughts become columns instead of one narrow block over a full-width table.
+const [intro = "", focus = ""] = personalStatement.split("<br><br>");
+
+// The closing CTA is rewritten here because experience.ts is never staged.
+// If that sentence ever changes upstream, replace() no-ops and the original
+// copy renders — no breakage, just the old wording.
+const introCta = intro.replace(
+	"There's a short <a href='/about'>about</a>, mostly outside of work.",
+	"Learn more <a href='/about'>about</a> me outside of work, and my <a href='/canon'>canon</a> of people and ideas that inspire me.",
+);
+
+// The right column leads with the shorter AI line; the blog link and closing
+// thought stay so it keeps ~210 characters — 253 ÷ 1.2, the measure ratio —
+// which is what lands both columns on the same four lines.
+const focusLead = focus.replace(
+	"Lately I've been exploring reflective AI tools with a focus on simple interfaces that feel intuitive and well considered, and have been writing",
+	"I've been exploring how to make AI interfaces simpler and feel more intuitive, and have been writing",
+);
 ---
 
-<div>
-  <AsciiHero />
-  <div class="flex flex-col pb-4">
-    <ExperienceTable />
+<div class="flex flex-col gap-12">
+  <div class="pt-4 grid gap-x-20 gap-y-5 md:grid-cols-[1.2fr_1fr]">
+    <p class="text-lead" set:html={introCta} />
+    <p class="text-lead" set:html={focusLead} />
   </div>
+  <ExperienceTable />
 </div>

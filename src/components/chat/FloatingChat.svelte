@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { assertNever } from "../../lib/assertNever";
+  import { onMount, tick } from "svelte";
   import { portal } from "../../lib/portal";
   import {
     isColdStart,
     parseChatApiSuccess,
     type ChatAction,
-    type ChatMode,
     type ChatSource,
   } from "../../lib/chatTypes";
   import Icon from "../ui/Icon.svelte";
@@ -20,20 +18,21 @@
   };
 
   const storageKey = "andrei-guide-v1";
-  const prompts = ["What are you working on?", "Show me Refract", "What's in your canon?"];
 
   let open = $state(false);
   let messages = $state<GuideMessage[]>([]);
   let input = $state("");
   let sending = $state(false);
   let waking = $state(false);
-  let mode = $state<ChatMode | null>(null);
+  let offline = $state(false);
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
   let threadRef = $state<HTMLDivElement | null>(null);
   let rootRef = $state<HTMLDivElement | null>(null);
   let panelRef = $state<HTMLDivElement | null>(null);
   let launchRef = $state<HTMLButtonElement | null>(null);
+  let noSlide = $state(false);
+  let desktop = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
   let abortRef: AbortController | null = null;
 
@@ -114,7 +113,9 @@
       rootRef.contains(document.activeElement);
     abortRef?.abort();
     open = false;
-    if (focusWasInside) launchRef?.focus();
+    // On desktop the launcher is hidden while the drawer is open; wait a tick
+    // so it is visible and focusable again before handing focus back.
+    if (focusWasInside) void tick().then(() => launchRef?.focus());
   }
 
   function actionHref(action: ChatAction | undefined): string | undefined {
@@ -125,6 +126,21 @@
   function errorText(value: unknown): string {
     if (isRecord(value) && typeof value.error === "string") return value.error;
     return "The guide couldn't answer.";
+  }
+
+  /** Config-only: no probe, so this never wakes a scale-to-zero GPU. */
+  async function checkHealth() {
+    try {
+      const response = await fetch("/api/health");
+      if (!response.ok) {
+        offline = true;
+        return;
+      }
+      const payload: unknown = await response.json().catch(() => null);
+      offline = !(isRecord(payload) && payload.status === "ok");
+    } catch {
+      offline = true;
+    }
   }
 
   function scheduleFollow(action: ChatAction) {
@@ -193,7 +209,6 @@
         appendReply(errorText(payload));
         return;
       }
-      mode = parsed.mode;
       appendReply(parsed.response, { sources: parsed.sources, action: parsed.action });
       scheduleFollow(parsed.action);
     } catch (error) {
@@ -223,6 +238,11 @@
   };
 
   onMount(() => {
+    void checkHealth();
+    let alive = true;
+    // Hydration and ClientRouter remounts restore an open guide onto an
+    // already-styled element; suppress the transition so it appears in place.
+    noSlide = true;
     const stored = readStored();
     if (stored) {
       messages = stored.messages;
@@ -236,8 +256,14 @@
       const next = `${url.pathname}${url.search}${url.hash}`;
       window.history.replaceState({}, "", next);
     }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (alive) noSlide = false;
+      });
+    });
     hydrated = true;
     return () => {
+      alive = false;
       if (followTimer) clearTimeout(followTimer);
     };
   });
@@ -258,6 +284,16 @@
   });
 
   $effect(() => {
+    const query = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      desktop = query.matches;
+    };
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
+  });
+
+  $effect(() => {
     if (!open || typeof window === "undefined") return;
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     // On touch, focusing the input would raise the keyboard — focus the
@@ -267,6 +303,7 @@
   });
 
   $effect(() => {
+    void open;
     void messages.length;
     void sending;
     if (!threadRef) return;
@@ -285,136 +322,127 @@
   bind:this={rootRef}
   class="guide-dock"
   data-open={open ? "true" : "false"}
+  data-no-slide={noSlide ? "true" : "false"}
 >
-  {#if open}
-    <div
-      id="guide-panel"
-      role="dialog"
-      aria-label="Ask Andrei"
-      tabindex="-1"
-      bind:this={panelRef}
-      class="guide-panel flex flex-col border border-[var(--color-text-secondary)] bg-[var(--color-bg-primary)] shadow-lg rounded-none"
-    >
-      <header class="flex items-start justify-between gap-3 border-b border-[var(--color-bg-secondary)] px-4 py-3">
-        <div>
-          <div class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</div>
-          <div class="text-xs text-[var(--color-text-secondary)]">
-            {#if mode === null}
-              Projects, work, and the site
-            {:else if mode === "model"}
-              From the model
-            {:else if mode === "notes"}
-              From site notes
-            {:else}
-              {assertNever(mode)}
-            {/if}
-          </div>
-        </div>
-        <button
-          type="button"
-          class="guide-icon-button text-[var(--color-text-primary)]"
-          aria-label="Close guide"
-          onclick={closeGuide}
-        >
-          <Icon name="close" class="w-5 h-5" />
-        </button>
-      </header>
-
-      <div
-        bind:this={threadRef}
-        class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3"
-        aria-live="polite"
+  <div
+    id="guide-panel"
+    role="dialog"
+    aria-label="Ask Andrei"
+    tabindex="-1"
+    bind:this={panelRef}
+    class="guide-panel"
+  >
+    <header class="flex items-center justify-between gap-3 px-4 py-2.5">
+      <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
+      <button
+        type="button"
+        class="guide-icon-button bg-[var(--color-primary)] text-white rounded-none"
+        aria-label="Close guide"
+        onclick={closeGuide}
       >
-        {#if messages.length === 0}
+        <Icon name="close" class="w-5 h-5" />
+      </button>
+    </header>
+
+    <div
+      bind:this={threadRef}
+      class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      aria-live="polite"
+    >
+      {#if messages.length === 0}
+        {#if offline}
+          <p class="text-sm text-[var(--color-text-secondary)]">
+            The inference server is currently down - it is expensive to run!
+          </p>
+          <p class="text-sm text-[var(--color-text-secondary)]">
+            Reach out directly and I'll spin it up for you:
+            <br />
+            <em>andrei c stoica (at) icloud (dot) com</em>
+          </p>
+        {:else}
           <p class="text-sm text-[var(--color-text-secondary)]">
             Ask about a project or a job. Say “show me Refract” and I'll open the page.
           </p>
-          <div class="flex flex-col gap-2">
-            {#each prompts as prompt (prompt)}
-              <button
-                type="button"
-                class="flex min-h-[44px] items-center text-left text-sm px-3 py-2 border border-[var(--color-bg-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] rounded-none"
-                onclick={() => void send(prompt)}
-              >
-                {prompt}
-              </button>
-            {/each}
-          </div>
         {/if}
+      {/if}
 
-        {#each messages as message (message.id)}
-          <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
-            <div
-              class="max-w-[85%] border rounded-none {message.role === 'user'
-                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
-            >
-              <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
-                <div>{message.content}</div>
-                {#if message.role === "assistant" && message.sources && message.sources.length > 0}
-                  <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] flex flex-wrap gap-x-2 gap-y-2">
-                    {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
-                      {#if source.href && source.href !== actionHref(message.action)}
-                        <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
-                          {source.title}
-                        </a>
-                      {:else if !source.href}
-                        <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
-                      {/if}
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-              {#if message.role === "assistant" && message.action?.kind === "navigate"}
-                <a
-                  href={message.action.href}
-                  class="guide-action"
-                  aria-label="Open {message.action.label}"
-                >
-                  <Icon name="hammer" class="w-4 h-4" />
-                  <span>{message.action.label}</span>
-                </a>
+      {#each messages as message (message.id)}
+        <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
+          <div
+            class="max-w-[85%] border rounded-none {message.role === 'user'
+              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+          >
+            <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
+              <div>{message.content}</div>
+              {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
+                <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] space-y-1">
+                  {#if message.action?.kind === "navigate"}
+                    <div>
+                      <a
+                        href={message.action.href}
+                        class="text-[11px] text-[var(--color-text-secondary)]"
+                      >
+                        → Navigating to {message.action.href}
+                      </a>
+                    </div>
+                  {/if}
+                  {#if message.sources && message.sources.length > 0}
+                    <div class="flex flex-wrap gap-x-2 gap-y-2">
+                      {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
+                        {#if source.href && source.href !== actionHref(message.action)}
+                          <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
+                            {source.title}
+                          </a>
+                        {:else if !source.href}
+                          <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
+                        {/if}
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
               {/if}
             </div>
           </div>
-        {/each}
+        </div>
+      {/each}
 
-        {#if sending}
-          <div class="text-sm text-[var(--color-text-secondary)]" role="status">
-            {waking ? "Waking the model…" : "Thinking…"}
-          </div>
-        {/if}
-      </div>
-
-      <form onsubmit={onSubmit} class="flex gap-2 border-t border-[var(--color-bg-secondary)] p-3">
-        <label class="sr-only" for="guide-input">Message</label>
-        <input
-          id="guide-input"
-          bind:this={inputRef}
-          bind:value={input}
-          type="text"
-          autocomplete="off"
-          placeholder="Ask about a project…"
-          disabled={sending}
-          class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={sending || input.trim().length === 0}
-          class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm border border-[var(--color-primary)] bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
-        >
-          Send
-        </button>
-      </form>
+      {#if sending}
+        <div class="text-sm text-[var(--color-text-secondary)]" role="status">
+          {waking ? "Waking the model…" : "Thinking…"}
+        </div>
+      {/if}
     </div>
-  {/if}
+
+    <form onsubmit={onSubmit} class="flex gap-2 p-3">
+      <label class="sr-only" for="guide-input">Message</label>
+      <input
+        id="guide-input"
+        bind:this={inputRef}
+        bind:value={input}
+        type="text"
+        autocomplete="off"
+        placeholder="Ask about a project…"
+        disabled={sending}
+        class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+      />
+      <button
+        type="submit"
+        disabled={sending || input.trim().length === 0}
+        class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
+      >
+        Send
+      </button>
+    </form>
+  </div>
 
   <button
     type="button"
     class="guide-launch"
     bind:this={launchRef}
     aria-expanded={open}
-    aria-controls={open ? "guide-panel" : undefined}
+    aria-controls="guide-panel"
+    inert={open && desktop}
     aria-label={open ? "Close guide" : "Ask Andrei"}
     onclick={(event) => {
       event.stopPropagation();
@@ -443,9 +471,21 @@
     pointer-events: auto;
   }
 
+  /* Base popover state — also the fallback for fractional viewport widths
+     between the two media blocks: hidden until opened, no enter/exit
+     motion. The desktop block below replaces the surface with the drawer. */
   .guide-panel {
+    display: none;
+    flex-direction: column;
     width: min(26rem, calc(100vw - 1.5rem));
     height: min(36rem, calc(100dvh - 5.5rem));
+    border: 1px solid var(--color-text-secondary);
+    background: var(--color-bg-primary);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+  }
+
+  .guide-dock[data-open="true"] .guide-panel {
+    display: flex;
   }
 
   .guide-thread {
@@ -460,20 +500,6 @@
   .guide-panel a,
   .guide-panel input {
     touch-action: manipulation;
-  }
-
-  :global(.guide-action) {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.5rem 0.75rem;
-    border-top: 1px solid var(--color-bg-secondary);
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
-    font-size: 0.75rem;
-    line-height: 1;
-    text-decoration: none;
   }
 
   .guide-launch,
@@ -512,6 +538,7 @@
   .guide-icon-button {
     width: 2.75rem;
     height: 2.75rem;
+    transition: background-color var(--duration-ui) var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -520,11 +547,7 @@
     }
 
     .guide-icon-button:hover {
-      color: var(--color-primary);
-    }
-
-    :global(.guide-action:hover) {
-      background: var(--color-bg-secondary);
+      background: var(--color-primary-hover);
     }
 
     .guide-input {
@@ -555,8 +578,62 @@
     }
   }
 
+  /* Desktop: a full-height drawer docked to the viewport's right edge. It
+     overlays the white gutter (and the content edge on narrower screens)
+     with a sunken surface and a shadow cast inward from the page's edge —
+     the recess reads as under the page, and the page never shifts. */
+  @media (min-width: 768px) {
+    .guide-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      width: min(24rem, 100vw);
+      height: auto;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border: none;
+      background: var(--color-bg-sunken);
+      box-shadow: var(--elevation-drawer);
+      transform: translateX(100%);
+      visibility: hidden;
+      z-index: 2;
+      transition:
+        transform var(--duration-ui) var(--ease-out),
+        visibility 0s linear var(--duration-ui);
+    }
+
+    .guide-dock[data-open="true"] .guide-panel {
+      transform: translateX(0);
+      visibility: visible;
+      transition:
+        transform var(--duration-drawer) var(--ease-out),
+        visibility 0s;
+    }
+
+    .guide-dock[data-no-slide="true"] .guide-panel {
+      transition: none;
+    }
+
+    /* The launcher sits under the drawer's footprint; hide it only once
+       the drawer has arrived so no bare corner shows mid-slide. */
+    .guide-dock[data-open="true"] .guide-launch {
+      visibility: hidden;
+      transition:
+        visibility 0s linear var(--duration-drawer),
+        background-color var(--duration-ui) var(--ease-out),
+        scale 160ms var(--ease-out);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .guide-launch {
+    .guide-panel,
+    .guide-dock[data-open="true"] .guide-panel {
+      transition: none;
+    }
+
+    .guide-launch,
+    .guide-dock[data-open="true"] .guide-launch {
       transition: none;
     }
 

@@ -21,7 +21,7 @@ const embedSrc = video?.includes("youtube.com/shorts/")
         <div class="relative w-full" style="padding-bottom: 56.25%;">
           <iframe
             src={embedSrc}
-            class="absolute top-0 left-0 w-full h-full rounded-lg"
+            class="absolute top-0 left-0 w-full h-full"
             allow="autoplay; fullscreen; picture-in-picture"
             allowfullscreen
           />
@@ -30,7 +30,7 @@ const embedSrc = video?.includes("youtube.com/shorts/")
         <div class="w-full">
           <video
             src={video}
-            class="w-full rounded-lg media-reveal"
+            class="w-full media-reveal"
             controls
             autoplay
             loop
