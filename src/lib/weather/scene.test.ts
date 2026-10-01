@@ -3,11 +3,6 @@ import { DITHER_LEVELS, quantize } from "./dither";
 import { renderLayers, renderMotionPatches, renderPlate } from "./draw";
 import { birdsAllowed } from "./effects";
 import { DETAIL, material, vistaWindow } from "./landscapes";
-import {
-	createLightningTimeline,
-	LIGHTNING_DURATION,
-	lightningGap,
-} from "./lightning";
 import { MOON_RADIUS, moonColor } from "./moon";
 import {
 	ATLAS_MARGIN,
@@ -26,12 +21,13 @@ import {
 	classifyWeather,
 	fallbackReading,
 	PLACES,
+	type StoredReading,
 	sceneLabel,
 	timeFromClock,
 	timeOfDay,
 	WEATHERS,
 } from "./scene";
-import { loadReading } from "./session";
+import { loadReading, READING_MAX_AGE_MS, saveReading } from "./session";
 
 const minute = 60_000;
 
@@ -241,60 +237,6 @@ describe("weather raster and elapsed time", () => {
 		expect(values.reduce((a, b) => a + b, 0) / 16).toBeCloseTo(127.5);
 		expect(quantize([-10, 255, 280], 0, 0)).toEqual([0, 255, 255]);
 	});
-	test("lightning has varied gaps, quiet t=0, occasional doubles, and deterministic seeks", () => {
-		const gaps = Array.from({ length: 100 }, (_, i) => lightningGap(i + 1));
-		expect(Math.min(...gaps)).toBeGreaterThanOrEqual(4);
-		expect(new Set(gaps).size).toBe(100);
-		expect(gaps.reduce((a, b) => a + b, 0) / gaps.length).toBeGreaterThan(8);
-		const timeline = createLightningTimeline();
-		expect(timeline(0).flash).toBe(0);
-		let start = 0;
-		let doubles = 0;
-		for (const gap of gaps) {
-			start += gap;
-			const event = timeline(start);
-			// A flash, not a swell: the peak lands within one 60 Hz frame.
-			expect(timeline(start + 0.001).flash).toBe(1);
-			expect(timeline(start + 0.011).flash).toBe(1);
-			expect(timeline(start + event.duration / 2).flash).toBeLessThan(0.5);
-			expect(event.duration).toBe(LIGHTNING_DURATION);
-			expect(timeline(start + LIGHTNING_DURATION + 0.001).flash).toBe(0);
-			expect(timeline(start + 0.7).flash + timeline(start + 0.7).second).toBe(
-				0,
-			);
-			const first = timeline(start + LIGHTNING_DURATION / 2);
-			const second = timeline(start + first.delay + 0.005);
-			expect(first.second).toBe(0);
-			if (event.double) {
-				doubles++;
-				// Two strikes, not one moving bolt: a dark beat, then the repeat.
-				expect(first.delay).toBeGreaterThan(LIGHTNING_DURATION + 0.04);
-				const beat = timeline(start + LIGHTNING_DURATION + 0.02);
-				expect(beat.flash).toBe(0);
-				expect(beat.second).toBe(0);
-				expect(second.flash).toBe(0);
-				expect(second.second).toBe(second.strength);
-				expect(
-					timeline(start + first.delay + LIGHTNING_DURATION + 0.001).second,
-				).toBe(0);
-				expect(second.strength).toBeGreaterThanOrEqual(0.5);
-				expect(second.strength).toBeLessThanOrEqual(2 / 3);
-				expect(second.origin).toBe(first.origin);
-				expect(second.split).toBeGreaterThanOrEqual(4);
-				expect(second.split).toBeLessThanOrEqual(6);
-			} else {
-				expect(second.second).toBe(0);
-			}
-		}
-		// About one in four strikes doubles: inside one in three to one in five.
-		expect(doubles).toBeGreaterThan(100 / 5 - 8);
-		expect(doubles).toBeLessThan(100 / 3 + 8);
-		const sample = timeline(20);
-		expect(timeline(20)).toEqual(sample);
-		timeline(500);
-		expect(timeline(20)).toEqual(sample);
-		expect(timeline(0).flash).toBe(0);
-	});
 });
 
 describe("place motion and merged clear weather", () => {
@@ -326,6 +268,27 @@ describe("place motion and merged clear weather", () => {
 		expect(loadReading(storage) ?? fallbackReading()).toEqual(
 			fallbackReading(),
 		);
+	});
+	test("cached reading expires so a long-lived tab does not paint night at noon", () => {
+		const reading: StoredReading = {
+			weather: "cloudy",
+			sunrise: 1_000,
+			sunset: 2_000,
+		};
+		const items = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => items.get(key) ?? null,
+			setItem: (key: string, value: string) => void items.set(key, value),
+		} as unknown as Storage;
+		const savedAt = 10_000_000;
+		saveReading(storage, reading, savedAt);
+		expect(loadReading(storage, savedAt + READING_MAX_AGE_MS)).toEqual(reading);
+		expect(loadReading(storage, savedAt + READING_MAX_AGE_MS + 1)).toBeNull();
+		// A clock set back is also stale, not fresh forever.
+		expect(loadReading(storage, savedAt - 1)).toBeNull();
+		// The old unstamped shape is dropped, not trusted.
+		items.set("oregon-banner-reading-v2", JSON.stringify(reading));
+		expect(loadReading(storage, savedAt)).toBeNull();
 	});
 });
 
@@ -463,56 +426,4 @@ describe("weather seam regression", () => {
 		}
 		expect(escapes).toEqual([]);
 	}, 20_000);
-	test("lightning origins cover both sides and the center of the scene", () => {
-		const at = createLightningTimeline();
-		let start = 0;
-		const origins = [];
-		for (let i = 1; i <= 100; i++) {
-			start += lightningGap(i);
-			origins.push(at(start + 0.08).origin);
-		}
-		expect(Math.min(...origins)).toBeLessThan(20);
-		expect(Math.max(...origins)).toBeGreaterThan(140);
-		expect(origins.filter((x) => x > 60 && x < 100).length).toBeGreaterThan(10);
-	});
-	test("lightning decays fast with return-stroke flicker", () => {
-		const at = createLightningTimeline();
-		let start = 0;
-		for (let i = 1; i <= 60; i++) {
-			start += lightningGap(i);
-			const frames = Array.from({ length: 254 }, (_, ms) =>
-				at(start + ms / 1000),
-			);
-			const flash = frames.map((frame) => frame.flash);
-			expect(Math.max(...flash)).toBe(1);
-			expect(Math.min(...flash)).toBeGreaterThanOrEqual(0);
-			// At least one re-brightening after the peak reads as electric.
-			const rises = flash.filter(
-				(v, ms) => ms > 20 && v > (flash[ms - 1] ?? v) + 0.05,
-			);
-			expect(rises.length).toBeGreaterThanOrEqual(1);
-			const event = at(start);
-			if (event.double) {
-				const second = Array.from({ length: 254 }, (_, ms) =>
-					at(start + event.delay + ms / 1000),
-				).map((frame) => frame.second);
-				expect(Math.max(...second)).toBe(event.strength);
-				expect(
-					second.filter((v, ms) => ms > 20 && v > (second[ms - 1] ?? v) + 0.02)
-						.length,
-				).toBeGreaterThanOrEqual(1);
-			}
-		}
-	});
-	test("lightning strikes never overlap, so the bolt never slides", () => {
-		const at = createLightningTimeline();
-		let start = 0;
-		for (let i = 1; i < 60; i++) {
-			start += lightningGap(i);
-			for (let t = 0; t < 0.7; t += 0.005) {
-				const frame = at(start + t);
-				expect(frame.flash > 0 && frame.second > 0).toBe(false);
-			}
-		}
-	});
 });

@@ -32,6 +32,10 @@ const { title, description = "Andrei's Portfolio" } = Astro.props;
     <div class="layout-grid">
       <slot />
     </div>
+    <!-- Body level, beside the page grid and not inside its scroll region, so
+         the persisted drawer is never a grid item or a scroll container child.
+         The chat fills this slot (SiteLayout.astro). -->
+    <slot name="guide" />
     <CursorTrail client:idle transition:persist="cursor-trail" />
   </body>
 </html>

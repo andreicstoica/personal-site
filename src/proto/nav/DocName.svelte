@@ -10,7 +10,6 @@
 
   .doc-name {
     color: var(--color-text-primary);
-    font-family: var(--font-serif);
     font-size: 2.25rem;
     font-weight: 400;
     letter-spacing: -0.02em;

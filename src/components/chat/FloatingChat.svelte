@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { portal } from "../../lib/portal";
+  import { navigate } from "astro:transitions/client";
+  import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
     isColdStart,
     parseChatApiSuccess,
@@ -17,7 +18,7 @@
     action?: ChatAction;
   };
 
-  const storageKey = "andrei-guide-v1";
+  const storageKey = GUIDE_STORAGE_KEY;
 
   let open = $state(false);
   let messages = $state<GuideMessage[]>([]);
@@ -32,7 +33,6 @@
   let panelRef = $state<HTMLDivElement | null>(null);
   let launchRef = $state<HTMLButtonElement | null>(null);
   let noSlide = $state(false);
-  let desktop = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
   let abortRef: AbortController | null = null;
 
@@ -113,7 +113,7 @@
       rootRef.contains(document.activeElement);
     abortRef?.abort();
     open = false;
-    // On desktop the launcher is hidden while the drawer is open; wait a tick
+    // The launcher is hidden while the guide is open; wait a tick
     // so it is visible and focusable again before handing focus back.
     if (focusWasInside) void tick().then(() => launchRef?.focus());
   }
@@ -148,9 +148,12 @@
     if (window.location.pathname === action.href) return;
     if (followTimer) clearTimeout(followTimer);
     followTimer = setTimeout(() => {
+      followTimer = undefined;
       // Never yank the page out from under a question the visitor is typing.
       if (input.trim().length > 0 || document.activeElement === inputRef) return;
-      window.location.assign(action.href);
+      // ClientRouter, not a full load: a reload would tear the thread down and
+      // rebuild it from storage, dropping scroll and focus for no reason.
+      void navigate(action.href);
     }, 900);
   }
 
@@ -231,31 +234,46 @@
     closeGuide();
   };
 
-  const onWindowClick = (event: MouseEvent) => {
-    if (!open || !rootRef) return;
-    if (event.target instanceof Node && rootRef.contains(event.target)) return;
-    closeGuide();
-  };
+  function cancelFollow(): void {
+    if (followTimer) clearTimeout(followTimer);
+    followTimer = undefined;
+  }
+
+  /** `/chat` redirects here with `?chat=1`, so this can arrive on any
+   *  navigation now that the island persists instead of remounting. */
+  function openFromUrl(): void {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("chat") !== "1") return;
+    open = true;
+    url.searchParams.delete("chat");
+    // Keep Astro's history metadata: it tracks the index it needs to tell a
+    // push from a traverse, and replacing it with {} breaks that.
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  }
 
   onMount(() => {
     void checkHealth();
     let alive = true;
-    // Hydration and ClientRouter remounts restore an open guide onto an
-    // already-styled element; suppress the transition so it appears in place.
+    // Only hydration restores onto an already-styled element (the drawer is
+    // open in the markup), so the slide is suppressed just for that frame.
+    // Persisting the island means later navigations keep the same element, and
+    // this flag never has to come back.
     noSlide = true;
     const stored = readStored();
     if (stored) {
       messages = stored.messages;
       open = stored.open;
     }
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("chat") === "1") {
-      open = true;
-      const url = new URL(window.location.href);
-      url.searchParams.delete("chat");
-      const next = `${url.pathname}${url.search}${url.hash}`;
-      window.history.replaceState({}, "", next);
-    }
+    openFromUrl();
+    // The island no longer remounts, so mount-time work that navigation can
+    // invalidate has to re-arm: a follow can land on the next page, and a
+    // manual navigation must cancel a pending one instead of racing it.
+    document.addEventListener("astro:page-load", openFromUrl);
+    document.addEventListener("astro:before-preparation", cancelFollow);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (alive) noSlide = false;
@@ -264,34 +282,41 @@
     hydrated = true;
     return () => {
       alive = false;
-      if (followTimer) clearTimeout(followTimer);
+      cancelFollow();
+      abortRef?.abort();
+      document.removeEventListener("astro:page-load", openFromUrl);
+      document.removeEventListener("astro:before-preparation", cancelFollow);
     };
   });
 
   $effect(() => {
     if (!hydrated) return;
-    sessionStorage.setItem(
-      storageKey,
-      JSON.stringify({ open, messages: messages.slice(-30) }),
-    );
-  });
-
-  $effect(() => {
-    if (!open && followTimer) {
-      clearTimeout(followTimer);
-      followTimer = undefined;
+    // Private-mode and storage-quota failures are not worth breaking an effect
+    // over; the guide just stops surviving a reload.
+    try {
+      sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({ open, messages: messages.slice(-30) }),
+      );
+    } catch {
+      // Storage unavailable.
     }
   });
 
+  // The page reserves room for the open drawer (global.css). SiteLayout mirrors
+  // this attribute onto each incoming document before the swap paints.
   $effect(() => {
-    const query = window.matchMedia("(min-width: 768px)");
-    const apply = () => {
-      desktop = query.matches;
-    };
-    apply();
-    query.addEventListener("change", apply);
-    return () => query.removeEventListener("change", apply);
+    if (!hydrated) return;
+    const root = document.documentElement;
+    root.dataset.guide = open ? "open" : "closed";
+    if (noSlide) root.dataset.guideInstant = "";
+    else delete root.dataset.guideInstant;
   });
+
+  $effect(() => {
+    if (!open) cancelFollow();
+  });
+
 
   $effect(() => {
     if (!open || typeof window === "undefined") return;
@@ -315,10 +340,9 @@
   });
 </script>
 
-<svelte:window onkeydown={onWindowKeydown} onclick={onWindowClick} />
+<svelte:window onkeydown={onWindowKeydown} />
 
 <div
-  use:portal
   bind:this={rootRef}
   class="guide-dock"
   data-open={open ? "true" : "false"}
@@ -332,15 +356,15 @@
     bind:this={panelRef}
     class="guide-panel"
   >
-    <header class="flex items-center justify-between gap-3 px-4 py-2.5">
+    <header class="guide-header flex items-center justify-between gap-3 px-4 py-2.5">
       <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
       <button
         type="button"
-        class="guide-icon-button bg-[var(--color-primary)] text-white rounded-none"
+        class="guide-icon-button"
         aria-label="Close guide"
         onclick={closeGuide}
       >
-        <Icon name="close" class="w-5 h-5" />
+        <Icon name="close" class="w-4 h-4" />
       </button>
     </header>
 
@@ -350,20 +374,18 @@
       aria-live="polite"
     >
       {#if messages.length === 0}
-        {#if offline}
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            The inference server is currently down - it is expensive to run!
-          </p>
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            Reach out directly and I'll spin it up for you:
-            <br />
-            <em>andrei c stoica (at) icloud (dot) com</em>
-          </p>
-        {:else}
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            Ask about a project or a job. Say “show me Refract” and I'll open the page.
-          </p>
-        {/if}
+        <div class="guide-empty">
+          {#if offline}
+            <p>The inference server is currently down - it is expensive to run!</p>
+            <p>
+              Reach out directly and I'll spin it up for you:
+              <br />
+              <em class="text-[var(--color-text-primary)]">andrei c stoica (at) icloud (dot) com</em>
+            </p>
+          {:else}
+            <p>Ask about a project or a job. Say “show me Refract” and I'll open the page.</p>
+          {/if}
+        </div>
       {/if}
 
       {#each messages as message (message.id)}
@@ -371,12 +393,12 @@
           <div
             class="max-w-[85%] border rounded-none {message.role === 'user'
               ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-bg-secondary)]'}"
+              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-(--color-divider)'}"
           >
-            <div class="px-3 py-2 text-sm whitespace-pre-wrap break-words">
-              <div>{message.content}</div>
+            <div class="px-3 py-2 text-sm break-words">
+              <div class="whitespace-pre-wrap">{message.content}</div>
               {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
-                <div class="mt-2 pt-2 border-t border-[var(--color-bg-secondary)] space-y-1">
+                <div class="mt-2 pt-2 border-t border-(--color-divider) space-y-1">
                   {#if message.action?.kind === "navigate"}
                     <div>
                       <a
@@ -391,7 +413,7 @@
                     <div class="flex flex-wrap gap-x-2 gap-y-2">
                       {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
                         {#if source.href && source.href !== actionHref(message.action)}
-                          <a href={source.href} class="text-[11px] text-[var(--color-primary)] underline">
+                          <a href={source.href} class="text-[11px]">
                             {source.title}
                           </a>
                         {:else if !source.href}
@@ -424,12 +446,12 @@
         autocomplete="off"
         placeholder="Ask about a project…"
         disabled={sending}
-        class="guide-input flex-1 min-w-0 px-3 py-2 border border-[var(--color-bg-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+        class="guide-input flex-1 min-w-0 px-3 py-2 border border-(--color-divider) bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
       />
       <button
         type="submit"
         disabled={sending || input.trim().length === 0}
-        class="flex min-h-[44px] items-center justify-center px-3 py-2 text-sm bg-[var(--color-primary)] text-white rounded-none disabled:opacity-50"
+        class="guide-send"
       >
         Send
       </button>
@@ -442,11 +464,16 @@
     bind:this={launchRef}
     aria-expanded={open}
     aria-controls="guide-panel"
-    inert={open && desktop}
+    inert={open}
     aria-label={open ? "Close guide" : "Ask Andrei"}
     onclick={(event) => {
       event.stopPropagation();
       open = !open;
+    }}
+    oncontextmenu={(event) => {
+      if (!import.meta.env.DEV) return;
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent("weather-lab:toggle"));
     }}
   >
     <Icon name={open ? "close" : "chat"} class="w-4 h-4" />
@@ -457,8 +484,8 @@
   .guide-dock {
     position: fixed;
     z-index: 70;
-    right: 0.75rem;
-    bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    right: max(var(--guide-launch-inset), env(safe-area-inset-right, 0px));
+    bottom: max(var(--guide-launch-inset), env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -471,21 +498,39 @@
     pointer-events: auto;
   }
 
-  /* Base popover state — also the fallback for fractional viewport widths
-     between the two media blocks: hidden until opened, no enter/exit
-     motion. The desktop block below replaces the surface with the drawer. */
+  /* One surface, two geometries: a bottom sheet on phones and a right drawer
+     on desktop. Both slide in from --guide-hide on the same ease-in-out and
+     duration in both directions, matching the page shift (global.css), and
+     hide with visibility once the slide ends. */
   .guide-panel {
-    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    display: flex;
     flex-direction: column;
-    width: min(26rem, calc(100vw - 1.5rem));
-    height: min(36rem, calc(100dvh - 5.5rem));
-    border: 1px solid var(--color-text-secondary);
-    background: var(--color-bg-primary);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border: none;
+    transform: var(--guide-hide);
+    visibility: hidden;
+    transition:
+      transform var(--duration-drawer) var(--ease-in-out),
+      visibility 0s linear var(--duration-drawer);
   }
 
   .guide-dock[data-open="true"] .guide-panel {
-    display: flex;
+    transform: none;
+    visibility: visible;
+    transition:
+      transform var(--duration-drawer) var(--ease-in-out),
+      visibility 0s;
+  }
+
+  .guide-dock[data-no-slide="true"] .guide-panel {
+    transition: none;
+  }
+
+  .guide-dock[data-open="true"] .guide-launch {
+    visibility: hidden;
   }
 
   .guide-thread {
@@ -517,15 +562,14 @@
   }
 
   .guide-launch {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: var(--guide-launch-size);
+    height: var(--guide-launch-size);
     background: var(--color-primary);
     color: white;
     border: 1px solid var(--color-primary);
     box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
     transition:
-      background-color var(--duration-ui) var(--ease-out),
-      scale 160ms var(--ease-out);
+      background-color var(--duration-ui) var(--ease-out);
   }
 
   .guide-launch::before,
@@ -535,10 +579,57 @@
     inset: -0.25rem;
   }
 
+  /* Close is secondary: a quiet 32px glyph, with ::before keeping a 44px
+     tap area (inset -0.375rem on each side). */
+  /* The negative margin pulls the 16px glyph flush with the header's right
+     padding, mirroring the title on the left. */
   .guide-icon-button {
-    width: 2.75rem;
-    height: 2.75rem;
-    transition: background-color var(--duration-ui) var(--ease-out);
+    width: 2rem;
+    height: 2rem;
+    margin-inline-end: -0.5rem;
+    background: transparent;
+    color: var(--color-text-secondary);
+    transition:
+      background-color var(--duration-ui) var(--ease-out),
+      color var(--duration-ui) var(--ease-out);
+  }
+
+  .guide-icon-button::before {
+    inset: -0.375rem;
+  }
+
+  .guide-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 100%;
+    max-width: 38ch;
+    margin-inline: auto;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    text-align: center;
+  }
+
+  .guide-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    background: var(--color-primary);
+    color: white;
+    font-size: var(--text-sm);
+  }
+
+  .guide-send:disabled {
+    opacity: 0.5;
+  }
+
+  /* The ring sits on the border, so focus reads as one edge, not two boxes. */
+  .guide-input:focus-visible {
+    outline-offset: -1px;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -547,82 +638,106 @@
     }
 
     .guide-icon-button:hover {
-      background: var(--color-primary-hover);
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
     }
 
     .guide-input {
       font-size: 0.875rem;
     }
+
+    .guide-send {
+      min-height: 2.25rem;
+    }
   }
 
-  .guide-launch:active {
-    scale: 0.98;
-  }
-
-  @media (max-width: 767px) {
-    .guide-dock {
-      right: max(10%, env(safe-area-inset-right, 0px));
-      bottom: max(10%, env(safe-area-inset-bottom, 0px));
-    }
-
-    .guide-dock[data-open="true"] {
-      top: max(10%, env(safe-area-inset-top, 0px));
-      left: max(10%, env(safe-area-inset-left, 0px));
-    }
-
+  /* Phones: a bottom sheet over the lower two thirds. The sheet's own close
+     button replaces the launcher while open. */
+  @media (max-width: 767.98px) {
     .guide-panel {
-      width: 100%;
-      height: auto;
-      flex: 1 1 auto;
-      min-height: 0;
+      --guide-hide: translateY(100%);
+      left: 0;
+      height: 66dvh;
+      background: var(--color-bg-primary);
+      box-shadow: var(--elevation-sheet);
     }
   }
 
-  /* Desktop: a full-height drawer docked to the viewport's right edge. It
-     overlays the white gutter (and the content edge on narrower screens)
-     with a sunken surface and a shadow cast inward from the page's edge —
-     the recess reads as under the page, and the page never shifts. */
+  /* Desktop: a full-height drawer as wide as the page's two gutters
+     (--guide-width). The page makes room for it (global.css), so no content
+     sits under it. The sunken surface and inward shadow read as a recess. */
   @media (min-width: 768px) {
     .guide-panel {
-      position: fixed;
+      --guide-hide: translateX(100%);
       top: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      width: min(24rem, 100vw);
-      height: auto;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      border: none;
+      z-index: 2;
+      width: var(--guide-width);
       background: var(--color-bg-sunken);
       box-shadow: var(--elevation-drawer);
-      transform: translateX(100%);
-      visibility: hidden;
-      z-index: 2;
-      transition:
-        transform var(--duration-ui) var(--ease-out),
-        visibility 0s linear var(--duration-ui);
     }
 
-    .guide-dock[data-open="true"] .guide-panel {
-      transform: translateX(0);
-      visibility: visible;
-      transition:
-        transform var(--duration-drawer) var(--ease-out),
-        visibility 0s;
+    /* Eased stops, not a plain two-color ramp, so the shade does not band. It
+       sits under the content (z-index -1 inside the panel's stacking context). */
+    .guide-panel::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: -1;
+      width: 2rem;
+      pointer-events: none;
+      background: linear-gradient(
+        to right,
+        var(--drawer-shade),
+        color-mix(in srgb, var(--drawer-shade) 75%, transparent) 12%,
+        color-mix(in srgb, var(--drawer-shade) 45%, transparent) 30%,
+        color-mix(in srgb, var(--drawer-shade) 20%, transparent) 55%,
+        color-mix(in srgb, var(--drawer-shade) 6%, transparent) 80%,
+        transparent
+      );
     }
 
-    .guide-dock[data-no-slide="true"] .guide-panel {
-      transition: none;
+    /* The drawer header takes the launcher's inset and size, so where the
+       launcher sits in the top corner (below) the close button lands exactly
+       on it: open and close stay in one spot. */
+    .guide-header {
+      padding-block-start: max(
+        var(--guide-launch-inset),
+        env(safe-area-inset-top, 0px)
+      );
+      padding-block-end: var(--guide-launch-inset);
+      padding-inline-end: max(
+        var(--guide-launch-inset),
+        env(safe-area-inset-right, 0px)
+      );
+    }
+
+    .guide-icon-button {
+      width: var(--guide-launch-size);
+      height: var(--guide-launch-size);
+      margin-inline-end: 0;
+    }
+
+    .guide-icon-button::before {
+      inset: -0.25rem;
     }
 
     /* The launcher sits under the drawer's footprint; hide it only once
        the drawer has arrived so no bare corner shows mid-slide. */
     .guide-dock[data-open="true"] .guide-launch {
-      visibility: hidden;
       transition:
         visibility 0s linear var(--duration-drawer),
-        background-color var(--duration-ui) var(--ease-out),
-        scale 160ms var(--ease-out);
+        background-color var(--duration-ui) var(--ease-out);
+    }
+  }
+
+  /* Top corner only once each gutter beside the 64rem column holds the
+     launcher (inset + size + clearance, 4rem); narrower, it would cover the
+     banner's top corner, so it stays in the bottom corner. */
+  @media (min-width: 72rem) {
+    .guide-dock {
+      top: max(var(--guide-launch-inset), env(safe-area-inset-top, 0px));
+      bottom: auto;
     }
   }
 
@@ -635,10 +750,6 @@
     .guide-launch,
     .guide-dock[data-open="true"] .guide-launch {
       transition: none;
-    }
-
-    .guide-launch:active {
-      scale: 1;
     }
   }
 </style>

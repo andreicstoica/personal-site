@@ -45,9 +45,11 @@ const UNIFORMS = [
 	"uLightning",
 	"uFlash",
 	"uFlashSecond",
+	"uFlashGlow",
 	"uFlashSeed",
-	"uFlashOrigin",
 	"uFlashSplit",
+	"uBolt",
+	"uBranch",
 	"uBirds",
 	"uHood",
 	"uGolden",
@@ -260,8 +262,10 @@ export function createBannerGl(canvas: HTMLCanvasElement): BannerGl | null {
 			gl.uniform1f(uniform("uFlash"), lightning.flash);
 			gl.uniform1f(uniform("uFlashSeed"), lightning.seed);
 			gl.uniform1f(uniform("uFlashSecond"), lightning.second);
-			gl.uniform1f(uniform("uFlashOrigin"), lightning.origin);
+			gl.uniform1f(uniform("uFlashGlow"), lightning.glow);
 			gl.uniform1f(uniform("uFlashSplit"), lightning.split);
+			gl.uniform2fv(uniform("uBolt"), lightning.path);
+			gl.uniform2fv(uniform("uBranch"), lightning.branch);
 			gl.uniform1f(
 				uniform("uBirds"),
 				birdsAllowed(current.weather, effect.rain) ? 1 : 0,

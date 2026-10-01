@@ -28,7 +28,7 @@ description: "People, things, and ideas that inspire me and shape how I think ab
 
 # YouTube
 
-- [Internet Shaquille ](https://www.youtube.com/@internetshaquille)
+- [Internet Shaquille](https://www.youtube.com/@internetshaquille)
 - [Mark Rober](https://www.youtube.com/channel/UCY1kMZp36IQSyNx_9h4mpCg)
 - [Hank Green](https://www.youtube.com/@hankschannel)
 - [Branch Education](https://www.youtube.com/@BranchEducation)

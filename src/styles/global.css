@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 
 @font-face {
   font-family: "LumberSans";
@@ -8,6 +8,17 @@
   font-style: normal;
 }
 
+/* ABC Areal's license forbids hosting the file on a public server, so this
+   resolves only where it is installed. Everyone else falls back to Plex. */
+@font-face {
+  font-family: "Areal Local";
+  src:
+    local("ABC Areal Superfamily Variable Regular"),
+    local("ABCArealSuperfamilyVariable-Regular");
+  font-weight: 400 700;
+  font-style: oblique 0deg 12deg;
+}
+
 @import "tailwindcss";
 
 /* CSS Custom Properties for global theming */
@@ -15,8 +26,9 @@
 	/* Colors */
 	--color-primary: #3848ff;
 	--color-primary-hover: #2a37cc;
-	--color-secondary: #00a647;
-	--color-secondary-hover: #008a3d;
+	/* Blue as text or a focus ring. Equals the fill in light mode; dark mode
+	   lifts L so it clears 4.5:1 on dark surfaces (the fill keeps white text). */
+	--color-primary-text: var(--color-primary);
 	--color-accent: #c23b23;
 	--color-accent-hover: #a12f1c;
 	--color-warning: #fcc605;
@@ -32,6 +44,7 @@
 	--color-bg-primary: #fefefe;
 	--color-bg-secondary: #c4c4c4;
 	--color-bg-sunken: #f5f5f5;
+	--color-divider: var(--color-bg-secondary);
 
 	/* Tag Colors */
 	--tag-work: #3848ff;
@@ -51,7 +64,6 @@
 
 	/* Fonts */
 	--font-sans: "IBM Plex Sans", system-ui, sans-serif;
-	--font-serif: "IBM Plex Serif", serif;
 	--font-mono: "IBM Plex Mono", monospace;
 
 	/* Type scale */
@@ -83,15 +95,21 @@
 	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 	--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 	--duration-ui: 180ms;
-	--duration-drawer: 280ms;
+	--duration-drawer: 220ms;
 	--duration-media: 400ms;
 
 	/* Elevation. The guide drawer is docked to the viewport edge, so its depth
-	   reads from the inside: cast inward from the page-facing edge, never
-	   outward onto the page. */
-	--elevation-drawer:
-		inset 1px 0 0 rgb(0 0 0 / 0.06),
-		inset 14px 0 34px -18px rgb(0 0 0 / 0.3);
+	   reads from the inside: a hairline on the page-facing edge plus an eased
+	   shade that fades inward from that edge only (--drawer-shade, drawn by
+	   FloatingChat.svelte). A blurred inset box-shadow would also darken the
+	   top, bottom, and far edges, where the drawer meets the viewport and
+	   nothing sits above it. */
+	--elevation-drawer: inset 1px 0 0 rgb(0 0 0 / 0.06);
+	--drawer-shade: rgb(0 0 0 / 0.1);
+	/* Phone sheet sits on top of the page: layered shadow cast upward. */
+	--elevation-sheet:
+		0 -1px 3px rgb(0 0 0 / 0.08),
+		0 -10px 28px rgb(0 0 0 / 0.14);
 }
 
 .nav-name {
@@ -103,8 +121,8 @@
 	opacity: 0;
 	filter: blur(4px);
 	transition:
-		opacity 180ms var(--ease-out),
-		filter 180ms var(--ease-out);
+		opacity var(--duration-ui) var(--ease-out),
+		filter var(--duration-ui) var(--ease-out);
 }
 
 .media-reveal.is-loaded {
@@ -120,7 +138,9 @@
 	.modal-backdrop,
 	.modal-backdrop.closing,
 	.btn-primary:active,
-	.btn-secondary:active {
+	.btn-secondary:active,
+	.btn-secondary-custom,
+	[data-page-scroll] {
 		animation: none;
 		transition: none;
 	}
@@ -134,20 +154,32 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	:root {
-		--color-text-primary: #fefefe;
+		/* Pure white on the dark page glares; this still clears 12:1. */
+		--color-text-primary: oklch(0.93 0 0);
 		--color-text-secondary: #cccccc;
 		--color-text-muted: #999999;
 		--color-text-inverse: #272727;
 
-		--color-bg-primary: #272727;
-		--color-bg-secondary: #333333;
-		--color-bg-tertiary: #404040;
-		--color-bg-sunken: #1f1f1f;
+		/* A faint cool tint keeps neutral grey from reading warm beside the
+		   mostly blue weather scenes. */
+		--color-bg-primary: oklch(0.273 0.009 255);
+		--color-bg-secondary: oklch(0.321 0.009 255);
+		--color-bg-tertiary: oklch(0.372 0.009 255);
+		--color-bg-sunken: oklch(0.239 0.009 255);
+		/* The chip gray is 1.18:1 on the dark page; rules need about the 1.7:1
+		   they get in light mode. */
+		--color-divider: oklch(0.42 0.009 255);
+
+		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
+		--color-primary-text: oklch(0.66 0.18 272);
 
 		/* Depth flattens to a single ring against dark surfaces */
-		--elevation-drawer:
-			inset 1px 0 0 rgb(255 255 255 / 0.1),
-			inset 14px 0 34px -18px rgb(0 0 0 / 0.5);
+		--elevation-drawer: inset 1px 0 0 rgb(255 255 255 / 0.1);
+		--drawer-shade: rgb(0 0 0 / 0.4);
+		/* Shadows barely read on dark ground; a faint lit edge marks the layer. */
+		--elevation-sheet:
+			inset 0 1px 0 rgb(255 255 255 / 0.08),
+			0 -12px 36px rgb(0 0 0 / 0.55);
 
 		/* ASCII Art Colors - Dark Mode */
 		--color-ascii-dark: #333333;
@@ -162,8 +194,93 @@
 }
 
 /* Global base styles */
+/* Every clickable control shows the pointer. In the base layer so Tailwind
+   cursor utilities (the gallery's zoom-in) still override it. */
+@layer base {
+	button:not(:disabled),
+	[role="button"],
+	select,
+	summary,
+	label[for] {
+		cursor: pointer;
+	}
+
+	button:disabled {
+		cursor: not-allowed;
+	}
+
+	/* Display sizes tighten; reading sizes keep the font's own spacing. */
+	h1,
+	h2,
+	h3 {
+		line-height: var(--leading-tight);
+		letter-spacing: var(--tracking-tight);
+		text-wrap: balance;
+	}
+}
+
+p,
+li,
+dd,
+blockquote,
+figcaption {
+	text-wrap: pretty;
+}
+
+:root {
+	--font-label: var(--font-sans);
+	--font-label-axes: normal;
+}
+
+:root[data-typeface="areal"],
+:root[data-typeface="geist"] {
+	--font-label: var(--font-mono);
+	--font-label-axes: var(--font-mono-axes, normal);
+}
+
+.type-label {
+	font-family: var(--font-label);
+	font-variation-settings: var(--font-label-axes);
+}
+
+/* Monos run about 17% wider than Plex Sans. A full match (about -0.09em) jams
+   the glyphs, so this closes half the gap. Small uppercase labels keep their
+   positive tracking, or the capitals clump. */
+:root[data-typeface="areal"] .type-label:not(.uppercase) {
+	letter-spacing: -0.05em;
+}
+
+:root[data-typeface="geist"] .type-label:not(.uppercase) {
+	letter-spacing: -0.045em;
+}
+
+/* Areal's mono is the same file on its MONO axis, which `--font-mono-axes` sets
+   wherever `--font-mono` is used. */
+:root[data-typeface="areal"] {
+	--font-sans: "Areal Local", "IBM Plex Sans", system-ui, sans-serif;
+	--font-mono: "Areal Local", "IBM Plex Mono", monospace;
+	--font-mono-axes: "MONO" 100;
+}
+
+:root[data-typeface="geist"] {
+	--font-sans: "Geist", "IBM Plex Sans", system-ui, sans-serif;
+	--font-mono: "Geist Mono", "IBM Plex Mono", monospace;
+	/* Geist sets wider and more open than Plex at the same size, so the same
+	   leading reads airier and lines wrap sooner. Tighten both a step. */
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.58;
+	letter-spacing: -0.01em;
+}
+
+/* Role titles run about 3% wider in Geist; this closes it to Plex's width. */
+:root[data-typeface="geist"] .row-role {
+	letter-spacing: -0.02em;
+}
+
 html {
 	font-family: var(--font-sans);
+	/* Geist ships no italic, so its <em> renders upright rather than faked. */
+	font-synthesis: none;
 	font-size: 16px;
 	color: var(--color-text-primary);
 	background-color: var(--color-bg-primary);
@@ -184,7 +301,6 @@ body {
 	overflow: hidden;
 	font-size: var(--text-base);
 	line-height: var(--leading-normal);
-	letter-spacing: var(--tracking-tight);
 }
 
 .cursor-pixel {
@@ -208,7 +324,13 @@ body {
 	font-size: var(--text-lg);
 	line-height: var(--leading-relaxed);
 	color: var(--color-text-primary);
-	text-wrap: pretty;
+}
+
+/* On phones the 17px lead fills the first screen; step down to body size. */
+@media (max-width: 767px) {
+	.text-lead {
+		font-size: var(--text-base);
+	}
 }
 
 .text-muted {
@@ -221,8 +343,42 @@ body {
 }
 
 :focus-visible {
-	outline: 2px solid var(--color-primary);
+	outline: 2px solid var(--color-primary-text);
 	outline-offset: 2px;
+}
+
+/* Chat launcher: one size and corner inset, shared by the chat dock, the
+   desktop drawer header (so its close button lands on the top-corner
+   launcher), and the weather lab stacked above the bottom-corner launcher
+   (FloatingChat.svelte, WeatherLab.svelte). */
+:root {
+	--guide-launch-size: 2.25rem;
+	--guide-launch-inset: var(--spacing-sm);
+}
+
+/* Desktop chat drawer: as wide as the page's two gutters, minus the page
+   padding, so opening it slides the content left with no overlap. The clamp
+   keeps it usable on narrow windows and narrow on very wide ones. */
+@media (min-width: 768px) {
+	:root {
+		--guide-width: clamp(
+			20rem,
+			100vw - 64rem - 2 * var(--page-padding-inline),
+			28rem
+		);
+	}
+
+	[data-page-scroll] {
+		transition: padding-inline-end var(--duration-drawer) var(--ease-in-out);
+	}
+
+	:root[data-guide="open"] [data-page-scroll] {
+		padding-inline-end: var(--guide-width);
+	}
+
+	:root[data-guide-instant] [data-page-scroll] {
+		transition: none;
+	}
 }
 
 .layout-grid {
@@ -298,7 +454,6 @@ body {
 	transition:
 		background-color var(--duration-ui) var(--ease-out),
 		box-shadow var(--duration-ui) var(--ease-out),
-		transform 160ms var(--ease-out),
 		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
@@ -313,10 +468,6 @@ body {
 	}
 }
 
-.btn-primary:active {
-	transform: scale(0.98);
-}
-
 .btn-secondary {
 	background: transparent;
 	color: var(--color-text-primary);
@@ -327,7 +478,6 @@ body {
 	transition:
 		border-color var(--duration-ui) var(--ease-out),
 		color var(--duration-ui) var(--ease-out),
-		transform 160ms var(--ease-out),
 		filter 80ms linear;
 	text-decoration: none;
 	display: inline-flex;
@@ -337,24 +487,58 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
 	.btn-secondary:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
+		border-color: var(--color-primary-text);
+		color: var(--color-primary-text);
 	}
 }
 
-.btn-secondary:active {
-	transform: scale(0.98);
-}
-
-/* Global link styles */
+/* Global link styles. A link keeps the color of the text around it; the mark is
+   a 1px dotted underline that turns solid on hover, so a bold or inline link
+   never gets lost. Buttons, chips, and the site name set text-decoration: none
+   themselves. */
 a {
-	color: var(--color-secondary);
-	text-decoration: none;
-	transition: color 0.2s ease;
+	color: inherit;
+	text-decoration-line: underline;
+	text-decoration-style: dotted;
+	text-decoration-thickness: 1px;
+	/* Clears Plex descenders, so skip-ink never breaks the dots around g, y, p. */
+	text-underline-offset: 0.3em;
+	text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
 }
 
-a:hover {
-	color: var(--color-secondary-hover);
+@media (hover: hover) and (pointer: fine) {
+	a:hover {
+		text-decoration-style: solid;
+		text-decoration-color: currentColor;
+	}
+}
+
+/* Experience table columns, shared by the header and every row. The name
+   column runs 1.25x so single-word names like NBCUniversal fit one line; the
+   other nine stay equal, so the rows' inner five-column grid still lines up
+   with the header. */
+@media (min-width: 1024px) {
+	.experience-grid {
+		grid-template-columns: 1.25fr repeat(9, minmax(0, 1fr));
+	}
+}
+
+/* Intro links (about/canon/blog) never break across lines, so the lead reads as
+   one calm paragraph. External ones get the ↗ mark below. */
+.lead-link {
+	white-space: nowrap;
+}
+
+/* Link-out mark for links that open another site. The no-break space keeps
+   the arrow on the last word's line; the empty alt text keeps it silent. */
+.markdown-link[target="_blank"]::after,
+.lead-link[target="_blank"]::after {
+	content: "↗";
+	content: "↗" / "";
+	/* An underline does not reach into an inline-block. Left in the link's own
+	   underline, the arrow is a second box whose dots restart out of phase. */
+	display: inline-block;
+	margin-inline-start: 0.25em;
 }
 
 /* Markdown content styling */
@@ -385,24 +569,6 @@ a:hover {
 	display: inline-block;
 	position: relative;
 	top: 0.25rem;
-}
-
-.markdown-link {
-	color: var(--color-secondary);
-	transition: color 0.2s ease;
-}
-
-.inline-icon {
-	display: inline-block;
-	width: 0.875em;
-	height: 0.875em;
-	vertical-align: -0.125em;
-	margin-left: 0.2em;
-}
-
-.markdown-link:hover {
-	color: var(--color-secondary-hover);
-	text-decoration: underline;
 }
 
 .markdown-p {
@@ -452,16 +618,6 @@ a:hover {
 	top: 0.25rem;
 }
 
-.markdown-body :where(a) {
-	color: var(--color-secondary);
-	text-decoration: none;
-}
-
-.markdown-body :where(a:hover) {
-	color: var(--color-secondary-hover);
-	text-decoration: underline;
-}
-
 .markdown-body :where(p) {
 	color: var(--color-text-primary);
 	line-height: 1.625;
@@ -472,20 +628,19 @@ a:hover {
 	background: var(--tag-personal);
 	color: var(--tag-personal-text) !important;
 	font-weight: 500;
-	transition: all 0.2s ease;
+	text-decoration: none;
+	transition:
+		filter var(--duration-ui) var(--ease-out),
+		transform var(--duration-ui) var(--ease-out),
+		box-shadow var(--duration-ui) var(--ease-out);
 }
 
-.btn-secondary-custom:hover {
-	background: var(--tag-personal);
-	filter: brightness(0.9);
-	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Name sits on the page-background bar; keep it off the global green link color. */
-.nav-name,
-.nav-name:hover {
-	color: var(--color-text-primary);
+@media (hover: hover) and (pointer: fine) {
+	.btn-secondary-custom:hover {
+		filter: brightness(0.9);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
 }
 
 /* Gallery strip — horizontal scroll with snap on touch */
@@ -498,12 +653,16 @@ a:hover {
 	scroll-snap-align: start;
 }
 
-.gallery-strip button {
-	transition: transform 160ms var(--ease-out);
+/* On phones the strip runs to the screen edge; snapping still lands on the
+   text column. */
+.gallery-strip.full-bleed {
+	scroll-padding-inline: var(--page-padding-inline);
 }
 
-.gallery-strip button:active {
-	transform: scale(0.98);
+/* The strip has no inline padding, so media sits flush with its column
+   edge. An inset ring stays visible inside the overflow clip. */
+.gallery-strip button:focus-visible {
+	outline-offset: -2px;
 }
 
 /* Mobile refinements */
@@ -528,17 +687,35 @@ a:hover {
 	position: fixed;
 	inset: 0;
 	z-index: 12000;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr) auto;
+	place-items: center;
+	--inspect-max-w: 95vw;
+	--inspect-max-h: 90dvh;
 	width: 100%;
 	height: 100%;
 	min-height: 100vh;
 	min-height: 100dvh;
 	padding: 1rem;
+	padding-bottom: max(1rem, env(safe-area-inset-bottom));
 	background: rgb(0 0 0 / 0.8);
 	backdrop-filter: blur(4px);
 	overscroll-behavior: none;
+}
+
+/* ImageGallery.svelte picks one placement per gallery. Bottom pins the bar to
+   the viewport edge and reserves its band under the media, so the buttons stay
+   put from slide to slide; sides give the media extra padding so the buttons
+   never sit on the image. A single item has no controls and keeps the defaults. */
+.image-inspect[data-controls="bottom"] {
+	--inspect-max-h: calc(
+		100dvh - 1rem - max(1rem, env(safe-area-inset-bottom)) - 3.5rem
+	);
+}
+
+.image-inspect[data-controls="sides"] {
+	--inspect-max-w: calc(100vw - 7.5rem);
 }
 
 .image-inspect-stage {
@@ -546,8 +723,9 @@ a:hover {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	align-self: stretch;
 	width: 100%;
-	height: 100%;
+	min-height: 0;
 }
 
 .image-inspect-trigger {
@@ -558,18 +736,135 @@ a:hover {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	max-width: 95vw;
-	max-height: 90vh;
-	max-height: 90dvh;
+	max-width: var(--inspect-max-w);
+	max-height: var(--inspect-max-h);
 }
 
 .image-inspect-media {
-	max-width: 95vw;
-	max-height: 90vh;
-	max-height: 90dvh;
+	max-width: var(--inspect-max-w);
+	max-height: var(--inspect-max-h);
 	width: auto;
 	height: auto;
 	object-fit: contain;
+}
+
+/* Horizontal drags belong to the carousel; vertical pan and pinch stay native. */
+.image-inspect-stage.is-swipeable {
+	touch-action: pan-y pinch-zoom;
+}
+
+.image-inspect-slide {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect-slide.is-dragging {
+	transition: none;
+}
+
+.image-inspect-slide[data-from="next"] {
+	animation: image-inspect-slide-next var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect-slide[data-from="prev"] {
+	animation: image-inspect-slide-prev var(--duration-ui) var(--ease-out);
+}
+
+@keyframes image-inspect-slide-next {
+	from {
+		opacity: 0;
+		transform: translateX(2rem);
+	}
+}
+
+@keyframes image-inspect-slide-prev {
+	from {
+		opacity: 0;
+		transform: translateX(-2rem);
+	}
+}
+
+.image-inspect-bar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+}
+
+.image-inspect[data-controls="bottom"] .image-inspect-bar {
+	margin-top: 0.75rem;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-bar {
+	display: contents;
+}
+
+.image-inspect-nav {
+	display: grid;
+	place-items: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	padding: 0;
+	border: 1px solid rgb(255 255 255 / 0.18);
+	border-radius: 0;
+	background: rgb(255 255 255 / 0.12);
+	color: rgb(255 255 255 / 0.9);
+	cursor: pointer;
+	touch-action: manipulation;
+	transition:
+		background-color var(--duration-ui) var(--ease-out),
+		color var(--duration-ui) var(--ease-out),
+		opacity var(--duration-ui) var(--ease-out);
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav {
+	position: absolute;
+	top: 50%;
+	translate: 0 -50%;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav[data-dir="prev"] {
+	left: max(0.5rem, env(safe-area-inset-left));
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-nav[data-dir="next"] {
+	right: max(0.5rem, env(safe-area-inset-right));
+}
+
+.image-inspect-nav[aria-disabled="true"] {
+	opacity: 0.3;
+	cursor: default;
+}
+
+.image-inspect-nav:focus-visible {
+	outline-color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.image-inspect-nav:not([aria-disabled="true"]):hover {
+		background: rgb(255 255 255 / 0.24);
+		color: white;
+	}
+}
+
+.image-inspect-count {
+	min-width: 4.5rem;
+	margin: 0;
+	color: rgb(255 255 255 / 0.75);
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	pointer-events: none;
+}
+
+.image-inspect[data-controls="sides"] .image-inspect-count {
+	position: absolute;
+	bottom: max(0.5rem, env(safe-area-inset-bottom));
+	left: 50%;
+	translate: -50% 0;
+	min-width: 0;
 }
 
 html.image-inspect-open,
@@ -578,7 +873,7 @@ html.image-inspect-open [data-page-scroll] {
 	overflow: hidden !important;
 }
 
-/* Modal transitions — scrim fades while media scales from the clicked thumbnail. */
+/* Scrim-only fade: used when the media cannot morph (no API, thumb off screen). */
 .modal-backdrop {
 	transition: opacity var(--duration-drawer) var(--ease-out);
 
@@ -589,23 +884,32 @@ html.image-inspect-open [data-page-scroll] {
 
 .modal-backdrop.closing {
 	opacity: 0;
-	transition: opacity var(--duration-ui) var(--ease-out);
+	transition: opacity 140ms var(--ease-out);
 }
 
 /*
- * The media morphs from the thumbnail it was clicked from, so the start
- * transform is a FLIP written by ImageGallery.svelte before the first paint —
- * JS owns the start value, CSS owns the travel. Origin is 0 0 because the start
- * transform carries its own translation; travel is on-screen movement, hence
- * ease-in-out rather than the backdrop's ease-out.
+ * Media morph. ImageGallery.svelte sets data-image-inspect-vt on <html> for
+ * the length of one view transition. The root crossfade carries the scrim, so
+ * the backdrop's own fade must not stack on it. Open is the drawer duration;
+ * close answers faster, so the dismissal feels like a response.
  */
-.modal-backdrop .image-inspect-media {
-	transform-origin: 0 0;
-	transition: transform var(--duration-drawer) var(--ease-in-out);
+html[data-image-inspect-vt] .modal-backdrop {
+	transition: none;
 }
 
-.modal-backdrop.closing .image-inspect-media {
-	transition: transform var(--duration-ui) var(--ease-in-out);
+html[data-image-inspect-vt="open"] {
+	--image-inspect-vt-duration: var(--duration-drawer);
+}
+
+html[data-image-inspect-vt="close"] {
+	--image-inspect-vt-duration: 140ms;
+}
+
+html[data-image-inspect-vt]::view-transition-group(*),
+html[data-image-inspect-vt]::view-transition-old(*),
+html[data-image-inspect-vt]::view-transition-new(*) {
+	animation-duration: var(--image-inspect-vt-duration);
+	animation-timing-function: var(--ease-out);
 }
 
 /*
@@ -616,8 +920,9 @@ html.image-inspect-open [data-page-scroll] {
 @media (prefers-reduced-motion: reduce) {
 	.modal-backdrop,
 	.modal-backdrop.closing,
-	.modal-backdrop .image-inspect-media,
-	.modal-backdrop.closing .image-inspect-media,
+	.image-inspect-slide,
+	.image-inspect-slide[data-from],
+	.image-inspect-nav,
 	.gallery-strip button,
 	.gallery-strip button:active {
 		animation: none;

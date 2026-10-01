@@ -3,44 +3,140 @@ import FloatingChat from "../components/chat/FloatingChat.svelte";
 import SiteFooter from "../components/footer/SiteFooter.astro";
 import Nav from "../components/nav/Nav.astro";
 import WeatherBanner from "../components/weather/WeatherBanner.svelte";
-import { showWeatherLab } from "../lib/weather/lab";
+import { GUIDE_STORAGE_KEY } from "../lib/guideState";
+import type { NavItem } from "../lib/navLinks";
 import RootLayout from "./RootLayout.astro";
 
 interface Props {
 	title: string;
 	description?: string;
+	parent?: NavItem;
 }
 
-const { title, description } = Astro.props;
-const showLab = showWeatherLab(import.meta.env.DEV);
+const { title, description, parent } = Astro.props;
+const showLab = import.meta.env.DEV;
+const isHome = Astro.url.pathname === "/";
 ---
 
 <RootLayout title={title} description={description}>
+  <script is:inline define:vars={{ guideKey: GUIDE_STORAGE_KEY }}>
+    // Reserve room for an open chat drawer before paint, so the page does not
+    // flash full width on load (FloatingChat.svelte).
+    //
+    // Astro's swap replaces every <html> attribute with the incoming
+    // document's, so anything set imperatively is lost on every navigation.
+    // Restoring it on astro:after-swap is close enough to pre-paint, but
+    // astro:page-load is not, and a frame painted without these is the jump
+    // this site used to show. Writing them onto the incoming document instead
+    // hands them to swapRootAttributes, which applies them in the same
+    // synchronous step as the body swap.
+    (() => {
+      if (window.__guideReserve) return;
+      window.__guideReserve = true;
+
+      const storedOpen = () => {
+        try {
+          return JSON.parse(sessionStorage.getItem(guideKey) || "{}").open === true;
+        } catch {
+          return false;
+        }
+      };
+
+      document.documentElement.dataset.guide = storedOpen() ? "open" : "closed";
+      document.documentElement.dataset.guideInstant = "";
+
+      document.addEventListener("astro:before-swap", (event) => {
+        const live = document.documentElement;
+        const next = event.newDocument.documentElement;
+        // Mirror the live value, never a guess: the island owns the toggle, and
+        // a page without the drawer must not reserve room for one.
+        if (event.newDocument.querySelector('[data-astro-transition-persist="guide"]')) {
+          next.dataset.guide = live.dataset.guide ?? (storedOpen() ? "open" : "closed");
+        } else {
+          delete next.dataset.guide;
+        }
+        // The incoming page element has no previous padding to animate from, so
+        // the instant flag would never be needed again, only left behind to
+        // silence the next real open.
+        delete next.dataset.guideInstant;
+        // Same for the banner frame, whose height is 0 without this attribute.
+        if (live.dataset.weatherBanner === "open") next.dataset.weatherBanner = "open";
+        else delete next.dataset.weatherBanner;
+      });
+    })();
+  </script>
   <div class="col-span-12 h-full min-h-0 overflow-y-auto" data-page-scroll>
     <div class="flex min-h-full flex-col">
       <div class="site-column">
-        <WeatherBanner
-          client:only="svelte"
-          showLab={showLab}
-          transition:persist="weather-banner"
-        />
-        <Nav />
+        <div class="banner-frame" data-banner-frame>
+          <WeatherBanner
+            client:only="svelte"
+            showLab={showLab}
+            transition:persist="weather-banner"
+          />
+        </div>
+        <Nav crumb={isHome ? undefined : title} parent={parent} />
       </div>
       <div class="site-column flex flex-1 flex-col">
         <div
-          class="page-island flex w-full flex-1 flex-col"
+          class:list={["page-island flex w-full flex-1 flex-col", { "page-island-sub": !isHome }]}
           data-page-island
-          transition:name="page"
-          transition:animate="fade"
         >
           <slot />
         </div>
         <SiteFooter />
       </div>
     </div>
-    <FloatingChat client:load />
   </div>
+  <!-- Body level, outside the scroll region, and persisted so navigation keeps
+       the drawer's DOM, thread, draft and focus instead of rebuilding them
+       from sessionStorage a frame after the new page paints. -->
+  <FloatingChat slot="guide" client:load transition:persist="guide" />
 </RootLayout>
+
+<style>
+  /* Collapsed until the client-only banner is ready, so the server page has no
+     empty hole above the fold. */
+  .banner-frame {
+    height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    background: var(--color-bg-sunken);
+  }
+
+  :global(html[data-weather-banner="open"]) .banner-frame {
+    height: var(--banner-height);
+    margin-top: 0.5rem;
+  }
+
+  /* Added only for the first reveal, then removed, so a viewport resize settles
+     the banner instead of animating it again. In-out because the page content
+     is already on screen and moves with it. */
+  .banner-frame.is-opening {
+    transition:
+      height var(--duration-media) var(--ease-in-out),
+      margin-top var(--duration-media) var(--ease-in-out);
+  }
+
+  /* Scroll anchoring would otherwise pull content back to cancel the slide. */
+  :global([data-page-scroll].is-banner-opening) {
+    overflow-anchor: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .banner-frame.is-opening {
+      transition: none;
+    }
+  }
+
+  /* Subpages have no eyebrow above the title, so the header's breadcrumb needs
+     the room the eyebrow used to take. */
+  @media (min-width: 768px) {
+    .page-island-sub {
+      padding-top: var(--spacing-sm);
+    }
+  }
+</style>
 
 <script>
   function resetPageScroll(): void {
@@ -52,4 +148,87 @@ const showLab = showWeatherLab(import.meta.env.DEV);
 
   resetPageScroll();
   document.addEventListener("astro:page-load", resetPageScroll);
+
+  let bannerFrameBound: HTMLElement | null = null;
+
+  function installBannerSlide(): void {
+    const frame = document.querySelector<HTMLElement>("[data-banner-frame]");
+    if (!frame) return;
+    // Called on the first load and again on every swap; a frame is re-rendered
+    // each time, so identity is what tells a fresh bind from a repeat one.
+    if (bannerFrameBound === frame) return;
+    bannerFrameBound = frame;
+
+    const scroller = document.querySelector<HTMLElement>("[data-page-scroll]");
+    const observer = new ResizeObserver((entries) => {
+      const size = entries[0]?.borderBoxSize[0];
+      if (size) frame.style.setProperty("--banner-height", `${size.blockSize}px`);
+    });
+    // Ready is the island's signal; slid survives ClientRouter swaps so later
+    // pages open at once instead of replaying the slide.
+    const scope = window as Window & {
+      __weatherBannerOpened?: boolean;
+      __weatherBannerSlid?: boolean;
+    };
+    const slideOnce = (): void => {
+      if (scope.__weatherBannerSlid) return;
+      scope.__weatherBannerSlid = true;
+      open(true);
+    };
+
+    // The outgoing frame is about to be detached, so drop what it is still
+    // waiting on. Keeping the ready listener would spend the one-shot reveal on
+    // the detached frame, leaving the incoming one collapsed for good when a
+    // visitor navigates inside the banner's first second.
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        observer.disconnect();
+        window.removeEventListener("weather-banner:ready", slideOnce);
+      },
+      { once: true },
+    );
+
+    const open = (slide: boolean): void => {
+      // The client-only island may not have rendered its slot when this script
+      // binds, so measure at open time. Without a length here the open height
+      // is `auto`, which cannot transition, and the banner snaps in.
+      const slot = frame.querySelector<HTMLElement>("[data-banner-slot]");
+      if (!slot) return;
+      frame.style.setProperty("--banner-height", `${slot.offsetHeight}px`);
+      observer.observe(slot);
+      if (!slide) {
+        document.documentElement.dataset.weatherBanner = "open";
+        return;
+      }
+      frame.classList.add("is-opening");
+      scroller?.classList.add("is-banner-opening");
+      document.documentElement.dataset.weatherBanner = "open";
+
+      const settle = (): void => {
+        frame.classList.remove("is-opening");
+        scroller?.classList.remove("is-banner-opening");
+      };
+      // Reduced motion means no transition ever runs, so waiting on one alone
+      // would strand the class and let a later resize animate the banner.
+      const backstop = window.setTimeout(settle, 600);
+      void Promise.all(frame.getAnimations().map((a) => a.finished))
+        .then(settle)
+        .catch(settle)
+        .finally(() => window.clearTimeout(backstop));
+    };
+
+    if (scope.__weatherBannerSlid) {
+      open(false);
+      return;
+    }
+    // The island can finish before this script runs on a warm cache.
+    if (scope.__weatherBannerOpened) slideOnce();
+    else window.addEventListener("weather-banner:ready", slideOnce, { once: true });
+  }
+
+  installBannerSlide();
+  // after-swap, not page-load: the incoming frame must carry its measured
+  // height before the first paint, and page-load is past that point.
+  document.addEventListener("astro:after-swap", installBannerSlide);
 </script>

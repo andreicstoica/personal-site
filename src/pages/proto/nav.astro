@@ -3,12 +3,11 @@ import Home from "../../components/home/Home.astro";
 import Nav from "../../components/nav/Nav.astro";
 import WeatherBanner from "../../components/weather/WeatherBanner.svelte";
 import RootLayout from "../../layouts/RootLayout.astro";
-import { showWeatherLab } from "../../lib/weather/lab";
 import DocName from "../../proto/nav/DocName.svelte";
 import NavProto from "../../proto/nav/NavProto.svelte";
 import QuietLinks from "../../proto/nav/QuietLinks.svelte";
 
-if (!showWeatherLab(import.meta.env.DEV)) {
+if (!import.meta.env.DEV) {
 	return Astro.redirect("/");
 }
 ---

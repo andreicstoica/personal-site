@@ -93,7 +93,9 @@ function texture(color: Rgb, x: number, y: number, strength = 0.05): Rgb {
 
 function paintedCrest(x: number, layer: number): number {
 	if (layer === 0) return ridge(x, 23.5, 3.4, 0.45);
-	if (layer === 1) return ridge(x, 30.5, 4, 2);
+	// An extra partial breaks the long even ridge into mounds with saddles
+	// between them, which is how the hills actually group.
+	if (layer === 1) return ridge(x, 30.5, 4, 2) + Math.sin(x * 0.21 + 1.1) * 0.9;
 	return ridge(x, 44, 3, 4);
 }
 
@@ -313,24 +315,38 @@ export function material(
 						if (y < ground - 4.5 * scale || y > ground) continue;
 						const jitter = (hash(treeSeed + 7) - 0.5) * 0.42;
 						const cx = 81 + row * (5.5 + depth * 4) + jitter;
-						if (Math.abs(x - cx) > 4.5) continue;
+						// Canopy half-width plus peak bend; the cascade-forest motion
+						// patch in draw.ts must cover every row's cx ± this reach.
+						if (Math.abs(x - cx) > 5.5) continue;
 						// Per-tree phase and rate keep neighbors out of lockstep while
 						// the gust still travels across the columns.
 						const treePhase = (hash(treeSeed + 29) - 0.5) * 1.4 + depth * 0.55;
 						const treeRate = 0.9 + hash(treeSeed + 41) * 0.2;
+						// A downwind lean under the oscillation reads as wind rather than
+						// wobble; the gust envelope still returns both to zero.
 						const sway =
 							motion.gust *
-							Math.sin(
-								motion.gustPhase * treeRate + row * 0.34 * gustLead + treePhase,
-							) *
-							0.85 *
-							(0.7 + depth * 0.15);
+							(0.4 +
+								Math.sin(
+									motion.gustPhase * treeRate +
+										row * 0.34 * gustLead +
+										treePhase,
+								)) *
+							1.5 *
+							(0.4 + depth * 0.3);
 						const height = Math.max(0, (ground - y) / (4.5 * scale));
 						const branch = Math.sin((x - cx) * 1.8 + height * 5);
-						const dx =
-							x - cx - sway * height * (0.55 + height * 0.8 + branch * 0.28);
+						// The trunk bends and carries the crown as one mass, and tips lead.
+						// A pure height shear flattens the small crowns into wedges.
+						const bend =
+							sway *
+							(0.7 * smoothstep(0, 0.45, height) +
+								height * height * (0.5 + branch * 0.25));
+						const dx = x - cx - bend;
+						// The bent crown dips slightly, as a fixed-length stem would.
 						const leafY =
-							y +
+							y -
+							(bend * bend * 0.12) / scale +
 							motion.shimmer *
 								Math.sin((x - cx) * 2.4 + height * 7) *
 								(0.7 + depth * 0.2);
@@ -393,16 +409,25 @@ export function material(
 				color = mix([92, 111, 123], [142, 143, 128], 0.28 + distantFold * 0.3);
 				color = mix(color, [177, 181, 171], smoothstep(0, 18, depth) * 0.18);
 			} else if (layer === 1 && depth >= 0) {
+				// Band pitch wanders, so beds vary in thickness across the slope
+				// instead of marching at one fixed spacing. Real strata pinch and
+				// swell; a constant pitch is what reads as corduroy.
+				const pitch =
+					1.12 +
+					(noise(x * 0.42, 3.1, 18) - 0.5) * 0.52 +
+					0.06 * Math.sin(x * 0.08 + 0.6);
 				const contour =
-					depth * (1.12 + 0.07 * Math.sin(x * 0.08 + 0.6)) +
-					Math.sin(x * 0.2 + depth * 0.11) * 0.2;
+					depth * pitch +
+					Math.sin(x * 0.2 + depth * 0.11) * 0.2 +
+					(noise(x * 1.6, 9.4, 58) - 0.5) * 0.34;
 				const bandPosition = contour / 0.78;
 				const bandNumber = Math.floor(bandPosition);
 				const bandIndex =
 					((bandNumber % PAINTED_BANDS.length) + PAINTED_BANDS.length) %
 					PAINTED_BANDS.length;
 				const nextBand = (bandIndex + 1) % PAINTED_BANDS.length;
-				const bandBlend = smoothstep(0.78, 1, bandPosition - bandNumber);
+				const within = bandPosition - bandNumber;
+				const bandBlend = smoothstep(0.78, 1, within);
 				color = mix(
 					PAINTED_BANDS[bandIndex] ?? [151, 68, 48],
 					PAINTED_BANDS[nextBand] ?? [184, 88, 50],
@@ -411,22 +436,44 @@ export function material(
 				const subBand = 0.5 + 0.5 * Math.sin(contour * 17 + x * 0.045);
 				color = mix(color, [91, 73, 58], subBand * 0.08);
 
-				const rillCell = Math.floor((x + 1.6) / 3.2);
-				const rillSeed = rillCell * 149 + 41;
-				const rillCenter =
-					rillCell * 3.2 +
-					1.6 +
-					(hash(rillSeed) - 0.5) * 1.15 +
-					Math.sin(depth * 0.3 + hash(rillSeed + 11) * TAU) * 0.25;
-				const rillDistance = x - rillCenter;
-				const rillFade = smoothstep(0.55, 3.2, depth);
-				const rillShadow =
-					1 - smoothstep(0.08, 0.34, Math.abs(rillDistance - 0.1));
-				const rillRim =
-					1 - smoothstep(0.06, 0.24, Math.abs(rillDistance + 0.25));
-				color = mix(color, [61, 56, 51], rillShadow * rillFade * 0.32);
-				color = mix(color, [229, 196, 139], rillRim * rillFade * 0.11);
+				// A thin dark marker bed at some contacts, the way a resistant
+				// seam outcrops as a line across a softer slope.
+				if (hash(bandNumber * 313 + 7) > 0.63) {
+					const seam = 1 - smoothstep(0, 0.13, Math.abs(within - 0.03));
+					color = mix(color, [78, 63, 54], seam * 0.46);
+				}
 
+				// Gullies come in clusters, with bare stretches between them, so a
+				// coarse cell decides where one starts and a low-frequency mask
+				// decides how much of the slope is drained at all.
+				const cluster = noise(x * 0.32, 21.5, 13);
+				const rillCell = Math.floor((x + 1.6) / 5.6);
+				const rillSeed = rillCell * 149 + 41;
+				const rillFade = smoothstep(0.55, 3.2, depth);
+				if (hash(rillSeed) < 0.3 + cluster * 0.8) {
+					const rillCenter =
+						rillCell * 5.6 +
+						1.6 +
+						(hash(rillSeed) - 0.5) * 3.4 +
+						Math.sin(depth * 0.22 + hash(rillSeed + 11) * TAU) * 0.55;
+					const rillDistance = x - rillCenter;
+					const girth = 0.05 + hash(rillSeed + 3) * 0.13;
+					const rillShadow =
+						1 -
+						smoothstep(girth * 0.5, girth * 2.6, Math.abs(rillDistance - 0.12));
+					const rillRim =
+						1 -
+						smoothstep(girth * 0.4, girth * 1.5, Math.abs(rillDistance + 0.3));
+					color = mix(
+						color,
+						[61, 56, 51],
+						rillShadow * rillFade * (0.2 + hash(rillSeed + 9) * 0.24),
+					);
+					color = mix(color, [229, 196, 139], rillRim * rillFade * 0.1);
+				}
+
+				// Finer rills only where the slope is drained, so they gather in
+				// the same places as the main ones.
 				const fineCell = Math.floor((x + 0.8) / 1.6);
 				const fineSeed = fineCell * 211 + 83;
 				const fineCenter =
@@ -435,7 +482,7 @@ export function material(
 					(hash(fineSeed) - 0.5) * 0.48 +
 					Math.sin(depth * 0.42 + hash(fineSeed + 5) * TAU) * 0.13;
 				const fineRill = 1 - smoothstep(0.035, 0.16, Math.abs(x - fineCenter));
-				color = mix(color, [74, 64, 54], fineRill * rillFade * 0.16);
+				color = mix(color, [74, 64, 54], fineRill * rillFade * cluster * 0.3);
 			} else if (layer === 2) {
 				const bladeCell = Math.floor(x * 1.6);
 				const bladeX = (bladeCell + 0.2 + hash(bladeCell * 73) * 0.6) / 1.6;

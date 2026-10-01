@@ -54,8 +54,8 @@ export function renderPlate(
 	const sunColor: Rgb = night
 		? [0.65, 0.76, 0.86]
 		: golden
-			? [1, 0.68, 0.35]
-			: [1, 0.91, 0.72];
+			? [1, 0.72, 0.4]
+			: [1, 0.95, 0.8];
 	const visibility = 1 - Math.max(effect.cloud * 0.85, effect.fog);
 	for (let y = 0; y < height; y++) {
 		const ramp = Math.min(1, (y + 0.5) / height / 0.78);
@@ -71,7 +71,7 @@ export function renderPlate(
 			const glow =
 				Math.exp(-((distance / (radius * 3)) ** 2)) *
 				visibility *
-				(night ? 0.045 : 0.16 + golden * 0.13);
+				(night ? 0.045 : 0.34 + golden * 0.18);
 			let color: Rgb = mix(
 				[
 					(sky[0] + sunColor[0] * glow) * 255,
@@ -79,7 +79,7 @@ export function renderPlate(
 					(sky[2] + sunColor[2] * glow) * 255,
 				],
 				[sunColor[0] * 255, sunColor[1] * 255, sunColor[2] * 255],
-				core * visibility * (night ? 0 : 0.9),
+				core * visibility * (night ? 0 : 1),
 			);
 			if (night) {
 				const moon = moonColor(
@@ -147,7 +147,7 @@ export function renderMotionPatches(place: Place, time: number) {
 		Place,
 		readonly (readonly [number, number, number, number, number])[]
 	> = {
-		"cascade-forest": [[2, 30, 34, 104, 14]],
+		"cascade-forest": [[2, 28, 34, 106, 14]],
 		"columbia-gorge": [
 			[1, 25, 20, 5, 16],
 			[1, 34, 35, 93, 7],

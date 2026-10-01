@@ -169,10 +169,6 @@
     color: rgba(255, 255, 255, 0.85);
   }
 
-  .proto-picker-item:active {
-    transform: scale(0.97);
-  }
-
   .proto-picker-item:focus-visible {
     outline: 2px solid rgba(255, 255, 255, 0.4);
     outline-offset: 2px;
