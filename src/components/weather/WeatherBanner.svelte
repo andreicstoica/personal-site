@@ -71,13 +71,18 @@
     readingSettled = false;
   }
 
-  async function fetchReading(): Promise<StoredReading> {
+  /** Null when live weather is unavailable, so the fallback is never cached. */
+  async function fetchReading(): Promise<StoredReading | null> {
+    // No browser geolocation: Vercel IP geo headers (city-level) already
+    // locate /api/weather. The banner only needs a 4-class weather_code
+    // bucket + sunrise/sunset, both stable within IP-geo error radius.
+    // Local dev has no IP headers, so the route defaults to New York City.
     try {
       const response = await fetch("/api/weather");
       const payload: unknown = await response.json();
       const parsed = weatherApiSchema.safeParse(payload);
       if (!response.ok || !parsed.success || !parsed.data.ok) {
-        return fallbackReading();
+        return null;
       }
       return {
         weather: parsed.data.weather,
@@ -85,7 +90,7 @@
         sunset: parsed.data.sunset,
       };
     } catch {
-      return fallbackReading();
+      return null;
     }
   }
 
@@ -94,9 +99,9 @@
     let cancelled = false;
     void fetchReading().then((next) => {
       if (cancelled) return;
-      reading = next;
+      reading = next ?? fallbackReading();
       readingSettled = true;
-      if (storage) saveReading(storage, next);
+      if (storage && next) saveReading(storage, next);
     });
     return () => {
       cancelled = true;
