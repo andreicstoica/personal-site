@@ -5,14 +5,14 @@ import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
-// `output: "server"` renders every page per request, so a new Date() in a
-// component would report the visitor's request time. Freeze one timestamp when
-// this config loads (build time == deploy time) and inject it instead.
+// Pages prerender to static HTML so a click is a CDN hit, not a serverless
+// cold start. Routes that need the request opt out with `prerender = false`.
+// Freeze one timestamp when this config loads (build time == deploy time).
 const buildDate = new Date().toISOString();
 
 // https://astro.build/config
 export default defineConfig({
-  output: "server",
+  output: "static",
   compressHTML: true,
   image: {
     service: {

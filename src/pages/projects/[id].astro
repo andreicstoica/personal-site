@@ -1,7 +1,11 @@
 ---
 import ProjectDisplay from "../../components/projects/ProjectDisplay.astro";
 import SiteLayout from "../../layouts/SiteLayout.astro";
-import { getProject } from "../../lib/projects";
+import { getAllProjects, getProject } from "../../lib/projects";
+
+export function getStaticPaths() {
+	return getAllProjects().map((project) => ({ params: { id: project.id } }));
+}
 
 const { id } = Astro.params;
 const project = id ? getProject(id) : undefined;

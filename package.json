@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "astro build",
-		"preview": "astro preview",
+		"preview": "astro build && bun scripts/serve-build.ts",
 		"astro": "astro",
 		"lint": "biome check --error-on-warnings src/",
 		"lint:fix": "biome check --write src/",
