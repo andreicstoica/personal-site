@@ -12,7 +12,7 @@ const buildDate = new Date().toISOString();
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://andrei.bio",
+  site: "https://www.andrei.bio",
   output: "static",
   compressHTML: true,
   image: {
