@@ -46,11 +46,11 @@ export function renderPlate(
 ): BannerImage {
 	const data = new Uint8ClampedArray(width * height * 4);
 	const light = lighting(scene);
-	const offsets = layerOffsets(timeSeconds);
+	const offsets = layerOffsets(timeSeconds, scene.place);
 	const effect = weatherEffect(scene);
 	const golden = scene.time === "golden-hour" ? 1 : 0;
 	const night = scene.time === "night";
-	const radius = night ? 0.095 : 0.055 + golden * 0.035;
+	const radius = night ? 0.081 : 0.055 + golden * 0.035;
 	const sunColor: Rgb = night
 		? [0.65, 0.76, 0.86]
 		: golden

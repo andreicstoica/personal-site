@@ -36,7 +36,7 @@ uniform float uRainLength;
 uniform float uFog;
 uniform float uShimmer;
 uniform float uLightning;
-uniform float uFlash, uFlashSeed, uGolden, uFlashOrigin, uFlashCool;
+uniform float uFlash, uFlashSecond, uFlashSeed, uGolden, uFlashOrigin, uFlashSplit;
 uniform float uDust;
 uniform float uBubbles;
 uniform vec3 uCloudLit;
@@ -63,6 +63,22 @@ float noise(vec2 p) {
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
+// Fractal noise. Low octaves set the shape, high ones the edge detail:
+// clouds use five for ragged billows, fog and shading samples use three.
+float fbm(vec2 p, int octaves) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  float total = 0.0;
+  for (int i = 0; i < 5; i++) {
+    if (i >= octaves) break;
+    value += amplitude * noise(p);
+    total += amplitude;
+    p = p * 2.02 + vec2(17.3, 9.1);
+    amplitude *= 0.5;
+  }
+  return value / total;
+}
+
 vec4 layerAt(vec2 uv, float layer, float offset) {
   float margin = (uAtlasWidth - uPlateSize.x) * 0.5;
   float x = (uv.x * uPlateSize.x + margin - offset) / uAtlasWidth;
@@ -82,6 +98,48 @@ float segment(vec2 p, vec2 a, vec2 b) {
   return length(p - a - d * clamp(dot(p - a, d) / dot(d, d), 0.0, 1.0));
 }
 
+// Returns (core, distance). Segments past split draw from a second seed, so a
+// repeat strike follows the first path to the split, then forks away from it.
+vec2 boltAt(vec2 p, float cycle, float origin, float split) {
+  float core = 0.0;
+  float dist = 1e4;
+  vec2 a = vec2(origin, 1.0);
+  for (int i = 1; i <= 10; i++) {
+    float n = float(i);
+    float path = n > split ? cycle + 211.0 : cycle;
+    float drift = (hash(vec2(path + 17.0, n)) - 0.5) * 3.4;
+    vec2 b = vec2(a.x + drift + (origin - a.x) * 0.16, 1.0 + n * 2.8);
+    float d = segment(p, a, b);
+    dist = min(dist, d);
+    core = max(core, 1.0 - smoothstep(0.06, 0.28, d));
+    if (i == 3 || i == 6 || i == 8) {
+      vec2 forkRoot = mix(a, b, 0.55);
+      float forkSide = hash(vec2(path + 31.0, n)) < 0.5 ? -1.0 : 1.0;
+      vec2 forkTip = forkRoot + vec2(forkSide * mix(2.4, 4.6, hash(vec2(path + 47.0, n))), mix(2.0, 3.5, hash(vec2(path + 59.0, n))));
+      float firstFork = 1.0 - smoothstep(0.05, 0.22, segment(p, forkRoot, forkTip));
+      core = max(core, firstFork * 0.55);
+      vec2 nestedTip = forkTip + vec2(forkSide * mix(1.1, 2.5, hash(vec2(path + 71.0, n))), mix(1.2, 2.3, hash(vec2(path + 83.0, n))));
+      float nestedFork = 1.0 - smoothstep(0.04, 0.15, segment(p, forkTip, nestedTip));
+      core = max(core, nestedFork * 0.35);
+    }
+    a = b;
+  }
+  return vec2(core, dist);
+}
+
+// Light around a strike: a tight halo on the path and a wide bloom that widens
+// as the pulse peaks, brightest in open sky and spilling onto the land.
+vec3 strikeLight(vec2 p, float pulse, float cycle, float origin, float split, vec3 tint, float sky) {
+  vec2 bolt = boltAt(p, cycle, origin, split);
+  float halo = exp(-bolt.y / 1.6);
+  float bloom = exp(-bolt.y / mix(5.0, 11.0, pulse));
+  // The pulse-scaled lift flares the whole scene on the first frames and is
+  // gone by mid-decay, so a strike reads as one hard flash.
+  float lift = (0.1 + 0.32 * pulse) * mix(0.6, 1.0, sky);
+  float light = lift + bolt.x * sky + (halo * 0.55 + bloom * 0.3) * mix(0.35, 1.0, sky);
+  return tint * pulse * light;
+}
+
 void main() {
   vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
   vec2 p = uv * uPlateSize;
@@ -90,11 +148,15 @@ void main() {
   vec2 sunDelta = (uv - uSun) * vec2(3.3333, 1.0);
   float sunDistance = length(sunDelta);
   float visibility = 1.0 - max(uCloud * 0.85, uFog);
-  float radius = mix(0.055 + uGolden * 0.035, 0.095, uNight);
+  float radius = mix(0.055 + uGolden * 0.035, 0.081, uNight);
   float core = exp(-pow(sunDistance / radius, 2.0) * 2.0);
   float glow = exp(-pow(sunDistance / (radius * 3.0), 2.0));
   vec3 sunColor = mix(mix(vec3(1.0, 0.91, 0.72), vec3(1.0, 0.68, 0.35), uGolden), vec3(0.65, 0.76, 0.86), uNight);
-  color += sunColor * glow * visibility * mix(0.16 + uGolden * 0.13, 0.045, uNight);
+  // Day: a warm glow plus a broad lift, as bright air around the sun.
+  // Night: a tight cool halo hugging the moon over a faint haze falloff.
+  float sunLift = exp(-sunDistance / (radius * 7.0)) * 0.06;
+  float moonHalo = exp(-pow(sunDistance / (radius * 2.0), 2.0)) * 0.16 + exp(-sunDistance / (radius * 5.0)) * 0.05;
+  color += sunColor * visibility * mix(glow * (0.16 + uGolden * 0.13) + sunLift, moonHalo, uNight);
   color = mix(color, sunColor, core * visibility * 0.90 * (1.0 - uNight));
 
   vec2 starCell = floor(p / STAR_CELL_SIZE);
@@ -118,17 +180,29 @@ void main() {
     }
   }
 
-  float clouds = noise(vec2(p.x * 0.035 - uTime * uCloudSpeed, p.y * 0.10));
-  clouds = clouds * 0.65 + noise(vec2(p.x * 0.095 - uTime * uCloudSpeed * 3.4, p.y * 0.23)) * 0.35;
-  float cover = smoothstep(0.38, 0.78, clouds) * uCloud;
+  // Domain-warped fBm billows like cumulus instead of smearing into haze.
+  // Heavier weather lowers the threshold, so cover grows as solid bodies
+  // rather than as a thicker veil.
+  vec2 cloudP = vec2(p.x * 0.05 - uTime * uCloudSpeed, p.y * 0.11);
+  vec2 warp = vec2(
+    fbm(cloudP * 0.7 + vec2(3.1, 7.7), 3),
+    fbm(cloudP * 0.7 + vec2(11.4, 2.9 + uTime * 0.01), 3)
+  );
+  vec2 cloudQ = cloudP + (warp - 0.5) * 1.1;
+  float clouds = fbm(cloudQ, 5);
+  // Rain (uCloud near 1) closes the sky to near overcast; cloudy keeps gaps.
+  float threshold = mix(0.68, 0.36, uCloud) - 0.14 * smoothstep(0.85, 1.0, uCloud);
+  float opacity = mix(0.35, 1.0, smoothstep(0.3, 0.8, uCloud)) * step(0.001, uCloud);
+  float cover = smoothstep(threshold, threshold + 0.1, clouds) * opacity;
+  // Less cloud just above a texel means it faces the sky: lit tops, shaded bellies.
+  float above = fbm(cloudQ - vec2(0.0, 0.35), 3);
+  float cloudLight = clamp(0.5 + (clouds - above) * 6.0 + (clouds - threshold) * 1.2, 0.0, 1.0);
   float wisps = smoothstep(0.46, 0.72, noise(vec2(p.x * 0.065 - uTime * 0.055, p.y * 0.38)));
   cover += wisps * (1.0 - smoothstep(0.15, 0.65, uv.y)) * (1.0 - uCloud) * 0.22 * (1.0 - uFog);
-  color = mix(color, mix(uCloudShade, uCloudLit, clouds), cover * (1.0 - smoothstep(uSkyFrac, 0.86, uv.y)));
+  color = mix(color, mix(uCloudShade, uCloudLit, cloudLight), cover * (1.0 - smoothstep(uSkyFrac, 0.86, uv.y)));
 
   float summitWisp = exp(-pow((p.y - 6.0 - sin(p.x * 0.1 - uTime * 0.07)) / 0.7, 2.0)) * exp(-pow((p.x - 90.0 - sin(uTime * 0.09) * 8.0) / 18.0, 2.0));
   color = mix(color, uCloudLit, summitWisp * uHood * 0.25);
-  float flash = uFlash * uLightning;
-  vec3 flashColor = mix(uFlashLight, uFlashBlue, uFlashCool);
   float depth = 0.0;
   float sky = 1.0;
   for (int i = 0; i < 3; i++) {
@@ -145,7 +219,7 @@ void main() {
       float windows = ${VISTA_WINDOWS.map(([left, right, top, bottom]) => `(step(${left.toFixed(1)}, local.x) * (1.0 - step(${right.toFixed(1)}, local.x)) * step(${top.toFixed(1)}, local.y) * (1.0 - step(${bottom.toFixed(1)}, local.y)))`).join(" + ")};
       land += uWindowLight * windows;
     }
-    float haze = (2.0 - layer) * 0.14 + uFog * (0.42 - layer * 0.13);
+    float haze = (2.0 - layer) * 0.14 + uFog * (0.26 - layer * 0.08);
     land = mix(land, uHorizon, haze);
     color = mix(color, land, surface.a);
     depth = mix(depth, (layer + 1.0) / 3.0, surface.a);
@@ -168,9 +242,23 @@ void main() {
   }
   color = mix(color, uZenith * 0.28, birds * sky * uBirds * (1.0 - uNight) * (0.7 - uFog * 0.35));
 
-  float fogBreath = 0.87 + 0.13 * sin(uTime * 0.17);
-  float mist = noise(vec2(p.x * 0.055 - uTime * 0.04, p.y * 0.12));
-  color = mix(color, uFogColor, uFog * fogBreath * (0.16 + mist * 0.3) * (1.0 - depth * 0.65));
+  if (uFog > 0.001) {
+    // Fog banks settle in the middle and low scene over a thin base haze.
+    // A slow drifting warp makes the banks curl and waft rather than slide
+    // as a rigid texture; the near bank moves faster than the far one.
+    float fogBreath = 0.87 + 0.13 * sin(uTime * 0.17);
+    vec2 fogP = vec2(p.x * 0.032, p.y * 0.11);
+    vec2 fogWarp = vec2(
+      fbm(fogP * 0.6 + vec2(uTime * 0.03, 4.2), 3),
+      fbm(fogP * 0.6 + vec2(7.9, -uTime * 0.02), 3)
+    );
+    float nearBank = fbm(fogP + (fogWarp - 0.5) * 1.4 - vec2(uTime * 0.05, 0.0), 3);
+    float farBank = fbm(fogP * 0.7 + (fogWarp - 0.5) + vec2(31.0 - uTime * 0.025, 5.0), 3);
+    float banks = smoothstep(0.32, 0.6, mix(farBank, nearBank, 0.6));
+    float band = smoothstep(0.25, 0.6, uv.y);
+    float veil = min(1.0, 0.28 + banks * band * 0.9);
+    color = mix(color, uFogColor, uFog * fogBreath * veil * (1.0 - depth * 0.3));
+  }
   color += uDirect * uShimmer * 0.07 * sin(p.y * 6.0 + sin(p.x * 0.3 - uTime)) * (1.0 - sky);
 
   if (uRain > 0.001) {
@@ -205,28 +293,13 @@ void main() {
   }
 
   if (uLightning > 0.001) {
-    float cycle = uFlashSeed;
-    float origin = uFlashOrigin;
-    float bolt = 0.0;
-    vec2 a = vec2(origin, 1.0);
-    for (int i = 1; i <= 10; i++) {
-      float n = float(i);
-      float drift = (hash(vec2(cycle + 17.0, n)) - 0.5) * 3.4;
-      vec2 b = vec2(a.x + drift + (origin - a.x) * 0.16, 1.0 + n * 2.8);
-      bolt = max(bolt, 1.0 - smoothstep(0.06, 0.28, segment(p, a, b)));
-      if (i == 3 || i == 6 || i == 8) {
-        vec2 forkRoot = mix(a, b, 0.55);
-        float forkSide = hash(vec2(cycle + 31.0, n)) < 0.5 ? -1.0 : 1.0;
-        vec2 forkTip = forkRoot + vec2(forkSide * mix(2.4, 4.6, hash(vec2(cycle + 47.0, n))), mix(2.0, 3.5, hash(vec2(cycle + 59.0, n))));
-        float firstFork = 1.0 - smoothstep(0.05, 0.22, segment(p, forkRoot, forkTip));
-        bolt = max(bolt, firstFork * 0.55);
-        vec2 nestedTip = forkTip + vec2(forkSide * mix(1.1, 2.5, hash(vec2(cycle + 71.0, n))), mix(1.2, 2.3, hash(vec2(cycle + 83.0, n))));
-        float nestedFork = 1.0 - smoothstep(0.04, 0.15, segment(p, forkTip, nestedTip));
-        bolt = max(bolt, nestedFork * 0.35);
-      }
-      a = b;
+    // The repeat strike never overlaps the first, so each owns its glow.
+    if (uFlash > 0.001) {
+      color += strikeLight(p, uFlash * uLightning, uFlashSeed, uFlashOrigin, 99.0, uFlashLight, sky);
     }
-    color += flashColor * flash * (0.1 + bolt * sky);
+    if (uFlashSecond > 0.001) {
+      color += strikeLight(p, uFlashSecond * uLightning, uFlashSeed, uFlashOrigin, uFlashSplit, uFlashBlue, sky);
+    }
   }
 
   vec2 moteP = p * vec2(1.5, 2.0) - vec2(uTime * 0.18, uTime * 0.08);
