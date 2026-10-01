@@ -1,0 +1,12 @@
+2025 Project Highlights
+My favorite programming personal projects in review
+
+Published January 28, 2026 on Andrei's Substack blog. This post is primarily a video walkthrough (approximately 7 minutes) reviewing favorite personal programming projects from 2025.
+
+Video URL: https://blog.andrei.bio/p/2025-project-highlights
+
+The video covers project highlights from Andrei's year of building, including work from Fractal Tech's bootcamp period and related demos. More images and links are referenced at andrei.bio. The walkthrough was inspired by Isak's project review format.
+
+Related context on the personal site: Fractal Tech experience describes building many projects in a compressed timeframe, with this video as the walkthrough link for 2025 project highlights.
+
+Projects on andrei.bio include Stance Health patient flows, Holdfast research collaboration tooling, Refract journaling demo, algorithm visualizations, and other full-stack and AI experiments from 2025.
