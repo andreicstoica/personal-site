@@ -9,7 +9,14 @@ interface Props {
 	description?: string;
 }
 
-const { title, description = "Andrei's Portfolio" } = Astro.props;
+const {
+	title,
+	description = "Product minded software engineer based in New York City.",
+} = Astro.props;
+
+// Unfurlers need absolute URLs. `site` is set in astro.config.
+const pageUrl = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL("/og.png", Astro.site);
 ---
 
 <!doctype html>
@@ -18,7 +25,23 @@ const { title, description = "Andrei's Portfolio" } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
     <meta name="author" content="Andrei Stoica" />
-    <meta name="image" content="/cover.jpeg" />
+    <link rel="canonical" href={pageUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Andrei Stoica" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Andrei on a couch with a laptop and plush animals, dithered in blue"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
