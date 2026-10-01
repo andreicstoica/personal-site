@@ -1,0 +1,48 @@
+The Making of bot-drei
+Fine-tuning an LLM and building a custom RAG pipeline
+
+I made my very own bot—meet bot-drei! I wanted to learn about model fine-tuning and RAG by doing. Building an AI version of myself seemed like a great place to start: personal enough to notice what worked, with enough training data from blog posts and the website.
+
+Going in, I assumed fine-tuning would be the hard part. RAG across my blog and website sounded like a product problem. Turns out the hard part wasn't where I expected.
+
+The core question: how do you balance personality with accuracy when your knowledge base is small? Too much freedom and the model hallucinates. Too constrained and it becomes a glorified search engine.
+
+## Fine-tuning
+
+This was straightforward: ~10 minutes to train a small open-source model on 100-200 examples of my writing using LoRA on a Windows desktop with an older Nvidia GPU, using Unsloth.
+
+LoRA (Low-Rank Adaptation) freezes most weights and trains small adapter matrices in attention layers—a low-rank patch that nudges how the model represents word relationships. You can fine-tune a 4B-parameter model quickly, then merge adapters into the base model.
+
+The model picked up my patterns, email and text style, and how I structure ideas.
+
+## Routing
+
+Once the model sounded like me, it needed to answer questions about my actual work without making things up. The system routes queries by confidence in retrieved context:
+
+Pre-filtering catches greetings and short queries—skip RAG, respond conversationally.
+
+Full pipeline handles substantive questions through query expansion, intent detection, hybrid retrieval, and confidence-based generation.
+
+Confidence bands: High (≥0.6) authoritative synthesis; Medium (0.4-0.6) quote with limitations; Low (<0.4) conversational fallback, honest about gaps.
+
+## RAG system
+
+My knowledge base is small: ~10 blog posts, resume, LinkedIn, website content. Tension: personality without retrieval causes hallucination; too much retrieval loses voice.
+
+Query expansion adds synonyms (projects → work, portfolio, experience). Intent detection routes to resume, blog, or project content with metadata tags to avoid cross-contamination.
+
+Hybrid retrieval: dense embeddings (70%) for semantic similarity; sparse BM25 (30%) for exact keywords and proper nouns. Combined with weighted scores, time decay favoring recent content, reranking by intent. Retrieves up to 50 candidates, narrows to top 3.
+
+High confidence: temperature 0.3, up to 1500 tokens, authoritative synthesis in my voice. Medium: same but acknowledge limitations and quote passages. Low: temperature 0.6, 500 tokens, skip RAG injection, be honest.
+
+Chunking: resume entries unchunked; projects/experience 1000-token chunks; blog posts 500 tokens with 100 overlap at heading boundaries.
+
+## Deployment
+
+Hosted GGUF with OpenAI-compatible API. Tried RunPod (deposit and GPU inventory issues). Hugging Face Inference Endpoints was easier despite higher hourly cost—start/stop via UI.
+
+## Lessons
+
+Fine-tuning is straightforward with modern tooling. Useful RAG is harder—you fight the model's prior from billions of tokens to stick to a few pages without losing voice. Answer: contextual routing—personality for greetings, precision for facts, honesty when confidence is low.
+
+Try it at andrei.bio/chat. Other considered names: NPCosmin, AndreiGPT, AndreiBot. Production model: Qwen2-3b tuned with Qwen (also tried Phi3). Time decay alpha = 0.001/day, floor 0.1.

@@ -1,0 +1,46 @@
+Netflix, WBD, and Attention
+What text and audio tell us about video's future
+
+The discourse around the bidding war to acquire Warner Bros. Discovery is wrong. Having worked at WBD, I think many underestimate Netflix's technological advantage and misunderstand who Netflix is actually competing against. This is all part of a broader shift in video being disrupted by technology.
+
+Ben Thompson describes changes that happened in text and audio media: an existing business model pre-tech, a period of transition as tech disrupted, and a new equilibrium. To understand where video is going, we need to see where text and audio already went.
+
+## Text
+
+Pre-1990s and early 2000s, the status quo was both aggregated and distributed regionally: local newspapers monopolized local coverage while national newspapers covered major stories.
+
+Then technology disrupted this model (2005-2015). The NYTimes was struggling, social media became prevalent, and new online business models like direct-to-consumer and ads became possible.
+
+Now a new equilibrium is present. Large aggregators like the NYTimes are default subscription sources. Niche publications like WSJ and FT rebounded. Traditional media companies became disruptors themselves using cheaper digital distribution.
+
+On the long-tail side, hyper-specific individualized sources exploded. Stratechery is a great example. Billy's BBQ writes about Arsenal with extreme detail for free. The NYTimes is as responsible for killing local newspapers as platforms like X or Substack. Big aggregators didn't just survive disruption—they became disruptors.
+
+Text is the least information-heavy medium on the internet, so disruption happened ahead of audio and video.
+
+## Audio and Music
+
+Music did not barbell like text. Radio and TV were aggregators; now Spotify and similar services dominate. Direct-to-consumer like Bandcamp hasn't gained mainstream adoption. Consumption is session-based (playlists, albums, streams), not discrete like articles, which makes aggregation necessary.
+
+## Film and TV
+
+Film and TV is in huge flux. Netflix attempting to buy WBD is a sign of the times.
+
+Netflix has a massive technological advantage over Hollywood incumbents. At WBD we felt Netflix was so far ahead they were bored. Traditional studios spent years reaching basic streaming competence before competing on Netflix's terms.
+
+Netflix can build audiences for content it does not own: Drive to Survive made F1 popular in America but Netflix doesn't own live race rights; Suits became more popular on Netflix than its original run but NBCUniversal owns IP; K-Pop Demon Hunters was licensed from Sony who still owns IP and merchandise.
+
+What Netflix gains from WBD: HBO prestige catalog for lean-forward watching; HGTV and Food Network for lean-back background viewing; Harry Potter and Cartoon Network for kids; DC game studio for attention beyond video.
+
+Netflix is not competing with Hollywood studios—it is competing with YouTube and TikTok. The scarce resource is attention, not content. Netflix paying ~$75B for WBD is expensive when YouTube and TikTok own creator relationships with different economics.
+
+## Predicted new equilibrium
+
+Multiple video platforms with different exclusive content mixes will coexist unlike Spotify's catalog parity. Tent-pole lean-forward content pairs with lean-back re-watchable libraries (Suits, Friends) that may decline as younger generations conditioned by YouTube prefer passive and slot-machine dynamics.
+
+Subscription prices may approach cable bundle costs because content creation is expensive relative to distribution.
+
+Creator end: premium content on YouTube, TikTok, Instagram. Examples: RocketJump's Nail House moving to feature film with crowdfunding; Camp Studios' Two Sleepy People getting limited theatrical release without festivals.
+
+Video may fragment lean-forward viewing like text did while lean-back stays aggregated. Creator-funded films may outperform mid-budget studio releases because creators own the audience when distribution is cheap.
+
+Hollywood thinks it's competing for content. It's competing for attention, and it is losing.

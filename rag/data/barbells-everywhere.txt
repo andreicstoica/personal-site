@@ -1,0 +1,126 @@
+Barbells Everywhere
+And an aside on Romania's current cultural and political crisis
+
+## Intro
+
+Hey everyone, short updates before the main story for this post:
+
+- Happy new year! My word for the year (instead of resolutions) is "agency.”
+
+- Next Sfânt popup will be February 8th, mark your calendars.
+
+- I am looking to play tennis in NYC during the winter months, lmk if you are willing to split court rentals.
+
+- Quick takes on odds and ends at the end of the post!
+
+- With that…
+
+## Barbells
+
+Generally, I’m a pretty big hater of dichotomies, opposing poles, sweeping this or that statements, etc. These arguments are almost always reductionist, and I believe gradients as an alternative is a much healthier way to view things. However, I have increasingly noticed opposing extremes as a phenomenon in all sorts of niches, which I will call barbells (two weights on opposing ends).1 I believe far apart nodes–barbells–are increasingly becoming a fixture of modern society across culture (especially online) and in finance (VC, business, etc.).
+
+### Similar theories in the wild (Twitter, IG):
+
+I write a reader-supported publication. To receive new posts and support my work, consider becoming a free or paid subscriber.
+
+## Media
+
+- Digital Media
+
+- YouTube micro influencers ←→ Mega influencers (Mr. Beast, Like Nastya, Mark Rober)
+
+- Self publishing2 ←→ traditional publishing
+
+- Traditional Media3
+
+- Streaming: Britbox/Crunchyroll ←→ Netflix (or other Hollywood accountant fueled streamer like Disney+)
+
+- Blockbuster actors ←→ generic cast members
+
+- Social and trad media will only be amplified in this regard with AI content, on both ends of the barbell.
+
+- Some more thoughts on this one: Purely economically, it makes more sense for many brands to distribute their advertising money (which ultimately drives these digital algos, shoutout Filterworld by Chayka) over higher engagement micro influencers for smaller CPMs than a huge influencer account with seemingly more reach. However, it is inevitable that there will be huge accounts that continue to draw revenue, this is especially true for other forms of media like streaming.
+
+## Sports
+
+- Running loads of zone 2 ←→ peaking on race day
+
+- Pro athlete salaries, especially true in uncapped sports (tennis, baseball), but true across the board (soccer, NBA)
+
+- Biohackers/life-extenders/training over-optimizers ←→ live in the moment, ability and mobility focused fitness
+
+## Health
+
+- Telemedicine ←→ concierge IRL medicine
+
+- Preventive naturopathic care ←→ cutting-edge tech driven treatments
+
+- General practitioners ←→ specialist consultants
+
+- Biohackers ←→ no fluoride non-GMO
+
+### VC
+
+- Niche funds (hustle fund, themed funds like Indie) ←→ PE adjacent mega funds (a16z, Tiger Global, NEA)
+
+- 10x engineer for startups4 ←→ ‘normal’ employees of a company (esp. when taking equity into account)
+
+- Unicorns/fund returners ←→ no exit
+
+## Loosely, ‘culture’ (bit of a catch all)
+
+- Casual interests ←→ lifelong pursuits
+
+- Massive Open Online Courses (MOOCs) and self-learning ←→ elite universities/exclusive courses with ridiculously high price tags
+
+- Travel to urban centers ←→ rural retreats (staycations as well?)
+
+- Solo travel vs. group travel (either friends or unknown)
+
+- Budget airlines ←→ luxury travel
+
+- Fast fashion ←→ luxury brands
+
+- E-commerce giants ←→ niche boutiques (connections to social media)
+
+- Zero-waste lifestyles ←→ high-consumption (maxx) culture
+
+- Simple 1.5x credit cards ←→ status/exclusive events/airport lounge credit cards
+
+## Conclusion on Opposites
+
+Robert Cialdini’s concept of sold opposites: ‘everyone has one, so must I’ or ‘not many people have this, it is desirable.’ Another example: Imagine a completely automated, speedy check-in process entirely on your phone. Now imagine a personal check-in process with many staff touchpoints, porters carrying your bags. There are many great ways to check into a hotel, and they can be total opposites.
+
+Many of these relate to compensation - perhaps this could be explained by applying the pareto principle to returns (most of the returns/views/productivity etc. from a small handful of the provided resources)
+
+Leave a comment
+
+Is this a human trait…?
+
+## Re: Romania rn
+
+Images above from Beauty and Biodiversity in Romania’s Hayfields - Atmos, which discusses the ecological benefits of age-old forms of haymaking. In my opinion, there is a big culture war going on in Romania re: industrialization and rural flight to the city over the last 20 years. Much of Romanian culture stems from rural/distributed regional traditions that are very pagan/land linked in origin… the loss of this (which was in part emphasized secularly during the Communist regime) has led many older voters to support nationalist candidates… but the times have changed. It is interesting this piece gets published now, from a very different political direction.
+
+There is no return to this form of society while maintaining the same pace of economic growth the country has experienced over the last 15 years. The most recent presidential election (and its accompanying drama, worth reading about if you are unaware) is just a flash point of these building tensions. There is a definite segment of the nation nostalgic for bygone times and nostalgia, times that are incompatible with today’s economic and political landscape, and even with the freedoms they now enjoy… unfortunately, I see this in my family as well. This has been written about by some of the academic diaspora as well: shoutout the ‘Future of: Nostalgia’ edition of Kajet.
+
+While I naturally an inclined to support biodiversity supporting systems of farming, to maintain these farms en-masse is aspirational given Romania’s status and relationship to the EU. Even though the land holds so much culture, and these practices are ecologically very beneficial, it is the unfortunate reality that their preservation has largely been co-opted by corrupt populists with other motives. The economic growth that has helped lift the country from decades of decline (90s-mid 10s) is, in no small part, fueled by foreign investment transforming agriculture practices (enriching both the foreign investors and local elites). While purchase power, productivity, etc. have grown nationally at record amounts, the government remains corrupt in opaque ways, leading to undirected anger in those who do not see their conditions improving. This is a large reason there is growing populist fervor for candidates who would continue to harm the population that hasn’t gained from Romania’s economic growth… a familiar story…
+
+I am not sure how to change this system to redistribute the wealth better, especially considering the tradition of communal land working and sustenance…
+
+Subscribe now
+
+- The Sound of Love - tbh, I often get emotional reading YouTube comments under songs, this is a cute way to further that experience
+
+- An interactive essay: Worlding - Future Observatory Journal
+
+- Interesting seeing Nabeel’s writing be proliferated now, I liked his piece on Palantir: Principles - Nabeel S. Qureshi
+
+- Re: internet filtering, here’s Sean’s take on how AI will change human memory: Unbundling memory - by Sean Thielen-Esparza - Language
+
+1For written clarity, I will follow this format when stating them: “extreme one ←→ extreme two”.
+
+2Currently driven by platforms like Substack, but I am bullish on a different approach in the future. Metalabel (Yancey Strickler’s newest proj.) is super interesting and worth digging into if you are unfamiliar.
+
+3a24 sidenote: What’s happened to a24 as it has entered middle land? A creeping sense of mediocrity as it attempts to satisfy a broader audience while it attempts to retain its core identities…?
+
+4there is debate around whether or not 10x engineers are real - this idea is especially popular among the tech accelerationist class/tech right
