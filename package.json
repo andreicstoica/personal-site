@@ -10,11 +10,12 @@
 		"lint": "biome check --error-on-warnings src/",
 		"lint:fix": "biome check --write src/",
 		"check": "astro check && svelte-check --tsconfig ./tsconfig.json",
-		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && astro build",
+		"test": "bun test",
+		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build",
 		"index": "tsx rag/build-index.ts",
 		"rag:build": "tsx rag/build-index.ts",
 		"rag:eval": "tsx rag/eval/run.ts",
-		"rag:rebuild": "rm -rf rag/.cache rag/index.json rag/keyword-index.json && npm run rag:build"
+		"rag:rebuild": "rm -rf rag/.cache rag/index.json rag/keyword-index.json && bun run rag:build"
 	},
 	"dependencies": {
 		"@astrojs/svelte": "9.0.1",

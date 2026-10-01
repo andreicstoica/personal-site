@@ -1,101 +1,70 @@
 import type { APIRoute } from "astro";
+import {
+	completeChat,
+	currentInference,
+	readInferenceEnv,
+} from "../../lib/inference";
+import { guideModelEnabled } from "../../lib/inferenceConfig";
 
-const MODEL_PROVIDER = (
-	import.meta.env.MODEL_PROVIDER ?? "local"
-).toLowerCase();
-const IS_LOCAL_MODEL = MODEL_PROVIDER === "local";
-const LOCAL_MODEL_URL =
-	import.meta.env.LOCAL_MODEL_URL ?? "http://localhost:1234";
-const LOCAL_MODEL_ID = import.meta.env.LOCAL_MODEL_ID ?? "noodlesGS/personal";
-const HF_API_URL = import.meta.env.HF_API_URL;
-const HF_API_KEY = import.meta.env.HF_API_KEY;
-const HF_MODEL_ID = import.meta.env.HF_MODEL_ID ?? "noodlesGS/personal";
+function json(body: unknown, status: number): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { "Content-Type": "application/json" },
+	});
+}
 
 export const prerender = false;
 
-export const GET: APIRoute = async () => {
-	try {
-		// Check configuration based on model provider
-		if (IS_LOCAL_MODEL) {
-			if (!LOCAL_MODEL_URL) {
-				return new Response(
-					JSON.stringify({
-						status: "error",
-						message: "Local model URL not configured",
-					}),
-					{
-						status: 503,
-						headers: { "Content-Type": "application/json" },
-					},
-				);
-			}
-		} else {
-			if (!HF_API_URL || !HF_API_KEY) {
-				return new Response(
-					JSON.stringify({
-						status: "error",
-						message: "Hugging Face API configuration missing",
-					}),
-					{
-						status: 503,
-						headers: { "Content-Type": "application/json" },
-					},
-				);
-			}
-		}
-
-		// Quick health check with minimal tokens
-		const baseUrl = IS_LOCAL_MODEL ? LOCAL_MODEL_URL : HF_API_URL;
-		const modelId = IS_LOCAL_MODEL ? LOCAL_MODEL_ID : HF_MODEL_ID;
-		const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
-
-		const headers: Record<string, string> = {
-			"Content-Type": "application/json",
-		};
-
-		if (!IS_LOCAL_MODEL) {
-			headers.Authorization = `Bearer ${HF_API_KEY}`;
-		}
-
-		const response = await fetch(apiUrl, {
-			method: "POST",
-			headers,
-			body: JSON.stringify({
-				model: modelId,
-				messages: [{ role: "user", content: "hi" }],
-				max_tokens: 1,
-				temperature: 0.1,
-			}),
-		});
-
-		if (response.ok) {
-			return new Response(JSON.stringify({ status: "ok" }), {
-				status: 200,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-
-		return new Response(
-			JSON.stringify({
-				status: "error",
-				message: "Inference server is not responding",
-			}),
+export const GET: APIRoute = async ({ url }) => {
+	const resolved = currentInference();
+	if (!guideModelEnabled(readInferenceEnv())) {
+		return json(
 			{
-				status: 503,
-				headers: { "Content-Type": "application/json" },
+				status: "off",
+				provider: "notes",
+				live: false,
+				message: "Guide model calls are off",
 			},
-		);
-	} catch (error) {
-		console.error("Health check failed:", error);
-		return new Response(
-			JSON.stringify({
-				status: "error",
-				message: "Inference server is currently down",
-			}),
-			{
-				status: 503,
-				headers: { "Content-Type": "application/json" },
-			},
+			200,
 		);
 	}
+
+	if (resolved.kind === "unconfigured") {
+		return json(
+			{
+				status: "unconfigured",
+				provider: resolved.provider,
+				message: resolved.reason,
+			},
+			503,
+		);
+	}
+
+	// A live generation wakes a scale-to-zero GPU. Default is config-only.
+	if (url.searchParams.get("probe") !== "1") {
+		return json(
+			{ status: "ok", provider: resolved.provider, live: false },
+			200,
+		);
+	}
+
+	const completion = await completeChat({
+		resolved,
+		temperature: 0,
+		maxTokens: 1,
+		messages: [{ role: "user", content: "hi" }],
+	});
+
+	if (completion.kind === "ok") {
+		return json({ status: "ok", provider: resolved.provider, live: true }, 200);
+	}
+
+	return json(
+		{
+			status: completion.kind,
+			provider: resolved.provider,
+			live: false,
+		},
+		503,
+	);
 };

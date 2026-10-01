@@ -62,6 +62,3 @@ export type GalleryMedia =
 			src: string;
 			alt: string;
 	  };
-
-export type ChatRole = "user" | "assistant";
-export type ChatServerStatus = "checking" | "online" | "offline";

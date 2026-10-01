@@ -1,8 +1,3 @@
 ---
-import FullPageChat from "../components/chat/FullPageChat.svelte";
-import SiteLayout from "../layouts/SiteLayout.astro";
+return Astro.redirect("/?chat=1");
 ---
-
-<SiteLayout title="Chat with Andrei">
-  <FullPageChat client:load />
-</SiteLayout>
