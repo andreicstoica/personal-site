@@ -4,7 +4,7 @@ Decided from the `/proto/unfurl` prototype, 2026-10-01. The prototype is deleted
 
 ## Direction
 
-Duotone: the couch photo (`public/cover.jpeg`) pushed through a 4×4 ordered Bayer dither in the site's blue, three tonal levels, with a mono domain chip bottom-left. Output is `public/og.png`, 1200 × 630.
+Duotone: the couch photo (the former `public/cover.jpeg`, removed from the repo once the PNG was baked) pushed through a 4×4 ordered Bayer dither in the site's blue, three tonal levels, with a mono domain chip bottom-left. Output is `public/og.png`, 1200 × 630.
 
 ## Values
 
