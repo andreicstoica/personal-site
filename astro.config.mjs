@@ -22,8 +22,6 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
-    // Ensure WebM and WebP files are treated as assets
-    assetsInclude: ["**/*.webm", "**/*.webp"],
     define: {
       __BUILD_DATE__: JSON.stringify(buildDate),
     },
