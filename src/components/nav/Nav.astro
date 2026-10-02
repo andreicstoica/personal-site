@@ -56,6 +56,7 @@ const { crumb, parent } = Astro.props;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    padding-block-end: 0;
     font-size: 1.5rem;
     font-weight: 700;
     line-height: var(--leading-tight);
@@ -75,7 +76,7 @@ const { crumb, parent } = Astro.props;
 
   .trail {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     min-width: 0;
     margin: 0;
     padding: 0;
@@ -92,7 +93,7 @@ const { crumb, parent } = Astro.props;
 
   .trail-parent {
     display: flex;
-    align-items: center;
+    align-items: baseline;
   }
 
   /* A flex item is a block, so its line box already holds the underline. */
@@ -104,7 +105,7 @@ const { crumb, parent } = Astro.props;
   /* The page title below shows the full name, so the crumb may truncate. */
   .trail-current {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     min-width: 0;
     color: var(--color-text-secondary);
   }
