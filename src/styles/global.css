@@ -197,6 +197,16 @@
 /* Every clickable control shows the pointer. In the base layer so Tailwind
    cursor utilities (the gallery's zoom-in) still override it. */
 @layer base {
+	/* The underline offset draws the line just below an inline link's box, so
+	   a pointer on the line missed the link. Block padding grows the hit area
+	   without moving text, down to the bottom of the line box, where hit
+	   testing passes to the next line; 0.3em reaches it at the site's line
+	   heights. In the base layer so padding utilities on button links win;
+	   links that are not inline and size their own hit area reset it. */
+	a {
+		padding-block-end: 0.3em;
+	}
+
 	button:not(:disabled),
 	[role="button"],
 	select,
