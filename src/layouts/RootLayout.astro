@@ -51,9 +51,12 @@ const ogImage = new URL("/og.png", Astro.site);
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <ClientRouter />
-    <Analytics />
   </head>
   <body class="m-0 p-0 layout-body">
+    <!-- Not in <head>: it renders a custom element, which ends the head when
+         parsed, so Astro's stylesheets land in the body and the ClientRouter
+         drops and reloads them on every navigation. -->
+    <Analytics />
     <div class="layout-grid">
       <slot />
     </div>
