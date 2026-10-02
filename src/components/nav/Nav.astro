@@ -95,6 +95,11 @@ const { crumb, parent } = Astro.props;
     align-items: center;
   }
 
+  /* A flex item is a block, so its line box already holds the underline. */
+  .trail-link {
+    padding-block-end: 0;
+  }
+
 
   /* The page title below shows the full name, so the crumb may truncate. */
   .trail-current {
