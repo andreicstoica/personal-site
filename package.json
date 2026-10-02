@@ -45,5 +45,8 @@
 		"svelte-eslint-parser": "^1.8.1",
 		"tsx": "^4.20.6",
 		"typescript": "5.9.2"
+	},
+	"optionalDependencies": {
+		"@aiforui/lapse": "^0.19.0"
 	}
 }

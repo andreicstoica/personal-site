@@ -10,6 +10,32 @@ import { defineConfig } from "astro/config";
 // Freeze one timestamp when this config loads (build time == deploy time).
 const buildDate = new Date().toISOString();
 
+/**
+ * Lapse, the motion inspector, comes from a private registry, so it is an
+ * optional dependency: CI and Vercel install without a token and skip it.
+ * Mount it only under `astro dev`, and only when it is installed.
+ * @returns {import("astro").AstroIntegration}
+ */
+function lapse() {
+  return {
+    name: "lapse",
+    hooks: {
+      "astro:config:setup": ({ command, injectScript }) => {
+        if (command !== "dev") return;
+        try {
+          import.meta.resolve("@aiforui/lapse/panel");
+        } catch {
+          return;
+        }
+        injectScript(
+          "page",
+          'import { mountLapse } from "@aiforui/lapse/panel"; mountLapse();',
+        );
+      },
+    },
+  };
+}
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://www.andrei.bio",
@@ -26,6 +52,6 @@ export default defineConfig({
       __BUILD_DATE__: JSON.stringify(buildDate),
     },
   },
-  integrations: [svelte()],
+  integrations: [svelte(), lapse()],
   adapter: vercel(),
 });
