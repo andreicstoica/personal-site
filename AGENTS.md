@@ -16,6 +16,7 @@
 - `bun run dev`: start Astro locally at `http://localhost:4321` with hot reload.
 - `bun run build`: production build to `dist`.
 - `bun run preview`: serve the built output for final verification.
+- Lapse (motion inspector) mounts in `bun run dev` only. `@aiforui/lapse` is an optional dependency from a private registry (`.npmrc`), so installs without the token in `~/.npmrc` skip it, and CI and Vercel stay green. Keep it optional.
 
 Use Bun for every script. `npm run <script>` happens to execute the same commands, but it resolves dependencies against `package-lock.json` instead of `bun.lock` — which silently installs a different Biome/TypeScript and produces lint results CI will not reproduce. `package-lock.json` is gitignored for this reason.
 
