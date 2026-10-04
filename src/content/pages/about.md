@@ -12,6 +12,7 @@ Recently, I've been thinking about:
 - [Netflix, WBD, and attention](https://blog.andrei.bio/p/netflix-wbd-and-attention)
 - [Do people like slop?](https://blog.andrei.bio/p/do-people-like-slop)
 - [Why I quit my job to build the future I want](https://blog.andrei.bio/p/why-im-quitting-my-job)
+- [Fine-tuning my own model and harness engineering](https://blog.andrei.bio/p/the-making-of-bot-drei)
 - I grew up with multiple people over 100 years old, giving me a different perception of time than most kids! Wrote about that in [Lessons on Living](https://blog.andrei.bio/p/lessons-on-living). <br><br>
 
 # Micropages
