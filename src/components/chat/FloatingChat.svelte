@@ -22,6 +22,8 @@
     sources?: ChatSource[];
     action?: ChatAction;
     notice?: string;
+    /** The guide followed this reply's navigate action. */
+    navigated?: boolean;
   };
 
   /** What the server has reported for the turn in flight. */
@@ -47,6 +49,8 @@
   let noSlide = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
   let stopIntentWatch: (() => void) | undefined;
+  /** The reply whose navigation is pending, so its step can show it. */
+  let followingId = $state<string | null>(null);
   let abortRef: AbortController | null = null;
 
   const viewing = $derived(routeByHref(pagePath));
@@ -74,6 +78,7 @@
       sources: wrapped.sources,
       action: wrapped.action,
       notice: wrapped.notice,
+      navigated: value.navigated === true,
     };
   }
 
@@ -155,8 +160,25 @@
     messages = [...messages, message].slice(-30);
   }
 
-  function appendReply(content: string, extra: Partial<GuideMessage> = {}) {
-    appendMessage({ id: crypto.randomUUID(), role: "assistant", content, ...extra });
+  function appendReply(content: string, extra: Partial<GuideMessage> = {}): string {
+    const id = crypto.randomUUID();
+    appendMessage({ id, role: "assistant", content, ...extra });
+    return id;
+  }
+
+  /** Navigation is a step too: pending while the follow waits, done once the
+   *  page moved, and a link when the visitor's own action cancelled it. */
+  function navStep(message: GuideMessage): GuideStep | null {
+    const action = message.action;
+    if (action?.kind !== "navigate") return null;
+    if (followingId === message.id) {
+      return { icon: "map", label: `Opening ${action.label}`, status: "active" };
+    }
+    if (message.navigated) {
+      return { icon: "map", label: `Opened ${action.label}`, status: "complete", href: action.href };
+    }
+    if (pagePath === action.href) return null;
+    return { icon: "map", label: `Open ${action.label}`, status: "complete", href: action.href };
   }
 
   // Outside clicks move focus to the clicked element before this runs, so the
@@ -221,16 +243,20 @@
     };
   }
 
-  function scheduleFollow(action: ChatAction) {
+  function scheduleFollow(action: ChatAction, messageId: string) {
     if (action.kind !== "navigate" || !action.follow) return;
     if (window.location.pathname === action.href) return;
     cancelFollow();
+    followingId = messageId;
     stopIntentWatch = watchIntent(cancelFollow);
     followTimer = setTimeout(() => {
       const draft = input.trim().length > 0;
       cancelFollow();
       // Never yank the page out from under a question the visitor is typing.
       if (draft) return;
+      messages = messages.map((message) =>
+        message.id === messageId ? { ...message, navigated: true } : message,
+      );
       // ClientRouter, not a full load: a reload would tear the thread down and
       // rebuild it from storage, dropping scroll and focus for no reason.
       void navigate(action.href);
@@ -278,12 +304,12 @@
           // The reply takes the steps' place in the same frame.
           pending = null;
           replied = true;
-          appendReply(event.reply.response, {
+          const replyId = appendReply(event.reply.response, {
             sources: event.reply.sources,
             action: event.reply.action,
             notice: event.reply.notice,
           });
-          scheduleFollow(event.reply.action);
+          scheduleFollow(event.reply.action, replyId);
         }
       }
       if (!replied) appendReply("The guide couldn't answer.");
@@ -312,6 +338,7 @@
     followTimer = undefined;
     stopIntentWatch?.();
     stopIntentWatch = undefined;
+    followingId = null;
   }
 
   /** `/chat` redirects here with `?chat=1`, so this can arrive on any
@@ -471,6 +498,7 @@
             </div>
           </div>
         {:else}
+          {@const nav = navStep(message)}
           <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
             {#if message.sources && message.sources.length > 0}
               <GuideSteps steps={doneSteps(message.sources)} />
@@ -479,10 +507,8 @@
             {#if message.notice}
               <p class="text-xs text-[var(--color-text-secondary)]">{message.notice}</p>
             {/if}
-            {#if message.action?.kind === "navigate"}
-              <a href={message.action.href} class="inline-block text-xs text-[var(--color-text-secondary)]">
-                {message.action.label} →
-              </a>
+            {#if nav}
+              <GuideSteps steps={[nav]} live={nav.status === "active"} />
             {/if}
           </div>
         {/if}

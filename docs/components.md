@@ -237,7 +237,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 | `notice` | Optional. Why a notes answer stands in for the model (out of credit, busy, error) |
 | `action` | `none`, or `navigate { href, label, follow }` |
 
-A `navigate` action renders under the reply as a small "{label} →" link. `follow` is `true` when the visitor asked to open a page or the model pointed to one for the rest. The guide then navigates after 900 ms, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press); the link stays either way. Replies render as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links.
+A `navigate` action renders under the reply as a step with a map icon: "Opening {label}" (shimmer) while the follow waits, "Opened {label}" once the page moved, or an "Open {label}" link when the visitor cancelled it or the action does not follow. On the page it names, an unfollowed action shows nothing. The "opened" state is saved with the thread. `follow` is `true` when the visitor asked to open a page or the model pointed to one for the rest. The guide then navigates after 900 ms, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press); the link stays either way. Replies render as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links.
 
 ### Supporting modules
 

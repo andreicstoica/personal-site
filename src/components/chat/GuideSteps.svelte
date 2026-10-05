@@ -5,6 +5,8 @@
     icon: PixelarticonName;
     label: string;
     status: "active" | "complete";
+    /** Makes the label a link, for a step the visitor can repeat. */
+    href?: string;
   };
 </script>
 
@@ -20,7 +22,11 @@
   {#each steps as step, index (index)}
     <li class="guide-step" data-status={step.status}>
       <Icon name={step.icon} class="w-3.5 h-3.5 shrink-0" />
-      <span class="guide-step-label">{step.label}</span>
+      {#if step.href}
+        <a href={step.href} class="guide-step-label guide-step-link">{step.label}</a>
+      {:else}
+        <span class="guide-step-label">{step.label}</span>
+      {/if}
     </li>
   {/each}
 </ol>
@@ -76,6 +82,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .guide-step-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--color-divider);
+    text-underline-offset: 0.2em;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .guide-step-link:hover {
+      color: var(--color-text-primary);
+    }
   }
 
   /* The active label shimmers: a lighter band sweeps across the text. */
