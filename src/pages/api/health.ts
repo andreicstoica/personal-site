@@ -48,10 +48,11 @@ export const GET: APIRoute = async ({ url }) => {
 		);
 	}
 
+	// Reasoning models spend the first tokens thinking; 1 token returns no text.
 	const completion = await completeChat({
 		resolved,
 		temperature: 0,
-		maxTokens: 1,
+		maxTokens: 64,
 		messages: [{ role: "user", content: "hi" }],
 	});
 
