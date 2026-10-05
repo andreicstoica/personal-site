@@ -11,7 +11,7 @@ const completionSchema = z.object({
 		.array(
 			z.object({
 				message: z.object({
-					content: z.string(),
+					content: z.string().nullable(),
 				}),
 			}),
 		)
@@ -20,7 +20,6 @@ const completionSchema = z.object({
 
 export type Completion =
 	| { kind: "ok"; content: string }
-	| { kind: "cold" }
 	| { kind: "down"; detail: string };
 
 function envValue(name: keyof InferenceEnv): string | undefined {
@@ -42,9 +41,9 @@ export function readInferenceEnv(): InferenceEnv {
 		GUIDE_MODEL: envValue("GUIDE_MODEL"),
 		LOCAL_MODEL_URL: envValue("LOCAL_MODEL_URL"),
 		LOCAL_MODEL_ID: envValue("LOCAL_MODEL_ID"),
-		HF_API_URL: envValue("HF_API_URL"),
-		HF_API_KEY: envValue("HF_API_KEY"),
-		HF_MODEL_ID: envValue("HF_MODEL_ID"),
+		MODEL_BASE_URL: envValue("MODEL_BASE_URL"),
+		MODEL_API_KEY: envValue("MODEL_API_KEY"),
+		MODEL_ID: envValue("MODEL_ID"),
 	};
 }
 
@@ -58,7 +57,7 @@ export async function completeChat(args: {
 	temperature: number;
 	maxTokens: number;
 }): Promise<Completion> {
-	const url = `${args.resolved.baseUrl}/v1/chat/completions`;
+	const url = `${args.resolved.baseUrl}/chat/completions`;
 	try {
 		const response = await fetch(url, {
 			method: "POST",
@@ -72,10 +71,8 @@ export async function completeChat(args: {
 				temperature: args.temperature,
 				max_tokens: args.maxTokens,
 			}),
-			signal: AbortSignal.timeout(22_000),
+			signal: AbortSignal.timeout(20_000),
 		});
-		if (response.status === 502 || response.status === 503)
-			return { kind: "cold" };
 		if (!response.ok) {
 			return { kind: "down", detail: `Model API HTTP ${response.status}` };
 		}
@@ -86,12 +83,6 @@ export async function completeChat(args: {
 		if (!content) return { kind: "down", detail: "Empty model response" };
 		return { kind: "ok", content };
 	} catch (error) {
-		if (
-			error instanceof Error &&
-			(error.name === "TimeoutError" || error.name === "AbortError")
-		) {
-			return { kind: "cold" };
-		}
 		const detail =
 			error instanceof Error ? error.message : "Model request failed";
 		return { kind: "down", detail };

@@ -58,7 +58,3 @@ export function parseChatApiSuccess(value: unknown): ChatApiSuccess | null {
 	}
 	return { response: value.response, sources, action, mode: value.mode };
 }
-
-export function isColdStart(value: unknown): boolean {
-	return isRecord(value) && value.retryable === true;
-}

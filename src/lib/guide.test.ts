@@ -135,39 +135,49 @@ describe("guide turn", () => {
 });
 
 describe("inference config", () => {
-	test("hugging face sends a bearer token", () => {
+	test("hosted sends a bearer token to an OpenAI-compatible base", () => {
 		const resolved = resolveInference({
-			MODEL_PROVIDER: "hf",
-			HF_API_URL: "https://hf.example/",
-			HF_API_KEY: "hf_test",
+			MODEL_PROVIDER: "hosted",
+			MODEL_BASE_URL: "https://api.example/v1/",
+			MODEL_API_KEY: "sk_test",
+			MODEL_ID: "flash",
 		});
-		expect(resolved.kind).toBe("ready");
+		expect(resolved).toMatchObject({
+			kind: "ready",
+			provider: "hosted",
+			baseUrl: "https://api.example/v1",
+			model: "flash",
+		});
 		if (resolved.kind !== "ready") return;
-		expect(resolved.provider).toBe("hf");
 		expect(authHeaders(resolved.auth)).toEqual({
-			Authorization: "Bearer hf_test",
+			Authorization: "Bearer sk_test",
 		});
 	});
 
 	test("model calls stay off unless GUIDE_MODEL=on", () => {
 		expect(guideModelEnabled({})).toBe(false);
-		expect(guideModelEnabled({ GUIDE_MODEL: "hf" })).toBe(false);
-		expect(guideModelEnabled({ MODEL_PROVIDER: "hf" })).toBe(false);
+		expect(guideModelEnabled({ GUIDE_MODEL: "hosted" })).toBe(false);
+		expect(guideModelEnabled({ MODEL_PROVIDER: "hosted" })).toBe(false);
 		expect(guideModelEnabled({ GUIDE_MODEL: "on" })).toBe(true);
 	});
 
-	test("modal is only a comment, not a provider", () => {
-		expect(resolveInference({ MODEL_PROVIDER: "modal" }).kind).toBe(
-			"unconfigured",
-		);
+	test("hosted without a key or model stays unconfigured", () => {
+		const base = { MODEL_PROVIDER: "hosted", MODEL_BASE_URL: "https://x/v1" };
+		expect(resolveInference({ ...base, MODEL_ID: "flash" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "hosted",
+		});
+		expect(resolveInference({ ...base, MODEL_API_KEY: "k" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "hosted",
+		});
 	});
 
-	test("hugging face without a key stays unconfigured", () => {
-		const resolved = resolveInference({
-			MODEL_PROVIDER: "hf",
-			HF_API_URL: "https://hf.example",
+	test("the retired hf provider is unknown, not a silent fallback", () => {
+		expect(resolveInference({ MODEL_PROVIDER: "hf" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "unknown",
 		});
-		expect(resolved).toMatchObject({ kind: "unconfigured", provider: "hf" });
 	});
 
 	test("unknown providers do not fall through to local", () => {

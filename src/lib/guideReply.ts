@@ -8,8 +8,6 @@ import {
 	siteRoutes,
 } from "./memorySelect";
 
-const CONTACT = "andrei c stoica (at) icloud (dot) com";
-
 function clip(body: string, max: number): string {
 	const trimmed = body.trim();
 	if (trimmed.length <= max) return trimmed;
@@ -65,17 +63,12 @@ function decideAction(
 function notesText(
 	message: string,
 	sections: readonly MemorySection[],
-	reason: "unconfigured" | "unreachable",
 ): string {
 	if (isSmallTalk(message)) {
 		return "Hey. Ask what I've been building, or say “show me Refract”.";
 	}
 	if (sections.length === 0) {
-		const lead =
-			reason === "unconfigured"
-				? "The guide model isn't connected."
-				: "The model is still waking or unreachable.";
-		return `${lead} I don't have notes on that. Ask about a project, a job, canon, or fitness — or email ${CONTACT}.`;
+		return "I don't have notes on that. Ask about my writing, the canon, or how this site was built.";
 	}
 	const paragraph = sections[0]?.body.trim().split(/\n\s*\n/)[0] ?? "";
 	const sentence = paragraph.split(/(?<=[.!?])\s+/)[0] ?? paragraph;
@@ -128,9 +121,8 @@ export function resolveGuideTurn(args: {
 			mode: "model",
 		};
 	}
-	const reason = args.notesReason ?? "unreachable";
 	return {
-		response: notesText(args.message, args.sections, reason),
+		response: notesText(args.message, args.sections),
 		sources: sourcesFrom(args.sections),
 		action: decided.action,
 		mode: "notes",

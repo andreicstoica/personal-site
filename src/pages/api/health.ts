@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ url }) => {
 		);
 	}
 
-	// A live generation wakes a scale-to-zero GPU. Default is config-only.
+	// A live generation costs tokens. Default is config-only.
 	if (url.searchParams.get("probe") !== "1") {
 		return json(
 			{ status: "ok", provider: resolved.provider, live: false },

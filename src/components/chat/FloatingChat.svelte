@@ -3,7 +3,6 @@
   import { navigate } from "astro:transitions/client";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
-    isColdStart,
     parseChatApiSuccess,
     type ChatAction,
     type ChatSource,
@@ -24,8 +23,6 @@
   let messages = $state<GuideMessage[]>([]);
   let input = $state("");
   let sending = $state(false);
-  let waking = $state(false);
-  let offline = $state(false);
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
   let threadRef = $state<HTMLDivElement | null>(null);
@@ -80,18 +77,8 @@
     }
   }
 
-  function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
-
   function isAbortError(value: unknown): boolean {
     return value instanceof DOMException && value.name === "AbortError";
-  }
-
-  function abortError(): DOMException {
-    return new DOMException("Aborted", "AbortError");
   }
 
   /** History is capped at 30 to match what sessionStorage keeps, so a
@@ -128,21 +115,6 @@
     return "The guide couldn't answer.";
   }
 
-  /** Config-only: no probe, so this never wakes a scale-to-zero GPU. */
-  async function checkHealth() {
-    try {
-      const response = await fetch("/api/health");
-      if (!response.ok) {
-        offline = true;
-        return;
-      }
-      const payload: unknown = await response.json().catch(() => null);
-      offline = !(isRecord(payload) && payload.status === "ok");
-    } catch {
-      offline = true;
-    }
-  }
-
   function scheduleFollow(action: ChatAction) {
     if (action.kind !== "navigate" || !action.follow) return;
     if (window.location.pathname === action.href) return;
@@ -158,7 +130,7 @@
   }
 
   async function postChat(
-    body: { message: string; history: Array<{ role: "user" | "assistant"; content: string }>; notesOnly?: boolean },
+    body: { message: string; history: Array<{ role: "user" | "assistant"; content: string }> },
     signal?: AbortSignal,
   ) {
     const response = await fetch("/api/chat", {
@@ -181,34 +153,16 @@
     appendMessage({ id: crypto.randomUUID(), role: "user", content: userMessage });
     input = "";
     sending = true;
-    waking = false;
     const controller = new AbortController();
     abortRef = controller;
 
     try {
-      const request = { message: userMessage, history };
-      const delays = [0, 2000, 4000, 8000];
-      let response: Response | null = null;
-      let payload: unknown = null;
-      for (const delay of delays) {
-        if (delay > 0) {
-          waking = true;
-          await sleep(delay);
-          if (controller.signal.aborted) throw abortError();
-        }
-        const result = await postChat(request, controller.signal);
-        response = result.response;
-        payload = result.payload;
-        if (response.status !== 503 || !isColdStart(payload)) break;
-      }
-      if (response?.status === 503 && isColdStart(payload)) {
-        waking = true;
-        const notes = await postChat({ ...request, notesOnly: true }, controller.signal);
-        response = notes.response;
-        payload = notes.payload;
-      }
+      const { response, payload } = await postChat(
+        { message: userMessage, history },
+        controller.signal,
+      );
       const parsed = parseChatApiSuccess(payload);
-      if (!response?.ok || !parsed) {
+      if (!response.ok || !parsed) {
         appendReply(errorText(payload));
         return;
       }
@@ -220,7 +174,6 @@
     } finally {
       if (abortRef === controller) abortRef = null;
       sending = false;
-      waking = false;
     }
   };
 
@@ -256,7 +209,6 @@
   }
 
   onMount(() => {
-    void checkHealth();
     let alive = true;
     // Only hydration restores onto an already-styled element (the drawer is
     // open in the markup), so the slide is suppressed just for that frame.
@@ -375,16 +327,7 @@
     >
       {#if messages.length === 0}
         <div class="guide-empty">
-          {#if offline}
-            <p>The inference server is currently down - it is expensive to run!</p>
-            <p>
-              Reach out directly and I'll spin it up for you:
-              <br />
-              <em class="text-[var(--color-text-primary)]">andrei c stoica (at) icloud (dot) com</em>
-            </p>
-          {:else}
-            <p>Ask about a project or a job. Say “show me Refract” and I'll open the page.</p>
-          {/if}
+          <p>Ask about a project or a job. Say “show me Refract” and I'll open the page.</p>
         </div>
       {/if}
 
@@ -431,7 +374,7 @@
 
       {#if sending}
         <div class="text-sm text-[var(--color-text-secondary)]" role="status">
-          {waking ? "Waking the model…" : "Thinking…"}
+          Thinking…
         </div>
       {/if}
     </div>

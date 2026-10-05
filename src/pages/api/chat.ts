@@ -19,17 +19,12 @@ const historyItemSchema = z.object({
 const chatRequestSchema = z.object({
 	message: z.string().trim().min(1).max(2000),
 	history: z.array(historyItemSchema).max(12).optional(),
-	notesOnly: z.boolean().optional(),
 });
 
-function json(
-	body: unknown,
-	status: number,
-	extraHeaders?: Record<string, string>,
-): Response {
+function json(body: unknown, status: number): Response {
 	return new Response(JSON.stringify(body), {
 		status,
-		headers: { "Content-Type": "application/json", ...extraHeaders },
+		headers: { "Content-Type": "application/json" },
 	});
 }
 
@@ -46,21 +41,18 @@ export const POST: APIRoute = async ({ request }) => {
 	const parsed = chatRequestSchema.safeParse(raw);
 	if (!parsed.success) return json({ error: "Invalid chat request" }, 400);
 
-	const { message, notesOnly = false } = parsed.data;
+	const { message } = parsed.data;
 	const history = (parsed.data.history ?? []).slice(-8);
 	const sections = selectMemory(loadMemorySections(), message);
 	const resolved = currentInference();
 	const modelOff = !guideModelEnabled(readInferenceEnv());
 
-	if (modelOff || notesOnly || resolved.kind === "unconfigured") {
+	if (modelOff || resolved.kind === "unconfigured") {
 		const payload: ChatApiSuccess = resolveGuideTurn({
 			message,
 			sections,
 			modelText: null,
-			notesReason:
-				modelOff || resolved.kind === "unconfigured"
-					? "unconfigured"
-					: "unreachable",
+			notesReason: "unconfigured",
 		});
 		return json(payload, 200);
 	}
@@ -75,10 +67,6 @@ export const POST: APIRoute = async ({ request }) => {
 			{ role: "user", content: message },
 		],
 	});
-
-	if (completion.kind === "cold") {
-		return json({ error: "Model is waking up", retryable: true }, 503);
-	}
 
 	if (completion.kind === "down") {
 		console.error("Chat model unavailable:", completion.detail);
