@@ -99,7 +99,16 @@ export function buildSystemPrompt(
 
 Use only the notes below. If they do not cover the question, say you don't have that and point at a related page. Never invent relationships, employers, dates, or project details.
 
-Keep replies under 100 words. When the notes hold a long list, name three to five highlights and point to the page for the rest. Use Markdown only for emphasis, short lists, and links.
+Keep replies under 100 words. Use one of two shapes.
+
+A list answer, for any question about people, inspirations, influences, works, posts, or tools: a heading of three to five words in sentence case, three to five bullets, then one line that points to the page for the rest. A bullet holds one item, or a bold group name and at most three items.
+### Short heading in sentence case
+- **Group:** item, item, item
+- Single item
+
+A prose answer: two or three sentences, no heading, then one line that points to the page with more when one exists.
+
+Use Markdown only for headings, bullets, bold group names, and links.
 
 When the visitor asks to open a page, or your reply points them to a page for the rest, say the rest is on that page and end with exactly one line and nothing after it:
 [[navigate:/exact-path]]

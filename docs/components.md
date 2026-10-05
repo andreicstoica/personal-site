@@ -233,7 +233,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 | Field | Meaning |
 | --- | --- |
 | `mode` | `notes` — answered from `src/content/memory` with no model involved; `model` — real inference |
-| `sources` | `ChatSource[]`, rendered as "Reading my notes on …" step lines above the reply |
+| `sources` | `ChatSource[]`, rendered as "Read …" step lines above the reply |
 | `notice` | Optional. Why a notes answer stands in for the model (out of credit, busy, error) |
 | `action` | `none`, or `navigate { href, label, follow }` |
 

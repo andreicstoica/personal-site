@@ -110,10 +110,10 @@
   /** The steps a finished turn took: one search, then one line per note read. */
   function doneSteps(sources: ChatSource[]): GuideStep[] {
     return [
-      { icon: "search", label: "Looking through my notes", status: "complete" },
+      { icon: "search", label: "Searched notes", status: "complete" },
       ...sources.map((source): GuideStep => ({
         icon: "file",
-        label: `Reading my notes on ${source.title}`,
+        label: `Read ${source.title}`,
         status: "complete",
       })),
     ];
@@ -121,10 +121,10 @@
 
   function pendingSteps(turn: PendingTurn): GuideStep[] {
     if (turn.sources === null) {
-      return [{ icon: "search", label: "Looking through my notes", status: "active" }];
+      return [{ icon: "search", label: "Searching notes", status: "active" }];
     }
     const steps = doneSteps(turn.sources);
-    if (turn.writing) steps.push({ icon: "chat", label: "Writing a reply", status: "active" });
+    if (turn.writing) steps.push({ icon: "chat", label: "Writing reply", status: "active" });
     return steps;
   }
 
@@ -723,9 +723,14 @@
     margin-top: 0.125rem;
   }
 
-  .guide-md :global(:where(strong, h1, h2, h3, h4)) {
-    font-size: inherit;
+  .guide-md :global(strong) {
     font-weight: 600;
+  }
+
+  .guide-md :global(:where(h1, h2, h3, h4)) {
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: 1.375;
   }
 
   .guide-md :global(em) {
