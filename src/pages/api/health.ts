@@ -63,6 +63,7 @@ export const GET: APIRoute = async ({ url }) => {
 	return json(
 		{
 			status: completion.kind,
+			outage: completion.outage,
 			provider: resolved.provider,
 			live: false,
 		},

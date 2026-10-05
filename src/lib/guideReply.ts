@@ -1,4 +1,5 @@
 import type { ChatAction, ChatApiSuccess, ChatSource } from "./chatTypes";
+import type { Outage } from "./inference";
 import {
 	extractNavigateHref,
 	isNavigationIntent,
@@ -103,11 +104,20 @@ Notes:
 ${notes}`;
 }
 
+const OUTAGE_NOTICE: Record<Outage, string> = {
+	budget:
+		"My AI is out of credit this month, so this answer comes straight from my notes.",
+	busy: "Lots of questions at once, so this answer comes straight from my notes. Try again in a minute.",
+	error:
+		"The model didn't answer, so this answer comes straight from my notes.",
+};
+
 export function resolveGuideTurn(args: {
 	message: string;
 	sections: readonly MemorySection[];
 	modelText: string | null;
-	notesReason: "unconfigured" | "unreachable" | null;
+	/** `unconfigured` is a deliberate notes-only site, so it gets no notice. */
+	notesReason: "unconfigured" | Outage | null;
 }): ChatApiSuccess {
 	const decided = decideAction(args.message, args.modelText);
 	if (decided.modelText !== null && args.notesReason === null) {
@@ -121,10 +131,14 @@ export function resolveGuideTurn(args: {
 			mode: "model",
 		};
 	}
+	const reason = args.notesReason;
 	return {
 		response: notesText(args.message, args.sections),
 		sources: sourcesFrom(args.sections),
 		action: decided.action,
 		mode: "notes",
+		...(reason && reason !== "unconfigured"
+			? { notice: OUTAGE_NOTICE[reason] }
+			: {}),
 	};
 }

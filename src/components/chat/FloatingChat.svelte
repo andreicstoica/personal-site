@@ -15,6 +15,7 @@
     content: string;
     sources?: ChatSource[];
     action?: ChatAction;
+    notice?: string;
   };
 
   const storageKey = GUIDE_STORAGE_KEY;
@@ -46,6 +47,7 @@
       mode: "notes",
       sources: value.sources ?? [],
       action: value.action ?? { kind: "none" },
+      notice: value.notice,
     });
     if (!wrapped) return null;
     return {
@@ -54,6 +56,7 @@
       content: value.content,
       sources: wrapped.sources,
       action: wrapped.action,
+      notice: wrapped.notice,
     };
   }
 
@@ -166,7 +169,11 @@
         appendReply(errorText(payload));
         return;
       }
-      appendReply(parsed.response, { sources: parsed.sources, action: parsed.action });
+      appendReply(parsed.response, {
+        sources: parsed.sources,
+        action: parsed.action,
+        notice: parsed.notice,
+      });
       scheduleFollow(parsed.action);
     } catch (error) {
       // A cancelled turn is the visitor's own doing — don't narrate it.
@@ -340,6 +347,9 @@
           >
             <div class="px-3 py-2 text-sm break-words">
               <div class="whitespace-pre-wrap">{message.content}</div>
+              {#if message.role === "assistant" && message.notice}
+                <p class="mt-2 text-[11px] text-[var(--color-text-secondary)]">{message.notice}</p>
+              {/if}
               {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
                 <div class="mt-2 pt-2 border-t border-(--color-divider) space-y-1">
                   {#if message.action?.kind === "navigate"}

@@ -18,9 +18,19 @@ const completionSchema = z.object({
 		.min(1),
 });
 
+/** Why a model call failed, as far as the visitor needs to know. */
+export type Outage = "budget" | "busy" | "error";
+
 export type Completion =
 	| { kind: "ok"; content: string }
-	| { kind: "down"; detail: string };
+	| { kind: "down"; outage: Outage; detail: string };
+
+function outageFor(status: number): Outage {
+	// 402: spend cap or credit exhausted. 429: rate limit, retry later.
+	if (status === 402) return "budget";
+	if (status === 429) return "busy";
+	return "error";
+}
 
 function envValue(name: keyof InferenceEnv): string | undefined {
 	if (typeof process !== "undefined") {
@@ -74,17 +84,26 @@ export async function completeChat(args: {
 			signal: AbortSignal.timeout(20_000),
 		});
 		if (!response.ok) {
-			return { kind: "down", detail: `Model API HTTP ${response.status}` };
+			return {
+				kind: "down",
+				outage: outageFor(response.status),
+				detail: `Model API HTTP ${response.status}`,
+			};
 		}
 		const parsed = completionSchema.safeParse(await response.json());
 		if (!parsed.success)
-			return { kind: "down", detail: "Unexpected model payload" };
+			return {
+				kind: "down",
+				outage: "error",
+				detail: "Unexpected model payload",
+			};
 		const content = parsed.data.choices[0]?.message.content;
-		if (!content) return { kind: "down", detail: "Empty model response" };
+		if (!content)
+			return { kind: "down", outage: "error", detail: "Empty model response" };
 		return { kind: "ok", content };
 	} catch (error) {
 		const detail =
 			error instanceof Error ? error.message : "Model request failed";
-		return { kind: "down", detail };
+		return { kind: "down", outage: "error", detail };
 	}
 }

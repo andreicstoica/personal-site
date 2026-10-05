@@ -69,12 +69,15 @@ export const POST: APIRoute = async ({ request }) => {
 	});
 
 	if (completion.kind === "down") {
-		console.error("Chat model unavailable:", completion.detail);
+		console.error(
+			`Chat model unavailable (${completion.outage}):`,
+			completion.detail,
+		);
 		const payload = resolveGuideTurn({
 			message,
 			sections,
 			modelText: null,
-			notesReason: "unreachable",
+			notesReason: completion.outage,
 		});
 		return json(payload, 200);
 	}

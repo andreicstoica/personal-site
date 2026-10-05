@@ -1,8 +1,9 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parseChatApiSuccess } from "./chatTypes";
 import { resolveGuideTurn } from "./guideReply";
+import { completeChat } from "./inference";
 import {
 	authHeaders,
 	guideModelEnabled,
@@ -187,6 +188,65 @@ describe("inference config", () => {
 	});
 });
 
+describe("model outages", () => {
+	const realFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = realFetch;
+	});
+
+	const resolved = {
+		kind: "ready",
+		provider: "hosted",
+		baseUrl: "https://api.example/v1",
+		model: "m",
+		auth: { kind: "none" },
+	} as const;
+
+	async function outageFor(status: number) {
+		globalThis.fetch = Object.assign(
+			async () => new Response("{}", { status }),
+			{ preconnect: realFetch.preconnect },
+		);
+		const completion = await completeChat({
+			resolved,
+			messages: [{ role: "user", content: "hi" }],
+			temperature: 0,
+			maxTokens: 8,
+		});
+		return completion.kind === "down" ? completion.outage : null;
+	}
+
+	test("402 is out of credit, 429 is busy, anything else is an error", async () => {
+		expect(await outageFor(402)).toBe("budget");
+		expect(await outageFor(429)).toBe("busy");
+		expect(await outageFor(500)).toBe("error");
+	});
+
+	test("an out-of-credit turn still answers from notes and says why", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: selectMemory(corpus(), "what is refract"),
+			modelText: null,
+			notesReason: "budget",
+		});
+		expect(turn.mode).toBe("notes");
+		expect(turn.response).toBe(
+			"The journal that collaborates with you to go deeper.",
+		);
+		expect(turn.notice).toContain("out of credit");
+	});
+
+	test("a notes-only site shows no outage notice", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: [],
+			modelText: null,
+			notesReason: "unconfigured",
+		});
+		expect(turn.notice).toBeUndefined();
+	});
+});
+
 describe("chat payload", () => {
 	test("rejects a navigate action missing follow", () => {
 		expect(
@@ -197,6 +257,15 @@ describe("chat payload", () => {
 				action: { kind: "navigate", href: "/", label: "Home" },
 			}),
 		).toBeNull();
+	});
+
+	test("keeps a notice and rejects a non-string one", () => {
+		const base = { response: "hi", mode: "notes", sources: [] };
+		const action = { kind: "none" };
+		expect(
+			parseChatApiSuccess({ ...base, action, notice: "out" })?.notice,
+		).toBe("out");
+		expect(parseChatApiSuccess({ ...base, action, notice: 1 })).toBeNull();
 	});
 });
 
