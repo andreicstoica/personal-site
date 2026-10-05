@@ -16,15 +16,15 @@ One principle: never move the reader against their intent. The guide can move tw
 
 ## Page movement
 
-8. Navigate the page only when the visitor asked to open something ("show me the colophon"). Otherwise offer the page as a card or link in the reply.
-9. Every interaction is intent. A pending navigation cancels on typing, focus in the composer, a text selection in the thread or on the page, a pointer down, a wheel or touch scroll, a key press, or a link click.
+8. Navigate the page when the visitor asked to open something ("show me the colophon"), or when the reply points to a page for the rest ("the full list is on my canon page"). The reply says so before the page moves. A page named only in the question stays a link.
+9. Every interaction is intent. A pending navigation cancels on a draft in the composer, a text selection in the thread or on the page, a pointer down, a wheel or touch scroll, a key press, or a link click. Focus alone is not a signal: focus stays in the composer after a send.
 10. Navigate with the ClientRouter (`navigate`), never a full load, so the panel and its scroll position persist. Scroll to an in-page target, such as a table row, once on that navigation and not again.
 
 ## Accessibility
 
 - The thread is `role="log"`, which implies `aria-live="polite"`. Do not nest another live region inside it.
 - Announce at most two events per turn: that the guide is thinking, and the reply. Status lines and follow-ups are not announced one by one.
-- Keep focus in the composer while a turn is pending. Block a second send with `aria-disabled` and a submit guard, not `disabled`. A focused input that becomes `disabled` loses focus to `<body>` (the focus fixup rule).
+- Keep focus in the composer while a turn is pending. Block a second send with `aria-disabled` and a submit guard, not `disabled`. A focused input that becomes `disabled` loses focus to `<body>` (the focus fixup rule). A control that unmounts on click (a starter prompt, "New chat") moves focus to the composer first.
 - Under `prefers-reduced-motion: reduce`, scroll jumps use `behavior: "auto"`.
 - Starter prompts and follow-ups are buttons in a list. Each has a 44px hit area on touch, and its label is the exact text it sends.
 
@@ -46,12 +46,11 @@ The server returns data, and the client maps it to parts. `src/lib/chatTypes.ts`
 
 | Rule | Where | Gap |
 | --- | --- | --- |
-| 1, 2 | `FloatingChat.svelte:294-297` | Scrolls to the bottom when the reader is within 60px of it, and also when `scrollTop` is 0. A reader who scrolls to the top is pulled down by the next message, and a long reply shows its end, not its start. |
+| 1, 2 | `FloatingChat.svelte:409-414` | Scrolls to the bottom when the reader is within 60px of it, and also when `scrollTop` is 0. A reader who scrolls to the top is pulled down by the next message, and a long reply shows its end, not its start. |
 | 3 | none | No "New reply" pill. |
-| 4 | `FloatingChat.svelte:227`, `:294` | A restored thread starts at `scrollTop` 0, so the same effect jumps it to the bottom. |
-| 9 | `FloatingChat.svelte:125-131` | A pending navigation cancels only on typing or composer focus. Selection, scroll, pointer, and keys do not cancel it. |
-| A11y | `FloatingChat.svelte:333`, `:386` | `aria-live` on the thread, with a `role="status"` row nested inside it. |
-| A11y | `FloatingChat.svelte:401` | `disabled={sending}` drops focus from the composer on every send. |
+| 4 | `FloatingChat.svelte:347`, `:409` | A restored thread starts at `scrollTop` 0, so the same effect jumps it to the bottom. |
+
+Fixed: a pending navigation now cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn is pending, and no live region is nested in it; the composer keeps focus on send.
 
 ## Not adopted
 

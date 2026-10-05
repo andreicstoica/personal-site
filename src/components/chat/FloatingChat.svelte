@@ -1,13 +1,19 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { navigate } from "astro:transitions/client";
-  import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
+  import { renderChatMarkdown } from "../../lib/chatMarkdown";
   import {
     parseChatApiSuccess,
+    parseChatEvent,
     type ChatAction,
+    type ChatEvent,
     type ChatSource,
   } from "../../lib/chatTypes";
+  import { starterPrompts } from "../../lib/guidePrompts";
+  import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
+  import { routeByHref } from "../../lib/memorySelect";
   import Icon from "../ui/Icon.svelte";
+  import GuideSteps, { type GuideStep } from "./GuideSteps.svelte";
 
   type GuideMessage = {
     id: string;
@@ -18,12 +24,20 @@
     notice?: string;
   };
 
+  /** What the server has reported for the turn in flight. */
+  type PendingTurn = { sources: ChatSource[] | null; writing: boolean };
+
   const storageKey = GUIDE_STORAGE_KEY;
+  /** Steps that land together still reveal one at a time, so the chain reads
+   *  in order. Only the pacing is client-side; every step comes from the server. */
+  const STEP_MS = 300;
 
   let open = $state(false);
   let messages = $state<GuideMessage[]>([]);
   let input = $state("");
   let sending = $state(false);
+  let pending = $state<PendingTurn | null>(null);
+  let pagePath = $state("/");
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
   let threadRef = $state<HTMLDivElement | null>(null);
@@ -32,7 +46,10 @@
   let launchRef = $state<HTMLButtonElement | null>(null);
   let noSlide = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
+  let stopIntentWatch: (() => void) | undefined;
   let abortRef: AbortController | null = null;
+
+  const viewing = $derived(routeByHref(pagePath));
 
   function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -84,6 +101,54 @@
     return value instanceof DOMException && value.name === "AbortError";
   }
 
+  function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /** The steps a finished turn took: one search, then one line per note read. */
+  function doneSteps(sources: ChatSource[]): GuideStep[] {
+    return [
+      { icon: "search", label: "Looking through my notes", status: "complete" },
+      ...sources.map((source): GuideStep => ({
+        icon: "file",
+        label: `Reading my notes on ${source.title}`,
+        status: "complete",
+      })),
+    ];
+  }
+
+  function pendingSteps(turn: PendingTurn): GuideStep[] {
+    if (turn.sources === null) {
+      return [{ icon: "search", label: "Looking through my notes", status: "active" }];
+    }
+    const steps = doneSteps(turn.sources);
+    if (turn.writing) steps.push({ icon: "chat", label: "Writing a reply", status: "active" });
+    return steps;
+  }
+
+  /** NDJSON: one event per line. A line can arrive split across chunks. */
+  async function* readEvents(response: Response): AsyncGenerator<ChatEvent> {
+    const reader = response.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      let newline = buffer.indexOf("\n");
+      while (newline !== -1) {
+        const line = buffer.slice(0, newline).trim();
+        buffer = buffer.slice(newline + 1);
+        const event = line ? parseChatEvent(JSON.parse(line)) : null;
+        if (event) yield event;
+        newline = buffer.indexOf("\n");
+      }
+      if (done) return;
+    }
+  }
+
   /** History is capped at 30 to match what sessionStorage keeps, so a
    *  restored thread is never shorter than the live one. */
   function appendMessage(message: GuideMessage) {
@@ -108,43 +173,70 @@
     if (focusWasInside) void tick().then(() => launchRef?.focus());
   }
 
-  function actionHref(action: ChatAction | undefined): string | undefined {
-    if (!action || action.kind !== "navigate") return undefined;
-    return action.href;
-  }
-
   function errorText(value: unknown): string {
     if (isRecord(value) && typeof value.error === "string") return value.error;
     return "The guide couldn't answer.";
   }
 
+  /** On touch, focusing the input would raise the keyboard, so focus the
+   *  dialog instead and let assistive tech land inside the panel. */
+  function focusComposer() {
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (finePointer) inputRef?.focus();
+    else panelRef?.focus();
+  }
+
+  /** Drops the thread and anything in flight, back to the starter prompts. */
+  function newChat() {
+    abortRef?.abort();
+    cancelFollow();
+    messages = [];
+    pending = null;
+    input = "";
+    // The restart button unmounts with the thread; keep focus in the panel.
+    focusComposer();
+  }
+
+  function sendPrompt(text: string) {
+    // The clicked row unmounts with the empty state; keep focus in the panel.
+    focusComposer();
+    void send(text);
+  }
+
+  /** Any sign the visitor is doing something else cancels a pending follow:
+   *  a pointer down, a wheel or touch scroll, a key press, or a text
+   *  selection. Focus alone is not a signal; it stays in the input by design. */
+  function watchIntent(onIntent: () => void): () => void {
+    const events = ["pointerdown", "wheel", "touchmove", "keydown"] as const;
+    const onSelection = () => {
+      if (document.getSelection()?.isCollapsed === false) onIntent();
+    };
+    for (const type of events) {
+      window.addEventListener(type, onIntent, { capture: true, passive: true });
+    }
+    document.addEventListener("selectionchange", onSelection);
+    return () => {
+      for (const type of events) window.removeEventListener(type, onIntent, { capture: true });
+      document.removeEventListener("selectionchange", onSelection);
+    };
+  }
+
   function scheduleFollow(action: ChatAction) {
     if (action.kind !== "navigate" || !action.follow) return;
     if (window.location.pathname === action.href) return;
-    if (followTimer) clearTimeout(followTimer);
+    cancelFollow();
+    stopIntentWatch = watchIntent(cancelFollow);
     followTimer = setTimeout(() => {
-      followTimer = undefined;
+      const draft = input.trim().length > 0;
+      cancelFollow();
       // Never yank the page out from under a question the visitor is typing.
-      if (input.trim().length > 0 || document.activeElement === inputRef) return;
+      if (draft) return;
       // ClientRouter, not a full load: a reload would tear the thread down and
       // rebuild it from storage, dropping scroll and focus for no reason.
       void navigate(action.href);
     }, 900);
   }
 
-  async function postChat(
-    body: { message: string; history: Array<{ role: "user" | "assistant"; content: string }> },
-    signal?: AbortSignal,
-  ) {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
-    const payload: unknown = await response.json().catch(() => null);
-    return { response, payload };
-  }
 
   const send = async (text: string) => {
     const userMessage = text.trim();
@@ -156,30 +248,51 @@
     appendMessage({ id: crypto.randomUUID(), role: "user", content: userMessage });
     input = "";
     sending = true;
+    pending = { sources: null, writing: false };
     const controller = new AbortController();
     abortRef = controller;
 
     try {
-      const { response, payload } = await postChat(
-        { message: userMessage, history },
-        controller.signal,
-      );
-      const parsed = parseChatApiSuccess(payload);
-      if (!response.ok || !parsed) {
-        appendReply(errorText(payload));
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, history, page: pagePath }),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        appendReply(errorText(await response.json().catch(() => null)));
         return;
       }
-      appendReply(parsed.response, {
-        sources: parsed.sources,
-        action: parsed.action,
-        notice: parsed.notice,
-      });
-      scheduleFollow(parsed.action);
+      let shownAt = performance.now();
+      let replied = false;
+      for await (const event of readEvents(response)) {
+        const wait = shownAt + STEP_MS - performance.now();
+        if (wait > 0) await sleep(wait);
+        if (controller.signal.aborted) return;
+        shownAt = performance.now();
+        if (event.type === "searched") {
+          pending = { sources: event.sources, writing: false };
+        } else if (event.type === "writing") {
+          pending = { sources: pending?.sources ?? [], writing: true };
+        } else {
+          // The reply takes the steps' place in the same frame.
+          pending = null;
+          replied = true;
+          appendReply(event.reply.response, {
+            sources: event.reply.sources,
+            action: event.reply.action,
+            notice: event.reply.notice,
+          });
+          scheduleFollow(event.reply.action);
+        }
+      }
+      if (!replied) appendReply("The guide couldn't answer.");
     } catch (error) {
       // A cancelled turn is the visitor's own doing — don't narrate it.
       if (!isAbortError(error)) appendReply("The guide couldn't answer.");
     } finally {
       if (abortRef === controller) abortRef = null;
+      pending = null;
       sending = false;
     }
   };
@@ -197,10 +310,17 @@
   function cancelFollow(): void {
     if (followTimer) clearTimeout(followTimer);
     followTimer = undefined;
+    stopIntentWatch?.();
+    stopIntentWatch = undefined;
   }
 
   /** `/chat` redirects here with `?chat=1`, so this can arrive on any
    *  navigation now that the island persists instead of remounting. */
+  function onPageLoad(): void {
+    pagePath = window.location.pathname;
+    openFromUrl();
+  }
+
   function openFromUrl(): void {
     const url = new URL(window.location.href);
     if (url.searchParams.get("chat") !== "1") return;
@@ -227,11 +347,11 @@
       messages = stored.messages;
       open = stored.open;
     }
-    openFromUrl();
+    onPageLoad();
     // The island no longer remounts, so mount-time work that navigation can
     // invalidate has to re-arm: a follow can land on the next page, and a
     // manual navigation must cancel a pending one instead of racing it.
-    document.addEventListener("astro:page-load", openFromUrl);
+    document.addEventListener("astro:page-load", onPageLoad);
     document.addEventListener("astro:before-preparation", cancelFollow);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -243,7 +363,7 @@
       alive = false;
       cancelFollow();
       abortRef?.abort();
-      document.removeEventListener("astro:page-load", openFromUrl);
+      document.removeEventListener("astro:page-load", onPageLoad);
       document.removeEventListener("astro:before-preparation", cancelFollow);
     };
   });
@@ -279,17 +399,13 @@
 
   $effect(() => {
     if (!open || typeof window === "undefined") return;
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    // On touch, focusing the input would raise the keyboard — focus the
-    // dialog instead so assistive tech lands inside the panel.
-    if (finePointer) inputRef?.focus();
-    else panelRef?.focus();
+    focusComposer();
   });
 
   $effect(() => {
     void open;
     void messages.length;
-    void sending;
+    void pending;
     if (!threadRef) return;
     const distanceFromBottom =
       threadRef.scrollHeight - threadRef.scrollTop - threadRef.clientHeight;
@@ -317,97 +433,111 @@
   >
     <header class="guide-header flex items-center justify-between gap-3 px-4 py-2.5">
       <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
-      <button
-        type="button"
-        class="guide-icon-button"
-        aria-label="Close guide"
-        onclick={closeGuide}
-      >
-        <Icon name="close" class="w-4 h-4" />
-      </button>
+      <div class="flex items-center gap-1">
+        {#if messages.length > 0 || sending}
+          <button
+            type="button"
+            class="guide-icon-button guide-restart"
+            aria-label="New chat"
+            title="New chat"
+            onclick={newChat}
+          >
+            <Icon name="reload" class="w-4 h-4" />
+          </button>
+        {/if}
+        <button
+          type="button"
+          class="guide-icon-button"
+          aria-label="Close guide"
+          onclick={closeGuide}
+        >
+          <Icon name="close" class="w-4 h-4" />
+        </button>
+      </div>
     </header>
 
     <div
       bind:this={threadRef}
       class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      role="log"
       aria-live="polite"
+      aria-busy={sending}
     >
-      {#if messages.length === 0}
-        <div class="guide-empty">
-          <p>Ask about a project or a job. Say “show me Refract” and I'll open the page.</p>
-        </div>
-      {/if}
-
       {#each messages as message (message.id)}
-        <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
-          <div
-            class="max-w-[85%] border rounded-none {message.role === 'user'
-              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-(--color-divider)'}"
-          >
-            <div class="px-3 py-2 text-sm break-words">
-              <div class="whitespace-pre-wrap">{message.content}</div>
-              {#if message.role === "assistant" && message.notice}
-                <p class="mt-2 text-[11px] text-[var(--color-text-secondary)]">{message.notice}</p>
-              {/if}
-              {#if message.role === "assistant" && (message.action?.kind === "navigate" || (message.sources && message.sources.length > 0))}
-                <div class="mt-2 pt-2 border-t border-(--color-divider) space-y-1">
-                  {#if message.action?.kind === "navigate"}
-                    <div>
-                      <a
-                        href={message.action.href}
-                        class="text-[11px] text-[var(--color-text-secondary)]"
-                      >
-                        → Navigating to {message.action.href}
-                      </a>
-                    </div>
-                  {/if}
-                  {#if message.sources && message.sources.length > 0}
-                    <div class="flex flex-wrap gap-x-2 gap-y-2">
-                      {#each message.sources as source (`${source.title}:${source.href ?? ""}`)}
-                        {#if source.href && source.href !== actionHref(message.action)}
-                          <a href={source.href} class="text-[11px]">
-                            {source.title}
-                          </a>
-                        {:else if !source.href}
-                          <span class="text-[11px] text-[var(--color-text-secondary)]">{source.title}</span>
-                        {/if}
-                      {/each}
-                    </div>
-                  {/if}
-                </div>
-              {/if}
+        {#if message.role === "user"}
+          <div class="flex justify-end">
+            <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+              {message.content}
             </div>
           </div>
-        </div>
+        {:else}
+          <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
+            {#if message.sources && message.sources.length > 0}
+              <GuideSteps steps={doneSteps(message.sources)} />
+            {/if}
+            <div class="guide-md">{@html renderChatMarkdown(message.content)}</div>
+            {#if message.notice}
+              <p class="text-xs text-[var(--color-text-secondary)]">{message.notice}</p>
+            {/if}
+            {#if message.action?.kind === "navigate"}
+              <a href={message.action.href} class="inline-block text-xs text-[var(--color-text-secondary)]">
+                {message.action.label} →
+              </a>
+            {/if}
+          </div>
+        {/if}
       {/each}
 
-      {#if sending}
-        <div class="text-sm text-[var(--color-text-secondary)]" role="status">
-          Thinking…
-        </div>
+      {#if pending}
+        <GuideSteps steps={pendingSteps(pending)} />
       {/if}
     </div>
 
-    <form onsubmit={onSubmit} class="flex gap-2 p-3">
+    {#if messages.length === 0}
+      <ul class="guide-prompts px-1" aria-label="Suggested questions">
+        {#each starterPrompts as prompt (prompt.text)}
+          <li>
+            <button type="button" class="guide-prompt" onclick={() => sendPrompt(prompt.text)}>
+              <Icon name={prompt.icon} class="w-4 h-4 shrink-0" />
+              <span>{prompt.text}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    <form onsubmit={onSubmit} class="guide-composer m-3">
       <label class="sr-only" for="guide-input">Message</label>
       <input
+        aria-describedby={viewing ? "guide-context" : undefined}
         id="guide-input"
         bind:this={inputRef}
         bind:value={input}
         type="text"
         autocomplete="off"
-        placeholder="Ask about a project…"
-        disabled={sending}
-        class="guide-input flex-1 min-w-0 px-3 py-2 border border-(--color-divider) bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-none disabled:opacity-60"
+        placeholder="Ask me anything…"
+        class="guide-input w-full px-3 pt-2.5 pb-1 bg-transparent text-[var(--color-text-primary)] rounded-none"
       />
-      <button
-        type="submit"
-        disabled={sending || input.trim().length === 0}
-        class="guide-send"
-      >
-        Send
-      </button>
+      <div class="flex items-center justify-between gap-2 pl-3 pr-1.5 pb-1.5">
+        {#if viewing}
+          <p id="guide-context" class="guide-context">
+            <Icon name="file" class="w-3.5 h-3.5 shrink-0" />
+            <span class="truncate">Viewing <span class="text-[var(--color-text-primary)]">{viewing.label}</span></span>
+          </p>
+        {:else}
+          <span></span>
+        {/if}
+        <!-- aria-disabled, not disabled: a focused control that becomes disabled
+             drops focus to <body>. send() ignores empty and in-flight submits. -->
+        <button
+          type="submit"
+          aria-label="Send"
+          aria-disabled={sending || input.trim().length === 0}
+          class="guide-send"
+        >
+          <Icon name="arrow-up" class="w-4 h-4" />
+        </button>
+      </div>
     </form>
   </div>
 
@@ -551,38 +681,99 @@
     inset: -0.375rem;
   }
 
-  .guide-empty {
+  /* Only the last header button is pulled flush with the padding. */
+  .guide-restart {
+    margin-inline-end: 0;
+  }
+
+  /* One card holds the input and a footer row with the page context and
+     the send button, so the context reads as part of the message. */
+  .guide-composer {
+    border: 1px solid var(--color-divider);
+    background: var(--color-bg-primary);
+  }
+
+  .guide-context {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 0.375rem;
+    min-width: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  /* Model replies render through renderChatMarkdown; Tailwind's reset strips
+     list and heading styles, so restore the few that markdown needs. */
+  .guide-md :global(:where(p, ul, ol, h1, h2, h3, h4, pre, blockquote) + *) {
+    margin-top: 0.5rem;
+  }
+
+  .guide-md :global(ul) {
+    list-style: disc;
+    padding-inline-start: 1.25rem;
+  }
+
+  .guide-md :global(ol) {
+    list-style: decimal;
+    padding-inline-start: 1.25rem;
+  }
+
+  .guide-md :global(li + li) {
+    margin-top: 0.125rem;
+  }
+
+  .guide-md :global(:where(strong, h1, h2, h3, h4)) {
+    font-size: inherit;
+    font-weight: 600;
+  }
+
+  .guide-md :global(em) {
+    font-style: italic;
+  }
+
+  .guide-md :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .guide-prompt {
+    display: flex;
+    align-items: center;
     gap: 0.75rem;
-    min-height: 100%;
-    max-width: 38ch;
-    margin-inline: auto;
+    width: 100%;
+    min-height: 44px;
+    padding-inline: 0.75rem;
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
-    text-align: center;
+    text-align: start;
+    transition: color var(--duration-ui) var(--ease-out);
   }
 
   .guide-send {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    padding-inline: 0.75rem;
+    width: 44px;
+    height: 44px;
     background: var(--color-primary);
     color: white;
-    font-size: var(--text-sm);
   }
 
-  .guide-send:disabled {
+  .guide-send[aria-disabled="true"] {
     opacity: 0.5;
   }
 
-  /* The ring sits on the border, so focus reads as one edge, not two boxes. */
+  /* A text field always matches :focus-visible, so a full ring would sit on
+     the composer for as long as the panel is open. The caret and a darker
+     card edge mark focus instead. */
   .guide-input:focus-visible {
-    outline-offset: -1px;
+    outline: none;
+  }
+
+  .guide-composer:has(.guide-input:focus-visible) {
+    border-color: var(--color-text-secondary);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -600,7 +791,16 @@
     }
 
     .guide-send {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .guide-prompt {
       min-height: 2.25rem;
+    }
+
+    .guide-prompt:hover {
+      color: var(--color-text-primary);
     }
   }
 
@@ -701,7 +901,8 @@
     }
 
     .guide-launch,
-    .guide-dock[data-open="true"] .guide-launch {
+    .guide-dock[data-open="true"] .guide-launch,
+    .guide-prompt {
       transition: none;
     }
   }

@@ -4,7 +4,7 @@ title: Canon
 route: /canon
 ---
 
-Canon is a living list of people, things, and ideas that inspire him. He cares less about isolated works than about a through-line in what someone makes.
+Canon is a living list of people, things, and ideas that inspire him. These are the people and works he looks up to. He cares less about isolated works than about a through-line in what someone makes.
 
 Writers: Ursula K. Le Guin, David Foster Wallace, Robert Caro, Herman Hesse.
 

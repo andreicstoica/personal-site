@@ -6,6 +6,7 @@ import {
 	isSmallTalk,
 	type MemorySection,
 	matchRoute,
+	type SiteRoute,
 	siteRoutes,
 } from "./memorySelect";
 
@@ -15,7 +16,7 @@ function clip(body: string, max: number): string {
 	return `${trimmed.slice(0, max).trimEnd()}…`;
 }
 
-function sourcesFrom(sections: readonly MemorySection[]): ChatSource[] {
+export function sourcesFrom(sections: readonly MemorySection[]): ChatSource[] {
 	const seen = new Set<string>();
 	const sources: ChatSource[] = [];
 	for (const section of sections) {
@@ -55,7 +56,9 @@ function decideAction(
 			kind: "navigate",
 			href: route.href,
 			label: route.label,
-			follow: intent,
+			// A page named only in the question stays a link. The model's token
+			// means it sent the visitor there for the rest of the answer.
+			follow: intent || fromModel !== undefined,
 		},
 		modelText: visible,
 	};
@@ -76,7 +79,10 @@ function notesText(
 	return clip(sentence, 220);
 }
 
-export function buildSystemPrompt(sections: readonly MemorySection[]): string {
+export function buildSystemPrompt(
+	sections: readonly MemorySection[],
+	viewing?: SiteRoute,
+): string {
 	const routeList = siteRoutes
 		.map((route) => `${route.href} — ${route.label}`)
 		.join("\n");
@@ -93,9 +99,12 @@ export function buildSystemPrompt(sections: readonly MemorySection[]): string {
 
 Use only the notes below. If they do not cover the question, say you don't have that and point at a related page. Never invent relationships, employers, dates, or project details.
 
-When the visitor wants to open a page on this site, end with exactly one line and nothing after it:
+Keep replies under 100 words. When the notes hold a long list, name three to five highlights and point to the page for the rest. Use Markdown only for emphasis, short lists, and links.
+
+When the visitor asks to open a page, or your reply points them to a page for the rest, say the rest is on that page and end with exactly one line and nothing after it:
 [[navigate:/exact-path]]
-Only use a path from the site map. Skip that line for ordinary questions.
+The site opens that page beside the chat. Only use a path from the site map. Skip that line when no page adds to the answer.
+${viewing ? `\nThe visitor is viewing ${viewing.label} (${viewing.href}). "This page" means that page.\n` : ""}
 
 Site map:
 ${routeList}

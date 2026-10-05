@@ -214,7 +214,9 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - On desktop the drawer header uses the launcher's geometry: padding equals `--guide-launch-inset` (at least the safe-area inset) and the close button is `--guide-launch-size`. From 72rem up the launcher sits in the top-right corner, so the close button lands exactly on it and opening and closing happen in one spot. Below 72rem each gutter beside the 64rem column is too narrow to hold the launcher without covering the banner's top corner, so it stays bottom-right. Phones keep the bottom-right launcher and the sheet's top-right close.
 - Right-clicking the launcher dispatches `weather-lab:toggle`, which shows or hides the weather lab in any build (remembered for the tab session)
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
-- An empty thread shows a centered empty state (max 38ch) with a one-line hint
+- An empty thread shows three starter prompts (`src/lib/guidePrompts.ts`) as icon rows above the composer; a click sends the prompt and keeps focus in the composer
+- The header shows "New chat" (reload icon) left of close once a thread exists; it aborts any turn in flight and returns to the starter prompts
+- The composer is one card: the input, then a row with "Viewing {page}" (from the route table) and an icon send button
 
 ### Interaction and accessibility
 
@@ -226,15 +228,16 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 
 ### Reply shape
 
-`POST /api/chat` returns a `ChatApiSuccess` (`src/lib/chatTypes.ts`):
+`POST /api/chat` streams NDJSON `ChatEvent`s (`src/lib/chatTypes.ts`): `searched` (the notes found), `writing` (only when the model is called), then `reply`, a `ChatApiSuccess`. The client reveals them as steps at least 300 ms apart. The request may carry `page`, the visitor's path; only a known route reaches the prompt. The reply:
 
 | Field | Meaning |
 | --- | --- |
 | `mode` | `notes` — answered from `src/content/memory` with no model involved; `model` — real inference |
-| `sources` | `ChatSource[]`, rendered as small links under the reply |
+| `sources` | `ChatSource[]`, rendered as "Reading my notes on …" step lines above the reply |
+| `notice` | Optional. Why a notes answer stands in for the model (out of credit, busy, error) |
 | `action` | `none`, or `navigate { href, label, follow }` |
 
-A `navigate` action renders under the reply as a small "→ Navigating to {href}" link, above the source links and separated from the text by a hairline. When `follow` is `true` the guide also navigates after 900ms, unless the visitor has started composing another question or focus is in the input (then the link stays the way through).
+A `navigate` action renders under the reply as a small "{label} →" link. `follow` is `true` when the visitor asked to open a page or the model pointed to one for the rest. The guide then navigates after 900 ms, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press); the link stays either way. Replies render as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links.
 
 ### Supporting modules
 

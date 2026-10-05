@@ -68,3 +68,27 @@ export function parseChatApiSuccess(value: unknown): ChatApiSuccess | null {
 		...(value.notice ? { notice: value.notice } : {}),
 	};
 }
+
+/** `/api/chat` streams NDJSON: what the guide found, that the model is
+ *  writing, then the reply. Steps arrive in that order and only once. */
+export type ChatEvent =
+	| { type: "searched"; sources: ChatSource[] }
+	| { type: "writing" }
+	| { type: "reply"; reply: ChatApiSuccess };
+
+export function parseChatEvent(value: unknown): ChatEvent | null {
+	if (!isRecord(value)) return null;
+	if (value.type === "writing") return { type: "writing" };
+	if (value.type === "reply") {
+		const reply = parseChatApiSuccess(value.reply);
+		return reply ? { type: "reply", reply } : null;
+	}
+	if (value.type !== "searched" || !Array.isArray(value.sources)) return null;
+	const sources: ChatSource[] = [];
+	for (const source of value.sources) {
+		const parsed = parseSource(source);
+		if (!parsed) return null;
+		sources.push(parsed);
+	}
+	return { type: "searched", sources };
+}
