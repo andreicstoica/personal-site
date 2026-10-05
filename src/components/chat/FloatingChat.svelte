@@ -489,7 +489,7 @@
       {/each}
 
       {#if pending}
-        <GuideSteps steps={pendingSteps(pending)} />
+        <GuideSteps steps={pendingSteps(pending)} live />
       {/if}
     </div>
 
