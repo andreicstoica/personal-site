@@ -22,6 +22,10 @@ Nav, footer, weather banner, galleries, icons, buttons, experience table, markdo
 
 Image galleries, modal inspect, media reveal, dark mode, scroll behavior. See [patterns.md](./patterns.md).
 
+## Agent chat
+
+Movement, focus, and component owners for the "Ask Andrei" guide. See [agent-chat.md](./agent-chat.md).
+
 ## Known rough edges
 
 1. **Image galleries have no navigation.** Horizontal scroll only; no prev/next arrows, no keyboard nav, no swipe on mobile. The modal inspect has no zoom or pan.

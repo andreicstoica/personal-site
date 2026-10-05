@@ -243,6 +243,8 @@ A `navigate` action renders under the reply as a small "→ Navigating to {href}
 - `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
+Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).
+
 The model is not called unless `GUIDE_MODEL=on`. A failed model call (any HTTP error or timeout) answers from notes; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
