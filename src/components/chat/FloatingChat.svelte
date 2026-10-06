@@ -701,7 +701,7 @@
           <div class="space-y-4" data-turn-body>
           {#if turn.question}
             <div class="flex justify-end">
-              <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+              <div class="max-w-[85%] px-3 py-2 text-sm leading-[1.6] break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
                 {turnText(turn.question)}
               </div>
             </div>
@@ -1087,10 +1087,12 @@
     font-weight: 600;
   }
 
+  /* Headings stay at the body size, as the visitor's own message is: weight,
+     not size, marks them. */
   .guide-md :global(:where(h1, h2, h3, h4)) {
-    font-size: var(--text-base);
+    font-size: inherit;
     font-weight: 600;
-    line-height: 1.375;
+    line-height: inherit;
   }
 
   .guide-md :global(em) {
@@ -1163,9 +1165,13 @@
       box-shadow: var(--elevation-sheet);
     }
 
-    /* Clear the notch or status bar at the top of a full-height sheet. */
+    /* A white header over the sunken thread marks the sheet as a drawer,
+       and it is the bar that shows when the sheet minimizes. It clears the
+       notch or status bar at the top of the full-height sheet. */
     .guide-header {
       padding-block-start: max(0.625rem, env(safe-area-inset-top, 0px));
+      background: var(--color-bg-primary);
+      border-block-end: 1px solid var(--color-divider);
     }
 
     /* Minimized: the same slide as open and close, stopped where only the

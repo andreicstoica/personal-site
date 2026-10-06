@@ -1,7 +1,7 @@
 import type { OpenPageOutput } from "./chatTypes";
 import { experiences } from "./experience";
 import { parseMarkdownContent } from "./markdownUtils";
-import { routeByHref } from "./memorySelect";
+import { routeByHref, siteRoutes } from "./memorySelect";
 
 /** A part of a page the guide can scroll to. `id` is the element id. */
 export type PageSection = { id: string; label: string };
@@ -96,4 +96,16 @@ export function linkedPage(
 		if (page) return page;
 	}
 	return null;
+}
+
+/** The page a reply's pointer line names in plain words, such as "The rest
+ *  is on my Canon page.", matched against the route labels. */
+export function namedPage(text: string): OpenPageOutput | null {
+	const lines = text.trim().split("\n");
+	const last = lines.at(-1) ?? "";
+	const match = /\bmy (.+?) page\b/i.exec(last);
+	if (!match?.[1]) return null;
+	const name = match[1].trim().toLowerCase();
+	const route = siteRoutes.find((item) => item.label.toLowerCase() === name);
+	return route ? { href: route.href, label: route.label } : null;
 }

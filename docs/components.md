@@ -238,7 +238,7 @@ The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.t
 | `tool-open_page` | The model pointed at a page, and maybe a section. A row in the trace, and a step under the reply |
 | `data-context` | What the route put in the prompt: note, post, and section counts, and the visitor's page. The trace's first row |
 | `data-notice` | Why a notes answer stands in for the model (out of credit, busy, error) |
-| `data-page` | A page the reply linked without calling `open_page`. The route sends the reply's first site link so the guide still opens it; the trace marks it "Pointed to …", not as a tool call |
+| `data-page` | A page the reply pointed to without calling `open_page`. The route reads the reply's first site link, or the page its plain pointer line names ("More on my Canon page."), so the guide still opens it; the trace marks it "Pointed to …", not as a tool call |
 
 The message metadata carries the model, the turn's duration, and its token counts, including tokens served from the provider's prompt cache. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `traceSummary`, `pageStep`, `groupTurns`).
 

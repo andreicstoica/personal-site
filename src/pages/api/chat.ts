@@ -36,7 +36,7 @@ import {
 } from "../../lib/inference";
 import { guideModelEnabled } from "../../lib/inferenceConfig";
 import { isSmallTalk, routeByHref } from "../../lib/memorySelect";
-import { linkedPage } from "../../lib/siteSections";
+import { linkedPage, namedPage } from "../../lib/siteSections";
 
 const turnSchema = z.object({
 	role: z.enum(["user", "assistant"]),
@@ -196,10 +196,13 @@ async function streamModelTurn(
 		writer.write(chunk);
 	}
 
-	// The model links the page it points to, but does not always call
-	// open_page for it. The link still opens the page; the trace marks it as
-	// a link, not a tool call.
-	const linked = !outage && !pageCalled ? linkedPage(text, pageSections) : null;
+	// The model names the page it points to, but does not always call
+	// open_page for it. Its pointer line (or a link) still opens the page;
+	// the trace marks it "Pointed to", not as a tool call.
+	const linked =
+		!outage && !pageCalled
+			? (linkedPage(text, pageSections) ?? namedPage(text))
+			: null;
 	if (linked && (linked.href !== turn.viewing || linked.section)) {
 		writer.write({
 			type: "data-page",
