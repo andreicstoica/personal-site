@@ -5,6 +5,7 @@ import type {
 	GuidePart,
 	GuideUIMessage,
 	OpenPageOutput,
+	ReadPostOutput,
 } from "./chatTypes";
 
 export type GuideStep = {
@@ -24,12 +25,15 @@ export type GuideStep = {
 export type PageCall = { toolCallId: string; output: OpenPageOutput };
 
 /** One assistant message, split into what the panel draws: the trace of how
- *  the answer was made, the reply text, notices, and the page it opens. */
+ *  the answer was made, the reply text, notices, and its sources: the page
+ *  it opens and the posts it read. */
 export type ReplyView = {
 	trace: GuideStep[];
 	text: string;
 	notices: string[];
 	page: PageCall | null;
+	/** Posts the reply read, once each, in the order it read them. */
+	posts: ReadPostOutput[];
 };
 
 const count = new Intl.NumberFormat("en", {
@@ -114,6 +118,16 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 	for (const part of message.parts) {
 		if (part.type === "data-context") {
 			steps.push(contextStep(part.data));
+		} else if (part.type === "data-page") {
+			const { href, label, section } = part.data;
+			steps.push({
+				icon: "directions",
+				label: section
+					? `Pointed to ${label} at ${section.label}`
+					: `Pointed to ${label}`,
+				status: "complete",
+				href: section ? `${href}#${section.id}` : href,
+			});
 		} else if (part.type === "reasoning") {
 			const text = part.text.trim();
 			const thinking = part.state === "streaming";
@@ -157,6 +171,7 @@ export function replyView(message: GuideUIMessage): ReplyView {
 		text: "",
 		notices: [],
 		page: null,
+		posts: [],
 	};
 	for (const part of message.parts) {
 		if (part.type === "text") view.text += part.text;
@@ -166,6 +181,14 @@ export function replyView(message: GuideUIMessage): ReplyView {
 			part.state === "output-available"
 		) {
 			view.page = { toolCallId: part.toolCallId, output: part.output };
+		} else if (part.type === "data-page" && part.id && !view.page) {
+			view.page = { toolCallId: part.id, output: part.data };
+		} else if (
+			part.type === "tool-read_post" &&
+			part.state === "output-available" &&
+			!view.posts.some((post) => post.url === part.output.url)
+		) {
+			view.posts.push(part.output);
 		}
 	}
 	view.text = view.text.trim();
@@ -192,48 +215,72 @@ export function traceSummary(
 /** How a page call ended: the page changed, or the current page scrolled. */
 export type PageMove = "opened" | "scrolled";
 
-/** The page call as a step: pending while the reply streams and while the
- *  follow waits, done once the page moved, and a link when the visitor's own
+/** A source the reply used, drawn as a card under it: a page of this site
+ *  the guide opened, or a blog post it read. */
+export type SourceCard = {
+	href: string;
+	title: string;
+	meta: string;
+	/** The page move is in progress. */
+	active: boolean;
+	/** Opens in a new tab: the blog lives off this site. */
+	external: boolean;
+};
+
+const postDate = new Intl.DateTimeFormat("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	timeZone: "UTC",
+});
+
+export function postCard(post: ReadPostOutput): SourceCard {
+	const date = post.date
+		? postDate.format(new Date(`${post.date}T00:00:00Z`))
+		: undefined;
+	return {
+		href: post.url,
+		title: post.title,
+		meta: [new URL(post.url).host, date].filter(Boolean).join(" · "),
+		active: false,
+		external: true,
+	};
+}
+
+/** The page call as a card: in progress while the reply streams and the
+ *  follow waits, then what happened, or where it goes when the visitor's own
  *  action cancelled it. Nothing when it would point at where they are. */
-export function pageStep(
+export function pageCard(
 	output: OpenPageOutput,
 	state: { pending: boolean; moved: PageMove | undefined; pagePath: string },
-): GuideStep | null {
+): SourceCard | null {
 	const { href, label, section } = output;
 	const samePage = state.pagePath === href;
+	if (samePage && !section && !state.moved) return null;
+	const card = {
+		href: section ? `${href}#${section.id}` : href,
+		title: label,
+		active: false,
+		external: false,
+	};
 	if (state.pending) {
-		const text =
+		const meta =
 			samePage && section
 				? `Scrolling to ${section.label}`
-				: `Opening ${label}`;
-		return { icon: "directions", label: text, status: "active" };
+				: section
+					? `Opening at ${section.label}`
+					: "Opening";
+		return { ...card, meta, active: true };
 	}
-	const link = section ? `${href}#${section.id}` : href;
-	if (state.moved === "scrolled" && section) {
+	if (state.moved === "scrolled" && section)
+		return { ...card, meta: `Scrolled to ${section.label}` };
+	if (state.moved === "opened")
 		return {
-			icon: "directions",
-			label: `Scrolled to ${section.label}`,
-			status: "complete",
-			href: link,
+			...card,
+			meta: section ? `Opened at ${section.label}` : "Opened",
 		};
-	}
-	if (state.moved === "opened") {
-		return {
-			icon: "directions",
-			label: section
-				? `Opened ${label} at ${section.label}`
-				: `Opened ${label}`,
-			status: "complete",
-			href: link,
-		};
-	}
-	if (samePage && !section) return null;
-	return {
-		icon: "directions",
-		label: section ? `Go to ${section.label} on ${label}` : `Open ${label}`,
-		status: "complete",
-		href: link,
-	};
+	const path = `andrei.bio${href}`;
+	return { ...card, meta: section ? `${section.label} · ${path}` : path };
 }
 
 export type Turn = {

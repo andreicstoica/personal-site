@@ -36,6 +36,7 @@ import {
 } from "../../lib/inference";
 import { guideModelEnabled } from "../../lib/inferenceConfig";
 import { isSmallTalk, routeByHref } from "../../lib/memorySelect";
+import { linkedPage } from "../../lib/siteSections";
 
 const turnSchema = z.object({
 	role: z.enum(["user", "assistant"]),
@@ -101,6 +102,7 @@ export const POST: APIRoute = async ({ request }) => {
 				await streamModelTurn(writer, {
 					model: guideModel(resolved),
 					modelId: resolved.model,
+					viewing: viewing?.href,
 					system: buildSystemPrompt({
 						notes,
 						posts,
@@ -132,6 +134,8 @@ async function streamModelTurn(
 	turn: {
 		model: ReturnType<typeof guideModel>;
 		modelId: string;
+		/** The path the visitor is on, when it is a known route. */
+		viewing: string | undefined;
 		system: string;
 		turns: ChatTurn[];
 		message: string;
@@ -165,6 +169,8 @@ async function streamModelTurn(
 	});
 
 	let wroteText = false;
+	let text = "";
+	let pageCalled = false;
 	const reader = toUIMessageStream<GuideTools, GuideUIMessage>({
 		stream: result.stream,
 		sendStart: false,
@@ -181,8 +187,25 @@ async function streamModelTurn(
 			outage ??= "error";
 			continue;
 		}
-		if (chunk.type === "text-delta" && chunk.delta.trim()) wroteText = true;
+		if (chunk.type === "text-delta") {
+			text += chunk.delta;
+			if (chunk.delta.trim()) wroteText = true;
+		}
+		if (chunk.type === "tool-input-available" && chunk.toolName === "open_page")
+			pageCalled = true;
 		writer.write(chunk);
+	}
+
+	// The model links the page it points to, but does not always call
+	// open_page for it. The link still opens the page; the trace marks it as
+	// a link, not a tool call.
+	const linked = !outage && !pageCalled ? linkedPage(text, pageSections) : null;
+	if (linked && (linked.href !== turn.viewing || linked.section)) {
+		writer.write({
+			type: "data-page",
+			id: `page-${crypto.randomUUID()}`,
+			data: linked,
+		});
 	}
 
 	if (!outage) {

@@ -14,7 +14,8 @@
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
     groupTurns,
-    pageStep,
+    pageCard,
+    postCard,
     replyView,
     traceSummary,
     type GuideStep,
@@ -25,7 +26,7 @@
   import { routeByHref } from "../../lib/memorySelect";
   import Icon from "../ui/Icon.svelte";
   import GuidePrompts from "./GuidePrompts.svelte";
-  import GuideSteps from "./GuideSteps.svelte";
+  import GuideCard from "./GuideCard.svelte";
   import GuideTrace from "./GuideTrace.svelte";
 
   const storageKey = GUIDE_STORAGE_KEY;
@@ -36,7 +37,7 @@
   /** How much of the previous turn stays visible above a new question. */
   const PEEK = 40;
   const THINKING: GuideStep = { icon: "lightbulb", label: "Thinking", status: "active" };
-  const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null };
+  const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null, posts: [] };
   /** "Continue exploring" waits until the visitor has had a moment with the
    *  reply, so it reads as an offer, not part of the answer. */
   const EXPLORE_DELAY = 2000;
@@ -260,31 +261,47 @@
       const draft = input.trim().length > 0;
       cancelFollow();
       // Never yank the page out from under a question the visitor is typing.
-      if (draft) return;
-      const section = output.section;
-      if (samePage) {
-        if (section && revealSection(section.id)) {
-          moved = { ...moved, [toolCallId]: "scrolled" };
-        }
-        return;
-      }
-      openingId = toolCallId;
-      const onLoad = () => {
-        openingId = null;
-        // Another navigation won the race; this call stays a link.
-        if (window.location.pathname !== output.href) return;
-        moved = { ...moved, [toolCallId]: "opened" };
-        // SiteLayout resets the page scroll on page-load; reveal after it.
-        if (section) requestAnimationFrame(() => revealSection(section.id));
-      };
-      document.addEventListener("astro:page-load", onLoad, { once: true });
-      // ClientRouter, not a full load: a reload would tear the thread down and
-      // rebuild it from storage, dropping scroll and focus for no reason.
-      navigate(output.href).catch(() => {
-        document.removeEventListener("astro:page-load", onLoad);
-        openingId = null;
-      });
+      if (!draft) followNow({ toolCallId, output });
     }, 900);
+  }
+
+  /** Opens the page, or scrolls this one to the section. On another page the
+   *  call reads "Opened" only once the new page has loaded. */
+  function followNow({ toolCallId, output }: PageCall) {
+    const section = output.section;
+    if (window.location.pathname === output.href) {
+      if (section && revealSection(section.id)) {
+        moved = { ...moved, [toolCallId]: "scrolled" };
+      }
+      return;
+    }
+    openingId = toolCallId;
+    const onLoad = () => {
+      openingId = null;
+      // Another navigation won the race; this call stays a link.
+      if (window.location.pathname !== output.href) return;
+      moved = { ...moved, [toolCallId]: "opened" };
+      // SiteLayout resets the page scroll on page-load; reveal after it.
+      if (section) requestAnimationFrame(() => revealSection(section.id));
+    };
+    document.addEventListener("astro:page-load", onLoad, { once: true });
+    // ClientRouter, not a full load: a reload would tear the thread down and
+    // rebuild it from storage, dropping scroll and focus for no reason.
+    navigate(output.href).catch(() => {
+      document.removeEventListener("astro:page-load", onLoad);
+      openingId = null;
+    });
+  }
+
+  /** A plain click on a page card does what the guide does: open the page
+   *  and mark the section. A modified click keeps the browser's behavior. */
+  function openCard(event: MouseEvent, call: PageCall) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    cancelFollow();
+    followNow(call);
   }
 
   const onSubmit = (event: SubmitEvent) => {
@@ -477,22 +494,30 @@
               {#if view.text}
                 <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
               {/if}
+              {#if view.page || view.posts.length > 0}
+                {@const page = view.page
+                  ? pageCard(view.page.output, {
+                      pending:
+                        live ||
+                        followingId === view.page.toolCallId ||
+                        openingId === view.page.toolCallId,
+                      moved: moved[view.page.toolCallId],
+                      pagePath,
+                    })
+                  : null}
+                <ul class="guide-cards" aria-label="Sources">
+                  {#if page && view.page}
+                    {@const call = view.page}
+                    <li><GuideCard card={page} onclick={(event) => openCard(event, call)} /></li>
+                  {/if}
+                  {#each view.posts as post (post.url)}
+                    <li><GuideCard card={postCard(post)} /></li>
+                  {/each}
+                </ul>
+              {/if}
               {#each view.notices as notice, noticeIndex (noticeIndex)}
                 <p class="text-xs text-[var(--color-text-secondary)]">{notice}</p>
               {/each}
-              {#if view.page}
-                {@const step = pageStep(view.page.output, {
-                  pending:
-                    live ||
-                    followingId === view.page.toolCallId ||
-                    openingId === view.page.toolCallId,
-                  moved: moved[view.page.toolCallId],
-                  pagePath,
-                })}
-                {#if step}
-                  <GuideSteps steps={[step]} live={step.status === "active"} />
-                {/if}
-              {/if}
             </div>
           {/if}
           {#if isLast && status === "error"}
@@ -633,6 +658,12 @@
 
   .guide-thread {
     overscroll-behavior: contain;
+  }
+
+  .guide-cards {
+    display: grid;
+    gap: 0.375rem;
+    padding-block-start: 0.25rem;
   }
 
   /* The last turn is at least one thread tall, less the peek above it, so

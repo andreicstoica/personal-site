@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { type GuideUIMessage, parseStoredMessages } from "./chatTypes";
 import { explorePrompts } from "./guidePrompts";
-import { groupTurns, pageStep, replyView, traceSummary } from "./guideTurn";
+import {
+	groupTurns,
+	pageCard,
+	postCard,
+	replyView,
+	traceSummary,
+} from "./guideTurn";
 
 const canon = {
 	href: "/canon",
@@ -65,6 +71,7 @@ describe("reply view", () => {
 		expect(view.text).toBe("Three films.");
 		expect(view.notices).toEqual(["From notes."]);
 		expect(view.page?.toolCallId).toBe("p1");
+		expect(view.posts.map((post) => post.title)).toEqual(["Dyson"]);
 		expect(traceSummary(message, view.trace, false)).toBe("Worked for 1.8s");
 	});
 
@@ -111,41 +118,53 @@ describe("continue exploring", () => {
 	});
 });
 
-describe("page step", () => {
+describe("source cards", () => {
 	const at = (pagePath: string) => ({ moved: undefined, pagePath });
 
-	test("pending, then opened, with the section in the link", () => {
-		expect(pageStep(canon, { ...at("/"), pending: true })?.label).toBe(
-			"Opening Canon",
-		);
-		expect(
-			pageStep(canon, { pending: false, moved: "opened", pagePath: "/canon" }),
-		).toMatchObject({
-			label: "Opened Canon at Movies",
-			href: "/canon#movies",
-			status: "complete",
+	test("a page card shows the move, then where it landed", () => {
+		expect(pageCard(canon, { ...at("/"), pending: true })).toMatchObject({
+			title: "Canon",
+			meta: "Opening at Movies",
+			active: true,
+			external: false,
 		});
+		expect(
+			pageCard(canon, { pending: false, moved: "opened", pagePath: "/canon" }),
+		).toMatchObject({ meta: "Opened at Movies", href: "/canon#movies" });
 	});
 
 	test("on the same page it scrolls instead of opening", () => {
-		expect(pageStep(canon, { ...at("/canon"), pending: true })?.label).toBe(
+		expect(pageCard(canon, { ...at("/canon"), pending: true })?.meta).toBe(
 			"Scrolling to Movies",
 		);
 		expect(
-			pageStep(canon, {
-				pending: false,
-				moved: "scrolled",
-				pagePath: "/canon",
-			})?.label,
+			pageCard(canon, { pending: false, moved: "scrolled", pagePath: "/canon" })
+				?.meta,
 		).toBe("Scrolled to Movies");
 	});
 
-	test("a cancelled follow leaves a link, and nothing points at here", () => {
-		expect(pageStep(canon, { ...at("/"), pending: false })?.label).toBe(
-			"Go to Movies on Canon",
+	test("a cancelled move says where it goes, and nothing points at here", () => {
+		expect(pageCard(canon, { ...at("/"), pending: false })?.meta).toBe(
+			"Movies · andrei.bio/canon",
 		);
 		const page = { href: "/canon", label: "Canon" };
-		expect(pageStep(page, { ...at("/canon"), pending: false })).toBeNull();
+		expect(pageCard(page, { ...at("/canon"), pending: false })).toBeNull();
+	});
+
+	test("a post card opens the blog in a new tab with its date", () => {
+		expect(
+			postCard({
+				title: "2025 Favorites",
+				url: "https://blog.andrei.bio/p/2025-favorites",
+				date: "2025-12-21",
+			}),
+		).toEqual({
+			href: "https://blog.andrei.bio/p/2025-favorites",
+			title: "2025 Favorites",
+			meta: "blog.andrei.bio · Dec 21, 2025",
+			active: false,
+			external: true,
+		});
 	});
 });
 

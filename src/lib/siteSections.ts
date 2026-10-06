@@ -76,3 +76,24 @@ export function resolveOpenPage(
 		...(found ? { section: found } : {}),
 	};
 }
+
+const SITE_LINK =
+	/\]\((?:https:\/\/(?:www\.)?andrei\.bio)?(\/[a-z0-9/-]*)(?:#([a-z0-9-]+))?\)/gi;
+
+/** The first page of this site a reply links to, such as "[Canon]
+ *  (/canon#movies)", resolved against the known routes and sections. */
+export function linkedPage(
+	text: string,
+	sectionsByPath: Readonly<Record<string, readonly PageSection[]>>,
+): OpenPageOutput | null {
+	for (const match of text.matchAll(SITE_LINK)) {
+		const path = match[1] ?? "";
+		const page = resolveOpenPage(
+			path.length > 1 ? path.replace(/\/$/, "") : path,
+			match[2],
+			sectionsByPath,
+		);
+		if (page) return page;
+	}
+	return null;
+}

@@ -38,6 +38,9 @@ export type GuideDataParts = {
 	/** Why a notes answer stands in for the model, in the visitor's terms. */
 	notice: { text: string };
 	context: ContextSummary;
+	/** A page the reply linked without calling open_page. The route sends it
+	 *  so the guide still opens the page the reply points to. */
+	page: OpenPageOutput;
 };
 
 /** Sent once a model turn ends, for the last line of the trace. */
@@ -126,6 +129,12 @@ function parsePart(value: unknown): GuidePart | null {
 			type: "data-context",
 			data: { notes, posts, sections, ...(page ? { page } : {}) },
 		};
+	}
+	if (value.type === "data-page") {
+		const page = parseOpenPage(value.data);
+		return page && typeof value.id === "string"
+			? { type: "data-page", id: value.id, data: page }
+			: null;
 	}
 	if (value.type === "data-notice") {
 		const data = value.data;
