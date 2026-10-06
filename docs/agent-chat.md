@@ -36,7 +36,7 @@ One principle: never move the reader against their intent. The guide can move tw
 | Thread | Scroll policy: follow state, turn anchoring, new-reply pill | Keep the scroll math in `src/lib` so it has a unit test |
 | Turn | One question and its reply | The unit the thread anchors to |
 | Reply parts | Text, status lines, card, notice, sources | Rendered from the `ChatApiSuccess` payload; no state of their own |
-| Prompt list | Starter prompts (empty thread) and "Keep exploring" follow-ups | One component, two uses: a click sends the label |
+| Prompt list (`GuidePrompts`) | Starter prompts (empty thread) and "Continue exploring" follow-ups | One component, two uses: a click sends the label |
 | Composer | Input text, page-context chip ("Viewing Colophon") | Reports typing to the intent signal |
 | Intent signal | The reader's last interaction, in the thread and on the page | One owner; cancels a pending navigation and pauses tail-follow |
 

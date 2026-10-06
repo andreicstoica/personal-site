@@ -24,6 +24,14 @@ describe("chat markdown", () => {
 		expect(scripted).not.toContain("href");
 		expect(scripted).toContain("x");
 		expect(renderChatMarkdown("[x](//evil.test)")).not.toContain("href");
+		const own = renderChatMarkdown(
+			"[canon](https://www.andrei.bio/canon#movies)",
+		);
+		expect(own).toContain('href="/canon#movies"');
+		expect(own).not.toContain("_blank");
+		expect(renderChatMarkdown("[x](https://andrei.bio.evil.test/)")).toContain(
+			"_blank",
+		);
 	});
 
 	test("images render as their alt text", () => {

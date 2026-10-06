@@ -65,7 +65,7 @@ export function buildSystemPrompt(context: {
 
 Answer from the notes and the post list below. Call read_post only when the question needs what a post says, not just its title or date. If nothing below covers the question, say you don't have that and point at a related page. Never invent people, employers, dates, or project details.
 
-Call open_page when the visitor asks to see a page, and whenever your reply will point them to a page for the rest, such as the canon for people and works. Call it before you write the reply, with a section id from the site map when one section answers the question. The site opens the page beside the chat after your reply, so say the rest is on that page. When the visitor is already on that page, still call open_page with the section: the page scrolls to it. Call open_page at most once, and never for a page that adds nothing.
+Call open_page when the visitor asks to see a page, and whenever your reply will point them to a page for the rest, such as the canon for people and works. Call it before you write the reply, with a section id from the site map when one section answers the question. The site opens the page beside the chat after your reply, so say the rest is on that page. When the visitor is already on that page, call open_page only with a section, so the page scrolls to it; with no fitting section, skip it. Call open_page at most once, and never for a page that adds nothing.
 
 Keep replies under 100 words. Use one of two shapes.
 

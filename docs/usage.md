@@ -56,8 +56,8 @@ Does it need client JS?
 
 Pixel-art icon from the `pixelarticons` set. Use it *next to text* in interactive elements; never as the sole carrier of meaning — it renders `aria-hidden="true"` by design (`Icon.astro:23`).
 
-- **`Icon.astro` in Astro markup, `Icon.svelte` only inside a Svelte island.** They're the same SVG; picking the Svelte one in an `.astro` file buys nothing and adds an import across the boundary. Real pair: `ProjectLinks.astro:59` (Astro), `FloatingChat.svelte:452` (Svelte).
-- Props: `name` (the `PixelarticonName` union — a new icon means new path data in `src/icons/pixelarticons.ts`, not a string), `class` (default `w-6 h-6`), `id`. Fill is `currentColor` — color comes from the surrounding text, never a `fill-` utility.
+- **`Icon.astro` in Astro markup, `Icon.svelte` only inside a Svelte island.** They're the same SVG; picking the Svelte one in an `.astro` file buys nothing and adds an import across the boundary. Real pair: `ProjectLinks.astro:59` (Astro), `GuidePrompts.svelte` (Svelte).
+- Props: `name` (the `PixelarticonName` union — a new icon means one more `pixelarticons/svg/<name>.svg?raw` import in `src/icons/pixelarticons.ts`, not a string; browse the set at pixelarticons.com), `class` (default `w-6 h-6`), `id`. Fill is `currentColor` — color comes from the surrounding text, never a `fill-` utility.
 - Alternative: the footer's four social glyphs are `BeosIcon.astro` (24px pixel art), whose `kind` union (`person`/`mail`/`terminal`/`balloon`, `navLinks.ts:6-11`) is `assertNever`-checked. New social entry without a glyph = compile error.
 
 ```astro

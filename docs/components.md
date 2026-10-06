@@ -88,10 +88,10 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 
 **File**: `src/components/ui/Icon.svelte`
 
-Renders a pixel-art SVG icon from the `pixelarticons` set. Icons are defined as path data in `src/icons/pixelarticons.ts`.
+Renders a pixel-art SVG icon from the `pixelarticons` package (MIT). `src/icons/pixelarticons.ts` imports each icon the site uses as its own SVG file (`?raw`), so only those ship; add an icon by adding its import.
 
 ```svelte
-<Icon name="arrow-right" class="w-4 h-4" />
+<Icon name="arrow-up" class="w-4 h-4" />
 ```
 
 Icon is purely visual (`aria-hidden="true"`). Use it next to text for interactive elements, not alone.
@@ -232,14 +232,20 @@ The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.t
 
 | Part | Meaning |
 | --- | --- |
-| `text` | The reply, streamed. Rendered as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links |
-| `tool-read_post` | The model read a post. A "Read {title}" step above the reply |
-| `tool-open_page` | The model pointed at a page, and maybe a section. A step under the reply |
+| `text` | The reply, streamed. Rendered as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML, keeps only site, https, and mailto links, and turns a full link to andrei.bio into a site path |
+| `reasoning` | The model's reasoning, low effort, so a sentence or two. A "Thought" row in the trace |
+| `tool-read_post` | The model read a post. A "Read {title}" row in the trace |
+| `tool-open_page` | The model pointed at a page, and maybe a section. A row in the trace, and a step under the reply |
+| `data-context` | What the route put in the prompt: note, post, and section counts, and the visitor's page. The trace's first row |
 | `data-notice` | Why a notes answer stands in for the model (out of credit, busy, error) |
 
-Reasoning is never sent to the client. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `pageStep`, `groupTurns`). Until the first part arrives, the turn shows one "Thinking" step.
+The message metadata carries the model, the turn's duration, and its token counts, including tokens served from the provider's prompt cache. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `traceSummary`, `pageStep`, `groupTurns`).
 
-An `open_page` call renders under the reply as a step with a map icon: "Opening {label}" or "Scrolling to {section}" (shimmer) while the reply streams and the follow waits, then "Opened {label} at {section}" or "Scrolled to {section}" once it ran, or a "Go to …" link when the visitor cancelled it. The guide acts 900 ms after the reply ends, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press). On another page it navigates with the ClientRouter, then reveals the section; on the same page it only scrolls. A call with no section on the current page shows nothing. Without a model, only an explicit request ("show me the colophon") opens a page.
+**Trace.** `GuideTrace.svelte` is a disclosure above each model reply, closed by default. Its header names the step in progress while the reply streams ("Thinking", "Reading a post"), then "Worked for 2.1s". Open, it lists the turn in order with `GuideSteps`: context loaded, reasoning, each tool call with its tool name in code, and "Wrote the reply" with the model and tokens. The prompt holds only public notes, so showing reasoning reveals nothing private. Notes answers have no trace. The body opens through a `0fr → 1fr` grid track (200ms open, 150ms close, ease-out), the caret rotates, and the rows are `inert` while closed.
+
+**Continue exploring.** Two seconds after a reply finishes, up to three follow-ups fade up under it, 40ms apart (`GuidePrompts.svelte`, the same list as the starter prompts). `explorePrompts` (`src/lib/guidePrompts.ts`) picks them by topic: "writing" when the reply read a post, else the page it opened, else the page the visitor is on, topped up from the starter prompts, never repeating a question already asked. Each one is answerable from the notes. A restored thread shows them at once; a new send hides them.
+
+An `open_page` call renders under the reply as a step with a directions icon: "Opening {label}" or "Scrolling to {section}" (shimmer) while the reply streams and the follow waits, then "Opened {label} at {section}" or "Scrolled to {section}" once it ran, or a "Go to …" link when the visitor cancelled it. The guide acts 900 ms after the reply ends, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press). On another page it navigates with the ClientRouter, then reveals the section; on the same page it only scrolls. A call with no section on the current page shows nothing. Without a model, only an explicit request ("show me the colophon") opens a page.
 
 `revealSection` (`src/lib/guidePage.ts`) scrolls the section into view and sets `data-guide-highlight`, a tint that holds and fades (`global.css`). Section ids come from `src/lib/siteSections.ts`: markdown pages (`MarkdownSections`) use `sectionId(title)`, experience rows use `row-{name}`, and fitness uses Astro's own heading ids. A hidden section (a filtered row) is skipped.
 

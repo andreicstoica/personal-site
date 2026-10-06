@@ -10,12 +10,13 @@
     type GuideUIMessage,
   } from "../../lib/chatTypes";
   import { revealSection, watchIntent } from "../../lib/guidePage";
-  import { starterPrompts } from "../../lib/guidePrompts";
+  import { explorePrompts, starterPrompts } from "../../lib/guidePrompts";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
     groupTurns,
     pageStep,
     replyView,
+    traceSummary,
     type GuideStep,
     type PageCall,
     type PageMove,
@@ -23,7 +24,9 @@
   } from "../../lib/guideTurn";
   import { routeByHref } from "../../lib/memorySelect";
   import Icon from "../ui/Icon.svelte";
+  import GuidePrompts from "./GuidePrompts.svelte";
   import GuideSteps from "./GuideSteps.svelte";
+  import GuideTrace from "./GuideTrace.svelte";
 
   const storageKey = GUIDE_STORAGE_KEY;
   /** sessionStorage keeps the last 30 messages; the route gets the last 9,
@@ -32,8 +35,11 @@
   const SEND = 9;
   /** How much of the previous turn stays visible above a new question. */
   const PEEK = 40;
-  const THINKING: GuideStep = { icon: "chat", label: "Thinking", status: "active" };
-  const EMPTY_VIEW: ReplyView = { steps: [], text: "", notices: [], page: null };
+  const THINKING: GuideStep = { icon: "lightbulb", label: "Thinking", status: "active" };
+  const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null };
+  /** "Continue exploring" waits until the visitor has had a moment with the
+   *  reply, so it reads as an offer, not part of the answer. */
+  const EXPLORE_DELAY = 2000;
 
   let open = $state(false);
   let input = $state("");
@@ -82,6 +88,7 @@
             instance.messages = instance.messages.slice(-KEEP);
           }
           if (!completed) return;
+          scheduleExplore();
           const page = replyView(message).page;
           if (page) scheduleFollow(page);
         },
@@ -101,6 +108,19 @@
   const sending = $derived(starting || status === "submitted" || status === "streaming");
   const turns = $derived(groupTurns(messages));
   const viewing = $derived(routeByHref(pagePath));
+  /** The turn whose reply shows "Continue exploring", once its delay ends. */
+  let exploreTurn = $state<string | null>(null);
+  let exploreTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Follow-ups for the last reply: about the post it read, the page it
+   *  opened, or the page the visitor is on, minus what was already asked. */
+  const explore = $derived.by(() => {
+    const last = turns.at(-1);
+    const view = last?.reply ? replyView(last.reply) : null;
+    const readPost = last?.reply?.parts.some((part) => part.type === "tool-read_post");
+    const topic = readPost ? "writing" : (view?.page?.output.href ?? pagePath);
+    const asked = turns.flatMap((turn) => (turn.question ? [turnText(turn.question)] : []));
+    return explorePrompts(topic, asked);
+  });
 
   function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -166,10 +186,24 @@
     else panelRef?.focus();
   }
 
+  function scheduleExplore() {
+    clearExplore();
+    exploreTimer = setTimeout(() => {
+      exploreTurn = turns.at(-1)?.id ?? null;
+    }, EXPLORE_DELAY);
+  }
+
+  function clearExplore() {
+    if (exploreTimer) clearTimeout(exploreTimer);
+    exploreTimer = undefined;
+    exploreTurn = null;
+  }
+
   /** Drops the thread and anything in flight, back to the starter prompts. */
   function newChat() {
     void chat?.stop();
     cancelFollow();
+    clearExplore();
     stored = [];
     if (chat) {
       chat.messages = [];
@@ -191,6 +225,7 @@
     const message = text.trim();
     if (!message || sending) return;
     cancelFollow();
+    clearExplore();
     input = "";
     starting = true;
     void loadChat()
@@ -294,6 +329,9 @@
       stored = saved.messages;
       moved = saved.moved;
       open = saved.open;
+      // A restored reply is not new; its follow-ups show without the wait.
+      const last = groupTurns(saved.messages).at(-1);
+      if (last?.reply) exploreTurn = last.id;
     }
     onPageLoad();
     // The island no longer remounts, so mount-time work that navigation can
@@ -384,7 +422,7 @@
             title="New chat"
             onclick={newChat}
           >
-            <Icon name="reload" class="w-4 h-4" />
+            <Icon name="pen-square" class="w-4 h-4" />
           </button>
         {/if}
         <button
@@ -418,10 +456,14 @@
           {/if}
           {#if turn.reply || live}
             {@const view = turn.reply ? replyView(turn.reply) : EMPTY_VIEW}
-            {@const steps = live && view.steps.length === 0 && !view.text && !view.page ? [THINKING] : view.steps}
+            {@const trace = view.trace.length > 0 ? view.trace : [THINKING]}
             <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
-              {#if steps.length > 0}
-                <GuideSteps {steps} {live} />
+              {#if view.trace.length > 0 || live}
+                <GuideTrace
+                  steps={trace}
+                  {live}
+                  summary={traceSummary(turn.reply, trace, live)}
+                />
               {/if}
               {#if view.text}
                 <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
@@ -444,21 +486,26 @@
           {#if isLast && status === "error"}
             <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
           {/if}
+          {#if isLast && exploreTurn === turn.id && !sending && explore.length > 0}
+            <GuidePrompts
+              prompts={explore}
+              title="Continue exploring"
+              animate
+              class="-mx-3 pt-1"
+              onselect={sendPrompt}
+            />
+          {/if}
         </div>
       {/each}
     </div>
 
     {#if messages.length === 0}
-      <ul class="guide-prompts px-1" aria-label="Suggested questions">
-        {#each starterPrompts as prompt (prompt.text)}
-          <li>
-            <button type="button" class="guide-prompt" onclick={() => sendPrompt(prompt.text)}>
-              <Icon name={prompt.icon} class="w-4 h-4 shrink-0" />
-              <span>{prompt.text}</span>
-            </button>
-          </li>
-        {/each}
-      </ul>
+      <GuidePrompts
+        prompts={starterPrompts}
+        label="Suggested questions"
+        class="px-1"
+        onselect={sendPrompt}
+      />
     {/if}
 
     <form onsubmit={onSubmit} class="guide-composer m-3">
@@ -476,7 +523,7 @@
       <div class="flex items-center justify-between gap-2 pl-3 pr-1.5 pb-1.5">
         {#if viewing}
           <p id="guide-context" class="guide-context">
-            <Icon name="file" class="w-3.5 h-3.5 shrink-0" />
+            <Icon name="eye" class="w-3.5 h-3.5 shrink-0" />
             <span class="truncate">Viewing <span class="text-[var(--color-text-primary)]">{viewing.label}</span></span>
           </p>
         {:else}
@@ -514,7 +561,7 @@
       window.dispatchEvent(new CustomEvent("weather-lab:toggle"));
     }}
   >
-    <Icon name={open ? "close" : "chat"} class="w-4 h-4" />
+    <Icon name={open ? "close" : "message"} class="w-4 h-4" />
   </button>
 </div>
 
@@ -705,19 +752,6 @@
     font-size: 0.9em;
   }
 
-  .guide-prompt {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    min-height: 44px;
-    padding-inline: 0.75rem;
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-    text-align: start;
-    transition: color var(--duration-ui) var(--ease-out);
-  }
-
   .guide-send {
     display: flex;
     flex-shrink: 0;
@@ -761,14 +795,6 @@
     .guide-send {
       width: 2rem;
       height: 2rem;
-    }
-
-    .guide-prompt {
-      min-height: 2.25rem;
-    }
-
-    .guide-prompt:hover {
-      color: var(--color-text-primary);
     }
   }
 
@@ -869,8 +895,7 @@
     }
 
     .guide-launch,
-    .guide-dock[data-open="true"] .guide-launch,
-    .guide-prompt {
+    .guide-dock[data-open="true"] .guide-launch {
       transition: none;
     }
   }

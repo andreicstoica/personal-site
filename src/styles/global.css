@@ -391,6 +391,41 @@ body {
 	}
 }
 
+/* Text for work in progress in the guide (GuideSteps, GuideTrace): a
+   lighter band sweeps across it. Reduced motion keeps plain text. */
+.guide-shimmer {
+	background: linear-gradient(
+			90deg,
+			var(--color-text-secondary) 0%,
+			var(--color-text-secondary) 40%,
+			var(--color-text-primary) 50%,
+			var(--color-text-secondary) 60%,
+			var(--color-text-secondary) 100%
+		)
+		0 0 / 250% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	animation: guide-shimmer 1.6s linear infinite;
+}
+
+@keyframes guide-shimmer {
+	from {
+		background-position: 100% 0;
+	}
+	to {
+		background-position: 0% 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.guide-shimmer {
+		animation: none;
+		background: none;
+		color: var(--color-text-secondary);
+	}
+}
+
 /* A section the guide pointed at (guidePage.ts) lands a little below the
    top edge, then holds a tint that fades. The spread shadow extends the tint
    past the box without moving layout. It animates color only, so it stays
