@@ -40,7 +40,7 @@
   const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null, posts: [] };
   /** "Continue exploring" waits until the visitor has had a moment with the
    *  reply, so it reads as an offer, not part of the answer. */
-  const EXPLORE_DELAY = 2000;
+  const EXPLORE_DELAY = 5000;
 
   let open = $state(false);
   let input = $state("");

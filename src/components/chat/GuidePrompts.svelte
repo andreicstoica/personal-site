@@ -98,24 +98,43 @@
       background-color var(--duration-ui) var(--ease-out);
   }
 
+  /* The arrow is an answer to "where does this go?", so it shows only when
+     the row is pointed at or focused, and slides in from 2px back. */
   .guide-prompt :global(.guide-prompt-arrow) {
-    opacity: 0.6;
+    opacity: 0;
+    transform: translateX(-2px);
     transition:
       transform 150ms var(--ease-out),
       opacity 150ms var(--ease-out);
   }
 
-  /* The title, then each row, rises 4px and fades in, 40ms apart. */
+  .guide-prompt:focus-visible :global(.guide-prompt-arrow) {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-variant="follow-up"] .guide-prompt:focus-visible {
+    background: var(--color-bg-primary);
+  }
+
+  /* A quiet arrival, well after the reply: the title, then each row, fades
+     in over 300ms and rises 2px, 50ms apart. */
   [data-animate="true"] .guide-prompts-title,
   [data-animate="true"] li {
-    animation: guide-prompt-in 250ms var(--ease-out) both;
-    animation-delay: calc(var(--index, 0) * 40ms);
+    animation: guide-prompt-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--index, 0) * 50ms);
   }
 
   @keyframes guide-prompt-in {
     from {
       opacity: 0;
-      transform: translateY(0.25rem);
+      transform: translateY(2px);
+    }
+  }
+
+  @keyframes guide-prompt-fade {
+    from {
+      opacity: 0;
     }
   }
 
@@ -134,17 +153,24 @@
 
     .guide-prompt:hover :global(.guide-prompt-arrow) {
       opacity: 1;
-      transform: translateX(2px);
+      transform: none;
     }
   }
 
+  /* Reduced motion keeps the fade and drops the movement. */
   @media (prefers-reduced-motion: reduce) {
     .guide-prompt,
-    .guide-prompt :global(.guide-prompt-arrow),
+    .guide-prompt :global(.guide-prompt-arrow) {
+      transition: none;
+    }
+
+    .guide-prompt :global(.guide-prompt-arrow) {
+      transform: none;
+    }
+
     [data-animate="true"] .guide-prompts-title,
     [data-animate="true"] li {
-      transition: none;
-      animation: none;
+      animation-name: guide-prompt-fade;
     }
   }
 </style>
