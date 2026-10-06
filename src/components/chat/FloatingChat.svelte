@@ -36,6 +36,10 @@
   const SEND = 9;
   /** How much of the previous turn stays visible above a new question. */
   const PEEK = 40;
+  /** The thread's vertical padding (py-3), and how near the end of a reply
+   *  counts as "at the live edge". */
+  const THREAD_PAD = 12;
+  const EDGE = 8;
   const THINKING: GuideStep = { icon: "lightbulb", label: "Thinking", status: "active" };
   const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null, posts: [] };
   /** "Continue exploring" waits until the visitor has had a moment with the
@@ -111,6 +115,15 @@
   const status = $derived(chat?.status ?? "ready");
   const sending = $derived(starting || status === "submitted" || status === "streaming");
   const turns = $derived(groupTurns(messages));
+  const turnCount = $derived(turns.length);
+  /** The end of the latest reply is out of view: show "Jump to latest". */
+  let latestHidden = $state(false);
+  /** The reader is at the live edge, so a streaming reply keeps its end in
+   *  view. Not reactive: only the scroll and resize handlers read it. */
+  let following = true;
+  /** False while a send's own scroll to the new question runs, so following
+   *  does not fight it. */
+  let settled = true;
   const viewing = $derived(routeByHref(pagePath));
   /** The turn whose reply shows "Continue exploring", once its delay ends. */
   let exploreTurn = $state<string | null>(null);
@@ -167,6 +180,86 @@
       top: Math.max(0, last.offsetTop - PEEK),
       behavior: reduce ? "auto" : behavior,
     });
+  }
+
+  /** The latest turn's content, without the room its turn reserves below. */
+  function latestBody(): HTMLElement | null {
+    return threadRef?.querySelector<HTMLElement>("[data-turn]:last-of-type [data-turn-body]") ?? null;
+  }
+
+  /** How far the end of the latest reply sits below what the thread shows;
+   *  zero or less when it is in view. */
+  function endOverflow(): number {
+    const body = latestBody();
+    if (!threadRef || !body) return 0;
+    const view = threadRef.getBoundingClientRect();
+    return body.getBoundingClientRect().bottom - (view.bottom - THREAD_PAD);
+  }
+
+  function measureLatest(): void {
+    latestHidden = messages.length > 0 && endOverflow() > EDGE;
+  }
+
+  /** At the live edge, keep following; scrolled away, stop. The reader's own
+   *  scroll decides, never the stream. */
+  function onThreadScroll(): void {
+    if (sending && settled) following = endOverflow() <= EDGE;
+    measureLatest();
+  }
+
+  /** A selection in the thread is reading in progress: stop moving. */
+  function onSelectionChange(): void {
+    const selection = document.getSelection();
+    if (
+      selection?.isCollapsed === false &&
+      selection.anchorNode &&
+      threadRef?.contains(selection.anchorNode)
+    ) {
+      following = false;
+    }
+  }
+
+  /** A streaming reply grows; while the reader follows, keep its end in view. */
+  function onLatestResize(): void {
+    if (sending && settled && following && threadRef) {
+      const overflow = endOverflow();
+      if (overflow > 0) threadRef.scrollTop += overflow;
+    }
+    measureLatest();
+  }
+
+  /** Back to the latest reply: the whole turn from its question when it fits,
+   *  else its end. Following resumes. */
+  function jumpToLatest(): void {
+    const body = latestBody();
+    const turn = body?.parentElement;
+    if (!threadRef || !body || !turn) return;
+    // The pill unmounts on click; keep focus in the panel.
+    focusComposer();
+    following = true;
+    const fits = body.offsetHeight + PEEK <= threadRef.clientHeight - THREAD_PAD * 2;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    threadRef.scrollTo({
+      top: fits
+        ? Math.max(0, turn.offsetTop - PEEK)
+        : threadRef.scrollTop + endOverflow(),
+      behavior: reduce ? "auto" : "smooth",
+    });
+  }
+
+  /** Runs once the thread's current scroll settles. */
+  function afterScroll(run: () => void): void {
+    const thread = threadRef;
+    if (!thread) return;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      thread.removeEventListener("scrollend", finish);
+      run();
+    };
+    thread.addEventListener("scrollend", finish);
+    setTimeout(finish, 600);
   }
 
   // Outside clicks move focus to the clicked element before this runs, so the
@@ -237,7 +330,15 @@
         void instance.sendMessage({ text: message });
         return tick();
       })
-      .then(() => anchorLastTurn("smooth"))
+      .then(() => {
+        settled = false;
+        following = true;
+        anchorLastTurn("smooth");
+        afterScroll(() => {
+          settled = true;
+          measureLatest();
+        });
+      })
       .catch(() => {
         // The SDK chunk failed to load (offline, or a stale deploy).
         input = message;
@@ -410,6 +511,26 @@
     if (!open) cancelFollow();
   });
 
+  // Watch the latest turn's content and the thread's own size; re-arm when a
+  // turn is added.
+  $effect(() => {
+    void turnCount;
+    const thread = threadRef;
+    const body = latestBody();
+    if (!thread || !body) {
+      latestHidden = false;
+      return;
+    }
+    const observer = new ResizeObserver(onLatestResize);
+    observer.observe(body);
+    observer.observe(thread);
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("selectionchange", onSelectionChange);
+    };
+  });
+
   // Opening the panel, or restoring it open, lands on the last question rather
   // than the bottom of its reply.
   $effect(() => {
@@ -462,17 +583,20 @@
       </div>
     </header>
 
+    <div class="guide-thread-frame">
     <div
       bind:this={threadRef}
       class="guide-thread relative flex-1 overflow-y-auto px-4 py-3 space-y-6"
       style:--guide-peek="{PEEK}px"
       role="log"
       aria-busy={sending}
+      onscroll={onThreadScroll}
     >
       {#each turns as turn, index (turn.id)}
         {@const isLast = index === turns.length - 1}
         {@const live = isLast && sending}
-        <div class="guide-turn space-y-4" data-turn data-last={isLast}>
+        <div class="guide-turn" data-turn data-last={isLast}>
+          <div class="space-y-4" data-turn-body>
           {#if turn.question}
             <div class="flex justify-end">
               <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
@@ -534,8 +658,16 @@
               onselect={sendPrompt}
             />
           {/if}
+          </div>
         </div>
       {/each}
+    </div>
+    {#if latestHidden}
+      <button type="button" class="guide-latest" onclick={jumpToLatest}>
+        <Icon name="arrow-down" class="w-3 h-3 shrink-0" />
+        <span class:guide-shimmer={sending}>{sending ? "Still writing" : "Jump to latest"}</span>
+      </button>
+    {/if}
     </div>
 
     {#if messages.length === 0}
@@ -659,6 +791,43 @@
 
   .guide-thread {
     overscroll-behavior: contain;
+  }
+
+  /* Holds the scrolling thread and the pill that floats over its foot. */
+  .guide-thread-frame {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* "Jump to latest": outside the scroller so it stays put, outside the log
+     so screen readers do not hear it as part of the conversation. */
+  .guide-latest {
+    position: absolute;
+    left: 50%;
+    bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding-inline: 0.75rem;
+    transform: translateX(-50%);
+    background: var(--color-bg-primary);
+    box-shadow: var(--elevation-sheet);
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    touch-action: manipulation;
+    animation: guide-latest-in 150ms var(--ease-out) both;
+  }
+
+  @keyframes guide-latest-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 0.25rem);
+    }
   }
 
   .guide-cards {
@@ -948,6 +1117,10 @@
     .guide-launch,
     .guide-dock[data-open="true"] .guide-launch {
       transition: none;
+    }
+
+    .guide-latest {
+      animation: none;
     }
   }
 </style>

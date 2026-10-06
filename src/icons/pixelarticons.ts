@@ -3,6 +3,7 @@
  * Each icon is imported as its own file, so only the icons named here ship.
  * Browse the full set at https://pixelarticons.com before adding one.
  */
+import arrowDown from "pixelarticons/svg/arrow-down.svg?raw";
 import arrowRight from "pixelarticons/svg/arrow-right.svg?raw";
 import arrowUp from "pixelarticons/svg/arrow-up.svg?raw";
 import article from "pixelarticons/svg/article.svg?raw";
@@ -38,6 +39,7 @@ function inner(svg: string): string {
 }
 
 export const pixelarticons = {
+	"arrow-down": inner(arrowDown),
 	"arrow-right": inner(arrowRight),
 	"arrow-up": inner(arrowUp),
 	article: inner(article),

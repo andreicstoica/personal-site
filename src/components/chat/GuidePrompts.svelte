@@ -43,9 +43,6 @@
             <Icon name={prompt.icon} class="w-4 h-4 shrink-0" />
           {/if}
           <span class="guide-prompt-text">{prompt.text}</span>
-          {#if variant === "follow-up"}
-            <Icon name="arrow-right" class="guide-prompt-arrow w-3 h-3 shrink-0" />
-          {/if}
         </button>
       </li>
     {/each}
@@ -114,7 +111,7 @@
   }
 
   [data-variant="follow-up"] .guide-prompt:focus-visible {
-    background: var(--color-bg-primary);
+    background: color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
   }
 
   /* A quiet arrival, well after the reply: the title, then each row, fades
@@ -148,7 +145,7 @@
     }
 
     [data-variant="follow-up"] .guide-prompt:hover {
-      background: var(--color-bg-primary);
+      background: color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
     }
 
     .guide-prompt:hover :global(.guide-prompt-arrow) {
