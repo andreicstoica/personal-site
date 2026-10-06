@@ -77,9 +77,7 @@
 
   .guide-card :global(.guide-card-go) {
     opacity: 0.6;
-    transition:
-      transform 150ms var(--ease-out),
-      opacity 150ms var(--ease-out);
+    transition: opacity 150ms var(--ease-out);
   }
 
   .guide-card:focus-visible {
@@ -94,7 +92,6 @@
 
     .guide-card:hover :global(.guide-card-go) {
       opacity: 1;
-      transform: translateX(2px);
     }
   }
 
