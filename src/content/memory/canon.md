@@ -22,6 +22,6 @@ Architects: James Polshek, Jeanne Gang, Luis Barragán, Marcel Breuer.
 
 Design: Maya Man, Naoto Fukasawa, Dieter Rams, Teenage Engineering, Herbert Bayer, Adam Ho, Alexander Rodchenko, Lester Beall.
 
-Paint: Jack Whitten, Robert Longo. Photography: William Eggleston, Ernst Haas, Luigi Ghirri, Willem Verbeck. Sculpture: László Moholy-Nagy, Constantin Brâncuși, Larry Bell.
+Paint: Jack Whitten, Robert Longo. Photography: William Eggleston, Ernst Haas, Luigi Ghirri, Willem Verbeeck. Sculpture: László Moholy-Nagy, Constantin Brâncuși, Larry Bell.
 
 Clothes: Outlier, Rosen X, Iris van Herpen.
