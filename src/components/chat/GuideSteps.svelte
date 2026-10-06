@@ -34,7 +34,7 @@
           {/if}
         </div>
         {#if step.detail}
-          <p class="guide-step-detail">{step.detail}</p>
+          <p class="guide-step-detail" title={step.detail}>{step.detail}</p>
         {/if}
         {#if step.data}
           <p class="guide-step-data">{step.data}</p>
@@ -122,19 +122,22 @@
     white-space: nowrap;
   }
 
-  /* The tool's real name, as a small square chip: the one place the trace
-     shows the system's own vocabulary. */
+  /* The tool's real name in mono: the one place the trace shows the
+     system's own vocabulary. */
   .guide-step-tool {
     flex-shrink: 0;
-    padding-inline: 0.25rem;
-    border: 1px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
     font-family: var(--font-mono);
-    font-size: 0.625rem;
-    line-height: 0.875rem;
+    font-size: 0.6875rem;
+    opacity: 0.7;
   }
 
-  /* Reasoning keeps its paragraph breaks. */
+  /* Reasoning keeps its paragraph breaks, up to three lines. */
   .guide-step-detail {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
     margin-block-start: 0.0625rem;
     opacity: 0.85;
     white-space: pre-wrap;

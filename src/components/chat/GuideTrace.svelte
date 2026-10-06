@@ -1,19 +1,38 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import type { GuideStep } from "../../lib/guideTurn";
   import Icon from "../ui/Icon.svelte";
   import GuideSteps from "./GuideSteps.svelte";
 
-  /** How a reply was made: open by default, so each step appears in place as
-   *  it happens, and collapsible. Collapsing is the visitor's call only; a
-   *  trace that closed itself after the reply would pull the text up under
-   *  the reader. Closed while live, the header names the step in progress. */
+  /** How a reply was made. Open while the guide works, so each step appears
+   *  in place, then folded once the reply starts: the fold lands before the
+   *  visitor reads a word, so no text moves under them. A visitor who toggles
+   *  it decides from then on. Closed while live, the header names the step
+   *  in progress. */
   let {
     steps,
     summary,
     live = false,
-  }: { steps: GuideStep[]; summary: string; live?: boolean } = $props();
+    folded = false,
+  }: {
+    steps: GuideStep[];
+    summary: string;
+    live?: boolean;
+    /** The reply has started; fold unless the visitor took over. */
+    folded?: boolean;
+  } = $props();
 
-  let open = $state(true);
+  let open = $state(untrack(() => !folded));
+  let touched = false;
+
+  $effect(() => {
+    if (folded && !touched) open = false;
+  });
+
+  function toggle() {
+    touched = true;
+    open = !open;
+  }
   const id = $props.id();
   /** Open, the rows already show the step in progress. */
   const headline = $derived(live && open ? "Working" : summary);
@@ -25,7 +44,7 @@
     class="guide-trace-toggle"
     aria-expanded={open}
     aria-controls="{id}-trace"
-    onclick={() => (open = !open)}
+    onclick={toggle}
   >
     <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
     <span class="guide-trace-summary" class:guide-shimmer={live}>{headline}</span>

@@ -464,7 +464,7 @@
 
     <div
       bind:this={threadRef}
-      class="guide-thread relative flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      class="guide-thread relative flex-1 overflow-y-auto px-4 py-3 space-y-6"
       style:--guide-peek="{PEEK}px"
       role="log"
       aria-busy={sending}
@@ -472,7 +472,7 @@
       {#each turns as turn, index (turn.id)}
         {@const isLast = index === turns.length - 1}
         {@const live = isLast && sending}
-        <div class="guide-turn space-y-3" data-turn data-last={isLast}>
+        <div class="guide-turn space-y-4" data-turn data-last={isLast}>
           {#if turn.question}
             <div class="flex justify-end">
               <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
@@ -483,11 +483,12 @@
           {#if turn.reply || live}
             {@const view = turn.reply ? replyView(turn.reply) : EMPTY_VIEW}
             {@const trace = view.trace.length > 0 ? view.trace : [THINKING]}
-            <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
+            <div class="space-y-3 text-sm break-words text-[var(--color-text-primary)]">
               {#if view.trace.length > 0 || live}
                 <GuideTrace
                   steps={trace}
                   {live}
+                  folded={view.text.length > 0}
                   summary={traceSummary(turn.reply, trace, live)}
                 />
               {/if}
@@ -529,7 +530,7 @@
               title="Continue exploring"
               variant="follow-up"
               animate
-              class="pt-2"
+              class="pt-1"
               onselect={sendPrompt}
             />
           {/if}
@@ -758,9 +759,15 @@
   }
 
   /* Model replies render through renderChatMarkdown; Tailwind's reset strips
-     list and heading styles, so restore the few that markdown needs. */
+     list and heading styles, so restore the few that markdown needs. Body
+     text runs at 1.6 so a reply reads as prose, not a log line; blocks sit
+     about one line apart. */
+  .guide-md {
+    line-height: 1.6;
+  }
+
   .guide-md :global(:where(p, ul, ol, h1, h2, h3, h4, pre, blockquote) + *) {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
   }
 
   .guide-md :global(ul) {
@@ -774,7 +781,7 @@
   }
 
   .guide-md :global(li + li) {
-    margin-top: 0.125rem;
+    margin-top: 0.25rem;
   }
 
   .guide-md :global(strong) {

@@ -60,9 +60,6 @@ function contextStep(data: ContextSummary): GuideStep {
 		icon: "files",
 		label: `Loaded ${data.notes} notes, ${data.posts} posts, and the site map`,
 		status: "complete",
-		detail: data.page
-			? `${data.sections} page sections it can point at. Visitor is on ${data.page}.`
-			: `${data.sections} page sections it can point at.`,
 	};
 }
 

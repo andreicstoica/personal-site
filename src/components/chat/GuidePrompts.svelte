@@ -72,27 +72,30 @@
     min-width: 0;
   }
 
-  /* Follow-ups: a small caps label like the home table's column heads, then
-     rows ruled by hairlines, flush with the reply text. */
+  /* Follow-ups: a quiet label, then padded rows with no rules between them.
+     A row takes the source cards' white surface on hover, so the panel has
+     one surface language: white means "this goes somewhere". */
   [data-variant="follow-up"] .guide-prompts-title {
-    padding-block-end: 0.375rem;
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    padding-inline: 0.75rem;
+    padding-block-end: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
     color: var(--color-text-muted);
   }
 
-  [data-variant="follow-up"] li {
-    border-block-start: 1px solid var(--color-divider);
-  }
-
-  [data-variant="follow-up"] li:last-child {
-    border-block-end: 1px solid var(--color-divider);
+  [data-variant="follow-up"] ul {
+    display: grid;
+    gap: 0.125rem;
   }
 
   [data-variant="follow-up"] .guide-prompt {
-    padding-inline: 0;
+    gap: 0.5rem;
+    padding-block: 0.375rem;
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    transition:
+      color var(--duration-ui) var(--ease-out),
+      background-color var(--duration-ui) var(--ease-out);
   }
 
   .guide-prompt :global(.guide-prompt-arrow) {
@@ -123,6 +126,10 @@
 
     .guide-prompt:hover {
       color: var(--color-text-primary);
+    }
+
+    [data-variant="follow-up"] .guide-prompt:hover {
+      background: var(--color-bg-primary);
     }
 
     .guide-prompt:hover :global(.guide-prompt-arrow) {
