@@ -3,17 +3,20 @@
   import Icon from "../ui/Icon.svelte";
   import GuideSteps from "./GuideSteps.svelte";
 
-  /** How a reply was made, behind a disclosure: closed by default so the
-   *  reply leads, open for anyone curious about the context and tool calls.
-   *  While live, the header names the step in progress. */
+  /** How a reply was made: open by default, so each step appears in place as
+   *  it happens, and collapsible. Collapsing is the visitor's call only; a
+   *  trace that closed itself after the reply would pull the text up under
+   *  the reader. Closed while live, the header names the step in progress. */
   let {
     steps,
     summary,
     live = false,
   }: { steps: GuideStep[]; summary: string; live?: boolean } = $props();
 
-  let open = $state(false);
+  let open = $state(true);
   const id = $props.id();
+  /** Open, the rows already show the step in progress. */
+  const headline = $derived(live && open ? "Working" : summary);
 </script>
 
 <div class="guide-trace" data-open={open}>
@@ -24,8 +27,8 @@
     aria-controls="{id}-trace"
     onclick={() => (open = !open)}
   >
-    <Icon name="chevron-right" class="guide-trace-caret w-3.5 h-3.5 shrink-0" />
-    <span class="guide-trace-summary" class:guide-shimmer={live}>{summary}</span>
+    <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
+    <span class="guide-trace-summary" class:guide-shimmer={live}>{headline}</span>
   </button>
   <!-- inert while closed: the collapsed rows leave the tab order and the
        accessibility tree, not just the screen. -->
@@ -45,17 +48,17 @@
     align-items: center;
     gap: 0.5rem;
     max-width: 100%;
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
     color: var(--color-text-secondary);
     transition: color var(--duration-ui) var(--ease-out);
   }
 
-  /* A 44px tap area on a 20px row. */
+  /* A 44px tap area on an 18px row. */
   .guide-trace-toggle::before {
     content: "";
     position: absolute;
-    inset: -0.75rem -0.25rem;
+    inset: -0.8125rem -0.25rem;
   }
 
   .guide-trace-summary {
@@ -98,7 +101,7 @@
   }
 
   .guide-trace-rows {
-    padding-block: 0.5rem 0.25rem;
+    padding-block: 0.375rem 0.25rem;
   }
 
   @media (hover: hover) and (pointer: fine) {

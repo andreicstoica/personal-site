@@ -15,8 +15,10 @@ export type GuideStep = {
 	href?: string;
 	/** The tool behind the step, shown as code in the trace. */
 	tool?: string;
-	/** Secondary text under the label: reasoning, or token counts. */
+	/** Secondary prose under the label, such as the model's reasoning. */
 	detail?: string;
+	/** A line of figures under the label, set in mono: model and tokens. */
+	data?: string;
 };
 
 export type PageCall = { toolCallId: string; output: OpenPageOutput };
@@ -68,6 +70,7 @@ function toolStep(part: GuidePart): GuideStep | null {
 				label: `Read ${part.output.title}`,
 				status: "complete",
 				tool: "read_post",
+				href: part.output.url,
 			};
 		if (part.state === "output-error")
 			return {
@@ -91,12 +94,13 @@ function toolStep(part: GuidePart): GuideStep | null {
 				status: "active",
 				tool: "open_page",
 			};
-		const { label, section } = part.output;
+		const { href, label, section } = part.output;
 		return {
 			icon: "directions",
 			label: section ? `Chose ${label} at ${section.label}` : `Chose ${label}`,
 			status: "complete",
 			tool: "open_page",
+			href: section ? `${href}#${section.id}` : href,
 		};
 	}
 	return null;
@@ -143,7 +147,7 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 		}
 	}
 	const usage = usageDetail(message.metadata);
-	if (reply && usage) reply.detail = usage;
+	if (reply && usage) reply.data = usage;
 	return steps;
 }
 

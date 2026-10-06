@@ -17,7 +17,7 @@ One principle: never move the reader against their intent. The guide can move tw
 ## Page movement
 
 8. Navigate the page when the visitor asked to open something ("show me the colophon"), or when the reply points to a page for the rest ("the full list is on my canon page"). The reply says so before the page moves. A page named only in the question stays a link.
-9. Every interaction is intent. A pending navigation cancels on a draft in the composer, a text selection in the thread or on the page, a pointer down, a wheel or touch scroll, a key press, or a link click. Focus alone is not a signal: focus stays in the composer after a send.
+9. Every interaction with the page is intent. A pending navigation cancels on a draft in the composer, a key press, or a pointer down, wheel or touch scroll, or text selection on the page. The same gestures inside the panel do not cancel it: reading or scrolling the thread says nothing about the page, and the panel does not move when the page does. Focus alone is not a signal: focus stays in the composer after a send.
 10. Navigate with the ClientRouter (`navigate`), never a full load, so the panel and its scroll position persist. Scroll to an in-page target, such as a table row, once on that navigation and not again.
 
 ## Accessibility
@@ -48,7 +48,7 @@ The server returns data, and the client maps it to parts. `src/lib/chatTypes.ts`
 | --- | --- | --- |
 | 3 | none | No "New reply" pill. A reply renders under its question in the space the last turn reserves, so it starts in view unless the reader scrolled away. |
 
-Fixed: a new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. The thread no longer follows the tail or jumps to the bottom. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
+Fixed: a step reads "Opened" only once the new page has loaded; a navigation that never lands leaves a link. A new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. The thread no longer follows the tail or jumps to the bottom. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
 
 ## Not adopted
 

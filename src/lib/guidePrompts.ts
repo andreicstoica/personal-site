@@ -38,13 +38,14 @@ const exploreByTopic: Readonly<Record<string, readonly StarterPrompt[]>> = {
 		{ text: "Where do you want to hike?", icon: "map" },
 	],
 	projects: [
+		{ text: "What did you build in 2025?", icon: "tools" },
 		{ text: "What other projects have you built?", icon: "tools" },
 		{ text: "How was this site built?", icon: "tools" },
 	],
 	writing: [
 		{ text: "What have you written about AI?", icon: "article" },
 		{ text: "Why did you quit your job?", icon: "article" },
-		{ text: "What were your 2025 favorites?", icon: "article" },
+		{ text: "What media did you love in 2025?", icon: "article" },
 	],
 };
 

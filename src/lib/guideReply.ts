@@ -76,7 +76,7 @@ A list answer, for any question about people, inspirations, influences, works, p
 
 A prose answer: two or three sentences, no heading, then one line that points to the page with more when one exists.
 
-Use Markdown only for headings, bullets, bold group names, and links. Link a post by its title, like [Title](URL); never print a bare URL.
+Use Markdown only for headings, bullets, bold group names, and links. When you name a post, link its title, like More in [Title](URL); never bold a post title and never print a bare URL.
 
 Site map:
 ${siteMap(sectionsByPath)}

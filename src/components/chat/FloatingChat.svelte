@@ -55,6 +55,9 @@
   let stopIntentWatch: (() => void) | undefined;
   /** The page call whose follow is pending, so its step can show it. */
   let followingId = $state<string | null>(null);
+  /** The page call whose navigation is in flight. "Opened" waits for the
+   *  new page to load, so a navigation that never lands never claims it did. */
+  let openingId = $state<string | null>(null);
   /** Page calls the guide carried out, by tool call id. */
   let moved = $state<Record<string, PageMove>>({});
 
@@ -250,7 +253,9 @@
     if (!open || (samePage && !output.section)) return;
     cancelFollow();
     followingId = toolCallId;
-    stopIntentWatch = watchIntent(cancelFollow);
+    // Reading or scrolling the thread is not a reason to stay: the panel does
+    // not move when the page does. Only the page and the keyboard count.
+    stopIntentWatch = watchIntent(cancelFollow, rootRef);
     followTimer = setTimeout(() => {
       const draft = input.trim().length > 0;
       cancelFollow();
@@ -263,18 +268,22 @@
         }
         return;
       }
-      moved = { ...moved, [toolCallId]: "opened" };
-      if (section) {
+      openingId = toolCallId;
+      const onLoad = () => {
+        openingId = null;
+        // Another navigation won the race; this call stays a link.
+        if (window.location.pathname !== output.href) return;
+        moved = { ...moved, [toolCallId]: "opened" };
         // SiteLayout resets the page scroll on page-load; reveal after it.
-        document.addEventListener(
-          "astro:page-load",
-          () => requestAnimationFrame(() => revealSection(section.id)),
-          { once: true },
-        );
-      }
+        if (section) requestAnimationFrame(() => revealSection(section.id));
+      };
+      document.addEventListener("astro:page-load", onLoad, { once: true });
       // ClientRouter, not a full load: a reload would tear the thread down and
       // rebuild it from storage, dropping scroll and focus for no reason.
-      void navigate(output.href);
+      navigate(output.href).catch(() => {
+        document.removeEventListener("astro:page-load", onLoad);
+        openingId = null;
+      });
     }, 900);
   }
 
@@ -473,7 +482,10 @@
               {/each}
               {#if view.page}
                 {@const step = pageStep(view.page.output, {
-                  pending: live || followingId === view.page.toolCallId,
+                  pending:
+                    live ||
+                    followingId === view.page.toolCallId ||
+                    openingId === view.page.toolCallId,
                   moved: moved[view.page.toolCallId],
                   pagePath,
                 })}
@@ -490,8 +502,9 @@
             <GuidePrompts
               prompts={explore}
               title="Continue exploring"
+              variant="follow-up"
               animate
-              class="-mx-3 pt-1"
+              class="pt-2"
               onselect={sendPrompt}
             />
           {/if}

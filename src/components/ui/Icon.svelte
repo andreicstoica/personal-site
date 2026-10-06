@@ -21,6 +21,7 @@
 	fill="currentColor"
 	xmlns="http://www.w3.org/2000/svg"
 	viewBox="0 0 24 24"
+	shape-rendering="crispEdges"
 	aria-hidden="true"
 >
 	<!-- Trusted markup: the icon module imports it from the pixelarticons package. -->

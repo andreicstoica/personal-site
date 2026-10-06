@@ -57,7 +57,9 @@ describe("reply view", () => {
 			["Wrote the reply", null],
 		]);
 		expect(view.trace[1]?.detail).toBe("Movies are on the canon.");
-		expect(view.trace.at(-1)?.detail).toBe(
+		expect(view.trace[2]?.href).toBe("/canon#movies");
+		expect(view.trace[3]?.href).toBe("https://blog.andrei.bio/p/dyson");
+		expect(view.trace.at(-1)?.data).toBe(
 			"gpt-oss-120b · 10.5K tokens in (10.4K cached) · 204 out",
 		);
 		expect(view.text).toBe("Three films.");
