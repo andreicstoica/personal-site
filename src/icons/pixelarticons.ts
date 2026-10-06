@@ -11,6 +11,7 @@ import bookOpen from "pixelarticons/svg/book-open.svg?raw";
 import camera from "pixelarticons/svg/camera.svg?raw";
 import chevronDown from "pixelarticons/svg/chevron-down.svg?raw";
 import chevronRight from "pixelarticons/svg/chevron-right.svg?raw";
+import chevronUp from "pixelarticons/svg/chevron-up.svg?raw";
 import close from "pixelarticons/svg/close.svg?raw";
 import coffee from "pixelarticons/svg/coffee.svg?raw";
 import cpu from "pixelarticons/svg/cpu.svg?raw";
@@ -47,6 +48,7 @@ export const pixelarticons = {
 	camera: inner(camera),
 	"chevron-down": inner(chevronDown),
 	"chevron-right": inner(chevronRight),
+	"chevron-up": inner(chevronUp),
 	close: inner(close),
 	coffee: inner(coffee),
 	cpu: inner(cpu),

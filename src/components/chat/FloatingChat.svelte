@@ -45,6 +45,11 @@
   /** "Continue exploring" waits until the visitor has had a moment with the
    *  reply, so it reads as an offer, not part of the answer. */
   const EXPLORE_DELAY = 5000;
+  /** How long the guide waits after a reply before it moves the page. On a
+   *  phone the sheet covers most of the page, so it waits long enough to
+   *  read the reply, then gets out of the way. */
+  const FOLLOW_DELAY = 900;
+  const PHONE_FOLLOW_DELAY = 5000;
 
   let open = $state(false);
   let input = $state("");
@@ -125,6 +130,46 @@
    *  does not fight it. */
   let settled = true;
   const viewing = $derived(routeByHref(pagePath));
+  /** Phones only: the sheet is down to its header so the page shows. */
+  let minimized = $state(false);
+  let headerHeight = $state(0);
+  let barRef = $state<HTMLButtonElement | null>(null);
+
+  function isPhone(): boolean {
+    return window.matchMedia("(max-width: 767.98px)").matches;
+  }
+
+  /** On a phone, slide the sheet down to its header once the guide moves the
+   *  page, so the visitor sees where it went. Focus follows to the bar so it
+   *  never sits on a control that is off screen. */
+  function minimize(): void {
+    if (!isPhone() || minimized) return;
+    const focusInside =
+      panelRef !== null &&
+      document.activeElement instanceof Node &&
+      panelRef.contains(document.activeElement);
+    minimized = true;
+    if (focusInside) void tick().then(() => barRef?.focus());
+  }
+
+  function expand(): void {
+    minimized = false;
+    void tick().then(focusComposer);
+  }
+
+  /** The bar's status line: where the latest page move stands. */
+  const barStatus = $derived.by(() => {
+    const last = turns.at(-1)?.reply;
+    const page = last ? replyView(last).page : null;
+    if (!page) return "Tap to keep chatting";
+    const card = pageCard(page.output, {
+      pending: followingId === page.toolCallId || openingId === page.toolCallId,
+      moved: moved[page.toolCallId],
+      pagePath,
+    });
+    return card ? `${card.title} · ${card.meta}` : "Tap to keep chatting";
+  });
+
   /** The turn whose reply shows "Continue exploring", once its delay ends. */
   let exploreTurn = $state<string | null>(null);
   let exploreTimer: ReturnType<typeof setTimeout> | undefined;
@@ -270,6 +315,7 @@
       document.activeElement instanceof Node &&
       rootRef.contains(document.activeElement);
     open = false;
+    minimized = false;
     // The launcher is hidden while the guide is open; wait a tick
     // so it is visible and focusable again before handing focus back.
     if (focusWasInside) void tick().then(() => launchRef?.focus());
@@ -308,6 +354,7 @@
     }
     moved = {};
     input = "";
+    minimized = false;
     // The restart button unmounts with the thread; keep focus in the panel.
     focusComposer();
   }
@@ -363,13 +410,14 @@
       cancelFollow();
       // Never yank the page out from under a question the visitor is typing.
       if (!draft) followNow({ toolCallId, output });
-    }, 900);
+    }, isPhone() ? PHONE_FOLLOW_DELAY : FOLLOW_DELAY);
   }
 
   /** Opens the page, or scrolls this one to the section. On another page the
    *  call reads "Opened" only once the new page has loaded. */
   function followNow({ toolCallId, output }: PageCall) {
     const section = output.section;
+    minimize();
     if (window.location.pathname === output.href) {
       if (section && revealSection(section.id)) {
         moved = { ...moved, [toolCallId]: "scrolled" };
@@ -548,7 +596,9 @@
   bind:this={rootRef}
   class="guide-dock"
   data-open={open ? "true" : "false"}
+  data-minimized={minimized ? "true" : "false"}
   data-no-slide={noSlide ? "true" : "false"}
+  style:--guide-bar-height="{headerHeight}px"
 >
   <div
     id="guide-panel"
@@ -558,8 +608,28 @@
     bind:this={panelRef}
     class="guide-panel"
   >
-    <header class="guide-header flex items-center justify-between gap-3 px-4 py-2.5">
-      <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
+    <header
+      class="guide-header flex items-center justify-between gap-3 px-4 py-2.5"
+      bind:clientHeight={headerHeight}
+    >
+      {#if minimized}
+        <button
+          type="button"
+          class="guide-bar"
+          aria-expanded="false"
+          aria-controls="guide-body"
+          bind:this={barRef}
+          onclick={expand}
+        >
+          <Icon name="chevron-up" class="w-4 h-4 shrink-0" />
+          <span class="guide-bar-text">
+            <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
+            <span class="guide-bar-status">{barStatus}</span>
+          </span>
+        </button>
+      {:else}
+        <span class="text-sm font-medium text-[var(--color-text-primary)]">Ask Andrei</span>
+      {/if}
       <div class="flex items-center gap-1">
         {#if messages.length > 0 || sending}
           <button
@@ -583,6 +653,9 @@
       </div>
     </header>
 
+    <!-- display: contents keeps the panel's flex layout; inert takes the
+         thread and composer out of reach while the sheet is down. -->
+    <div id="guide-body" class="contents" inert={minimized}>
     <div class="guide-thread-frame">
     <div
       bind:this={threadRef}
@@ -712,6 +785,7 @@
         </button>
       </div>
     </form>
+    </div>
   </div>
 
   <button
@@ -1018,16 +1092,54 @@
     }
   }
 
-  /* Phones: a bottom sheet over the lower two thirds. The sheet's own close
-     button replaces the launcher while open. */
+  /* Phones: a bottom sheet over the lower three quarters, so the page the
+     guide opens still shows above it. svh, not dvh: the small viewport is the
+     one with the browser's bars showing, so the composer is never pushed
+     under them. The sheet takes the drawer's sunken surface, so the white
+     question bubbles and source cards read as objects on it. The sheet's own
+     close button replaces the launcher while open. */
   @media (max-width: 767.98px) {
     .guide-panel {
       --guide-hide: translateY(100%);
       left: 0;
-      height: 66dvh;
-      background: var(--color-bg-primary);
+      height: 75svh;
+      background: var(--color-bg-sunken);
       box-shadow: var(--elevation-sheet);
     }
+
+    /* Minimized: the same slide as open and close, stopped where only the
+       header shows above the home indicator. */
+    .guide-dock[data-open="true"][data-minimized="true"] .guide-panel {
+      transform: translateY(
+        calc(100% - var(--guide-bar-height) - env(safe-area-inset-bottom, 0px))
+      );
+    }
+  }
+
+  .guide-bar {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+    min-height: 44px;
+    text-align: start;
+    color: var(--color-text-secondary);
+    touch-action: manipulation;
+  }
+
+  .guide-bar-text {
+    display: grid;
+    min-width: 0;
+  }
+
+  .guide-bar-status {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
   }
 
   /* Desktop: a full-height drawer as wide as the page's two gutters

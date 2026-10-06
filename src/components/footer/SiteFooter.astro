@@ -54,7 +54,8 @@ const updatedAt = new Date(__BUILD_DATE__).toLocaleDateString("en-US", {
     color: var(--color-text-secondary);
     font-family: var(--font-mono);
     font-variation-settings: var(--font-mono-axes, normal);
-    font-size: var(--text-xs);
+    /* The links' size: the mono date sits beside them as a peer. */
+    font-size: var(--text-sm);
     white-space: nowrap;
   }
 
