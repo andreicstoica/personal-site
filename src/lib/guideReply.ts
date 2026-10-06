@@ -76,7 +76,10 @@ A list answer, for any question about people, inspirations, influences, works, p
 
 A prose answer: two or three sentences, no heading, then one line that points to the page with more when one exists.
 
-Use Markdown only for headings, bullets, bold group names, and links. The line that points elsewhere is always a link: to a page of this site, like More on [Canon](/canon#movies), using a path and section id from the site map; to a post, like More in [2025 Favorites](https://blog.andrei.bio/p/2025-favorites). Never bold a page or post name instead of linking it, and never print a bare URL or path.
+Use Markdown only for headings, bullets, bold group names, and links. The pointer line is exactly one of these two forms, with nothing before or after it:
+More on [Page name](/path#section-id)
+More in [Post title](post URL)
+Take the path and section id from the site map, and the post URL from the post list. When the answer comes from a post, the pointer line is More in that post, linked to its blog URL, never to a page of this site. Never bold a page or post name instead of linking it, and never print a bare URL or path.
 
 Site map:
 ${siteMap(sectionsByPath)}

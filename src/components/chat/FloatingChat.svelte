@@ -232,25 +232,31 @@
     return threadRef?.querySelector<HTMLElement>("[data-turn]:last-of-type [data-turn-body]") ?? null;
   }
 
-  /** How far the end of the latest reply sits below what the thread shows;
-   *  zero or less when it is in view. The end is the reply's, not the turn's:
-   *  follow-ups that fade in later are offers, not content the reader missed. */
+  /** How far the bottom of the latest turn (reply, cards, follow-ups) sits
+   *  below what the thread shows; zero or less when it is in view. */
   function endOverflow(): number {
-    const end = latestBody()?.querySelector<HTMLElement>("[data-reply-end]");
-    if (!threadRef || !end) return 0;
+    const body = latestBody();
+    if (!threadRef || !body) return 0;
     const view = threadRef.getBoundingClientRect();
-    return end.getBoundingClientRect().top - (view.bottom - THREAD_PAD);
+    return body.getBoundingClientRect().bottom - (view.bottom - THREAD_PAD);
   }
 
   function measureLatest(): void {
     latestHidden = messages.length > 0 && endOverflow() > EDGE;
   }
 
-  /** At the live edge, keep following; scrolled away, stop. The reader's own
-   *  scroll decides, never the stream. */
+  /** At the bottom, keep following; scrolled away, stop. The reader's own
+   *  scroll decides, never the content. */
   function onThreadScroll(): void {
-    if (sending && settled) following = endOverflow() <= EDGE;
+    if (settled) following = endOverflow() <= EDGE;
     measureLatest();
+  }
+
+  /** A click or key in the thread (opening the trace, say) is the reader
+   *  taking over: what they opened stays put, and the arrow offers the way
+   *  back down. */
+  function onThreadIntent(): void {
+    following = false;
   }
 
   /** A selection in the thread is reading in progress: stop moving. */
@@ -265,11 +271,19 @@
     }
   }
 
-  /** A streaming reply grows; while the reader follows, keep its end in view. */
+  /** The latest turn grows: a streaming reply, then cards and follow-ups. While
+   *  the reader follows, keep its bottom in view; tokens move instantly, the
+   *  later arrivals glide. */
   function onLatestResize(): void {
-    if (sending && settled && following && threadRef) {
+    if (settled && following && threadRef) {
       const overflow = endOverflow();
-      if (overflow > 0) threadRef.scrollTop += overflow;
+      if (overflow > 0) {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        threadRef.scrollTo({
+          top: threadRef.scrollTop + overflow,
+          behavior: sending || reduce ? "auto" : "smooth",
+        });
+      }
     }
     measureLatest();
   }
@@ -285,10 +299,8 @@
     following = true;
     const fits = body.offsetHeight + PEEK <= threadRef.clientHeight - THREAD_PAD * 2;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const view = threadRef.getBoundingClientRect();
-    const bottom = body.getBoundingClientRect().bottom - (view.bottom - THREAD_PAD);
     threadRef.scrollTo({
-      top: fits ? Math.max(0, turn.offsetTop - PEEK) : threadRef.scrollTop + bottom,
+      top: fits ? Math.max(0, turn.offsetTop - PEEK) : threadRef.scrollTop + endOverflow(),
       behavior: reduce ? "auto" : "smooth",
     });
   }
@@ -580,13 +592,29 @@
     };
   });
 
-  // Opening the panel, or restoring it open, lands on the last question rather
-  // than the bottom of its reply.
+  // Clicks and keys inside the thread hand control to the reader (onThreadIntent).
+  $effect(() => {
+    const thread = threadRef;
+    if (!thread) return;
+    thread.addEventListener("pointerdown", onThreadIntent);
+    thread.addEventListener("keydown", onThreadIntent);
+    return () => {
+      thread.removeEventListener("pointerdown", onThreadIntent);
+      thread.removeEventListener("keydown", onThreadIntent);
+    };
+  });
+
+  // The first open after a load lands on the last question rather than the
+  // bottom of its reply. Later opens keep the reader's place: the thread is
+  // never unmounted, so its scroll survives a close.
+  let anchoredOnce = false;
   $effect(() => {
     if (!open || !hydrated) return;
     // Warm the SDK while the visitor reads or types.
     void loadChat().catch(() => {});
     focusComposer();
+    if (anchoredOnce) return;
+    anchoredOnce = true;
     void tick().then(() => anchorLastTurn("auto"));
   });
 </script>
@@ -722,7 +750,6 @@
           {#if isLast && status === "error"}
             <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
           {/if}
-          <span data-reply-end aria-hidden="true"></span>
           {#if isLast && exploreTurn === turn.id && !sending && explore.length > 0}
             <GuidePrompts
               prompts={explore}
