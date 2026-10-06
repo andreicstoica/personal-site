@@ -80,15 +80,18 @@
     color: var(--color-text-muted);
   }
 
+  /* Rows touch, so the three read as one list. On touch a row is 40px: above
+     the 24px minimum, a little under 44, so three rows do not float apart
+     around 14px text. Fine pointers get 36px. */
   [data-variant="follow-up"] ul {
     display: grid;
-    gap: 0.125rem;
   }
 
   [data-variant="follow-up"] .guide-prompt {
     gap: 0.5rem;
-    padding-block: 0.375rem;
-    font-size: 0.8125rem;
+    min-height: 2.5rem;
+    padding-block: 0.25rem;
+    font-size: var(--text-sm);
     line-height: 1.25rem;
     transition:
       color var(--duration-ui) var(--ease-out),

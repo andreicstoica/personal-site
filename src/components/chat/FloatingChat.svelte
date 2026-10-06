@@ -233,12 +233,13 @@
   }
 
   /** How far the end of the latest reply sits below what the thread shows;
-   *  zero or less when it is in view. */
+   *  zero or less when it is in view. The end is the reply's, not the turn's:
+   *  follow-ups that fade in later are offers, not content the reader missed. */
   function endOverflow(): number {
-    const body = latestBody();
-    if (!threadRef || !body) return 0;
+    const end = latestBody()?.querySelector<HTMLElement>("[data-reply-end]");
+    if (!threadRef || !end) return 0;
     const view = threadRef.getBoundingClientRect();
-    return body.getBoundingClientRect().bottom - (view.bottom - THREAD_PAD);
+    return end.getBoundingClientRect().top - (view.bottom - THREAD_PAD);
   }
 
   function measureLatest(): void {
@@ -274,7 +275,7 @@
   }
 
   /** Back to the latest reply: the whole turn from its question when it fits,
-   *  else its end. Following resumes. */
+   *  else the bottom of the turn, follow-ups included. Following resumes. */
   function jumpToLatest(): void {
     const body = latestBody();
     const turn = body?.parentElement;
@@ -284,10 +285,10 @@
     following = true;
     const fits = body.offsetHeight + PEEK <= threadRef.clientHeight - THREAD_PAD * 2;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const view = threadRef.getBoundingClientRect();
+    const bottom = body.getBoundingClientRect().bottom - (view.bottom - THREAD_PAD);
     threadRef.scrollTo({
-      top: fits
-        ? Math.max(0, turn.offsetTop - PEEK)
-        : threadRef.scrollTop + endOverflow(),
+      top: fits ? Math.max(0, turn.offsetTop - PEEK) : threadRef.scrollTop + bottom,
       behavior: reduce ? "auto" : "smooth",
     });
   }
@@ -721,6 +722,7 @@
           {#if isLast && status === "error"}
             <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
           {/if}
+          <span data-reply-end aria-hidden="true"></span>
           {#if isLast && exploreTurn === turn.id && !sending && explore.length > 0}
             <GuidePrompts
               prompts={explore}
@@ -736,9 +738,15 @@
       {/each}
     </div>
     {#if latestHidden}
-      <button type="button" class="guide-latest" onclick={jumpToLatest}>
-        <Icon name="arrow-down" class="w-3 h-3 shrink-0" />
-        <span class:guide-shimmer={sending}>{sending ? "Still writing" : "Jump to latest"}</span>
+      <button
+        type="button"
+        class="guide-latest"
+        data-streaming={sending}
+        aria-label={sending ? "Still writing. Jump to the latest reply" : "Jump to the latest reply"}
+        title="Jump to latest"
+        onclick={jumpToLatest}
+      >
+        <Icon name="arrow-down" class="w-4 h-4" />
       </button>
     {/if}
     </div>
@@ -876,31 +884,52 @@
     min-height: 0;
   }
 
-  /* "Jump to latest": outside the scroller so it stays put, outside the log
-     so screen readers do not hear it as part of the conversation. */
+  /* "Jump to latest": a 32px arrow in the thread's bottom-right corner, with
+     a 44px tap area. Outside the scroller so it stays put, outside the log so
+     screen readers do not hear it as part of the conversation. A dot marks a
+     reply still streaming below. */
   .guide-latest {
     position: absolute;
-    left: 50%;
+    right: 0.75rem;
     bottom: 0.5rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    min-height: 2rem;
-    padding-inline: 0.75rem;
-    transform: translateX(-50%);
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
     background: var(--color-bg-primary);
     box-shadow: var(--elevation-sheet);
     color: var(--color-text-secondary);
-    font-size: 0.75rem;
-    line-height: 1.125rem;
     touch-action: manipulation;
     animation: guide-latest-in 150ms var(--ease-out) both;
+  }
+
+  .guide-latest::before {
+    content: "";
+    position: absolute;
+    inset: -0.375rem;
+  }
+
+  .guide-latest[data-streaming="true"]::after {
+    content: "";
+    position: absolute;
+    top: 0.3125rem;
+    right: 0.3125rem;
+    width: 0.3125rem;
+    height: 0.3125rem;
+    background: var(--color-primary);
   }
 
   @keyframes guide-latest-in {
     from {
       opacity: 0;
-      transform: translate(-50%, 0.25rem);
+      transform: scale(0.95);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .guide-latest:hover {
+      color: var(--color-text-primary);
     }
   }
 
@@ -1092,19 +1121,24 @@
     }
   }
 
-  /* Phones: a bottom sheet over the lower three quarters, so the page the
-     guide opens still shows above it. svh, not dvh: the small viewport is the
-     one with the browser's bars showing, so the composer is never pushed
-     under them. The sheet takes the drawer's sunken surface, so the white
-     question bubbles and source cards read as objects on it. The sheet's own
-     close button replaces the launcher while open. */
+  /* Phones: a full-height sheet. svh, not dvh: the small viewport is the one
+     with the browser's bars showing, so the composer is never pushed under
+     them. The page shows again when the guide moves it: the sheet minimizes
+     to its header (below). The sheet takes the drawer's sunken surface, so
+     the white question bubbles and source cards read as objects on it. The
+     sheet's own close button replaces the launcher while open. */
   @media (max-width: 767.98px) {
     .guide-panel {
       --guide-hide: translateY(100%);
       left: 0;
-      height: 75svh;
+      height: 100svh;
       background: var(--color-bg-sunken);
       box-shadow: var(--elevation-sheet);
+    }
+
+    /* Clear the notch or status bar at the top of a full-height sheet. */
+    .guide-header {
+      padding-block-start: max(0.625rem, env(safe-area-inset-top, 0px));
     }
 
     /* Minimized: the same slide as open and close, stopped where only the
