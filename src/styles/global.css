@@ -391,6 +391,31 @@ body {
 	}
 }
 
+/* A section the guide pointed at (guidePage.ts) lands a little below the
+   top edge, then holds a tint that fades. The spread shadow extends the tint
+   past the box without moving layout. It animates color only, so it stays
+   under reduced motion. */
+:where([data-page-scroll] [id]) {
+	scroll-margin-block-start: 1.5rem;
+}
+
+[data-guide-highlight] {
+	--guide-mark: color-mix(in srgb, var(--color-primary) 12%, transparent);
+	animation: guide-mark 2.4s var(--ease-out) both;
+}
+
+@keyframes guide-mark {
+	0%,
+	45% {
+		background-color: var(--guide-mark);
+		box-shadow: 0 0 0 0.5rem var(--guide-mark);
+	}
+	100% {
+		background-color: transparent;
+		box-shadow: 0 0 0 0.5rem transparent;
+	}
+}
+
 .layout-grid {
 	height: 100%;
 	min-height: 0;

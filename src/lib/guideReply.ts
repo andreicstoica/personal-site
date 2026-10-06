@@ -1,7 +1,7 @@
-import type { ChatAction, ChatApiSuccess, ChatSource } from "./chatTypes";
+import type { OpenPageOutput } from "./chatTypes";
+import type { GuideDoc, SearchHit } from "./guideSearch";
 import type { Outage } from "./inference";
 import {
-	extractNavigateHref,
 	isNavigationIntent,
 	isSmallTalk,
 	type MemorySection,
@@ -9,6 +9,7 @@ import {
 	type SiteRoute,
 	siteRoutes,
 } from "./memorySelect";
+import type { PageSection } from "./siteSections";
 
 function clip(body: string, max: number): string {
 	const trimmed = body.trim();
@@ -16,88 +17,55 @@ function clip(body: string, max: number): string {
 	return `${trimmed.slice(0, max).trimEnd()}…`;
 }
 
-export function sourcesFrom(sections: readonly MemorySection[]): ChatSource[] {
-	const seen = new Set<string>();
-	const sources: ChatSource[] = [];
-	for (const section of sections) {
-		const key = `${section.title}:${section.route ?? ""}`;
-		if (seen.has(key)) continue;
-		seen.add(key);
-		sources.push(
-			section.route
-				? { title: section.title, href: section.route }
-				: { title: section.title },
-		);
-	}
-	return sources.slice(0, 4);
-}
-
-function decideAction(
-	message: string,
-	modelText: string | null,
-): {
-	action: ChatAction;
-	modelText: string | null;
-} {
-	const extracted = modelText ? extractNavigateHref(modelText) : null;
-	const fromModel = extracted?.href
-		? siteRoutes.find((route) => route.href === extracted.href)
-		: undefined;
-	const lexical = matchRoute(message);
-	const intent = isNavigationIntent(message);
-	const route =
-		intent && lexical && fromModel && lexical.href !== fromModel.href
-			? lexical
-			: (fromModel ?? lexical ?? undefined);
-	const visible = extracted ? extracted.text : modelText;
-	if (!route) return { action: { kind: "none" }, modelText: visible };
-	return {
-		action: {
-			kind: "navigate",
-			href: route.href,
-			label: route.label,
-			// A page named only in the question stays a link. The model's token
-			// means it sent the visitor there for the rest of the answer.
-			follow: intent || fromModel !== undefined,
-		},
-		modelText: visible,
-	};
-}
-
-function notesText(
-	message: string,
-	sections: readonly MemorySection[],
+function siteMap(
+	sectionsByPath: Readonly<Record<string, readonly PageSection[]>>,
 ): string {
-	if (isSmallTalk(message)) {
-		return "Hey. Ask what I've been building, or say “show me Refract”.";
-	}
-	if (sections.length === 0) {
-		return "I don't have notes on that. Ask about my writing, the canon, or how this site was built.";
-	}
-	const paragraph = sections[0]?.body.trim().split(/\n\s*\n/)[0] ?? "";
-	const sentence = paragraph.split(/(?<=[.!?])\s+/)[0] ?? paragraph;
-	return clip(sentence, 220);
-}
-
-export function buildSystemPrompt(
-	sections: readonly MemorySection[],
-	viewing?: SiteRoute,
-): string {
-	const routeList = siteRoutes
-		.map((route) => `${route.href} — ${route.label}`)
+	return siteRoutes
+		.map((route) => {
+			const sections = sectionsByPath[route.href] ?? [];
+			const list = sections.length
+				? `. Sections: ${sections.map((section) => section.id).join(", ")}`
+				: "";
+			return `${route.href} — ${route.label}${list}`;
+		})
 		.join("\n");
-	const notes =
-		sections.length === 0
-			? "No notes matched this message. Say so. Do not invent facts about Andrei."
-			: sections
-					.map((section) => {
-						const route = section.route ? `route: ${section.route}\n` : "";
-						return `## ${section.title}\n${route}${section.body}`;
-					})
-					.join("\n\n");
+}
+
+function noteBlock(notes: readonly MemorySection[]): string {
+	return notes
+		.map((note) => {
+			const route = note.route ? ` (${note.route})` : "";
+			return `## ${note.title}${route}\n${note.body}`;
+		})
+		.join("\n\n");
+}
+
+function postList(posts: readonly GuideDoc[]): string {
+	return posts
+		.map((post) => {
+			const date = post.date ?? "undated";
+			const tags = post.tags?.length ? ` [${post.tags.join(", ")}]` : "";
+			return `- ${post.slug}: ${post.title} (${date}) ${post.url}${tags}`;
+		})
+		.join("\n");
+}
+
+/** Everything the guide knows fits in about 5,000 tokens, so it rides in the
+ *  prompt and most answers need no tool call. Post bodies are the exception:
+ *  read_post loads one when a question needs more than its title. The page
+ *  the visitor is on comes last, so the rest is one fixed, cacheable prefix. */
+export function buildSystemPrompt(context: {
+	notes: readonly MemorySection[];
+	posts: readonly GuideDoc[];
+	sectionsByPath: Readonly<Record<string, readonly PageSection[]>>;
+	viewing?: SiteRoute;
+}): string {
+	const { notes, posts, sectionsByPath, viewing } = context;
 	return `You are the guide on Andrei Stoica's site, andrei.bio. Speak as Andrei, in the first person: concise, direct, no filler.
 
-Use only the notes below. If they do not cover the question, say you don't have that and point at a related page. Never invent relationships, employers, dates, or project details.
+Answer from the notes and the post list below. Call read_post only when the question needs what a post says, not just its title or date. If nothing below covers the question, say you don't have that and point at a related page. Never invent people, employers, dates, or project details.
+
+Call open_page when the visitor asks to see a page, and whenever your reply will point them to a page for the rest, such as the canon for people and works. Call it before you write the reply, with a section id from the site map when one section answers the question. The site opens the page beside the chat after your reply, so say the rest is on that page. When the visitor is already on that page, still call open_page with the section: the page scrolls to it. Call open_page at most once, and never for a page that adds nothing.
 
 Keep replies under 100 words. Use one of two shapes.
 
@@ -108,21 +76,19 @@ A list answer, for any question about people, inspirations, influences, works, p
 
 A prose answer: two or three sentences, no heading, then one line that points to the page with more when one exists.
 
-Use Markdown only for headings, bullets, bold group names, and links.
-
-When the visitor asks to open a page, or your reply points them to a page for the rest, say the rest is on that page and end with exactly one line and nothing after it:
-[[navigate:/exact-path]]
-The site opens that page beside the chat. Only use a path from the site map. Skip that line when no page adds to the answer.
-${viewing ? `\nThe visitor is viewing ${viewing.label} (${viewing.href}). "This page" means that page.\n` : ""}
+Use Markdown only for headings, bullets, bold group names, and links. Link a post by its title, like [Title](URL); never print a bare URL.
 
 Site map:
-${routeList}
+${siteMap(sectionsByPath)}
+
+Posts, newest first (slug: title (date) URL [tags]):
+${postList(posts)}
 
 Notes:
-${notes}`;
+${noteBlock(notes)}${viewing ? `\n\nThe visitor is viewing ${viewing.label} (${viewing.href}). "This page" means that page.` : ""}`;
 }
 
-const OUTAGE_NOTICE: Record<Outage, string> = {
+export const OUTAGE_NOTICE: Record<Outage, string> = {
 	budget:
 		"My AI is out of credit this month, so this answer comes straight from my notes.",
 	busy: "Lots of questions at once, so this answer comes straight from my notes. Try again in a minute.",
@@ -130,33 +96,26 @@ const OUTAGE_NOTICE: Record<Outage, string> = {
 		"The model didn't answer, so this answer comes straight from my notes.",
 };
 
-export function resolveGuideTurn(args: {
-	message: string;
-	sections: readonly MemorySection[];
-	modelText: string | null;
-	/** `unconfigured` is a deliberate notes-only site, so it gets no notice. */
-	notesReason: "unconfigured" | Outage | null;
-}): ChatApiSuccess {
-	const decided = decideAction(args.message, args.modelText);
-	if (decided.modelText !== null && args.notesReason === null) {
-		const response =
-			decided.modelText.trim() ||
-			"I don't have a good answer for that from the notes.";
-		return {
-			response,
-			sources: sourcesFrom(args.sections),
-			action: decided.action,
-			mode: "model",
-		};
+/** The reply without a model: the first sentence of the best match. */
+export function notesText(
+	message: string,
+	results: readonly SearchHit[],
+): string {
+	if (isSmallTalk(message)) {
+		return "Hey. Ask about my writing, the people I look up to, or how this site was built.";
 	}
-	const reason = args.notesReason;
-	return {
-		response: notesText(args.message, args.sections),
-		sources: sourcesFrom(args.sections),
-		action: decided.action,
-		mode: "notes",
-		...(reason && reason !== "unconfigured"
-			? { notice: OUTAGE_NOTICE[reason] }
-			: {}),
-	};
+	const best = results[0];
+	if (!best?.text) {
+		return "I don't have notes on that. Ask about my writing, the canon, or how this site was built.";
+	}
+	const paragraph = best.text.trim().split(/\n\s*\n/)[0] ?? "";
+	const sentence = paragraph.split(/(?<=[.!?])\s+/)[0] ?? paragraph;
+	return clip(sentence, 220);
+}
+
+/** Without a model, only an explicit "show me X" opens a page. */
+export function notesOpenPage(message: string): OpenPageOutput | null {
+	if (!isNavigationIntent(message)) return null;
+	const route = matchRoute(message);
+	return route ? { href: route.href, label: route.label } : null;
 }

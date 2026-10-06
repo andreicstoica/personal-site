@@ -1,16 +1,5 @@
-<script module lang="ts">
-  import type { PixelarticonName } from "../../icons/pixelarticons";
-
-  export type GuideStep = {
-    icon: PixelarticonName;
-    label: string;
-    status: "active" | "complete";
-    /** Makes the label a link, for a step the visitor can repeat. */
-    href?: string;
-  };
-</script>
-
 <script lang="ts">
+  import type { GuideStep } from "../../lib/guideTurn";
   import Icon from "../ui/Icon.svelte";
 
   /** `live` animates rows as they arrive. A finished chain renders still, so

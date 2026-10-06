@@ -2,43 +2,41 @@
   import { onMount, tick } from "svelte";
   import { navigate } from "astro:transitions/client";
   import { renderChatMarkdown } from "../../lib/chatMarkdown";
+  import type { GuideChat } from "../../lib/guideChat";
   import {
-    parseChatApiSuccess,
-    parseChatEvent,
-    type ChatAction,
-    type ChatEvent,
-    type ChatSource,
+    parseStoredMessages,
+    turnText,
+    type ChatTurn,
+    type GuideUIMessage,
   } from "../../lib/chatTypes";
+  import { revealSection, watchIntent } from "../../lib/guidePage";
   import { starterPrompts } from "../../lib/guidePrompts";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
+  import {
+    groupTurns,
+    pageStep,
+    replyView,
+    type GuideStep,
+    type PageCall,
+    type PageMove,
+    type ReplyView,
+  } from "../../lib/guideTurn";
   import { routeByHref } from "../../lib/memorySelect";
   import Icon from "../ui/Icon.svelte";
-  import GuideSteps, { type GuideStep } from "./GuideSteps.svelte";
-
-  type GuideMessage = {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-    sources?: ChatSource[];
-    action?: ChatAction;
-    notice?: string;
-    /** The guide followed this reply's navigate action. */
-    navigated?: boolean;
-  };
-
-  /** What the server has reported for the turn in flight. */
-  type PendingTurn = { sources: ChatSource[] | null; writing: boolean };
+  import GuideSteps from "./GuideSteps.svelte";
 
   const storageKey = GUIDE_STORAGE_KEY;
-  /** Steps that land together still reveal one at a time, so the chain reads
-   *  in order. Only the pacing is client-side; every step comes from the server. */
-  const STEP_MS = 300;
+  /** sessionStorage keeps the last 30 messages; the route gets the last 9,
+   *  four exchanges and the new question. */
+  const KEEP = 30;
+  const SEND = 9;
+  /** How much of the previous turn stays visible above a new question. */
+  const PEEK = 40;
+  const THINKING: GuideStep = { icon: "chat", label: "Thinking", status: "active" };
+  const EMPTY_VIEW: ReplyView = { steps: [], text: "", notices: [], page: null };
 
   let open = $state(false);
-  let messages = $state<GuideMessage[]>([]);
   let input = $state("");
-  let sending = $state(false);
-  let pending = $state<PendingTurn | null>(null);
   let pagePath = $state("/");
   let hydrated = $state(false);
   let inputRef = $state<HTMLInputElement | null>(null);
@@ -49,136 +47,102 @@
   let noSlide = $state(false);
   let followTimer: ReturnType<typeof setTimeout> | undefined;
   let stopIntentWatch: (() => void) | undefined;
-  /** The reply whose navigation is pending, so its step can show it. */
+  /** The page call whose follow is pending, so its step can show it. */
   let followingId = $state<string | null>(null);
-  let abortRef: AbortController | null = null;
+  /** Page calls the guide carried out, by tool call id. */
+  let moved = $state<Record<string, PageMove>>({});
 
+  function toTurns(messages: GuideUIMessage[]): ChatTurn[] {
+    const turns: ChatTurn[] = [];
+    for (const message of messages.slice(-SEND)) {
+      if (message.role !== "user" && message.role !== "assistant") continue;
+      const text = turnText(message);
+      if (text) turns.push({ role: message.role, text });
+    }
+    return turns;
+  }
+
+  /** The AI SDK is about 34 KB gzipped, and most visitors never open the
+   *  guide, so it loads when the panel opens or a message is sent. Until
+   *  then a restored thread renders from `stored`. */
+  let chat = $state.raw<GuideChat | null>(null);
+  let chatLoad: Promise<GuideChat> | undefined;
+  /** Replaced whole, never mutated, so it stays a plain array. */
+  let stored = $state.raw<GuideUIMessage[]>([]);
+  /** True from a send until the SDK has loaded and taken the message. */
+  let starting = $state(false);
+
+  function loadChat(): Promise<GuideChat> {
+    chatLoad ??= import("../../lib/guideChat").then(({ createGuideChat }) => {
+      const instance = createGuideChat({
+        messages: stored,
+        body: (messages) => ({ messages: toTurns(messages), page: pagePath }),
+        onFinish: (message, completed) => {
+          if (instance.messages.length > KEEP) {
+            instance.messages = instance.messages.slice(-KEEP);
+          }
+          if (!completed) return;
+          const page = replyView(message).page;
+          if (page) scheduleFollow(page);
+        },
+      });
+      chat = instance;
+      return instance;
+    });
+    // A failed load (offline, or a stale deploy) can be retried by the next send.
+    chatLoad.catch(() => {
+      chatLoad = undefined;
+    });
+    return chatLoad;
+  }
+
+  const messages = $derived(chat ? chat.messages : stored);
+  const status = $derived(chat?.status ?? "ready");
+  const sending = $derived(starting || status === "submitted" || status === "streaming");
+  const turns = $derived(groupTurns(messages));
   const viewing = $derived(routeByHref(pagePath));
 
   function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
-  function parseStoredMessage(value: unknown): GuideMessage | null {
-    if (!isRecord(value)) return null;
-    if (typeof value.id !== "string" || typeof value.content !== "string") return null;
-    if (value.role !== "user" && value.role !== "assistant") return null;
-    const wrapped = parseChatApiSuccess({
-      response: value.content,
-      mode: "notes",
-      sources: value.sources ?? [],
-      action: value.action ?? { kind: "none" },
-      notice: value.notice,
-    });
-    if (!wrapped) return null;
-    return {
-      id: value.id,
-      role: value.role,
-      content: value.content,
-      sources: wrapped.sources,
-      action: wrapped.action,
-      notice: wrapped.notice,
-      navigated: value.navigated === true,
-    };
+  function parseMoved(value: unknown): Record<string, PageMove> {
+    if (!isRecord(value)) return {};
+    const out: Record<string, PageMove> = {};
+    for (const [id, how] of Object.entries(value)) {
+      if (how === "opened" || how === "scrolled") out[id] = how;
+    }
+    return out;
   }
 
-  function readStored(): { open: boolean; messages: GuideMessage[] } | null {
+  function readStored(): {
+    open: boolean;
+    messages: GuideUIMessage[];
+    moved: Record<string, PageMove>;
+  } | null {
     try {
       const raw = sessionStorage.getItem(storageKey);
       if (!raw) return null;
       const parsed: unknown = JSON.parse(raw);
-      if (!isRecord(parsed) || typeof parsed.open !== "boolean" || !Array.isArray(parsed.messages)) {
-        return null;
-      }
-      const restored: GuideMessage[] = [];
-      for (const item of parsed.messages) {
-        const message = parseStoredMessage(item);
-        if (!message) return null;
-        restored.push(message);
-      }
-      return { open: parsed.open, messages: restored };
+      if (!isRecord(parsed) || typeof parsed.open !== "boolean") return null;
+      const messages = parseStoredMessages(parsed.messages);
+      if (!messages) return null;
+      return { open: parsed.open, messages, moved: parseMoved(parsed.moved) };
     } catch {
       return null;
     }
   }
 
-  function isAbortError(value: unknown): boolean {
-    return value instanceof DOMException && value.name === "AbortError";
-  }
-
-  function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
+  /** Puts the last question near the top of the thread, with a little of
+   *  the turn before it still in view. */
+  function anchorLastTurn(behavior: ScrollBehavior): void {
+    const last = threadRef?.querySelector<HTMLElement>("[data-turn]:last-of-type");
+    if (!threadRef || !last) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    threadRef.scrollTo({
+      top: Math.max(0, last.offsetTop - PEEK),
+      behavior: reduce ? "auto" : behavior,
     });
-  }
-
-  /** The steps a finished turn took: one search, then one line per note read. */
-  function doneSteps(sources: ChatSource[]): GuideStep[] {
-    return [
-      { icon: "search", label: "Searched notes", status: "complete" },
-      ...sources.map((source): GuideStep => ({
-        icon: "file",
-        label: `Read ${source.title}`,
-        status: "complete",
-      })),
-    ];
-  }
-
-  function pendingSteps(turn: PendingTurn): GuideStep[] {
-    if (turn.sources === null) {
-      return [{ icon: "search", label: "Searching notes", status: "active" }];
-    }
-    const steps = doneSteps(turn.sources);
-    if (turn.writing) steps.push({ icon: "chat", label: "Writing reply", status: "active" });
-    return steps;
-  }
-
-  /** NDJSON: one event per line. A line can arrive split across chunks. */
-  async function* readEvents(response: Response): AsyncGenerator<ChatEvent> {
-    const reader = response.body?.getReader();
-    if (!reader) return;
-    const decoder = new TextDecoder();
-    let buffer = "";
-    for (;;) {
-      const { done, value } = await reader.read();
-      buffer += decoder.decode(value, { stream: !done });
-      let newline = buffer.indexOf("\n");
-      while (newline !== -1) {
-        const line = buffer.slice(0, newline).trim();
-        buffer = buffer.slice(newline + 1);
-        const event = line ? parseChatEvent(JSON.parse(line)) : null;
-        if (event) yield event;
-        newline = buffer.indexOf("\n");
-      }
-      if (done) return;
-    }
-  }
-
-  /** History is capped at 30 to match what sessionStorage keeps, so a
-   *  restored thread is never shorter than the live one. */
-  function appendMessage(message: GuideMessage) {
-    messages = [...messages, message].slice(-30);
-  }
-
-  function appendReply(content: string, extra: Partial<GuideMessage> = {}): string {
-    const id = crypto.randomUUID();
-    appendMessage({ id, role: "assistant", content, ...extra });
-    return id;
-  }
-
-  /** Navigation is a step too: pending while the follow waits, done once the
-   *  page moved, and a link when the visitor's own action cancelled it. */
-  function navStep(message: GuideMessage): GuideStep | null {
-    const action = message.action;
-    if (action?.kind !== "navigate") return null;
-    if (followingId === message.id) {
-      return { icon: "map", label: `Opening ${action.label}`, status: "active" };
-    }
-    if (message.navigated) {
-      return { icon: "map", label: `Opened ${action.label}`, status: "complete", href: action.href };
-    }
-    if (pagePath === action.href) return null;
-    return { icon: "map", label: `Open ${action.label}`, status: "complete", href: action.href };
   }
 
   // Outside clicks move focus to the clicked element before this runs, so the
@@ -188,16 +152,10 @@
       rootRef !== null &&
       document.activeElement instanceof Node &&
       rootRef.contains(document.activeElement);
-    abortRef?.abort();
     open = false;
     // The launcher is hidden while the guide is open; wait a tick
     // so it is visible and focusable again before handing focus back.
     if (focusWasInside) void tick().then(() => launchRef?.focus());
-  }
-
-  function errorText(value: unknown): string {
-    if (isRecord(value) && typeof value.error === "string") return value.error;
-    return "The guide couldn't answer.";
   }
 
   /** On touch, focusing the input would raise the keyboard, so focus the
@@ -210,10 +168,14 @@
 
   /** Drops the thread and anything in flight, back to the starter prompts. */
   function newChat() {
-    abortRef?.abort();
+    void chat?.stop();
     cancelFollow();
-    messages = [];
-    pending = null;
+    stored = [];
+    if (chat) {
+      chat.messages = [];
+      chat.clearError();
+    }
+    moved = {};
     input = "";
     // The restart button unmounts with the thread; keep focus in the panel.
     focusComposer();
@@ -222,110 +184,68 @@
   function sendPrompt(text: string) {
     // The clicked row unmounts with the empty state; keep focus in the panel.
     focusComposer();
-    void send(text);
+    send(text);
   }
 
-  /** Any sign the visitor is doing something else cancels a pending follow:
-   *  a pointer down, a wheel or touch scroll, a key press, or a text
-   *  selection. Focus alone is not a signal; it stays in the input by design. */
-  function watchIntent(onIntent: () => void): () => void {
-    const events = ["pointerdown", "wheel", "touchmove", "keydown"] as const;
-    const onSelection = () => {
-      if (document.getSelection()?.isCollapsed === false) onIntent();
-    };
-    for (const type of events) {
-      window.addEventListener(type, onIntent, { capture: true, passive: true });
-    }
-    document.addEventListener("selectionchange", onSelection);
-    return () => {
-      for (const type of events) window.removeEventListener(type, onIntent, { capture: true });
-      document.removeEventListener("selectionchange", onSelection);
-    };
-  }
-
-  function scheduleFollow(action: ChatAction, messageId: string) {
-    if (action.kind !== "navigate" || !action.follow) return;
-    if (window.location.pathname === action.href) return;
+  function send(text: string) {
+    const message = text.trim();
+    if (!message || sending) return;
     cancelFollow();
-    followingId = messageId;
+    input = "";
+    starting = true;
+    void loadChat()
+      .then((instance) => {
+        void instance.sendMessage({ text: message });
+        return tick();
+      })
+      .then(() => anchorLastTurn("smooth"))
+      .catch(() => {
+        // The SDK chunk failed to load (offline, or a stale deploy).
+        input = message;
+      })
+      .finally(() => {
+        starting = false;
+      });
+  }
+
+  /** Waits a beat after the reply, then opens the page or scrolls this one.
+   *  Any sign of the visitor doing something else cancels it. */
+  function scheduleFollow({ toolCallId, output }: PageCall) {
+    const samePage = window.location.pathname === output.href;
+    if (!open || (samePage && !output.section)) return;
+    cancelFollow();
+    followingId = toolCallId;
     stopIntentWatch = watchIntent(cancelFollow);
     followTimer = setTimeout(() => {
       const draft = input.trim().length > 0;
       cancelFollow();
       // Never yank the page out from under a question the visitor is typing.
       if (draft) return;
-      messages = messages.map((message) =>
-        message.id === messageId ? { ...message, navigated: true } : message,
-      );
+      const section = output.section;
+      if (samePage) {
+        if (section && revealSection(section.id)) {
+          moved = { ...moved, [toolCallId]: "scrolled" };
+        }
+        return;
+      }
+      moved = { ...moved, [toolCallId]: "opened" };
+      if (section) {
+        // SiteLayout resets the page scroll on page-load; reveal after it.
+        document.addEventListener(
+          "astro:page-load",
+          () => requestAnimationFrame(() => revealSection(section.id)),
+          { once: true },
+        );
+      }
       // ClientRouter, not a full load: a reload would tear the thread down and
       // rebuild it from storage, dropping scroll and focus for no reason.
-      void navigate(action.href);
+      void navigate(output.href);
     }, 900);
   }
 
-
-  const send = async (text: string) => {
-    const userMessage = text.trim();
-    if (!userMessage || sending) return;
-    const history = messages.slice(-8).map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
-    appendMessage({ id: crypto.randomUUID(), role: "user", content: userMessage });
-    input = "";
-    sending = true;
-    pending = { sources: null, writing: false };
-    const controller = new AbortController();
-    abortRef = controller;
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, history, page: pagePath }),
-        signal: controller.signal,
-      });
-      if (!response.ok) {
-        appendReply(errorText(await response.json().catch(() => null)));
-        return;
-      }
-      let shownAt = performance.now();
-      let replied = false;
-      for await (const event of readEvents(response)) {
-        const wait = shownAt + STEP_MS - performance.now();
-        if (wait > 0) await sleep(wait);
-        if (controller.signal.aborted) return;
-        shownAt = performance.now();
-        if (event.type === "searched") {
-          pending = { sources: event.sources, writing: false };
-        } else if (event.type === "writing") {
-          pending = { sources: pending?.sources ?? [], writing: true };
-        } else {
-          // The reply takes the steps' place in the same frame.
-          pending = null;
-          replied = true;
-          const replyId = appendReply(event.reply.response, {
-            sources: event.reply.sources,
-            action: event.reply.action,
-            notice: event.reply.notice,
-          });
-          scheduleFollow(event.reply.action, replyId);
-        }
-      }
-      if (!replied) appendReply("The guide couldn't answer.");
-    } catch (error) {
-      // A cancelled turn is the visitor's own doing — don't narrate it.
-      if (!isAbortError(error)) appendReply("The guide couldn't answer.");
-    } finally {
-      if (abortRef === controller) abortRef = null;
-      pending = null;
-      sending = false;
-    }
-  };
-
   const onSubmit = (event: SubmitEvent) => {
     event.preventDefault();
-    void send(input);
+    send(input);
   };
 
   const onWindowKeydown = (event: KeyboardEvent) => {
@@ -369,10 +289,11 @@
     // Persisting the island means later navigations keep the same element, and
     // this flag never has to come back.
     noSlide = true;
-    const stored = readStored();
-    if (stored) {
-      messages = stored.messages;
-      open = stored.open;
+    const saved = readStored();
+    if (saved) {
+      stored = saved.messages;
+      moved = saved.moved;
+      open = saved.open;
     }
     onPageLoad();
     // The island no longer remounts, so mount-time work that navigation can
@@ -389,20 +310,22 @@
     return () => {
       alive = false;
       cancelFollow();
-      abortRef?.abort();
+      void chat?.stop();
       document.removeEventListener("astro:page-load", onPageLoad);
       document.removeEventListener("astro:before-preparation", cancelFollow);
     };
   });
 
+  // Written when a turn settles, not on every streamed token. Private-mode and
+  // storage-quota failures are not worth breaking an effect over; the guide
+  // just stops surviving a reload.
   $effect(() => {
-    if (!hydrated) return;
-    // Private-mode and storage-quota failures are not worth breaking an effect
-    // over; the guide just stops surviving a reload.
+    if (!hydrated || sending) return;
+    const snapshot = $state.snapshot(messages).slice(-KEEP);
     try {
       sessionStorage.setItem(
         storageKey,
-        JSON.stringify({ open, messages: messages.slice(-30) }),
+        JSON.stringify({ open, messages: snapshot, moved }),
       );
     } catch {
       // Storage unavailable.
@@ -423,22 +346,14 @@
     if (!open) cancelFollow();
   });
 
-
+  // Opening the panel, or restoring it open, lands on the last question rather
+  // than the bottom of its reply.
   $effect(() => {
-    if (!open || typeof window === "undefined") return;
+    if (!open || !hydrated) return;
+    // Warm the SDK while the visitor reads or types.
+    void loadChat().catch(() => {});
     focusComposer();
-  });
-
-  $effect(() => {
-    void open;
-    void messages.length;
-    void pending;
-    if (!threadRef) return;
-    const distanceFromBottom =
-      threadRef.scrollHeight - threadRef.scrollTop - threadRef.clientHeight;
-    if (distanceFromBottom < 60 || threadRef.scrollTop === 0) {
-      threadRef.scrollTop = threadRef.scrollHeight;
-    }
+    void tick().then(() => anchorLastTurn("auto"));
   });
 </script>
 
@@ -485,38 +400,52 @@
 
     <div
       bind:this={threadRef}
-      class="guide-thread flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      class="guide-thread relative flex-1 overflow-y-auto px-4 py-3 space-y-3"
+      style:--guide-peek="{PEEK}px"
       role="log"
-      aria-live="polite"
       aria-busy={sending}
     >
-      {#each messages as message (message.id)}
-        {#if message.role === "user"}
-          <div class="flex justify-end">
-            <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-              {message.content}
+      {#each turns as turn, index (turn.id)}
+        {@const isLast = index === turns.length - 1}
+        {@const live = isLast && sending}
+        <div class="guide-turn space-y-3" data-turn data-last={isLast}>
+          {#if turn.question}
+            <div class="flex justify-end">
+              <div class="max-w-[85%] px-3 py-2 text-sm break-words whitespace-pre-wrap bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+                {turnText(turn.question)}
+              </div>
             </div>
-          </div>
-        {:else}
-          {@const nav = navStep(message)}
-          <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
-            {#if message.sources && message.sources.length > 0}
-              <GuideSteps steps={doneSteps(message.sources)} />
-            {/if}
-            <div class="guide-md">{@html renderChatMarkdown(message.content)}</div>
-            {#if message.notice}
-              <p class="text-xs text-[var(--color-text-secondary)]">{message.notice}</p>
-            {/if}
-            {#if nav}
-              <GuideSteps steps={[nav]} live={nav.status === "active"} />
-            {/if}
-          </div>
-        {/if}
+          {/if}
+          {#if turn.reply || live}
+            {@const view = turn.reply ? replyView(turn.reply) : EMPTY_VIEW}
+            {@const steps = live && view.steps.length === 0 && !view.text && !view.page ? [THINKING] : view.steps}
+            <div class="space-y-2 text-sm break-words text-[var(--color-text-primary)]">
+              {#if steps.length > 0}
+                <GuideSteps {steps} {live} />
+              {/if}
+              {#if view.text}
+                <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
+              {/if}
+              {#each view.notices as notice, noticeIndex (noticeIndex)}
+                <p class="text-xs text-[var(--color-text-secondary)]">{notice}</p>
+              {/each}
+              {#if view.page}
+                {@const step = pageStep(view.page.output, {
+                  pending: live || followingId === view.page.toolCallId,
+                  moved: moved[view.page.toolCallId],
+                  pagePath,
+                })}
+                {#if step}
+                  <GuideSteps steps={[step]} live={step.status === "active"} />
+                {/if}
+              {/if}
+            </div>
+          {/if}
+          {#if isLast && status === "error"}
+            <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
+          {/if}
+        </div>
       {/each}
-
-      {#if pending}
-        <GuideSteps steps={pendingSteps(pending)} live />
-      {/if}
     </div>
 
     {#if messages.length === 0}
@@ -646,12 +575,20 @@
     overscroll-behavior: contain;
   }
 
+  /* The last turn is at least one thread tall, less the peek above it, so
+     even a short reply can sit with its question at the top. 100% is the
+     thread's content box, so the 0.75rem top padding comes back. Pure CSS,
+     so the room exists on the first frame of a restore. */
+  .guide-turn[data-last="true"] {
+    min-height: calc(100% + 0.75rem - var(--guide-peek));
+  }
+
   .guide-input {
     font-size: 1rem;
   }
 
   .guide-panel button,
-  .guide-panel a,
+  .guide-panel :global(a),
   .guide-panel input {
     touch-action: manipulation;
   }

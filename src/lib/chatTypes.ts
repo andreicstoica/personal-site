@@ -1,94 +1,144 @@
-export type ChatRole = "user" | "assistant";
+import type { UIMessage } from "ai";
 
-export type ChatMode = "model" | "notes";
-
-export type ChatAction =
-	| { kind: "none" }
-	| { kind: "navigate"; href: string; label: string; follow: boolean };
-
-export type ChatSource = {
+export type ReadPostOutput = {
 	title: string;
-	href?: string;
+	url: string;
+	date?: string;
+	/** The post body. The model reads it; the panel does not show it. */
+	text?: string;
 };
 
-export type ChatApiSuccess = {
-	response: string;
-	sources: ChatSource[];
-	action: ChatAction;
-	mode: ChatMode;
-	/** Why a notes answer stands in for the model, in the visitor's terms. */
-	notice?: string;
+export type OpenPageOutput = {
+	href: string;
+	label: string;
+	section?: { id: string; label: string };
 };
+
+/** Tool names and shapes, shared by the route (which runs them) and the
+ *  panel (which renders them as steps). Only the route imports the tools. */
+export type GuideUITools = {
+	read_post: { input: { slug: string }; output: ReadPostOutput };
+	open_page: {
+		input: { path: string; section?: string };
+		output: OpenPageOutput;
+	};
+};
+
+export type GuideDataParts = {
+	/** Why a notes answer stands in for the model, in the visitor's terms. */
+	notice: { text: string };
+};
+
+export type GuideUIMessage = UIMessage<unknown, GuideDataParts, GuideUITools>;
+export type GuidePart = GuideUIMessage["parts"][number];
+
+/** One prior turn as the route accepts it: text only. Tool outputs from the
+ *  client are never replayed to the model. */
+export type ChatTurn = { role: "user" | "assistant"; text: string };
+
+export function turnText(message: GuideUIMessage): string {
+	return message.parts
+		.map((part) => (part.type === "text" ? part.text : ""))
+		.join("")
+		.trim();
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseSource(value: unknown): ChatSource | null {
-	if (!isRecord(value) || typeof value.title !== "string") return null;
-	if (value.href === undefined) return { title: value.title };
-	if (typeof value.href !== "string") return null;
-	return { title: value.title, href: value.href };
+function optionalString(value: unknown): value is string | undefined {
+	return value === undefined || typeof value === "string";
 }
 
-function parseAction(value: unknown): ChatAction | null {
+function parseOpenPage(value: unknown): OpenPageOutput | null {
 	if (!isRecord(value)) return null;
-	if (value.kind === "none") return { kind: "none" };
-	if (value.kind !== "navigate") return null;
 	if (typeof value.href !== "string" || typeof value.label !== "string")
 		return null;
-	if (typeof value.follow !== "boolean") return null;
-	return {
-		kind: "navigate",
-		href: value.href,
-		label: value.label,
-		follow: value.follow,
-	};
-}
-
-export function parseChatApiSuccess(value: unknown): ChatApiSuccess | null {
-	if (!isRecord(value) || typeof value.response !== "string") return null;
-	if (value.mode !== "model" && value.mode !== "notes") return null;
-	const action = parseAction(value.action);
-	if (!action) return null;
-	if (!Array.isArray(value.sources)) return null;
-	const sources: ChatSource[] = [];
-	for (const source of value.sources) {
-		const parsed = parseSource(source);
-		if (!parsed) return null;
-		sources.push(parsed);
-	}
-	if (value.notice !== undefined && typeof value.notice !== "string")
+	const section = value.section;
+	if (section === undefined) return { href: value.href, label: value.label };
+	if (
+		!isRecord(section) ||
+		typeof section.id !== "string" ||
+		typeof section.label !== "string"
+	)
 		return null;
 	return {
-		response: value.response,
-		sources,
-		action,
-		mode: value.mode,
-		...(value.notice ? { notice: value.notice } : {}),
+		href: value.href,
+		label: value.label,
+		section: { id: section.id, label: section.label },
 	};
 }
 
-/** `/api/chat` streams NDJSON: what the guide found, that the model is
- *  writing, then the reply. Steps arrive in that order and only once. */
-export type ChatEvent =
-	| { type: "searched"; sources: ChatSource[] }
-	| { type: "writing" }
-	| { type: "reply"; reply: ChatApiSuccess };
-
-export function parseChatEvent(value: unknown): ChatEvent | null {
+/** Restores one stored part, or drops it. Only finished tool calls survive:
+ *  a call cut off by a reload has nothing left to show. Post bodies are
+ *  dropped to keep storage small. */
+function parsePart(value: unknown): GuidePart | null {
 	if (!isRecord(value)) return null;
-	if (value.type === "writing") return { type: "writing" };
-	if (value.type === "reply") {
-		const reply = parseChatApiSuccess(value.reply);
-		return reply ? { type: "reply", reply } : null;
+	if (value.type === "step-start") return { type: "step-start" };
+	if (value.type === "text") {
+		return typeof value.text === "string"
+			? { type: "text", text: value.text, state: "done" }
+			: null;
 	}
-	if (value.type !== "searched" || !Array.isArray(value.sources)) return null;
-	const sources: ChatSource[] = [];
-	for (const source of value.sources) {
-		const parsed = parseSource(source);
+	if (value.type === "data-notice") {
+		const data = value.data;
+		return isRecord(data) && typeof data.text === "string"
+			? { type: "data-notice", data: { text: data.text } }
+			: null;
+	}
+	if (value.state !== "output-available") return null;
+	if (typeof value.toolCallId !== "string") return null;
+	const toolCallId = value.toolCallId;
+	const input = isRecord(value.input) ? value.input : {};
+	const output = value.output;
+	if (!isRecord(output)) return null;
+
+	if (value.type === "tool-read_post") {
+		if (typeof output.title !== "string" || typeof output.url !== "string")
+			return null;
+		if (!optionalString(output.date)) return null;
+		return {
+			type: "tool-read_post",
+			toolCallId,
+			state: "output-available",
+			input: { slug: typeof input.slug === "string" ? input.slug : "" },
+			output: {
+				title: output.title,
+				url: output.url,
+				...(output.date ? { date: output.date } : {}),
+			},
+		};
+	}
+	if (value.type === "tool-open_page") {
+		const parsed = parseOpenPage(output);
 		if (!parsed) return null;
-		sources.push(parsed);
+		return {
+			type: "tool-open_page",
+			toolCallId,
+			state: "output-available",
+			input: { path: parsed.href },
+			output: parsed,
+		};
 	}
-	return { type: "searched", sources };
+	return null;
+}
+
+/** Validates a thread from sessionStorage. Unknown parts are dropped; a
+ *  malformed message drops the whole thread. */
+export function parseStoredMessages(value: unknown): GuideUIMessage[] | null {
+	if (!Array.isArray(value)) return null;
+	const messages: GuideUIMessage[] = [];
+	for (const item of value) {
+		if (!isRecord(item) || typeof item.id !== "string") return null;
+		if (item.role !== "user" && item.role !== "assistant") return null;
+		if (!Array.isArray(item.parts)) return null;
+		const parts: GuidePart[] = [];
+		for (const part of item.parts) {
+			const parsed = parsePart(part);
+			if (parsed) parts.push(parsed);
+		}
+		messages.push({ id: item.id, role: item.role, parts });
+	}
+	return messages;
 }
