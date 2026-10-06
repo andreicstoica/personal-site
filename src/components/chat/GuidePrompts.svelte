@@ -3,9 +3,8 @@
   import Icon from "../ui/Icon.svelte";
 
   /** Questions the visitor can send with one click; the label is the exact
-   *  text sent. Two variants: `starter` rows lead with a topic icon in the
-   *  empty thread; `follow-up` rows sit under a reply as a ruled list with a
-   *  trailing arrow, like the work table on the home page. */
+   *  text sent. Both variants lead with a topic icon: `starter` rows in the
+   *  empty thread, `follow-up` rows under a reply as a quieter, tighter list. */
   let {
     prompts,
     label,
@@ -39,9 +38,7 @@
     {#each prompts as prompt, index (prompt.text)}
       <li style:--index={index + 1}>
         <button type="button" class="guide-prompt" onclick={() => onselect(prompt.text)}>
-          {#if variant === "starter"}
-            <Icon name={prompt.icon} class="w-4 h-4 shrink-0" />
-          {/if}
+          <Icon name={prompt.icon} class="guide-prompt-icon w-4 h-4 shrink-0" />
           <span class="guide-prompt-text">{prompt.text}</span>
         </button>
       </li>
@@ -69,6 +66,10 @@
     min-width: 0;
   }
 
+  [data-variant="follow-up"] .guide-prompt :global(.guide-prompt-icon) {
+    opacity: 0.8;
+  }
+
   /* Follow-ups: a quiet label, then padded rows with no rules between them.
      A row takes the source cards' white surface on hover, so the panel has
      one surface language: white means "this goes somewhere". */
@@ -88,7 +89,7 @@
   }
 
   [data-variant="follow-up"] .guide-prompt {
-    gap: 0.5rem;
+    gap: 0.625rem;
     min-height: 2.5rem;
     padding-block: 0.25rem;
     font-size: var(--text-sm);
@@ -96,21 +97,6 @@
     transition:
       color var(--duration-ui) var(--ease-out),
       background-color var(--duration-ui) var(--ease-out);
-  }
-
-  /* The arrow is an answer to "where does this go?", so it shows only when
-     the row is pointed at or focused, and slides in from 2px back. */
-  .guide-prompt :global(.guide-prompt-arrow) {
-    opacity: 0;
-    transform: translateX(-2px);
-    transition:
-      transform 150ms var(--ease-out),
-      opacity 150ms var(--ease-out);
-  }
-
-  .guide-prompt:focus-visible :global(.guide-prompt-arrow) {
-    opacity: 1;
-    transform: none;
   }
 
   [data-variant="follow-up"] .guide-prompt:focus-visible {
@@ -151,21 +137,12 @@
       background: color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
     }
 
-    .guide-prompt:hover :global(.guide-prompt-arrow) {
-      opacity: 1;
-      transform: none;
-    }
   }
 
   /* Reduced motion keeps the fade and drops the movement. */
   @media (prefers-reduced-motion: reduce) {
-    .guide-prompt,
-    .guide-prompt :global(.guide-prompt-arrow) {
+    .guide-prompt {
       transition: none;
-    }
-
-    .guide-prompt :global(.guide-prompt-arrow) {
-      transform: none;
     }
 
     [data-animate="true"] .guide-prompts-title,
