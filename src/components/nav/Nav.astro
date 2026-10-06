@@ -125,10 +125,14 @@ const { crumb, parent } = Astro.props;
   }
 
   /* Phones keep the trail on one line: the name holds its size and the
-     crumbs after it step down, on the same baseline. */
-  @media (max-width: 479.98px) {
+     crumbs after it step down a size. On the shared baseline the lighter,
+     smaller crumbs read as sitting low beside the bold name, so they rise
+     0.06em, about a pixel, to look level. */
+  @media (width < 40rem) {
     .trail-parent,
     .trail-current {
+      position: relative;
+      top: -0.06em;
       font-size: 1.125rem;
     }
   }

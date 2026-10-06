@@ -131,7 +131,7 @@ const isHome = Astro.url.pathname === "/";
 
   /* Subpages have no eyebrow above the title, so the header's breadcrumb needs
      the room the eyebrow used to take. */
-  @media (min-width: 768px) {
+  @media (width >= 48rem) {
     .page-island-sub {
       padding-top: var(--spacing-sm);
     }

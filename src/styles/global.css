@@ -337,7 +337,7 @@ body {
 }
 
 /* On phones the 17px lead fills the first screen; step down to body size. */
-@media (max-width: 767px) {
+@media (width < 48rem) {
 	.text-lead {
 		font-size: var(--text-base);
 	}
@@ -369,7 +369,7 @@ body {
 /* Desktop chat drawer: as wide as the page's two gutters, minus the page
    padding, so opening it slides the content left with no overlap. The clamp
    keeps it usable on narrow windows and narrow on very wide ones. */
-@media (min-width: 768px) {
+@media (width >= 48rem) {
 	:root {
 		--guide-width: clamp(
 			20rem,
@@ -475,7 +475,7 @@ body {
    edges on phones, where the page padding is the only margin: the strip
    scrolls edge to edge and still starts in line with the text. On wider
    screens they stay in the column. */
-@media (max-width: 767.98px) {
+@media (width < 48rem) {
 	.full-bleed-narrow {
 		width: calc(100% + var(--page-padding-inline) * 2);
 		margin-inline: calc(var(--page-padding-inline) * -1);
@@ -600,7 +600,7 @@ a {
    column runs 1.25x so single-word names like NBCUniversal fit one line; the
    other nine stay equal, so the rows' inner five-column grid still lines up
    with the header. */
-@media (min-width: 1024px) {
+@media (width >= 64rem) {
 	.experience-grid {
 		grid-template-columns: 1.25fr repeat(9, minmax(0, 1fr));
 	}
@@ -742,7 +742,7 @@ a {
 	scroll-padding-inline: var(--page-padding-inline);
 }
 
-@media (max-width: 767.98px) {
+@media (width < 48rem) {
 	.gallery-strip.full-bleed-narrow {
 		scroll-padding-inline: var(--page-padding-inline);
 	}
@@ -755,7 +755,7 @@ a {
 }
 
 /* Mobile refinements */
-@media (max-width: 767px) {
+@media (width < 48rem) {
 	/* iOS momentum scrolling */
 	.scrollbar-always-visible {
 		-webkit-overflow-scrolling: touch;

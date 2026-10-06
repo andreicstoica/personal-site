@@ -136,7 +136,7 @@
   let barRef = $state<HTMLButtonElement | null>(null);
 
   function isPhone(): boolean {
-    return window.matchMedia("(max-width: 767.98px)").matches;
+    return window.matchMedia("(width < 48rem)").matches;
   }
 
   /** On a phone, slide the sheet down to its header once the guide moves the
@@ -1178,7 +1178,7 @@
      to its header (below). The sheet takes the drawer's sunken surface, so
      the white question bubbles and source cards read as objects on it. The
      sheet's own close button replaces the launcher while open. */
-  @media (max-width: 767.98px) {
+  @media (width < 48rem) {
     .guide-panel {
       --guide-hide: translateY(100%);
       left: 0;
@@ -1234,7 +1234,7 @@
   /* Desktop: a full-height drawer as wide as the page's two gutters
      (--guide-width). The page makes room for it (global.css), so no content
      sits under it. The sunken surface and inward shadow read as a recess. */
-  @media (min-width: 768px) {
+  @media (width >= 48rem) {
     .guide-panel {
       --guide-hide: translateX(100%);
       top: 0;
@@ -1302,7 +1302,7 @@
   /* Top corner only once each gutter beside the 64rem column holds the
      launcher (inset + size + clearance, 4rem); narrower, it would cover the
      banner's top corner, so it stays in the bottom corner. */
-  @media (min-width: 72rem) {
+  @media (width >= 72rem) {
     .guide-dock {
       top: max(var(--guide-launch-inset), env(safe-area-inset-top, 0px));
       bottom: auto;
