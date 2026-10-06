@@ -797,7 +797,7 @@
         type="text"
         autocomplete="off"
         placeholder="Ask me anything…"
-        class="guide-input w-full px-3 pt-2.5 pb-1 bg-transparent text-[var(--color-text-primary)] rounded-none"
+        class="guide-input pt-2 pb-0.5 bg-transparent text-[var(--color-text-primary)] rounded-none"
       />
       <div class="flex items-center justify-between gap-2 pl-3 pr-1.5 pb-1.5">
         {#if viewing}
@@ -974,8 +974,16 @@
     min-height: calc(100% + 0.75rem - var(--guide-peek));
   }
 
+  /* On touch the field stays 16px, the size below which iOS Safari zooms the
+     page on focus, and is drawn at 87.5% so its text matches the 14px
+     messages. The width is widened by the same factor so the scaled field
+     still spans the composer. */
   .guide-input {
     font-size: 1rem;
+    width: calc(100% / 0.875);
+    padding-inline: calc(0.75rem / 0.875);
+    transform: scale(0.875);
+    transform-origin: left center;
   }
 
   .guide-panel button,
@@ -1042,7 +1050,10 @@
 
   /* One card holds the input and a footer row with the page context and
      the send button, so the context reads as part of the message. */
+  /* overflow: hidden clips the touch input's widened layout box (it is drawn
+     scaled down to fit). */
   .guide-composer {
+    overflow: hidden;
     border: 1px solid var(--color-divider);
     background: var(--color-bg-primary);
   }
@@ -1104,15 +1115,23 @@
     font-size: 0.9em;
   }
 
+  /* 36px on touch, with a 44px tap area. */
   .guide-send {
+    position: relative;
     display: flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 2.25rem;
+    height: 2.25rem;
     background: var(--color-primary);
     color: white;
+  }
+
+  .guide-send::before {
+    content: "";
+    position: absolute;
+    inset: -0.25rem;
   }
 
   .guide-send[aria-disabled="true"] {
@@ -1141,7 +1160,10 @@
     }
 
     .guide-input {
+      width: 100%;
+      padding-inline: 0.75rem;
       font-size: 0.875rem;
+      transform: none;
     }
 
     .guide-send {
