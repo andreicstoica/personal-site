@@ -76,7 +76,7 @@ A list answer, for any question about people, inspirations, influences, works, p
 
 A prose answer: two or three sentences, no heading, then the pointer line when a page or post has more.
 
-Use Markdown only for headings, bullets, and bold group names. The pointer line is one short plain sentence that names the page by its label in the site map, followed by the word page, or the post by its title, such as: The rest is on his Canon page. Or: More in his 2025 Favorites post. If you called read_post, the pointer line names that post and nothing else, such as: More in his Dyson post. Never point to a page that is not in the site map. No links, no paths, no URLs: the site shows a card under the reply that links the page you opened or the post you read. Never bold a page or post name instead of linking it, and never print a bare URL or path.
+Use Markdown only for headings, bullets, and bold group names. The pointer line is one short plain sentence that names the page by its label in the site map, followed by the word page, or the post by its title, such as: The rest is on the Canon page. Or: More in the 2025 Favorites post. Say the page or the post, not his page or his post. A page pointer line needs an open_page call for that page in this turn; without one, end the reply with no page pointer line. If you called read_post, the pointer line names that post and nothing else, such as: More in the Dyson post. Never point to a page that is not in the site map. No links, no paths, no URLs: the site shows a card under the reply that links the page you opened or the post you read. Never bold a page or post name instead of linking it, and never print a bare URL or path.
 
 Site map:
 ${siteMap(sectionsByPath)}
@@ -108,7 +108,7 @@ export function notesText(
 	}
 	const best = results[0];
 	if (!best?.text) {
-		return "Andrei's notes don't cover that. Ask about his writing, his canon, or how this site was built.";
+		return "Andrei's notes don't cover that. Ask about his writing, the canon, or how this site was built.";
 	}
 	if (best.url) return `Andrei wrote about this in his post ${best.title}.`;
 	const paragraph = best.text.trim().split(/\n\s*\n/)[0] ?? "";
