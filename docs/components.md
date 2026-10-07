@@ -88,10 +88,10 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 
 **File**: `src/components/ui/Icon.svelte`
 
-Renders a pixel-art SVG icon from the `pixelarticons` set. Icons are defined as path data in `src/icons/pixelarticons.ts`.
+Renders a pixel-art SVG icon from the `pixelarticons` package (MIT). `src/icons/pixelarticons.ts` imports each icon the site uses as its own SVG file (`?raw`), so only those ship; add an icon by adding its import.
 
 ```svelte
-<Icon name="arrow-right" class="w-4 h-4" />
+<Icon name="arrow-up" class="w-4 h-4" />
 ```
 
 Icon is purely visual (`aria-hidden="true"`). Use it next to text for interactive elements, not alone.
@@ -206,7 +206,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - Portal-mounted (`.guide-dock` via the `portal` action) so it escapes page stacking contexts
 - Trigger: `.guide-launch` button in the bottom-right corner, or the top-right corner from 72rem (1152px) up. `.guide-panel` (header, thread, input form) is always mounted and gated by CSS, so `aria-controls="guide-panel"` is constant
 - One surface, two geometries. Both slide in from `--guide-hide` and hide with `visibility` once the slide ends:
-  - Below 768px: a bottom sheet over the lower two thirds (`66dvh`), `--color-bg-primary` with `--elevation-sheet` cast upward, so it reads as a layer on top of the page. Closed: `translateY(100%)`.
+  - Below 768px: a full-height sheet (`100svh`, the viewport with the browser's bars showing, so the composer never slips under them; the header clears the top safe area), on `--color-bg-sunken` like the drawer so white bubbles and cards read as surfaces, with `--elevation-sheet` cast upward. Closed: `translateY(100%)`. Minimized after a page move: translated down to its header (`--guide-bar-height`, above the home indicator), which becomes one button with the move's status; see rule 11 in agent-chat.md.
   - From 768px up: a full-height drawer on the right edge, `--guide-width` wide (the page's two gutters minus page padding, clamped to 20–28rem). The page makes room: `:root[data-guide="open"] [data-page-scroll]` gets that much `padding-inline-end`, so content slides left and nothing sits under the drawer. Surface is `--color-bg-sunken` with a hairline (`--elevation-drawer`) and an eased shade (`--drawer-shade`, `.guide-panel::before`) fading inward from the page-facing edge only. Closed: `translateX(100%)`.
 - Motion uses the shared tokens: open and close both `--duration-drawer` (220ms) on `--ease-in-out`, the same timing as the page shift; `prefers-reduced-motion` disables both; a guide restored from `sessionStorage` or `?chat=1` appears in place without sliding
 - `SiteLayout.astro` sets `data-guide` on `<html>` before paint (on load and on every ClientRouter swap) from the stored state, so an open drawer never flashes the page full width. The island owns the attribute after hydration. Both read the key from `src/lib/guideState.ts`.
@@ -232,14 +232,21 @@ The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.t
 
 | Part | Meaning |
 | --- | --- |
-| `text` | The reply, streamed. Rendered as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links |
-| `tool-read_post` | The model read a post. A "Read {title}" step above the reply |
-| `tool-open_page` | The model pointed at a page, and maybe a section. A step under the reply |
+| `text` | The reply, streamed. Rendered as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML, keeps only site, https, and mailto links, and turns a full link to andrei.bio into a site path |
+| `reasoning` | The model's reasoning, low effort, so a sentence or two. A "Thought" row in the trace |
+| `tool-read_post` | The model read a post. A "Read {title}" row in the trace |
+| `tool-open_page` | The model pointed at a page, and maybe a section. A row in the trace, and a step under the reply |
+| `data-context` | What the route put in the prompt: note, post, and section counts, and the visitor's page. The trace's first row |
 | `data-notice` | Why a notes answer stands in for the model (out of credit, busy, error) |
+| `data-page` | A page the reply pointed to without calling `open_page`. The route reads the reply's first site link, or the page its plain pointer line names ("More on my Canon page."), so the guide still opens it; the trace marks it "Pointed to …", not as a tool call |
 
-Reasoning is never sent to the client. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `pageStep`, `groupTurns`). Until the first part arrives, the turn shows one "Thinking" step.
+The message metadata carries the model, the turn's duration, and its token counts, including tokens served from the provider's prompt cache. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `traceSummary`, `pageStep`, `groupTurns`).
 
-An `open_page` call renders under the reply as a step with a map icon: "Opening {label}" or "Scrolling to {section}" (shimmer) while the reply streams and the follow waits, then "Opened {label} at {section}" or "Scrolled to {section}" once it ran, or a "Go to …" link when the visitor cancelled it. The guide acts 900 ms after the reply ends, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press). On another page it navigates with the ClientRouter, then reveals the section; on the same page it only scrolls. A call with no section on the current page shows nothing. Without a model, only an explicit request ("show me the colophon") opens a page.
+**Trace.** `GuideTrace.svelte` is a disclosure above each model reply. It is open while the guide works, so each step appears in place, and folds as the reply text starts, before the visitor reads a word, so no text moves under them. Once the visitor toggles it, it stays as they left it. Its header reads "Working" while open and live (or, folded, the step in progress), then "Worked for 2.1s". It lists the turn in order with `GuideSteps`: context loaded, reasoning (up to three lines), each tool call with its tool name in mono, and "Wrote the reply" with the model and tokens on a mono line. A post it read links to the post; a page it chose links to that page and section. Rows are 12px with 12px icons (crisp at 2x), one size below the reply. The prompt holds only public notes, so showing reasoning reveals nothing private. Notes answers have no trace. The body opens and closes through a `0fr → 1fr` grid track (200ms open, 150ms close, ease-out), the caret rotates, and the rows are `inert` while closed.
+
+**Continue exploring.** Five seconds after a reply finishes, up to three follow-ups fade in under it over 300ms, rising 2px, 50ms apart (reduced motion keeps the fade only). `GuidePrompts.svelte` serves both lists: the starter prompts, and with `variant="follow-up"` a quiet label over tighter rows (40px on touch) that lead with the same topic icons and take a half-white surface on hover. They are written by hand, not generated. `explorePrompts` (`src/lib/guidePrompts.ts`) picks them by topic: "writing" when the reply read a post, else the page it opened, else the page the visitor is on, topped up from the starter prompts, never repeating a question already asked. Each one is answerable from the notes. A restored thread shows them at once; a new send hides them.
+
+**Sources.** What the reply used renders as cards under it (`GuideCard.svelte`, built by `pageCard` and `postCard` in `src/lib/guideTurn.ts`). A post it read is a card with the title and "blog.andrei.bio · Dec 21, 2025" that opens in a new tab. A page it opened is a card with the page, the section, and the move: "Opening at Movies" (shimmer) while the reply streams and the follow waits, "Opened at Movies" once the new page has loaded (or "Scrolled to Movies"), or the section and path when the visitor's own action cancelled it. A plain click on a page card opens the page and marks the section, like the guide's own move; a modified click keeps the browser's behavior. Cards come only from tool results and page links, so each one is something the reply used. The guide acts 900 ms after the reply ends, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press). On another page it navigates with the ClientRouter, then reveals the section; on the same page it only scrolls. A call with no section on the current page shows nothing. Without a model, only an explicit request ("show me the colophon") opens a page.
 
 `revealSection` (`src/lib/guidePage.ts`) scrolls the section into view and sets `data-guide-highlight`, a tint that holds and fades (`global.css`). Section ids come from `src/lib/siteSections.ts`: markdown pages (`MarkdownSections`) use `sectionId(title)`, experience rows use `row-{name}`, and fitness uses Astro's own heading ids. A hidden section (a filtered row) is skipped.
 

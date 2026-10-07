@@ -20,7 +20,14 @@ export function guideTools() {
 				slug: z.string().max(80).describe("A slug from the post list"),
 			}),
 			execute: async ({ slug }): Promise<ReadPostOutput> => {
-				const post = guidePosts().find((item) => item.slug === slug);
+				// The model sometimes passes the URL's last segment instead of the
+				// list's slug; both name the same post.
+				const wanted = slug.replace(/\/$/, "").split("/").pop() ?? slug;
+				const post = guidePosts().find(
+					(item) =>
+						item.slug === wanted ||
+						item.url?.replace(/\/$/, "").endsWith(`/${wanted}`),
+				);
 				if (!post?.url) throw new Error(`Unknown post ${slug}`);
 				return {
 					title: post.title,

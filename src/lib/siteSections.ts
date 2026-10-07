@@ -1,7 +1,7 @@
 import type { OpenPageOutput } from "./chatTypes";
 import { experiences } from "./experience";
 import { parseMarkdownContent } from "./markdownUtils";
-import { routeByHref } from "./memorySelect";
+import { routeByHref, siteRoutes } from "./memorySelect";
 
 /** A part of a page the guide can scroll to. `id` is the element id. */
 export type PageSection = { id: string; label: string };
@@ -75,4 +75,37 @@ export function resolveOpenPage(
 		label: route.label,
 		...(found ? { section: found } : {}),
 	};
+}
+
+const SITE_LINK =
+	/\]\((?:https:\/\/(?:www\.)?andrei\.bio)?(\/[a-z0-9/-]*)(?:#([a-z0-9-]+))?\)/gi;
+
+/** The first page of this site a reply links to, such as "[Canon]
+ *  (/canon#movies)", resolved against the known routes and sections. */
+export function linkedPage(
+	text: string,
+	sectionsByPath: Readonly<Record<string, readonly PageSection[]>>,
+): OpenPageOutput | null {
+	for (const match of text.matchAll(SITE_LINK)) {
+		const path = match[1] ?? "";
+		const page = resolveOpenPage(
+			path.length > 1 ? path.replace(/\/$/, "") : path,
+			match[2],
+			sectionsByPath,
+		);
+		if (page) return page;
+	}
+	return null;
+}
+
+/** The page a reply's pointer line names in plain words, such as "The rest
+ *  is on my Canon page.", matched against the route labels. */
+export function namedPage(text: string): OpenPageOutput | null {
+	const lines = text.trim().split("\n");
+	const last = lines.at(-1) ?? "";
+	const match = /\bmy (.+?) page\b/i.exec(last);
+	if (!match?.[1]) return null;
+	const name = match[1].trim().toLowerCase();
+	const route = siteRoutes.find((item) => item.label.toLowerCase() === name);
+	return route ? { href: route.href, label: route.label } : null;
 }

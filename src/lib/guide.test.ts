@@ -30,7 +30,9 @@ import {
 } from "./memorySelect";
 import {
 	experienceSections,
+	linkedPage,
 	markdownSections,
+	namedPage,
 	resolveOpenPage,
 	sectionId,
 } from "./siteSections";
@@ -187,6 +189,37 @@ describe("page sections", () => {
 		const ids = experienceSections().map((section) => section.id);
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(ids).toContain(`row-${sectionId("Liftoff")}`);
+	});
+
+	test("a reply's first site link becomes the page it points to", () => {
+		const byPath = { "/canon": markdownSections(pageBody("canon")) };
+		expect(
+			linkedPage(
+				"More in [2025 Favorites](https://blog.andrei.bio/p/x). More on [Canon](/canon#movies).",
+				byPath,
+			),
+		).toEqual({
+			href: "/canon",
+			label: "Canon",
+			section: { id: "movies", label: "Movies" },
+		});
+		expect(
+			linkedPage("See [Canon](https://www.andrei.bio/canon/).", byPath)?.href,
+		).toBe("/canon");
+		expect(linkedPage("[nowhere](/not-a-page)", byPath)).toBeNull();
+		expect(linkedPage("More on the canon page: [/canon]", byPath)).toBeNull();
+	});
+
+	test("a plain pointer line names the page it points to", () => {
+		expect(namedPage("Books…\n\nMore on my Canon page.")).toEqual({
+			href: "/canon",
+			label: "Canon",
+		});
+		expect(namedPage("The rest is on my Colophon page.")?.href).toBe(
+			"/colophon",
+		);
+		expect(namedPage("More in my Dyson post.")).toBeNull();
+		expect(namedPage("The rest is on my Projects page.")).toBeNull();
 	});
 
 	test("open_page takes a section by id or label and drops an unknown one", () => {

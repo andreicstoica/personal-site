@@ -25,20 +25,34 @@ export function revealSection(id: string): boolean {
 
 /** Any sign the visitor is doing something else: a pointer down, a wheel or
  *  touch scroll, a key press, or a text selection. Focus alone is not a
- *  signal; it stays in the composer by design. */
-export function watchIntent(onIntent: () => void): () => void {
-	const events = ["pointerdown", "wheel", "touchmove", "keydown"] as const;
-	const onSelection = () => {
-		if (document.getSelection()?.isCollapsed === false) onIntent();
+ *  signal; it stays in the composer by design. Pointer, scroll, and
+ *  selection inside `ignore` (the guide panel) do not count; key presses
+ *  always do. */
+export function watchIntent(
+	onIntent: () => void,
+	ignore: Element | null = null,
+): () => void {
+	const inside = (node: Node | null) =>
+		ignore !== null && node !== null && ignore.contains(node);
+	const onPointer = (event: Event) => {
+		if (!(event.target instanceof Node && inside(event.target))) onIntent();
 	};
-	for (const type of events) {
-		window.addEventListener(type, onIntent, { capture: true, passive: true });
+	const pointerEvents = ["pointerdown", "wheel", "touchmove"] as const;
+	const onSelection = () => {
+		const selection = document.getSelection();
+		if (selection?.isCollapsed === false && !inside(selection.anchorNode))
+			onIntent();
+	};
+	for (const type of pointerEvents) {
+		window.addEventListener(type, onPointer, { capture: true, passive: true });
 	}
+	window.addEventListener("keydown", onIntent, { capture: true });
 	document.addEventListener("selectionchange", onSelection);
 	return () => {
-		for (const type of events) {
-			window.removeEventListener(type, onIntent, { capture: true });
+		for (const type of pointerEvents) {
+			window.removeEventListener(type, onPointer, { capture: true });
 		}
+		window.removeEventListener("keydown", onIntent, { capture: true });
 		document.removeEventListener("selectionchange", onSelection);
 	};
 }

@@ -24,12 +24,40 @@ export type GuideUITools = {
 	};
 };
 
+/** What the route put in front of the model, for the reply's trace. */
+export type ContextSummary = {
+	notes: number;
+	posts: number;
+	/** Page sections the model can point at. */
+	sections: number;
+	/** The page label the visitor was on, when it is a known route. */
+	page?: string;
+};
+
 export type GuideDataParts = {
 	/** Why a notes answer stands in for the model, in the visitor's terms. */
 	notice: { text: string };
+	context: ContextSummary;
+	/** A page the reply linked without calling open_page. The route sends it
+	 *  so the guide still opens the page the reply points to. */
+	page: OpenPageOutput;
 };
 
-export type GuideUIMessage = UIMessage<unknown, GuideDataParts, GuideUITools>;
+/** Sent once a model turn ends, for the last line of the trace. */
+export type GuideMetadata = {
+	model?: string;
+	ms?: number;
+	inputTokens?: number;
+	/** Input tokens the provider served from its prompt cache. */
+	cachedTokens?: number;
+	outputTokens?: number;
+};
+
+export type GuideUIMessage = UIMessage<
+	GuideMetadata,
+	GuideDataParts,
+	GuideUITools
+>;
 export type GuidePart = GuideUIMessage["parts"][number];
 
 /** One prior turn as the route accepts it: text only. Tool outputs from the
@@ -81,6 +109,33 @@ function parsePart(value: unknown): GuidePart | null {
 			? { type: "text", text: value.text, state: "done" }
 			: null;
 	}
+	if (value.type === "reasoning") {
+		return typeof value.text === "string"
+			? { type: "reasoning", text: value.text, state: "done" }
+			: null;
+	}
+	if (value.type === "data-context") {
+		const data = value.data;
+		if (!isRecord(data)) return null;
+		const { notes, posts, sections, page } = data;
+		if (
+			typeof notes !== "number" ||
+			typeof posts !== "number" ||
+			typeof sections !== "number" ||
+			!optionalString(page)
+		)
+			return null;
+		return {
+			type: "data-context",
+			data: { notes, posts, sections, ...(page ? { page } : {}) },
+		};
+	}
+	if (value.type === "data-page") {
+		const page = parseOpenPage(value.data);
+		return page && typeof value.id === "string"
+			? { type: "data-page", id: value.id, data: page }
+			: null;
+	}
 	if (value.type === "data-notice") {
 		const data = value.data;
 		return isRecord(data) && typeof data.text === "string"
@@ -124,6 +179,23 @@ function parsePart(value: unknown): GuidePart | null {
 	return null;
 }
 
+function parseMetadata(value: unknown): GuideMetadata | null {
+	if (!isRecord(value)) return null;
+	const metadata: GuideMetadata = {};
+	if (typeof value.model === "string") metadata.model = value.model;
+	for (const key of [
+		"ms",
+		"inputTokens",
+		"cachedTokens",
+		"outputTokens",
+	] as const) {
+		const field = value[key];
+		if (typeof field === "number" && Number.isFinite(field))
+			metadata[key] = field;
+	}
+	return metadata;
+}
+
 /** Validates a thread from sessionStorage. Unknown parts are dropped; a
  *  malformed message drops the whole thread. */
 export function parseStoredMessages(value: unknown): GuideUIMessage[] | null {
@@ -138,7 +210,13 @@ export function parseStoredMessages(value: unknown): GuideUIMessage[] | null {
 			const parsed = parsePart(part);
 			if (parsed) parts.push(parsed);
 		}
-		messages.push({ id: item.id, role: item.role, parts });
+		const metadata = parseMetadata(item.metadata);
+		messages.push({
+			id: item.id,
+			role: item.role,
+			parts,
+			...(metadata ? { metadata } : {}),
+		});
 	}
 	return messages;
 }

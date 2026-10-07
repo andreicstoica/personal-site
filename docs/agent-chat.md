@@ -6,10 +6,10 @@ One principle: never move the reader against their intent. The guide can move tw
 
 ## Thread movement
 
-1. Do not auto-scroll to follow a reply. The question anchors near the top (rule 2) and the reply grows below it. When the reader scrolls, leave them where they are.
+1. Follow the latest turn only while the reader is at its bottom: as the reply streams, and as its cards and follow-ups arrive later, its bottom stays in view (tokens instantly, later arrivals with a smooth scroll). The reader's own scroll away, a click or key in the thread (opening the trace, say), or a text selection stops the following; scrolling back to the bottom resumes it. A send's own scroll to the new question finishes before following starts.
 2. When the visitor sends, scroll the new turn so the question sits near the top of the thread, with about two lines of the previous turn still visible above it. The reply renders below the question and is read from its first line. The last turn gets a `min-height` equal to the thread's height, so a short thread can still put the question at the top.
-3. A reply that lands while the reader is away from the live edge renders off screen. A "New reply" pill at the bottom of the thread scrolls to the start of that reply.
-4. Reopen a restored thread at the last question, not at the bottom.
+3. A reply that lands while the reader is away from the live edge renders off screen. Whenever the bottom of the latest turn is out of view, a 32px arrow in the thread's bottom-right corner says so, with a dot while the reply still streams. A tap brings back the whole turn from its question when that fits, else its bottom with the follow-ups, and resumes following. It sits outside the log, so screen readers do not hear it as conversation.
+4. The first open after a page load lands on the last question, not at the bottom. Closing and reopening the panel keeps the reader's place: the thread is never unmounted.
 5. While a turn is pending, show one status row. Replace it with the reply in place. Never insert content above the reader's position.
 6. Reserve space for content that loads late. A card image gets a fixed `aspect-ratio` box before it loads.
 7. Notices, errors, and retries render inside the turn that caused them. They never scroll the thread.
@@ -17,8 +17,9 @@ One principle: never move the reader against their intent. The guide can move tw
 ## Page movement
 
 8. Navigate the page when the visitor asked to open something ("show me the colophon"), or when the reply points to a page for the rest ("the full list is on my canon page"). The reply says so before the page moves. A page named only in the question stays a link.
-9. Every interaction is intent. A pending navigation cancels on a draft in the composer, a text selection in the thread or on the page, a pointer down, a wheel or touch scroll, a key press, or a link click. Focus alone is not a signal: focus stays in the composer after a send.
+9. Every interaction with the page is intent. A pending navigation cancels on a draft in the composer, a key press, or a pointer down, wheel or touch scroll, or text selection on the page. The same gestures inside the panel do not cancel it: reading or scrolling the thread says nothing about the page, and the panel does not move when the page does. Focus alone is not a signal: focus stays in the composer after a send.
 10. Navigate with the ClientRouter (`navigate`), never a full load, so the panel and its scroll position persist. Scroll to an in-page target, such as a table row, once on that navigation and not again.
+11. On a phone the sheet covers the page, so the guide waits 5 seconds after the reply instead of 0.9, then moves the page and minimizes the sheet to its header, showing where it went ("Canon · Opened at Writers"). A tap on the bar restores the sheet. While minimized, the thread and composer are `inert` and focus moves to the bar.
 
 ## Accessibility
 
@@ -36,7 +37,7 @@ One principle: never move the reader against their intent. The guide can move tw
 | Thread | Scroll policy: follow state, turn anchoring, new-reply pill | Keep the scroll math in `src/lib` so it has a unit test |
 | Turn | One question and its reply | The unit the thread anchors to |
 | Reply parts | Text, status lines, card, notice, sources | Rendered from the `ChatApiSuccess` payload; no state of their own |
-| Prompt list | Starter prompts (empty thread) and "Keep exploring" follow-ups | One component, two uses: a click sends the label |
+| Prompt list (`GuidePrompts`) | Starter prompts (empty thread) and "Continue exploring" follow-ups | One component, two uses: a click sends the label |
 | Composer | Input text, page-context chip ("Viewing Colophon") | Reports typing to the intent signal |
 | Intent signal | The reader's last interaction, in the thread and on the page | One owner; cancels a pending navigation and pauses tail-follow |
 
@@ -46,9 +47,10 @@ The server returns data, and the client maps it to parts. `src/lib/chatTypes.ts`
 
 | Rule | Where | Gap |
 | --- | --- | --- |
-| 3 | none | No "New reply" pill. A reply renders under its question in the space the last turn reserves, so it starts in view unless the reader scrolled away. |
+| 7 | `FloatingChat.svelte` | Errors render in the turn, but there is no retry control; the visitor sends again. |
+| a11y | `GuidePrompts.svelte` | "Continue exploring" appears five seconds after the reply inside the log, so screen readers hear one more event per turn. |
 
-Fixed: a new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. The thread no longer follows the tail or jumps to the bottom. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
+Fixed: a streaming reply follows its live edge while the reader is there, and a "Jump to latest" pill covers the reply out of view. A step reads "Opened" only once the new page has loaded; a navigation that never lands leaves a link. A new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
 
 ## Not adopted
 

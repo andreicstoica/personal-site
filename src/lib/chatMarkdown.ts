@@ -12,9 +12,13 @@ function escapeHtml(text: string): string {
 	return text.replace(/[&<>"']/g, (char) => ESCAPES[char] ?? char);
 }
 
+const SITE_ORIGIN = /^https:\/\/(?:www\.)?andrei\.bio(?=\/|$)/i;
+
 /** Site paths, https, and mailto only. `//host` is protocol-relative, so it
- *  counts as external and must not pass as a site path. */
+ *  counts as external and must not pass as a site path. A full link to this
+ *  site becomes its path, so it opens in place like any other site link. */
 function safeHref(href: string): string | null {
+	if (SITE_ORIGIN.test(href)) return href.replace(SITE_ORIGIN, "") || "/";
 	if (href.startsWith("/") && !href.startsWith("//")) return href;
 	if (/^(https:|mailto:)/i.test(href)) return href;
 	return null;

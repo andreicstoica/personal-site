@@ -102,7 +102,6 @@ const { crumb, parent } = Astro.props;
   }
 
 
-  /* The page title below shows the full name, so the crumb may truncate. */
   .trail-current {
     display: flex;
     align-items: baseline;
@@ -117,9 +116,20 @@ const { crumb, parent } = Astro.props;
     font-weight: 400;
   }
 
+  /* The page title below shows the full name, so as a last resort the crumb
+     truncates. */
   .trail-page {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  /* Phones keep the trail on one line: the name holds its size and the
+     crumbs after it step down, on the same baseline. */
+  @media (max-width: 479.98px) {
+    .trail-parent,
+    .trail-current {
+      font-size: 1.125rem;
+    }
   }
 </style>

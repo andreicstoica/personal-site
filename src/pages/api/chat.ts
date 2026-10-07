@@ -2,6 +2,7 @@ import {
 	createUIMessageStream,
 	createUIMessageStreamResponse,
 	isStepCount,
+	type LanguageModelUsage,
 	type StopCondition,
 	streamText,
 	toUIMessageStream,
@@ -9,7 +10,11 @@ import {
 } from "ai";
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import type { ChatTurn, GuideUIMessage } from "../../lib/chatTypes";
+import type {
+	ChatTurn,
+	GuideMetadata,
+	GuideUIMessage,
+} from "../../lib/chatTypes";
 import {
 	guideNotes,
 	guidePosts,
@@ -31,6 +36,7 @@ import {
 } from "../../lib/inference";
 import { guideModelEnabled } from "../../lib/inferenceConfig";
 import { isSmallTalk, routeByHref } from "../../lib/memorySelect";
+import { linkedPage, namedPage } from "../../lib/siteSections";
 
 const turnSchema = z.object({
 	role: z.enum(["user", "assistant"]),
@@ -82,11 +88,24 @@ export const POST: APIRoute = async ({ request }) => {
 			) {
 				writeNotesTurn(writer, message);
 			} else {
+				const notes = guideNotes();
+				const posts = guidePosts();
+				writer.write({
+					type: "data-context",
+					data: {
+						notes: notes.length,
+						posts: posts.length,
+						sections: Object.values(pageSections).flat().length,
+						...(viewing ? { page: viewing.label } : {}),
+					},
+				});
 				await streamModelTurn(writer, {
 					model: guideModel(resolved),
+					modelId: resolved.model,
+					viewing: viewing?.href,
 					system: buildSystemPrompt({
-						notes: guideNotes(),
-						posts: guidePosts(),
+						notes,
+						posts,
 						sectionsByPath: pageSections,
 						viewing,
 					}),
@@ -114,6 +133,9 @@ async function streamModelTurn(
 	writer: Writer,
 	turn: {
 		model: ReturnType<typeof guideModel>;
+		modelId: string;
+		/** The path the visitor is on, when it is a known route. */
+		viewing: string | undefined;
 		system: string;
 		turns: ChatTurn[];
 		message: string;
@@ -121,6 +143,7 @@ async function streamModelTurn(
 	},
 ): Promise<void> {
 	let outage: Outage | null = null;
+	const started = performance.now();
 	const result = streamText({
 		model: turn.model,
 		system: turn.system,
@@ -132,6 +155,10 @@ async function streamModelTurn(
 		stopWhen: [isStepCount(3), openedAfterReply],
 		temperature: 0.3,
 		maxOutputTokens: 1000,
+		// The answers are short lookups over notes already in the prompt. Low
+		// effort keeps the reasoning (shown in the trace) to a few lines and
+		// cuts seconds from each turn; hosts that ignore the field are fine.
+		providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
 		// A retry on 402 or 429 only delays the notes answer.
 		maxRetries: 0,
 		abortSignal: AbortSignal.any([turn.signal, AbortSignal.timeout(30_000)]),
@@ -142,12 +169,15 @@ async function streamModelTurn(
 	});
 
 	let wroteText = false;
+	let text = "";
+	let pageCalled = false;
 	const reader = toUIMessageStream<GuideTools, GuideUIMessage>({
 		stream: result.stream,
 		sendStart: false,
 		sendFinish: false,
-		// Reasoning can quote the system prompt; the panel never shows it.
-		sendReasoning: false,
+		// Reasoning shows in the reply's trace. The prompt holds only public
+		// notes, so a quote from it reveals nothing private.
+		sendReasoning: true,
 		onError: () => "",
 	}).getReader();
 	for (;;) {
@@ -157,8 +187,38 @@ async function streamModelTurn(
 			outage ??= "error";
 			continue;
 		}
-		if (chunk.type === "text-delta" && chunk.delta.trim()) wroteText = true;
+		if (chunk.type === "text-delta") {
+			text += chunk.delta;
+			if (chunk.delta.trim()) wroteText = true;
+		}
+		if (chunk.type === "tool-input-available" && chunk.toolName === "open_page")
+			pageCalled = true;
 		writer.write(chunk);
+	}
+
+	// The model names the page it points to, but does not always call
+	// open_page for it. Its pointer line (or a link) still opens the page;
+	// the trace marks it "Pointed to", not as a tool call.
+	const linked =
+		!outage && !pageCalled
+			? (linkedPage(text, pageSections) ?? namedPage(text))
+			: null;
+	if (linked && (linked.href !== turn.viewing || linked.section)) {
+		writer.write({
+			type: "data-page",
+			id: `page-${crypto.randomUUID()}`,
+			data: linked,
+		});
+	}
+
+	if (!outage) {
+		writer.write({
+			type: "message-metadata",
+			messageMetadata: await turnMetadata(result, {
+				model: turn.modelId,
+				ms: Math.round(performance.now() - started),
+			}),
+		});
 	}
 
 	if (outage) {
@@ -169,6 +229,28 @@ async function streamModelTurn(
 		});
 	} else if (!wroteText) {
 		writeText(writer, "I don't have a good answer for that from my notes.");
+	}
+}
+
+/** The model and token counts for the trace. Usage is best effort: a
+ *  provider that reports none leaves those fields out. */
+async function turnMetadata(
+	result: { totalUsage: PromiseLike<LanguageModelUsage> },
+	base: { model: string; ms: number },
+): Promise<GuideMetadata> {
+	const model = base.model.replace(/^[^/]+\//, "");
+	try {
+		const usage = await result.totalUsage;
+		const cached = usage.inputTokenDetails.cacheReadTokens;
+		return {
+			model,
+			ms: base.ms,
+			...(usage.inputTokens ? { inputTokens: usage.inputTokens } : {}),
+			...(cached ? { cachedTokens: cached } : {}),
+			...(usage.outputTokens ? { outputTokens: usage.outputTokens } : {}),
+		};
+	} catch {
+		return { model, ms: base.ms };
 	}
 }
 

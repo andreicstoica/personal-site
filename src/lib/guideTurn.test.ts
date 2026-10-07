@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { type GuideUIMessage, parseStoredMessages } from "./chatTypes";
-import { groupTurns, pageStep, replyView } from "./guideTurn";
+import { explorePrompts } from "./guidePrompts";
+import {
+	groupTurns,
+	pageCard,
+	postCard,
+	replyView,
+	traceSummary,
+} from "./guideTurn";
 
 const canon = {
 	href: "/canon",
@@ -13,10 +20,15 @@ function reply(parts: GuideUIMessage["parts"]): GuideUIMessage {
 }
 
 describe("reply view", () => {
-	test("tool steps go above the text, the page call below", () => {
-		const view = replyView(
-			reply([
+	test("the trace runs in order: context, reasoning, tools, then the reply", () => {
+		const message: GuideUIMessage = {
+			...reply([
+				{
+					type: "data-context",
+					data: { notes: 28, posts: 25, sections: 32, page: "Home" },
+				},
 				{ type: "step-start" },
+				{ type: "reasoning", text: "Movies are on the canon.", state: "done" },
 				{
 					type: "tool-open_page",
 					toolCallId: "p1",
@@ -34,15 +46,44 @@ describe("reply view", () => {
 				{ type: "text", text: "Three films.", state: "done" },
 				{ type: "data-notice", data: { text: "From notes." } },
 			]),
+			metadata: {
+				model: "gpt-oss-120b",
+				ms: 1800,
+				inputTokens: 10486,
+				cachedTokens: 10368,
+				outputTokens: 204,
+			},
+		};
+		const view = replyView(message);
+		expect(view.trace.map((step) => [step.label, step.tool ?? null])).toEqual([
+			["Loaded 28 notes, 25 posts, and the site map", null],
+			["Thought", null],
+			["Chose Canon at Movies", "open_page"],
+			["Read Dyson", "read_post"],
+			["Wrote the reply", null],
+		]);
+		expect(view.trace[1]?.detail).toBe("Movies are on the canon.");
+		expect(view.trace[2]?.href).toBe("/canon#movies");
+		expect(view.trace[3]?.href).toBe("https://blog.andrei.bio/p/dyson");
+		expect(view.trace.at(-1)?.data).toBe(
+			"gpt-oss-120b · 10.5K tokens in (10.4K cached) · 204 out",
 		);
-		expect(view.steps.map((step) => step.label)).toEqual(["Read Dyson"]);
 		expect(view.text).toBe("Three films.");
 		expect(view.notices).toEqual(["From notes."]);
 		expect(view.page?.toolCallId).toBe("p1");
+		expect(view.posts.map((post) => post.title)).toEqual(["Dyson"]);
+		expect(traceSummary(message, view.trace, false)).toBe("Worked for 1.8s");
 	});
 
-	test("a post being read shows as an active step", () => {
-		const view = replyView(
+	test("while live, the header names the step in progress", () => {
+		const message = reply([
+			{ type: "reasoning", text: "", state: "streaming" },
+		]);
+		const view = replyView(message);
+		expect(view.trace).toEqual([
+			{ icon: "lightbulb", label: "Thinking", status: "active" },
+		]);
+		const reading = replyView(
 			reply([
 				{
 					type: "tool-read_post",
@@ -52,47 +93,78 @@ describe("reply view", () => {
 				},
 			]),
 		);
-		expect(view.steps).toEqual([
-			{ icon: "article", label: "Reading a post", status: "active" },
-		]);
+		expect(traceSummary(null, reading.trace, true)).toBe("Reading a post");
+	});
+
+	test("a notes answer has no trace", () => {
+		const view = replyView(
+			reply([{ type: "text", text: "From my notes.", state: "done" }]),
+		);
+		expect(view.trace.map((step) => step.label)).toEqual(["Wrote the reply"]);
 	});
 });
 
-describe("page step", () => {
+describe("continue exploring", () => {
+	test("follows the topic, tops up, and skips what was asked", () => {
+		const picked = explorePrompts("/canon", ["Which architects do you like?"]);
+		expect(picked.map((prompt) => prompt.text)).toEqual([
+			"What books shaped you?",
+			"Which photographers do you follow?",
+			"Who do you look up to?",
+		]);
+		expect(
+			explorePrompts("/projects/refract", []).map((prompt) => prompt.text),
+		).toContain("What other projects have you built?");
+	});
+});
+
+describe("source cards", () => {
 	const at = (pagePath: string) => ({ moved: undefined, pagePath });
 
-	test("pending, then opened, with the section in the link", () => {
-		expect(pageStep(canon, { ...at("/"), pending: true })?.label).toBe(
-			"Opening Canon",
-		);
-		expect(
-			pageStep(canon, { pending: false, moved: "opened", pagePath: "/canon" }),
-		).toMatchObject({
-			label: "Opened Canon at Movies",
-			href: "/canon#movies",
-			status: "complete",
+	test("a page card shows the move, then where it landed", () => {
+		expect(pageCard(canon, { ...at("/"), pending: true })).toMatchObject({
+			title: "Canon",
+			meta: "Opening at Movies",
+			active: true,
+			external: false,
 		});
+		expect(
+			pageCard(canon, { pending: false, moved: "opened", pagePath: "/canon" }),
+		).toMatchObject({ meta: "Opened at Movies", href: "/canon#movies" });
 	});
 
 	test("on the same page it scrolls instead of opening", () => {
-		expect(pageStep(canon, { ...at("/canon"), pending: true })?.label).toBe(
+		expect(pageCard(canon, { ...at("/canon"), pending: true })?.meta).toBe(
 			"Scrolling to Movies",
 		);
 		expect(
-			pageStep(canon, {
-				pending: false,
-				moved: "scrolled",
-				pagePath: "/canon",
-			})?.label,
+			pageCard(canon, { pending: false, moved: "scrolled", pagePath: "/canon" })
+				?.meta,
 		).toBe("Scrolled to Movies");
 	});
 
-	test("a cancelled follow leaves a link, and nothing points at here", () => {
-		expect(pageStep(canon, { ...at("/"), pending: false })?.label).toBe(
-			"Go to Movies on Canon",
+	test("a cancelled move says where it goes, and nothing points at here", () => {
+		expect(pageCard(canon, { ...at("/"), pending: false })?.meta).toBe(
+			"Movies · andrei.bio/canon",
 		);
 		const page = { href: "/canon", label: "Canon" };
-		expect(pageStep(page, { ...at("/canon"), pending: false })).toBeNull();
+		expect(pageCard(page, { ...at("/canon"), pending: false })).toBeNull();
+	});
+
+	test("a post card opens the blog in a new tab with its date", () => {
+		expect(
+			postCard({
+				title: "2025 Favorites",
+				url: "https://blog.andrei.bio/p/2025-favorites",
+				date: "2025-12-21",
+			}),
+		).toEqual({
+			href: "https://blog.andrei.bio/p/2025-favorites",
+			title: "2025 Favorites",
+			meta: "blog.andrei.bio · Dec 21, 2025",
+			active: false,
+			external: true,
+		});
 	});
 });
 
@@ -110,13 +182,13 @@ test("turns pair each question with the reply under it", () => {
 });
 
 describe("stored thread", () => {
-	test("keeps finished parts, drops cut-off calls and post bodies", () => {
+	test("keeps finished parts and reasoning, drops cut-off calls and post bodies", () => {
 		const restored = parseStoredMessages([
 			{
 				id: "a1",
 				role: "assistant",
 				parts: [
-					{ type: "reasoning", text: "hidden" },
+					{ type: "reasoning", text: "Canon first.", state: "streaming" },
 					{
 						type: "tool-read_post",
 						toolCallId: "r1",
@@ -135,6 +207,7 @@ describe("stored thread", () => {
 			},
 		]);
 		expect(restored?.[0]?.parts).toEqual([
+			{ type: "reasoning", text: "Canon first.", state: "done" },
 			{
 				type: "tool-read_post",
 				toolCallId: "r1",

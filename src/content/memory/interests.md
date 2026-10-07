@@ -14,4 +14,4 @@ Training: he runs, lifts, and plays tennis.
 
 Side projects: a podcast and audiobook platform with agent-friendly APIs, strong search, and an MCP server or CLI, so an AI agent can do anything he can do in the app. A homelab for self-hosting: NAS storage, media, Docker services, and remote development.
 
-Tools he likes: TypeScript, React, Next.js, Node, FastAPI, Postgres, Docker, Tailwind, Vercel, and Cloudflare Workers; the Vercel AI SDK, MCP, and local models through Ollama and LM Studio; SSH-first work with devcontainers, Cursor, zellij, tmux, uv, and ripgrep. In hardware he weighs build quality, efficiency, upgradeability, and long-term value over the newest specs.
+Tools he reaches for on other projects (this site itself is Astro and Svelte; see the colophon): TypeScript, React, Next.js, Node, FastAPI, Postgres, Docker, Tailwind, and Vercel; the Vercel AI SDK, MCP, and local models through Ollama and LM Studio; SSH-first work with devcontainers, herdr, and uv; and his own pi setup. For work he knows AWS best: Fargate, S3, and related services. In hardware he weighs build quality, efficiency, upgradeability, and long-term value over the newest specs.
