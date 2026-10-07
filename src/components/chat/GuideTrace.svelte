@@ -1,41 +1,26 @@
 <script lang="ts">
-  import { untrack } from "svelte";
   import type { GuideStep } from "../../lib/guideTurn";
   import Icon from "../ui/Icon.svelte";
+  import GuideSpinner from "./GuideSpinner.svelte";
   import GuideSteps from "./GuideSteps.svelte";
 
-  /** How a reply was made. Open while the guide works, so each step appears
-   *  in place, then folded once the reply starts: the fold lands before the
-   *  visitor reads a word, so no text moves under them. A visitor who toggles
-   *  it decides from then on. Closed while live, the header names the step
-   *  in progress. */
+  /** How a reply was made, in one line. While the guide works, a spinner
+   *  sits where the caret goes and the line names the step in progress,
+   *  changing in place; the steps never unfold on their own, so nothing
+   *  above the reply grows while it streams. Done, the line reads "Worked
+   *  for 2.1s" and the caret opens the steps. */
   let {
     steps,
     summary,
     live = false,
-    folded = false,
   }: {
     steps: GuideStep[];
     summary: string;
     live?: boolean;
-    /** The reply has started; fold unless the visitor took over. */
-    folded?: boolean;
   } = $props();
 
-  let open = $state(untrack(() => !folded));
-  let touched = false;
-
-  $effect(() => {
-    if (folded && !touched) open = false;
-  });
-
-  function toggle() {
-    touched = true;
-    open = !open;
-  }
+  let open = $state(false);
   const id = $props.id();
-  /** Open, the rows already show the step in progress. */
-  const headline = $derived(live && open ? "Working" : summary);
 </script>
 
 <div class="guide-trace" data-open={open}>
@@ -44,10 +29,17 @@
     class="guide-trace-toggle"
     aria-expanded={open}
     aria-controls="{id}-trace"
-    onclick={toggle}
+    onclick={() => (open = !open)}
   >
-    <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
-    <span class="guide-trace-summary" class:guide-shimmer={live}>{headline}</span>
+    {#if live}
+      <GuideSpinner />
+    {:else}
+      <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
+    {/if}
+    <!-- Keyed, so each new step fades in where the last one stood. -->
+    {#key summary}
+      <span class="guide-trace-summary">{summary}</span>
+    {/key}
   </button>
   <!-- inert while closed: the collapsed rows leave the tab order and the
        accessibility tree, not just the screen. -->
@@ -85,6 +77,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    animation: guide-trace-step 150ms var(--ease-out);
+  }
+
+  @keyframes guide-trace-step {
+    from {
+      opacity: 0;
+    }
   }
 
   .guide-trace-toggle :global(.guide-trace-caret) {
@@ -130,6 +129,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .guide-trace-summary {
+      animation: none;
+    }
+
     .guide-trace-body,
     .guide-trace-clip,
     .guide-trace-toggle,
