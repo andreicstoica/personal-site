@@ -1,47 +1,37 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { APICallError, createGateway, type LanguageModel } from "ai";
-import { type Outage, outageFor } from "./inference";
-import type { ResolvedInference } from "./inferenceConfig";
+import { APICallError, gateway, type LanguageModel } from "ai";
 
-type Ready = Extract<ResolvedInference, { kind: "ready" }>;
+/** Why a model call failed, as far as the visitor needs to know. */
+export type Outage = "budget" | "busy" | "error";
 
-/** The AI Gateway gets its own provider rather than its OpenAI-compatible
- *  endpoint: it routes gpt-oss across several hosts, reports which one
- *  served a call. The free tier routes each call to whichever host is
- *  available; the guide does not pin one. */
-function onGateway(resolved: Ready): boolean {
-	try {
-		return new URL(resolved.baseUrl).hostname === "ai-gateway.vercel.sh";
-	} catch {
-		return false;
-	}
+export function outageFor(status: number): Outage {
+	// 402: spend cap or credit exhausted. 429: rate limit, retry later.
+	if (status === 402) return "budget";
+	if (status === 429) return "busy";
+	return "error";
 }
 
-export function guideModel(resolved: Ready): LanguageModel {
-	if (onGateway(resolved) && resolved.auth.kind === "bearer")
-		return createGateway({ apiKey: resolved.auth.token })(resolved.model);
-	const provider = createOpenAICompatible({
-		name: resolved.provider,
-		baseURL: resolved.baseUrl,
-		...(resolved.auth.kind === "bearer" ? { apiKey: resolved.auth.token } : {}),
-	});
-	return provider.chatModel(resolved.model);
+/** The guide's one setting: the AI Gateway model it calls, such as
+ *  openai/gpt-oss-120b. Unset, the guide answers from its notes. The
+ *  gateway signs in with the deployment's Vercel OIDC token, or locally with
+ *  the one `vercel env pull` writes to .env.local; AI_GATEWAY_API_KEY, when
+ *  set, takes precedence. */
+export function guideModelId(): string | undefined {
+	const fromProcess =
+		typeof process !== "undefined" ? process.env.MODEL_ID : undefined;
+	const value = fromProcess ?? import.meta.env.MODEL_ID;
+	return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+/** The free tier routes each call to whichever host serves the model; the
+ *  guide does not pin one. */
+export function guideModel(id: string): LanguageModel {
+	return gateway(id);
 }
 
 /** The answers are short lookups over notes already in the prompt. Low
  *  reasoning effort keeps the trace's reasoning to a few lines and cuts
- *  seconds from each turn; hosts that ignore it are fine. */
-type CallOptions = {
-	reasoning?: "low";
-	providerOptions?: Record<string, Record<string, string>>;
-};
-
-/** The gateway maps the shared effort for whichever host it routes to. */
-export function guideCallOptions(resolved: Ready): CallOptions {
-	return onGateway(resolved)
-		? { reasoning: "low" }
-		: { providerOptions: { openaiCompatible: { reasoningEffort: "low" } } };
-}
+ *  seconds from each turn; the gateway maps it for whichever host serves. */
+export const GUIDE_REASONING = "low";
 
 /** The host that served a gateway call, from its routing metadata. */
 export function servedBy(metadata: unknown): string | undefined {

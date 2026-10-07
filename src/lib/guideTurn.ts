@@ -199,14 +199,14 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 export function replyView(message: GuideUIMessage): ReplyView {
 	const trace = traceSteps(message);
 	const view: ReplyView = {
-		// A reply with no model call is the notes answer: say so, rather than
-		// claim the model wrote it.
+		// A reply with no model call (a greeting, or the notes answer) says so,
+		// rather than claim the model wrote it.
 		trace:
 			!message.metadata && trace.length === 1 && trace[0]?.icon === "cpu"
 				? [
 						{
 							icon: "files",
-							label: "Answered from his notes by keyword match",
+							label: "Answered without the model",
 							status: "complete",
 						},
 					]

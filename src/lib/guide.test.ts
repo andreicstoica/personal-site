@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { APICallError } from "ai";
-import { guideCallOptions, guideModel, outageOf, servedBy } from "./guideModel";
+import { guideModel, guideModelId, outageOf, servedBy } from "./guideModel";
 import { starterPrompts } from "./guidePrompts";
 import {
 	buildSystemPrompt,
@@ -17,12 +17,6 @@ import {
 	postDocs,
 	postIndex,
 } from "./guideSearch";
-import { completeChat } from "./inference";
-import {
-	authHeaders,
-	guideModelEnabled,
-	resolveInference,
-} from "./inferenceConfig";
 import { fileStem, parseKnowledgeFile } from "./knowledge";
 import {
 	isBannerQuestion,
@@ -318,122 +312,43 @@ describe("page sections", () => {
 	});
 });
 
-describe("inference config", () => {
-	test("hosted sends a bearer token to an OpenAI-compatible base", () => {
-		const resolved = resolveInference({
-			MODEL_PROVIDER: "hosted",
-			MODEL_BASE_URL: "https://api.example/v1/",
-			MODEL_API_KEY: "sk_test",
-			MODEL_ID: "flash",
-		});
-		expect(resolved).toMatchObject({
-			kind: "ready",
-			provider: "hosted",
-			baseUrl: "https://api.example/v1",
-			model: "flash",
-		});
-		if (resolved.kind !== "ready") return;
-		expect(authHeaders(resolved.auth)).toEqual({
-			Authorization: "Bearer sk_test",
-		});
-	});
-
-	test("model calls stay off unless GUIDE_MODEL=on", () => {
-		expect(guideModelEnabled({})).toBe(false);
-		expect(guideModelEnabled({ GUIDE_MODEL: "hosted" })).toBe(false);
-		expect(guideModelEnabled({ MODEL_PROVIDER: "hosted" })).toBe(false);
-		expect(guideModelEnabled({ GUIDE_MODEL: "on" })).toBe(true);
-	});
-
-	test("hosted without a key or model stays unconfigured", () => {
-		const base = { MODEL_PROVIDER: "hosted", MODEL_BASE_URL: "https://x/v1" };
-		expect(resolveInference({ ...base, MODEL_ID: "flash" })).toMatchObject({
-			kind: "unconfigured",
-			provider: "hosted",
-		});
-		expect(resolveInference({ ...base, MODEL_API_KEY: "k" })).toMatchObject({
-			kind: "unconfigured",
-			provider: "hosted",
-		});
-	});
-
-	test("the retired hf provider is unknown, not a silent fallback", () => {
-		expect(resolveInference({ MODEL_PROVIDER: "hf" })).toMatchObject({
-			kind: "unconfigured",
-			provider: "unknown",
-		});
-	});
-
-	test("unknown providers do not fall through to local", () => {
-		expect(resolveInference({ MODEL_PROVIDER: "together" }).kind).toBe(
-			"unconfigured",
-		);
-	});
-});
-
-describe("model outages", () => {
-	const realFetch = globalThis.fetch;
+describe("guide model", () => {
+	const realModel = process.env.MODEL_ID;
 	afterEach(() => {
-		globalThis.fetch = realFetch;
+		if (realModel === undefined) delete process.env.MODEL_ID;
+		else process.env.MODEL_ID = realModel;
 	});
 
-	const resolved = {
-		kind: "ready",
-		provider: "hosted",
-		baseUrl: "https://api.example/v1",
-		model: "m",
-		auth: { kind: "none" },
-	} as const;
+	test("MODEL_ID turns the model on; unset or blank, the notes answer", () => {
+		process.env.MODEL_ID = " openai/gpt-oss-120b ";
+		expect(guideModelId()).toBe("openai/gpt-oss-120b");
+		process.env.MODEL_ID = " ";
+		expect(guideModelId()).toBeUndefined();
+	});
 
-	async function outageFor(status: number) {
-		globalThis.fetch = Object.assign(
-			async () => new Response("{}", { status }),
-			{ preconnect: realFetch.preconnect },
+	test("the model is the gateway's, by id", () => {
+		const model = guideModel("openai/gpt-oss-120b");
+		expect(typeof model === "object" && model.modelId).toBe(
+			"openai/gpt-oss-120b",
 		);
-		const completion = await completeChat({
-			resolved,
-			messages: [{ role: "user", content: "hi" }],
-			temperature: 0,
-			maxTokens: 8,
-		});
-		return completion.kind === "down" ? completion.outage : null;
-	}
-
-	test("402 is out of credit, 429 is busy, anything else is an error", async () => {
-		expect(await outageFor(402)).toBe("budget");
-		expect(await outageFor(429)).toBe("busy");
-		expect(await outageFor(500)).toBe("error");
 	});
 
-	test("SDK errors map the same way as raw responses", () => {
+	test("402 is out of credit, 429 is busy, anything else is an error", () => {
 		const error = (statusCode: number) =>
 			new APICallError({
 				message: "x",
-				url: "https://api.example/v1/chat/completions",
+				url: "https://ai-gateway.vercel.sh/v3/ai/language-model",
 				requestBodyValues: {},
 				statusCode,
 			});
 		expect(outageOf(error(402))).toBe("budget");
 		expect(outageOf(error(429))).toBe("busy");
+		expect(outageOf(error(500))).toBe("error");
 		expect(outageOf(new Error("socket hang up"))).toBe("error");
 		expect(OUTAGE_NOTICE.budget).toContain("out of credit");
 	});
 
-	test("the model client takes the resolved host", () => {
-		const model = guideModel(resolved);
-		expect(typeof model === "object" && model.modelId).toBe("m");
-	});
-
-	test("the gateway gets shared reasoning effort and reports its host", () => {
-		const gateway = {
-			...resolved,
-			baseUrl: "https://ai-gateway.vercel.sh/v1",
-			model: "openai/gpt-oss-120b",
-		};
-		expect(guideCallOptions(gateway)).toEqual({ reasoning: "low" });
-		expect(guideCallOptions(resolved)).toEqual({
-			providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
-		});
+	test("the trace names the host from the gateway's routing metadata", () => {
 		expect(servedBy({ gateway: { routing: { finalProvider: "groq" } } })).toBe(
 			"groq",
 		);

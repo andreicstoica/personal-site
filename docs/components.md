@@ -267,18 +267,17 @@ A greeting runs with no tools (`activeToolsFor` in the route, through the SDK's 
 ### Supporting modules
 
 - `src/lib/guideReply.ts` — the system prompt, outage notices, and the notes answer
-- `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools and the model client: the AI Gateway's own provider (shared `reasoning: "low"`, and the serving host from its routing metadata for the trace), or an OpenAI-compatible client for any other host
+- `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools, and the model: `MODEL_ID` through the AI Gateway (Vercel OIDC, or `AI_GATEWAY_API_KEY`), shared `reasoning: "low"`, the serving host from routing metadata for the trace, and how a failed call maps to a notice
 - `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
 - `src/lib/guideSearch.ts` — post parsing, the keyword search behind the notes answer, and the passage finder
 - `src/lib/knowledge.ts` — reads a library file's frontmatter and body
 - `src/lib/memorySelect.ts` — parses notes into sections and matches routes
-- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible; production uses the Vercel AI Gateway free tier)
 - `src/lib/botGuard.ts` — the BotID check the route runs first: a request without the island's challenge answer gets 403, the eval passes with its secret header, and a failed check lets the request through to the firewall's rate limit
-- `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
+- `src/pages/api/health.ts` — reports whether `MODEL_ID` is set; call with `?probe=1` to reach the model
 
 Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).
 
-The model is not called unless `GUIDE_MODEL=on`. A failed model call (any HTTP error or timeout) answers from notes: the first sentence of the best keyword match, with a notice; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
+The model is not called unless `MODEL_ID` is set, and never for a greeting. A failed model call (any HTTP error or timeout) answers from notes: the first sentence of the best keyword match, with a notice; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
 
