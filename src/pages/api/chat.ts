@@ -35,7 +35,11 @@ import {
 	readInferenceEnv,
 } from "../../lib/inference";
 import { guideModelEnabled } from "../../lib/inferenceConfig";
-import { isSmallTalk, routeByHref } from "../../lib/memorySelect";
+import {
+	isBannerQuestion,
+	isSmallTalk,
+	routeByHref,
+} from "../../lib/memorySelect";
 import { linkedPage, namedPage } from "../../lib/siteSections";
 
 const turnSchema = z.object({
@@ -172,6 +176,7 @@ async function streamModelTurn(
 	let wroteText = false;
 	let text = "";
 	let pageCalled = false;
+	let sceneCalled = false;
 	const reader = toUIMessageStream<GuideTools, GuideUIMessage>({
 		stream: result.stream,
 		sendStart: false,
@@ -194,6 +199,11 @@ async function streamModelTurn(
 		}
 		if (chunk.type === "tool-input-available" && chunk.toolName === "open_page")
 			pageCalled = true;
+		if (
+			chunk.type === "tool-input-available" &&
+			chunk.toolName === "show_scene_controls"
+		)
+			sceneCalled = true;
 		writer.write(chunk);
 	}
 
@@ -211,6 +221,9 @@ async function streamModelTurn(
 			data: linked,
 		});
 	}
+
+	if (!outage && !sceneCalled && isBannerQuestion(turn.message))
+		writeScene(writer);
 
 	if (!outage) {
 		writer.write({
@@ -264,9 +277,19 @@ function writeText(writer: Writer, text: string): void {
 
 /** The answer without a model: a sentence from the best keyword match,
  *  and a page only when the visitor asked to open one. */
+/** The banner's scene controls, for a reply the model did not give them to. */
+function writeScene(writer: Writer): void {
+	writer.write({
+		type: "data-scene",
+		id: `scene-${crypto.randomUUID()}`,
+		data: { shown: true },
+	});
+}
+
 function writeNotesTurn(writer: Writer, message: string): void {
 	const results = isSmallTalk(message) ? [] : guideSearch().search(message, 3);
 	writeText(writer, notesText(message, results));
+	if (isBannerQuestion(message)) writeScene(writer);
 	const opened = notesOpenPage(message);
 	if (!opened) return;
 	const toolCallId = `notes-${crypto.randomUUID()}`;

@@ -3,6 +3,7 @@ import { z } from "astro/zod";
 import type {
 	OpenPageOutput,
 	ReadPostOutput,
+	SceneControlsOutput,
 	SearchPostsOutput,
 } from "./chatTypes";
 import { guidePostSearch, guidePosts, pageSections } from "./guideContent";
@@ -85,6 +86,12 @@ export function guideTools() {
 				if (!opened) throw new Error(`Unknown page ${path}`);
 				return opened;
 			},
+		}),
+		show_scene_controls: tool({
+			description:
+				"Show buttons under the reply that change the banner at the top of the page: its place, weather, and time of day.",
+			inputSchema: z.object({}),
+			execute: async (): Promise<SceneControlsOutput> => ({ shown: true }),
 		}),
 	};
 }

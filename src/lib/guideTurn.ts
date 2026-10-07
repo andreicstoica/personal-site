@@ -34,6 +34,8 @@ export type ReplyView = {
 	page: PageCall | null;
 	/** Posts the reply read, once each, in the order it read them. */
 	posts: ReadPostOutput[];
+	/** Whether the reply carries the banner's scene controls. */
+	scene: boolean;
 };
 
 const count = new Intl.NumberFormat("en", {
@@ -113,6 +115,15 @@ function toolStep(part: GuidePart): GuideStep | null {
 			tool: "search_posts",
 		};
 	}
+	if (part.type === "tool-show_scene_controls") {
+		const done = part.state === "output-available";
+		return {
+			icon: "cloud",
+			label: done ? "Added the banner controls" : "Adding the banner controls",
+			status: done ? "complete" : "active",
+			tool: "show_scene_controls",
+		};
+	}
 	if (part.type === "tool-open_page") {
 		if (part.state !== "output-available")
 			return {
@@ -150,6 +161,12 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 					: `Pointed to ${label}`,
 				status: "complete",
 				href: section ? `${href}#${section.id}` : href,
+			});
+		} else if (part.type === "data-scene") {
+			steps.push({
+				icon: "cloud",
+				label: "Added the banner controls",
+				status: "complete",
 			});
 		} else if (part.type === "reasoning") {
 			const text = part.text.trim();
@@ -195,10 +212,17 @@ export function replyView(message: GuideUIMessage): ReplyView {
 		notices: [],
 		page: null,
 		posts: [],
+		scene: false,
 	};
 	for (const part of message.parts) {
 		if (part.type === "text") view.text += part.text;
 		else if (part.type === "data-notice") view.notices.push(part.data.text);
+		else if (
+			part.type === "data-scene" ||
+			(part.type === "tool-show_scene_controls" &&
+				part.state === "output-available")
+		)
+			view.scene = true;
 		else if (
 			part.type === "tool-open_page" &&
 			part.state === "output-available"

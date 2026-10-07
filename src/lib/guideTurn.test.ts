@@ -140,6 +140,38 @@ describe("reply view", () => {
 		expect(traceSummary(null, searching.trace, true)).toBe("Searching posts");
 	});
 
+	test("scene controls come from the tool or the route's fallback", () => {
+		const offered = replyView(
+			reply([
+				{
+					type: "tool-show_scene_controls",
+					toolCallId: "c1",
+					state: "output-available",
+					input: {},
+					output: { shown: true },
+				},
+				{ type: "text", text: "Try the buttons.", state: "done" },
+			]),
+		);
+		expect(offered.scene).toBe(true);
+		expect(offered.trace[0]).toEqual({
+			icon: "cloud",
+			label: "Added the banner controls",
+			status: "complete",
+			tool: "show_scene_controls",
+		});
+		const fallback = replyView(
+			reply([
+				{ type: "text", text: "A pixel landscape.", state: "done" },
+				{ type: "data-scene", id: "s1", data: { shown: true } },
+			]),
+		);
+		expect(fallback.scene).toBe(true);
+		expect(
+			replyView(reply([{ type: "text", text: "Hi.", state: "done" }])).scene,
+		).toBe(false);
+	});
+
 	test("a notes answer has no trace", () => {
 		const view = replyView(
 			reply([{ type: "text", text: "From my notes.", state: "done" }]),
@@ -226,6 +258,31 @@ test("turns pair each question with the reply under it", () => {
 });
 
 describe("stored thread", () => {
+	test("keeps the banner's scene controls, from the tool or the route", () => {
+		const restored = parseStoredMessages([
+			{
+				id: "a1",
+				role: "assistant",
+				parts: [
+					{
+						type: "tool-show_scene_controls",
+						toolCallId: "c1",
+						state: "output-available",
+						input: {},
+						output: { shown: true },
+					},
+					{ type: "data-scene", id: "s1", data: { shown: true } },
+				],
+			},
+		]);
+		const message = restored?.[0];
+		expect(message?.parts.map((part) => part.type)).toEqual([
+			"tool-show_scene_controls",
+			"data-scene",
+		]);
+		expect(message && replyView(message).scene).toBe(true);
+	});
+
 	test("keeps finished parts and reasoning, drops cut-off calls, post bodies, and excerpts", () => {
 		const restored = parseStoredMessages([
 			{

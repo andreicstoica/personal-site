@@ -23,6 +23,7 @@ import {
 	resolveInference,
 } from "./inferenceConfig";
 import {
+	isBannerQuestion,
 	isNavigationIntent,
 	matchRoute,
 	parseMemoryMarkdown,
@@ -165,6 +166,12 @@ describe("routes", () => {
 		expect(matchRoute("hello there")).toBeNull();
 		expect(isNavigationIntent("please show me Refract")).toBe(true);
 		expect(isNavigationIntent("what is refract")).toBe(false);
+		expect(isBannerQuestion("woah this banner is cool!")).toBe(true);
+		expect(isBannerQuestion("the weather at the top of home is cool")).toBe(
+			true,
+		);
+		expect(isBannerQuestion("Do you do graphic design?")).toBe(false);
+		expect(isBannerQuestion("What is the NYC tech scene like?")).toBe(false);
 	});
 });
 

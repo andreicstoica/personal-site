@@ -98,6 +98,14 @@ export function isNavigationIntent(message: string): boolean {
 	return NAV_INTENT.test(message);
 }
 
+const BANNER_TOPIC = /\b(banner|landscape|scenery|pixel art|weather)\b/i;
+
+/** A message about the banner at the top of the page, which gets the scene
+ *  controls whether or not the model hands them out. */
+export function isBannerQuestion(message: string): boolean {
+	return BANNER_TOPIC.test(message);
+}
+
 export function isSmallTalk(message: string): boolean {
 	const trimmed = message.trim();
 	return /^(hi|hello|hey|thanks|thank you|yo|sup|howdy|what'?s up|how are you|ok|okay|cool|nice|wow)[!.?\s]*$/i.test(

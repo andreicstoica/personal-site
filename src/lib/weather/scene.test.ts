@@ -18,6 +18,7 @@ import {
 	rapidMotion,
 } from "./placeMotion";
 import {
+	captionWords,
 	classifyWeather,
 	fallbackReading,
 	PLACES,
@@ -66,7 +67,19 @@ describe("weather lighting clock", () => {
 				weather: "clear",
 				colorMode: "light",
 			}),
-		).toBe("Mount Hood, golden hour, clear");
+		).toBe("Mt. Hood, OR, golden hour, clear");
+		expect(
+			captionWords({
+				place: "oregon-coast",
+				time: "golden-hour",
+				weather: "fog",
+				colorMode: "dark",
+			}),
+		).toEqual({
+			weather: "foggy",
+			time: "golden hour",
+			place: "Cannon Beach, OR",
+		});
 	});
 });
 
