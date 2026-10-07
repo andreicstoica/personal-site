@@ -228,7 +228,7 @@ async function streamModelTurn(
 			data: { text: OUTAGE_NOTICE[outage] },
 		});
 	} else if (!wroteText) {
-		writeText(writer, "I don't have a good answer for that from my notes.");
+		writeText(writer, "Andrei's notes don't have a good answer for that.");
 	}
 }
 

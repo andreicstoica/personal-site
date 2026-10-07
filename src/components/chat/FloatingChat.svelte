@@ -796,7 +796,7 @@
         bind:value={input}
         type="text"
         autocomplete="off"
-        placeholder="Ask me anything…"
+        placeholder="Ask anything…"
         class="guide-input pt-2 pb-0.5 bg-transparent text-[var(--color-text-primary)] rounded-none"
       />
       <div class="flex items-center justify-between gap-2 pl-3 pr-1.5 pb-1.5">

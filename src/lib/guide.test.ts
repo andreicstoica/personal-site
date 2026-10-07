@@ -159,6 +159,27 @@ describe("notes answers", () => {
 		expect(text).toBe("The journal that collaborates with you to go deeper.");
 	});
 
+	test("a post is named, not quoted in Andrei's first person", () => {
+		const text = notesText("dyson", [
+			{
+				title: "Dyson",
+				url: "https://blog.andrei.bio/p/dyson",
+				text: "I bought a vacuum.",
+			},
+		]);
+		expect(text).toBe("Andrei wrote about this in his post Dyson.");
+	});
+
+	test("fixed replies speak about Andrei, never as him", () => {
+		const firstPerson = /\b(I|I'm|me|my|we|our)\b/;
+		const replies = [
+			notesText("hi", []),
+			notesText("what is a quasar", []),
+			...Object.values(OUTAGE_NOTICE),
+		];
+		for (const reply of replies) expect(reply).not.toMatch(firstPerson);
+	});
+
 	test("only an explicit request opens a page without the model", () => {
 		expect(notesOpenPage("show me courtly")).toEqual({
 			href: "/projects/courtly",
