@@ -10,7 +10,7 @@ import svelteParser from "svelte-eslint-parser";
 
 export default defineConfig([
 	{
-		ignores: ["dist/**", "node_modules/**", ".astro/**", "rag/**"],
+		ignores: ["dist/**", "node_modules/**", ".astro/**"],
 	},
 	{
 		files: ["**/*.svelte"],

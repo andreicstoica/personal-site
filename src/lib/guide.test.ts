@@ -23,6 +23,7 @@ import {
 	guideModelEnabled,
 	resolveInference,
 } from "./inferenceConfig";
+import { fileStem, parseKnowledgeFile } from "./knowledge";
 import {
 	isBannerQuestion,
 	isNavigationIntent,
@@ -39,35 +40,30 @@ import {
 	sectionId,
 } from "./siteSections";
 
-const memoryDir = path.resolve("src/content/memory");
-const ragDir = path.resolve("rag/data");
+const notesDir = path.resolve("src/content/knowledge/notes");
+const postsDir = path.resolve("src/content/knowledge/posts");
 
 function corpus() {
-	return readdirSync(memoryDir)
+	return readdirSync(notesDir)
 		.filter((name) => name.endsWith(".md"))
 		.flatMap((name) =>
-			parseMemoryMarkdown(readFileSync(path.join(memoryDir, name), "utf8")),
+			parseMemoryMarkdown(
+				readFileSync(path.join(notesDir, name), "utf8"),
+				fileStem(name),
+			),
 		);
 }
 
 function posts() {
 	return postDocs(
-		readdirSync(ragDir)
-			.filter((name) => name.endsWith(".json"))
-			.map((name) => {
-				const textPath = path.join(ragDir, name.replace(/\.json$/, ".txt"));
-				let text: string | undefined;
-				try {
-					text = readFileSync(textPath, "utf8");
-				} catch {
-					text = undefined;
-				}
-				return {
-					slug: name.replace(/\.json$/, ""),
-					meta: JSON.parse(readFileSync(path.join(ragDir, name), "utf8")),
-					text,
-				};
-			}),
+		readdirSync(postsDir)
+			.filter((name) => name.endsWith(".md"))
+			.map((name) => ({
+				slug: fileStem(name),
+				file: parseKnowledgeFile(
+					readFileSync(path.join(postsDir, name), "utf8"),
+				),
+			})),
 	);
 }
 
@@ -446,22 +442,25 @@ describe("model outages", () => {
 });
 
 test("markdown sections keep a heading route", () => {
-	const sections = parseMemoryMarkdown(`---
-id: projects
-title: Projects
-route: /
+	const sections = parseMemoryMarkdown(
+		`---
+type: note
+title: "Projects"
+resource: /
 ---
 
 Overview of the work.
 
 ## Refract
-route: /projects/refract
+resource: /projects/refract
 
 A journal.
-`);
-	expect(sections.map((section) => section.title)).toEqual([
-		"Projects",
-		"Refract",
+`,
+		"projects",
+	);
+	expect(sections.map((section) => [section.id, section.title])).toEqual([
+		["projects-projects", "Projects"],
+		["projects-refract", "Refract"],
 	]);
 	expect(sections[1]?.route).toBe("/projects/refract");
 	expect(sections[1]?.body).toBe("A journal.");

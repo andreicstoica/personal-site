@@ -1,3 +1,5 @@
+import { parseKnowledgeFile, textField } from "./knowledge";
+
 export type MemorySection = {
 	id: string;
 	title: string;
@@ -135,18 +137,6 @@ export function matchRoute(message: string): SiteRoute | null {
 	return winners[0] ?? null;
 }
 
-function parseFrontmatter(block: string): Record<string, string> {
-	const fields: Record<string, string> = {};
-	for (const line of block.split("\n")) {
-		const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line.trim());
-		const key = match?.[1];
-		const value = match?.[2];
-		if (!key || value === undefined) continue;
-		fields[key] = value.replace(/^["']|["']$/g, "").trim();
-	}
-	return fields;
-}
-
 function sectionFrom(
 	fileId: string,
 	title: string,
@@ -155,8 +145,9 @@ function sectionFrom(
 ): MemorySection | null {
 	const lines = body.replace(/^\n/, "").split("\n");
 	let route = inheritedRoute;
-	if (lines[0]?.startsWith("route:")) {
-		route = lines[0].slice("route:".length).trim();
+	// A section names the page it describes on its first line.
+	if (lines[0]?.startsWith("resource:")) {
+		route = lines[0].slice("resource:".length).trim();
 		lines.shift();
 	}
 	const text = lines.join("\n").trim();
@@ -170,18 +161,23 @@ function sectionFrom(
 	};
 }
 
-export function parseMemoryMarkdown(raw: string): MemorySection[] {
-	const fmMatch = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(raw);
-	const fm = fmMatch?.[1] ? parseFrontmatter(fmMatch[1]) : {};
-	const body = fmMatch ? raw.slice(fmMatch[0].length) : raw;
-	const fileId = fm.id ?? "memory";
+/** One note from the knowledge library: its frontmatter title and resource,
+ *  then a section per `## ` heading. The file name is its id. */
+export function parseMemoryMarkdown(
+	raw: string,
+	fileId: string,
+): MemorySection[] {
+	const file = parseKnowledgeFile(raw);
+	const body = file.body;
+	const fileTitle = textField(file, "title");
+	const resource = textField(file, "resource");
 	const chunks = body.split(/^## /m);
 	const sections: MemorySection[] = [];
 	const preamble = chunks[0] ?? "";
 	const preambleSection = sectionFrom(
 		fileId,
-		fm.title ?? "Notes",
-		fm.route,
+		fileTitle ?? "Notes",
+		resource,
 		preamble,
 	);
 	if (preambleSection) sections.push(preambleSection);
