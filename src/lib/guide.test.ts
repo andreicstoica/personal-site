@@ -186,7 +186,7 @@ describe("posts", () => {
 		expect(hit?.text?.length).toBeGreaterThan(0);
 	});
 
-	test("search_posts finds a passage only a post body holds", () => {
+	test("keyword search finds a passage only a post body holds", () => {
 		const postSearch = createGuideSearch(postIndex(posts()));
 		const hits = postSearch.search("LoRA adapter matrices", 3);
 		expect(hits[0]).toMatchObject({

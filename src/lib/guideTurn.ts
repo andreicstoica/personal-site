@@ -89,32 +89,6 @@ function toolStep(part: GuidePart): GuideStep | null {
 			tool: "read_post",
 		};
 	}
-	if (part.type === "tool-search_posts") {
-		const query = part.input?.query?.trim();
-		if (part.state === "output-available") {
-			const titles = part.output.hits.map((hit) => hit.title);
-			return {
-				icon: "search",
-				label: query ? `Searched posts for “${query}”` : "Searched posts",
-				status: "complete",
-				tool: "search_posts",
-				detail: titles.length ? titles.join(", ") : "No posts matched",
-			};
-		}
-		if (part.state === "output-error")
-			return {
-				icon: "search",
-				label: "Couldn't search posts",
-				status: "complete",
-				tool: "search_posts",
-			};
-		return {
-			icon: "search",
-			label: "Searching posts",
-			status: "active",
-			tool: "search_posts",
-		};
-	}
 	if (part.type === "tool-show_scene_controls") {
 		const done = part.state === "output-available";
 		return {

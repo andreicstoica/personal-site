@@ -185,7 +185,7 @@ async function streamModelTurn(
 		})),
 		tools: guideTools(),
 		activeTools: activeToolsFor(turn.message),
-		// Search, read, open a page, reply: the longest turn the tools allow.
+		// Read, hand out scene controls, open a page, reply: the longest turn.
 		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
 		maxOutputTokens: 1000,

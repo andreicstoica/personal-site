@@ -32,6 +32,6 @@
     { "id": "nav-fitness", "kind": "nav", "q": "take me to the fitness page", "page": "/fitness" },
 
     { "id": "unknown", "kind": "edge", "q": "What is your favorite color?", "facts": [["don't", "doesn't", "not ", "no "]] },
-    { "id": "hi", "kind": "edge", "q": "hi", "noTools": ["search_posts", "read_post", "open_page", "show_scene_controls"], "scene": false }
+    { "id": "hi", "kind": "edge", "q": "hi", "noTools": ["read_post", "open_page", "show_scene_controls"], "scene": false }
   ]
 }
