@@ -8,6 +8,7 @@ import {
 	postIndex,
 	type SearchHit,
 } from "./guideSearch";
+import { fileStem, parseKnowledgeFile } from "./knowledge";
 import { loadMemorySections } from "./memory";
 
 export { loadMemorySections as guideNotes };
@@ -24,12 +25,8 @@ const pageFiles = import.meta.glob("../content/pages/*.md", {
 	import: "default",
 });
 
-const postMeta = import.meta.glob("../../rag/data/*.json", {
-	eager: true,
-	import: "default",
-});
-
-const postText = import.meta.glob("../../rag/data/*.txt", {
+// Posts at the top of the folder only; `posts/archive` has no URLs to cite.
+const postFiles = import.meta.glob("../content/knowledge/posts/*.md", {
 	eager: true,
 	query: "?raw",
 	import: "default",
@@ -57,15 +54,15 @@ export const pageSections: Readonly<Record<string, readonly PageSection[]>> = {
 let posts: GuideDoc[] | undefined;
 let search: GuideSearch | undefined;
 
-/** Blog posts from `rag/data`, newest first. */
+/** Blog posts from the knowledge library, newest first. */
 export function guidePosts(): GuideDoc[] {
 	posts ??= postIndex(
 		postDocs(
-			Object.entries(postMeta).map(([path, meta]) => ({
-				slug: path.replace(/^.*\//, "").replace(/\.json$/, ""),
-				meta,
-				text: postText[path.replace(/\.json$/, ".txt")],
-			})),
+			Object.entries(postFiles).flatMap(([path, raw]) =>
+				typeof raw === "string"
+					? [{ slug: fileStem(path), file: parseKnowledgeFile(raw) }]
+					: [],
+			),
 		),
 	);
 	return posts;

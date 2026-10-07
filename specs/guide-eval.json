@@ -1,5 +1,5 @@
 {
-  "about": "Questions for the Ask Andrei guide, scored by scripts/guide-eval.ts. Each fact group is a list of alternatives; every group must appear in the reply (case-insensitive). Facts come from src/content/memory and rag/data.",
+  "about": "Questions for the Ask Andrei guide, scored by scripts/guide-eval.ts. Each fact group is a list of alternatives; every group must appear in the reply (case-insensitive). Facts come from src/content/knowledge.",
   "cases": [
     { "id": "canon", "kind": "notes", "q": "Who do you look up to?", "facts": [["Le Guin", "Caro", "Wallace", "Hesse"]], "page": "/canon" },
     { "id": "liftoff", "kind": "notes", "q": "What do you do at Liftoff?", "facts": [["founding", "product engineer"]] },

@@ -1,4 +1,5 @@
 import MiniSearch from "minisearch";
+import { type KnowledgeFile, listField, textField } from "./knowledge";
 import type { MemorySection } from "./memorySelect";
 
 /** One searchable source: a memory note (a site path) or a post (a URL). */
@@ -12,7 +13,7 @@ export type GuideDoc = {
 	url?: string;
 	/** ISO date (YYYY-MM-DD), for posts. */
 	date?: string;
-	/** File name in `rag/data`, for posts; the id `read_post` takes. */
+	/** File name in the library's `posts` folder; the id `read_post` takes. */
 	slug?: string;
 	tags?: string[];
 };
@@ -27,10 +28,6 @@ export type SearchHit = {
 	text: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function noteDocs(sections: readonly MemorySection[]): GuideDoc[] {
 	return sections.map((section) => ({
 		id: `note:${section.id}`,
@@ -40,46 +37,47 @@ export function noteDocs(sections: readonly MemorySection[]): GuideDoc[] {
 	}));
 }
 
-/** Posts with a blog URL and a body, from `rag/data` metadata and text.
+/** Posts with a blog URL and a body, from the library's `posts` folder.
  *  Older newsletter text without a URL stays out: the guide cannot cite it. */
 export function postDocs(
-	entries: ReadonlyArray<{ slug: string; meta: unknown; text: unknown }>,
+	entries: ReadonlyArray<{ slug: string; file: KnowledgeFile }>,
 ): GuideDoc[] {
 	const posts: GuideDoc[] = [];
-	for (const { slug, meta, text } of entries) {
-		if (!isRecord(meta)) continue;
-		if (meta.type !== "blog" && meta.type !== "essay") continue;
-		const url = meta.sourceUrl;
-		const title = meta.title;
-		if (typeof url !== "string" || !url.startsWith("https://blog.andrei.bio/"))
-			continue;
-		if (typeof title !== "string") continue;
-		if (typeof text !== "string" || !text.trim()) continue;
+	for (const { slug, file } of entries) {
+		if (textField(file, "type") !== "post") continue;
+		const url = textField(file, "resource");
+		const title = textField(file, "title");
+		if (!url?.startsWith("https://blog.andrei.bio/") || !title) continue;
+		if (!file.body.trim()) continue;
+		const timestamp = textField(file, "timestamp");
 		const date =
-			typeof meta.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(meta.date)
-				? meta.date
+			timestamp && /^\d{4}-\d{2}-\d{2}$/.test(timestamp)
+				? timestamp
 				: undefined;
-		const tags = Array.isArray(meta.tags)
-			? meta.tags.filter((tag): tag is string => typeof tag === "string")
-			: [];
 		posts.push({
 			id: `post:${slug}`,
 			slug,
 			title,
-			text,
+			text: file.body,
 			url,
-			tags,
+			tags: listField(file, "tags"),
 			...(date ? { date } : {}),
 		});
 	}
 	return posts;
 }
 
-/** Posts newest first; undated posts go last. */
+/** Posts newest first; undated posts go last. Same-day posts sort by slug,
+ *  so the prompt's post list, and its cached prefix, never depends on file
+ *  listing order. */
 export function postIndex(docs: readonly GuideDoc[]): GuideDoc[] {
 	return docs
 		.filter((doc) => doc.slug && doc.url)
-		.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+		.sort(
+			(a, b) =>
+				(b.date ?? "").localeCompare(a.date ?? "") ||
+				(a.slug ?? "").localeCompare(b.slug ?? ""),
+		);
 }
 
 type Chunk = { id: string; docId: string; title: string; text: string };
