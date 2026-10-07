@@ -115,7 +115,7 @@ describe("layered terrain", () => {
 			for (const x of place === "bend-plateau"
 				? [48, 67, 77, 85, 97, 107, 116]
 				: place === "oregon-coast"
-					? [74.8, 79.3, 87, 93, 101, 107, 116, 124, 132.5]
+					? [74.8, 79.3, 87, 89.6, 93, 98.6, 107, 116, 119, 132.5]
 					: [8, 25, 40, 137, 140, 141, 142, 150, 164]) {
 				let entered = false;
 				for (let y = 0.125; y < 48; y += 0.25) {
@@ -126,11 +126,14 @@ describe("layered terrain", () => {
 				}
 			}
 		}
-		for (const x of [100, 101, 102]) {
-			expect(material("oregon-coast", 0, x, 5.25)).toBeNull();
-			expect(material("oregon-coast", 0, x, 6)).not.toBeNull();
+		for (const x of [98, 98.6, 99.2]) {
+			expect(material("oregon-coast", 0, x, 2.75)).toBeNull();
+			expect(material("oregon-coast", 0, x, 3.5)).not.toBeNull();
 		}
-		expect(material("oregon-coast", 0, 90, 18)).toBeNull();
+		expect(material("oregon-coast", 0, 88, 18)).toBeNull();
+		expect(material("oregon-coast", 0, 89.6, 18)).not.toBeNull();
+		expect(material("oregon-coast", 0, 87, 21)).toBeNull();
+		expect(material("oregon-coast", 0, 87, 22)).not.toBeNull();
 		expect(material("oregon-coast", 0, 115, 18)).not.toBeNull();
 		for (const x of [74.8, 79.3, 132.5]) {
 			const sea = material("oregon-coast", 0, x, 22.5);

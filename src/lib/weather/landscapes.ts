@@ -116,65 +116,120 @@ function profile(x: number, points: Profile): number {
 	return previous[1];
 }
 
+// One massif, not separate towers: a lower jagged buttress on the left, pointed
+// fins with shallow notches, the tallest spire left of center, a deep V over
+// the shadowed cleft, a second spire pair, then a stepped fall to the talus.
 const SMITH_CREST: Profile = [
 	[59, 34],
-	[64, 24],
-	[65, 17],
-	[67, 13],
-	[69, 12],
-	[70, 17],
-	[72, 22],
-	[75, 17],
-	[76, 10],
-	[77, 8],
-	[79, 8.5],
-	[80, 10],
-	[81, 10.2],
-	[82, 18],
-	[84, 16],
-	[85, 14],
-	[86, 14.5],
-	[87, 20],
-	[89, 25],
-	[93, 20],
-	[95, 12],
-	[96, 11],
-	[97, 6],
-	[99, 6.5],
-	[100, 7],
-	[101, 13],
-	[103, 14],
-	[104, 18],
-	[106, 16],
-	[107, 12],
-	[108, 12.4],
-	[110, 19],
-	[112, 21],
-	[114, 20],
-	[116, 16],
-	[120, 17],
-	[121, 22],
-	[123, 23],
-	[125, 27],
-	[130, 29],
+	[60.6, 27.3],
+	[61.8, 20],
+	[62.6, 16],
+	[63.5, 14.9],
+	[64.4, 16.2],
+	[65.4, 15],
+	[66.6, 16.8],
+	[67.6, 16.1],
+	[68.6, 14.4],
+	[69.6, 13.9],
+	[70.8, 15.6],
+	[71.8, 16.6],
+	[72.8, 13.8],
+	[74.2, 11.8],
+	[75.6, 10.2],
+	[76.8, 8.8],
+	[77.8, 7.6],
+	[78.6, 7.2],
+	[79.6, 8.6],
+	[80.6, 11],
+	[81.6, 10.2],
+	[82.8, 9.4],
+	[83.8, 9.6],
+	[85, 11.6],
+	[86.2, 10.4],
+	[87.2, 9.8],
+	[88.2, 10.6],
+	[89.4, 9.4],
+	[90.4, 9.6],
+	[91.6, 10.8],
+	[92.8, 9.2],
+	[94, 8],
+	[95, 5.8],
+	[95.6, 4.8],
+	[96.2, 5.4],
+	[97, 7.6],
+	[98, 10.4],
+	[98.8, 12.6],
+	[99.6, 12.2],
+	[100.6, 9.6],
+	[101.8, 9.4],
+	[103.2, 9.8],
+	[104, 11.4],
+	[105, 9.6],
+	[106.2, 9.2],
+	[106.8, 10.2],
+	[107.6, 6.8],
+	[108.4, 5.6],
+	[109.2, 6.8],
+	[109.8, 7.8],
+	[110.4, 7],
+	[111, 6.8],
+	[111.8, 8.8],
+	[112.8, 10],
+	[113.8, 9.6],
+	[115, 11.6],
+	[116.2, 11],
+	[117.2, 13.4],
+	[118.4, 13],
+	[119.6, 12.6],
+	[120.6, 15.2],
+	[121.8, 14.8],
+	[123, 17.2],
+	[124.2, 16.6],
+	[125.2, 19.4],
+	[126.4, 23],
+	[128.2, 26.6],
+	[130.6, 29.8],
+	[133, 32],
 	[136, 35],
 ];
+/** Where the shadowed cleft splits the massif, under the crest's deep V. */
+const SMITH_CLEFT = 99.2;
+/** The shallower notches between fins, each with a groove of shadow below. */
+const SMITH_GROOVES = [66.6, 71.8, 80.6, 85, 91.6, 104, 106.8, 112.8, 117.2];
+// A monolith, not a cone: a near-vertical left face over a low shoulder, a
+// narrow summit about 37% across, then one long straight slope that steepens
+// into a near-vertical right face above a flat base on the waterline.
 const HAYSTACK_CREST: Profile = [
-	[83, 27.5],
-	[87, 24],
-	[90, 18.5],
-	[93, 12.5],
-	[96, 8.5],
-	[99, 6],
-	[101, 5.5],
-	[103, 5.8],
-	[106, 8.4],
-	[110, 12.4],
-	[115, 16.7],
-	[119, 21.2],
-	[124, 25.1],
-	[128, 27.5],
+	[86, 27.5],
+	[86.1, 22.8],
+	[86.5, 21.7],
+	[87.3, 21.3],
+	[88, 21.7],
+	[88.6, 21.3],
+	[89, 18.2],
+	[89.3, 15.8],
+	[90.1, 12.9],
+	[91.5, 10.1],
+	[93.1, 8],
+	[94.9, 6],
+	[96.5, 4.5],
+	[97.8, 3.4],
+	[98.6, 3],
+	[99.4, 3.3],
+	[100.6, 4],
+	[102.8, 5.5],
+	[105.3, 7.3],
+	[107.8, 9.1],
+	[110.5, 11.1],
+	[113.4, 13],
+	[115.6, 15],
+	[116.9, 18],
+	[117.6, 21.6],
+	[118.7, 25.1],
+	[120, 27.5],
 ];
+const HAYSTACK_LEFT = HAYSTACK_CREST[0][0];
+const HAYSTACK_RIGHT = HAYSTACK_CREST[HAYSTACK_CREST.length - 1]?.[0] ?? 120;
 const NEEDLES_CREST: Profile = [
 	[71, 27.3],
 	[73, 26.1],
@@ -533,6 +588,35 @@ export function material(
 					color = mix(color, [237, 177, 113], Math.max(0, strata) * 0.15);
 					if (noise(x + Math.sin(y * 0.4) * 0.12, y * 0.04, 320) > 0.72)
 						color = mix(color, [48, 44, 61], 0.7);
+					const cleft =
+						(1 -
+							smoothstep(
+								1.2,
+								2.8,
+								Math.abs(x - SMITH_CLEFT - (y - 10) * 0.06),
+							)) *
+						(1 - smoothstep(29, 33, y));
+					color = mix(color, [40, 36, 52], cleft * 0.9);
+					for (const groove of SMITH_GROOVES) {
+						const depth = y - profile(groove, SMITH_CREST);
+						if (depth < 0 || depth > 14) continue;
+						const shade =
+							(1 -
+								smoothstep(
+									0.15,
+									0.6,
+									Math.abs(x - groove - Math.sin(y * 0.7 + groove) * 0.15),
+								)) *
+							(1 - depth / 14);
+						color = mix(color, [61, 54, 72], shade * 0.6);
+					}
+					const talus = 29.4 + noise(x, 0, 90) * 1.6;
+					if (y > talus)
+						color = mix(
+							color,
+							mix([118, 101, 72], [168, 142, 101], stone(x, y)),
+							0.55 * smoothstep(talus, talus + 1.5, y),
+						);
 				}
 			} else if (layer === 1 && y > riverBank(x)) {
 				color = mix(
@@ -745,7 +829,7 @@ export function material(
 						);
 				}
 				const crest = profile(x, HAYSTACK_CREST);
-				const rock = x >= 83 && x <= 128 && y >= crest;
+				const rock = x >= HAYSTACK_LEFT && x <= HAYSTACK_RIGHT && y >= crest;
 				const islet = x >= 71 && x <= 82 && y >= profile(x, NEEDLES_CREST);
 				const needle =
 					y >= 23.1 &&
@@ -753,7 +837,7 @@ export function material(
 						0.2 + (y - 23.1) * 0.2;
 				if ((rock || islet || needle) && y < 27.5) {
 					const grain = stone(x, y);
-					const face = smoothstep(100, 109, x + (y - 6) * 0.23);
+					const face = smoothstep(97.5, 106.5, x + (y - 3) * 0.23);
 					color = mix(
 						mix([32, 44, 53], [57, 68, 73], grain),
 						mix([76, 75, 60], [128, 115, 83], grain),
@@ -780,7 +864,7 @@ export function material(
 						(0.26 + noise(x, y, 100) * 0.13);
 					color = mix(color, [180, 199, 194], mist);
 					for (const [cx, width] of [
-						[105.5, 23.5],
+						[103, 18],
 						[76.5, 6.5],
 						[132.5, 1.9],
 					] as const) {
