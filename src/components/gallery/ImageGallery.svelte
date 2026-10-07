@@ -5,6 +5,7 @@
   import { portal } from "../../lib/portal";
   import type { GalleryMedia, GalleryVariant } from "../../lib/types";
   import Icon from "../ui/Icon.svelte";
+  import CrossStitch from "./CrossStitch.svelte";
 
   interface Props {
     images: GalleryMedia[];
@@ -447,7 +448,7 @@
         <button
           bind:this={thumbRefs[i]}
           type="button"
-          class="cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
+          class="relative cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
           aria-label={`Open ${experienceName} image`}
           onclick={() => openImage(i)}
         >
@@ -474,6 +475,9 @@
               height={image.height}
               decoding="async"
             />
+            {#if image.stitch}
+              <CrossStitch corner={image.stitch} />
+            {/if}
           {/if}
         </button>
       </div>

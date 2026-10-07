@@ -11,6 +11,7 @@ import MediaGallery from "../components/gallery/MediaGallery.astro";
   <div slot="after" class="mt-2 pb-8">
     <MediaGallery
       images={["about.webp", "timbers.webp"]}
+      stitches={{ "about.webp": "bottom-right", "timbers.webp": "top-left" }}
       experienceName="About"
       variant="desktop"
     />
