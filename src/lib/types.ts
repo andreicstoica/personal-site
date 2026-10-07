@@ -67,4 +67,7 @@ export type GalleryMedia =
 			 *  video loads or when the browser holds autoplay back. */
 			poster: string;
 			alt: string;
+			/** Poster pixel size. Gives the tile its box before the video file loads. */
+			width?: number;
+			height?: number;
 	  };

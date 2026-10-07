@@ -50,7 +50,7 @@ The server returns data, and the client maps it to parts. `src/lib/chatTypes.ts`
 | 7 | `FloatingChat.svelte` | Errors render in the turn, but there is no retry control; the visitor sends again. |
 | a11y | `GuidePrompts.svelte` | "Continue exploring" appears five seconds after the reply inside the log, so screen readers hear one more event per turn. |
 
-Fixed: a streaming reply follows its live edge while the reader is there, and a "Jump to latest" pill covers the reply out of view. A step reads "Opened" only once the new page has loaded; a navigation that never lands leaves a link. A new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
+Fixed: a streaming reply follows its live edge while the reader is there, and a "Jump to latest" pill covers the reply out of view. A step reads "Opened" only once the new page has loaded; a navigation that never lands leaves a link. A new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS. A reload restores the thread's scroll offset; a thread saved before that shows the end of the latest reply. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
 
 ## Not adopted
 

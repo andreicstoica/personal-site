@@ -41,7 +41,7 @@ import type { SearchHit } from "../../lib/guideSearch";
 import { guideTools } from "../../lib/guideTools";
 import {
 	isBannerQuestion,
-	isSmallTalk,
+	isConversational,
 	routeByHref,
 } from "../../lib/memorySelect";
 import { linkedPage, namedPage } from "../../lib/siteSections";
@@ -102,9 +102,11 @@ export const POST: APIRoute = async ({ request }) => {
 		execute: async ({ writer }) => {
 			writer.write({ type: "start" });
 			const modelId = guideModelId();
-			// A greeting needs no model: given no tools, gpt-oss printed a tool
-			// name into its hello, and given tools, it handed out banner controls.
-			if (!modelId || isSmallTalk(message)) {
+			// Conversational messages need no model: given no tools, gpt-oss
+			// printed a tool name into its hello, and given tools, it handed
+			// out banner controls. The check is the old prefilter: greetings,
+			// reactions, acknowledgements, and short follow-ups.
+			if (!modelId || isConversational(message)) {
 				writeNotesTurn(writer, message);
 			} else {
 				const notes = guideNotes();
@@ -342,7 +344,9 @@ function writeScene(writer: Writer): void {
 /** The answer without a model: a sentence from the best keyword match,
  *  and a page only when the visitor asked to open one. */
 function writeNotesTurn(writer: Writer, message: string): void {
-	const results = isSmallTalk(message) ? [] : guideSearch().search(message, 3);
+	const results = isConversational(message)
+		? []
+		: guideSearch().search(message, 3);
 	writeText(writer, notesText(message, results));
 	if (isBannerQuestion(message)) writeScene(writer);
 	const opened = notesOpenPage(message);

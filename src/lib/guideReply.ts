@@ -2,8 +2,9 @@ import type { OpenPageOutput } from "./chatTypes";
 import type { Outage } from "./guideModel";
 import type { GuideDoc, SearchHit } from "./guideSearch";
 import {
+	isConversational,
+	isGreeting,
 	isNavigationIntent,
-	isSmallTalk,
 	type MemorySection,
 	matchRoute,
 	type SiteRoute,
@@ -72,7 +73,7 @@ Answer from the notes and the post list below. Call read_post only when the ques
 
 Call open_page when the visitor asks to see a page, and whenever your reply will point them to a page for the rest, such as the canon for people and works. Call it before you write the reply, with a section id from the site map when one section answers the question. The site opens the page beside the chat after your reply, so say the rest is on that page. When the visitor is already on that page, call open_page only with a section, so the page scrolls to it; with no fitting section, skip it. Call open_page at most once, and never for a page that adds nothing.
 
-When the visitor mentions the banner at the top of the page (its landscape, place, weather, or light), call show_scene_controls before you write the reply. The site then shows buttons under the reply that change the banner's place, weather, and time of day, so tell them they can change it with the buttons below. The end of this prompt says what the banner shows now.
+When the visitor mentions the banner at the top of the page (its landscape, place, weather, or light), call show_scene_controls before you write the reply. The site then shows buttons under the reply that change the banner's place, weather, and time of day, so tell them they can change it with the buttons below. Call it only when they mention the banner. A greeting or any other question is not a reason to call it or to mention the banner. The end of this prompt says what the banner shows now, for when they do ask.
 
 Keep replies under 100 words. Use one of two shapes.
 
@@ -110,7 +111,7 @@ function turnContext(context: {
 	if (context.scene) {
 		const words = captionWords(context.scene);
 		lines.push(
-			`The banner at the top of the page shows a ${words.weather} ${words.time} at ${words.place}.`,
+			`The banner at the top of the page shows a ${words.weather} ${words.time} at ${words.place}. Mention it only if they ask about the banner.`,
 		);
 	}
 	if (context.passages?.length)
@@ -140,8 +141,8 @@ export function notesText(
 	message: string,
 	results: readonly SearchHit[],
 ): string {
-	if (isSmallTalk(message)) {
-		return /^(hi|hello|hey|yo|sup|howdy)\b/i.test(message.trim())
+	if (isConversational(message)) {
+		return isGreeting(message)
 			? "Hello. Ask about Andrei's writing, the people he looks up to, or how this site was built."
 			: "Ask about anything else: his writing, the people he looks up to, or how this site was built.";
 	}

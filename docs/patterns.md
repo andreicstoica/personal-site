@@ -34,7 +34,7 @@ Two layers: the thumbnail strip (inline) and the modal inspect (portal).
 
 ## Media reveal
 
-Images and videos fade in and unblur when loaded: `opacity: 0` with `filter: blur(4px)` transitions to `opacity: 1` with `filter: blur(0)` over 180ms. Implemented via the `mediaReveal` action in `src/lib/mediaReveal.ts`.
+Images and videos fade in and unblur when loaded: `opacity: 0` with `filter: blur(4px)` transitions to `opacity: 1` with `filter: blur(0)` over 180ms. Implemented via the `mediaReveal` action in `src/lib/mediaReveal.ts`. A video with a poster reveals when that still loads, so the tile shows even if the video file itself has not.
 
 When media is already cached (ready before hydration), the action defers `is-loaded` by one `requestAnimationFrame` so the element paints at `opacity: 0` first. Without the deferral the browser skips the transition entirely.
 

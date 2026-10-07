@@ -58,7 +58,7 @@
   function ratioAt(i: number): number {
     const media = images[i];
     if (!media) return 16 / 9;
-    if (media.kind === "video") return videoRatios[i] ?? 16 / 9;
+    if (media.kind === "video" && videoRatios[i] !== undefined) return videoRatios[i];
     return media.width && media.height ? media.width / media.height : 16 / 9;
   }
 
@@ -459,6 +459,8 @@
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal
               use:viewportPlay
+              width={image.width}
+              height={image.height}
               autoplay
               loop
               muted

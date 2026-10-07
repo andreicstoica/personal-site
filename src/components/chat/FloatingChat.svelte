@@ -143,6 +143,10 @@
   /** False while a send's own scroll to the new question runs, so following
    *  does not fight it. */
   let settled = true;
+  /** True until a reloaded thread has its scroll place back. */
+  let holdScroll = true;
+  /** Scroll offset from the last session, applied once the thread is laid out. */
+  let pendingScroll: number | null = null;
   const viewing = $derived(routeByHref(pagePath));
   /** Phones only: the sheet is down to its header so the page shows. */
   let minimized = $state(false);
@@ -237,6 +241,8 @@
     open: boolean;
     messages: GuideUIMessage[];
     moved: Record<string, PageMove>;
+    /** Where the thread was scrolled. Absent in threads saved before this. */
+    scroll: number | null;
   } | null {
     try {
       const raw = sessionStorage.getItem(storageKey);
@@ -245,7 +251,11 @@
       if (!isRecord(parsed) || typeof parsed.open !== "boolean") return null;
       const messages = parseStoredMessages(parsed.messages);
       if (!messages) return null;
-      return { open: parsed.open, messages, moved: parseMoved(parsed.moved) };
+      const scroll =
+        typeof parsed.scroll === "number" && parsed.scroll >= 0
+          ? parsed.scroll
+          : null;
+      return { open: parsed.open, messages, moved: parseMoved(parsed.moved), scroll };
     } catch {
       return null;
     }
@@ -283,9 +293,13 @@
 
   /** At the bottom, keep following; scrolled away, stop. The reader's own
    *  scroll decides, never the content. */
+  let scrollPersist: ReturnType<typeof setTimeout> | undefined;
   function onThreadScroll(): void {
     if (settled) following = endOverflow() <= EDGE;
     measureLatest();
+    if (holdScroll) return;
+    clearTimeout(scrollPersist);
+    scrollPersist = setTimeout(() => persistThread(), 200);
   }
 
   /** A click or key in the thread (opening the trace, say) is the reader
@@ -309,8 +323,10 @@
 
   /** The latest turn grows: a streaming reply, then cards and follow-ups. While
    *  the reader follows, keep its bottom in view; tokens move instantly, the
-   *  later arrivals glide. */
+   *  later arrivals glide. Held through the reload restore, so that scroll
+   *  does not yank the thread to the end before the saved place is back. */
   function onLatestResize(): void {
+    if (holdScroll) return;
     if (settled && following && threadRef) {
       const overflow = endOverflow();
       if (overflow > 0) {
@@ -527,6 +543,22 @@
     openFromUrl();
   }
 
+  /** A plain click on an `#ask-andrei` link opens the guide in place. */
+  function onAskAndreiLink(event: MouseEvent): void {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    const node = event.target;
+    if (!(node instanceof Element)) return;
+    const link = node.closest("a[href='#ask-andrei']");
+    if (!(link instanceof HTMLAnchorElement)) return;
+    event.preventDefault();
+    if (open) expand();
+    else {
+      minimized = false;
+      open = true;
+    }
+  }
+
   function openFromUrl(): void {
     const url = new URL(window.location.href);
     if (url.searchParams.get("chat") !== "1") return;
@@ -560,9 +592,15 @@
       stored = saved.messages;
       moved = saved.moved;
       open = saved.open;
+      pendingScroll = saved.scroll;
       // A restored reply is not new; its follow-ups show without the wait.
       const last = groupTurns(saved.messages).at(-1);
       if (last?.reply) exploreTurn = last.id;
+      // Don't follow until the saved place is back. Following from the top
+      // would scroll the thread before the restore and then fight it.
+      following = false;
+    } else {
+      holdScroll = false;
     }
     onPageLoad();
     // The island no longer remounts, so mount-time work that navigation can
@@ -570,6 +608,7 @@
     // manual navigation must cancel a pending one instead of racing it.
     document.addEventListener("astro:page-load", onPageLoad);
     document.addEventListener("astro:before-preparation", cancelFollow);
+    document.addEventListener("click", onAskAndreiLink, true);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (alive) noSlide = false;
@@ -582,23 +621,37 @@
       void chat?.stop();
       document.removeEventListener("astro:page-load", onPageLoad);
       document.removeEventListener("astro:before-preparation", cancelFollow);
+      document.removeEventListener("click", onAskAndreiLink, true);
     };
   });
 
   // Written when a turn settles, not on every streamed token. Private-mode and
   // storage-quota failures are not worth breaking an effect over; the guide
   // just stops surviving a reload.
-  $effect(() => {
+  function persistThread(): void {
     if (!hydrated || sending) return;
     const snapshot = $state.snapshot(messages).slice(-KEEP);
+    // While the reload restore is in flight, keep the saved offset. Writing
+    // the still-zero scrollTop would forget where the reader was.
+    const scroll = holdScroll ? pendingScroll : (threadRef?.scrollTop ?? null);
     try {
       sessionStorage.setItem(
         storageKey,
-        JSON.stringify({ open, messages: snapshot, moved }),
+        JSON.stringify({
+          open,
+          messages: snapshot,
+          moved,
+          ...(scroll !== null ? { scroll } : {}),
+        }),
       );
     } catch {
       // Storage unavailable.
     }
+  }
+
+  $effect(() => {
+    if (!hydrated || sending) return;
+    persistThread();
   });
 
   // The page reserves room for the open drawer (global.css). SiteLayout mirrors
@@ -647,9 +700,10 @@
     };
   });
 
-  // The first open after a load lands on the last question rather than the
-  // bottom of its reply. Later opens keep the reader's place: the thread is
-  // never unmounted, so its scroll survives a close.
+  // A reload puts the thread back where the reader left it. A thread saved
+  // before scroll was stored shows the end of the latest reply, not the
+  // question pinned to the top. Later opens keep the reader's place: the
+  // thread is never unmounted, so its scroll survives a close.
   let anchoredOnce = false;
   $effect(() => {
     if (!open || !hydrated) return;
@@ -658,7 +712,23 @@
     focusComposer();
     if (anchoredOnce) return;
     anchoredOnce = true;
-    void tick().then(() => anchorLastTurn("auto"));
+    void tick().then(() => {
+      requestAnimationFrame(() => {
+        const thread = threadRef;
+        if (!thread) {
+          holdScroll = false;
+          return;
+        }
+        if (pendingScroll !== null) thread.scrollTop = pendingScroll;
+        else {
+          const overflow = endOverflow();
+          if (overflow > 0) thread.scrollTop += overflow;
+        }
+        following = endOverflow() <= EDGE;
+        holdScroll = false;
+        measureLatest();
+      });
+    });
   });
 </script>
 

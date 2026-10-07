@@ -52,11 +52,15 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 const processedImages = await Promise.all(
 	images.map(async (imageName): Promise<GalleryMedia | null> => {
 		if (imageName.toLowerCase().endsWith(".webm")) {
+			const posterName = imageName.replace(/\.webm$/i, ".poster.webp");
+			const size = await publicImageSize(posterName);
 			return {
 				kind: "video",
 				src: `/images/${imageName}`,
-				poster: `/images/${imageName.replace(/\.webm$/i, ".poster.webp")}`,
+				poster: `/images/${posterName}`,
 				alt: experienceName,
+				width: size?.width,
+				height: size?.height,
 			};
 		}
 

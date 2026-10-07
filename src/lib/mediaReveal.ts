@@ -16,31 +16,49 @@ export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
 		};
 	}
 
-	const { ready, event } = videoReveal(node);
-	if (node.readyState >= ready) {
+	// A poster is a separate image. Waiting on the video file leaves the tile
+	// blank whenever that file is slow, deferred, or never fetched.
+	if (node.poster) return revealPoster(node, markLoaded);
+
+	if (node.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
 		requestAnimationFrame(() => markLoaded());
 	}
-	node.addEventListener(event, markLoaded);
+	node.addEventListener("loadeddata", markLoaded);
 	return {
 		destroy() {
-			node.removeEventListener(event, markLoaded);
+			node.removeEventListener("loadeddata", markLoaded);
 		},
 	};
 }
 
-/** A video with a poster can show as soon as its size is known: the poster
- *  fills the frame. Without one it waits for a first frame, which a browser
- *  holding autoplay back may never load. */
-function videoReveal(video: HTMLVideoElement): {
-	ready: number;
-	event: "loadedmetadata" | "loadeddata";
-} {
-	return video.poster
-		? { ready: HTMLMediaElement.HAVE_METADATA, event: "loadedmetadata" }
-		: { ready: HTMLMediaElement.HAVE_CURRENT_DATA, event: "loadeddata" };
+/** Page-parse path: the island action may not have mounted yet. */
+function watchPoster(video: HTMLVideoElement): void {
+	if (video.classList.contains("is-loaded") || watchedPosters.has(video))
+		return;
+	watchedPosters.add(video);
+	revealPoster(video, () => revealElement(video));
+}
+
+function revealPoster(
+	video: HTMLVideoElement,
+	markLoaded: () => void,
+): { destroy: () => void } {
+	const poster = new Image();
+	poster.addEventListener("load", markLoaded);
+	poster.addEventListener("error", markLoaded);
+	poster.src = video.poster;
+	if (poster.complete && poster.naturalWidth > 0)
+		requestAnimationFrame(markLoaded);
+	return {
+		destroy() {
+			poster.removeEventListener("load", markLoaded);
+			poster.removeEventListener("error", markLoaded);
+		},
+	};
 }
 
 const REVEAL_SELECTOR = ".media-reveal";
+const watchedPosters = new WeakSet<HTMLVideoElement>();
 
 function revealElement(element: Element): void {
 	element.classList.add("is-loaded");
@@ -56,11 +74,11 @@ function scanRevealables(root: ParentNode = document): void {
 		) {
 			revealElement(element);
 		}
-		if (
-			element instanceof HTMLVideoElement &&
-			element.readyState >= videoReveal(element).ready
-		) {
-			revealElement(element);
+		if (element instanceof HTMLVideoElement) {
+			if (element.poster) watchPoster(element);
+			else if (element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+				revealElement(element);
+			}
 		}
 	}
 }
@@ -74,7 +92,6 @@ function scanRevealables(root: ParentNode = document): void {
 export function installMediaReveal(): void {
 	document.addEventListener("load", handleMediaEvent, true);
 	document.addEventListener("loadeddata", handleMediaEvent, true);
-	document.addEventListener("loadedmetadata", handleMediaEvent, true);
 	document.addEventListener("astro:page-load", () => scanRevealables());
 	scanRevealables();
 }
@@ -82,11 +99,5 @@ export function installMediaReveal(): void {
 function handleMediaEvent(event: Event): void {
 	const target = event.target;
 	if (!(target instanceof Element) || !target.matches(REVEAL_SELECTOR)) return;
-	// Metadata alone reveals only a video that has a poster to show.
-	if (
-		event.type === "loadedmetadata" &&
-		!(target instanceof HTMLVideoElement && target.poster)
-	)
-		return;
 	revealElement(target);
 }

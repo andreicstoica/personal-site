@@ -20,6 +20,7 @@ import {
 import { fileStem, parseKnowledgeFile } from "./knowledge";
 import {
 	isBannerQuestion,
+	isConversational,
 	isNavigationIntent,
 	matchRoute,
 	parseMemoryMarkdown,
@@ -205,6 +206,16 @@ describe("routes", () => {
 		);
 		expect(isBannerQuestion("Do you do graphic design?")).toBe(false);
 		expect(isBannerQuestion("What is the NYC tech scene like?")).toBe(false);
+		expect(isConversational("hi there!")).toBe(true);
+		expect(isConversational("good morning")).toBe(true);
+		expect(isConversational("tell me more")).toBe(true);
+		expect(isConversational("got it")).toBe(true);
+		expect(isConversational("not bad")).toBe(true);
+		expect(isConversational("Contax")).toBe(false);
+		expect(isConversational("what is refract")).toBe(false);
+		expect(isConversational("woah this banner is cool!")).toBe(false);
+		expect(isConversational("show me the canon")).toBe(false);
+		expect(isConversational("What does Andrei do at Liftoff?")).toBe(false);
 	});
 });
 
@@ -229,9 +240,11 @@ describe("notes answers", () => {
 		const firstPerson = /\b(I|I'm|me|my|we|our)\b/;
 		const replies = [
 			notesText("hi", []),
+			notesText("hi there!", []),
 			notesText("what is a quasar", []),
 			...Object.values(OUTAGE_NOTICE),
 		];
+		expect(notesText("hi there!", [])).toBe(notesText("hi", []));
 		for (const reply of replies) expect(reply).not.toMatch(firstPerson);
 	});
 
