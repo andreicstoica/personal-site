@@ -28,6 +28,8 @@ export type Turn = {
 	passages?: string[];
 	notice?: string;
 	model?: string;
+	/** The host that served the model, when the gateway reports it. */
+	provider?: string;
 	ms?: number;
 	inputTokens?: number;
 	cachedTokens?: number;

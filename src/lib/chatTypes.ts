@@ -60,6 +60,8 @@ export type GuideDataParts = {
 /** Sent once a model turn ends, for the last line of the trace. */
 export type GuideMetadata = {
 	model?: string;
+	/** The host that served the model, when the gateway reports it. */
+	provider?: string;
 	ms?: number;
 	inputTokens?: number;
 	/** Input tokens the provider served from its prompt cache. */
@@ -240,6 +242,7 @@ function parseMetadata(value: unknown): GuideMetadata | null {
 	if (!isRecord(value)) return null;
 	const metadata: GuideMetadata = {};
 	if (typeof value.model === "string") metadata.model = value.model;
+	if (typeof value.provider === "string") metadata.provider = value.provider;
 	for (const key of [
 		"ms",
 		"inputTokens",

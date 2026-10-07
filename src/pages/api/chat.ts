@@ -22,7 +22,12 @@ import {
 	guideSearch,
 	pageSections,
 } from "../../lib/guideContent";
-import { guideModel, outageOf } from "../../lib/guideModel";
+import {
+	guideCallOptions,
+	guideModel,
+	outageOf,
+	servedBy,
+} from "../../lib/guideModel";
 import {
 	buildSystemPrompt,
 	notesOpenPage,
@@ -122,6 +127,7 @@ export const POST: APIRoute = async ({ request }) => {
 					});
 				await streamModelTurn(writer, {
 					model: guideModel(resolved),
+					callOptions: guideCallOptions(resolved, readInferenceEnv()),
 					modelId: resolved.model,
 					viewing: viewing?.href,
 					system: buildSystemPrompt({
@@ -163,6 +169,7 @@ async function streamModelTurn(
 	writer: Writer,
 	turn: {
 		model: ReturnType<typeof guideModel>;
+		callOptions: ReturnType<typeof guideCallOptions>;
 		modelId: string;
 		/** The path the visitor is on, when it is a known route. */
 		viewing: string | undefined;
@@ -189,10 +196,7 @@ async function streamModelTurn(
 		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
 		maxOutputTokens: 1000,
-		// The answers are short lookups over notes already in the prompt. Low
-		// effort keeps the reasoning (shown in the trace) to a few lines and
-		// cuts seconds from each turn; hosts that ignore the field are fine.
-		providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
+		...turn.callOptions,
 		// A retry on 402 or 429 only delays the notes answer.
 		maxRetries: 0,
 		abortSignal: AbortSignal.any([turn.signal, AbortSignal.timeout(30_000)]),
@@ -292,15 +296,20 @@ async function streamModelTurn(
 /** The model and token counts for the trace. Usage is best effort: a
  *  provider that reports none leaves those fields out. */
 async function turnMetadata(
-	result: { totalUsage: PromiseLike<LanguageModelUsage> },
+	result: {
+		totalUsage: PromiseLike<LanguageModelUsage>;
+		providerMetadata: PromiseLike<unknown>;
+	},
 	base: { model: string; ms: number },
 ): Promise<GuideMetadata> {
 	const model = base.model.replace(/^[^/]+\//, "");
 	try {
 		const usage = await result.totalUsage;
 		const cached = usage.inputTokenDetails.cacheReadTokens;
+		const provider = servedBy(await result.providerMetadata);
 		return {
 			model,
+			...(provider ? { provider } : {}),
 			ms: base.ms,
 			...(usage.inputTokens ? { inputTokens: usage.inputTokens } : {}),
 			...(cached ? { cachedTokens: cached } : {}),
@@ -318,8 +327,6 @@ function writeText(writer: Writer, text: string): void {
 	writer.write({ type: "text-end", id });
 }
 
-/** The answer without a model: a sentence from the best keyword match,
- *  and a page only when the visitor asked to open one. */
 /** A post's title, URL, and date for a card; the passage text stays out. */
 function postRef(hit: SearchHit): {
 	title: string;
@@ -342,6 +349,8 @@ function writeScene(writer: Writer): void {
 	});
 }
 
+/** The answer without a model: a sentence from the best keyword match,
+ *  and a page only when the visitor asked to open one. */
 function writeNotesTurn(writer: Writer, message: string): void {
 	const results = isSmallTalk(message) ? [] : guideSearch().search(message, 3);
 	writeText(writer, notesText(message, results));

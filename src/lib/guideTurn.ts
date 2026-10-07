@@ -45,7 +45,11 @@ const count = new Intl.NumberFormat("en", {
 
 function usageDetail(metadata: GuideMetadata | undefined): string | undefined {
 	if (!metadata?.model) return undefined;
-	const parts = [metadata.model];
+	const parts = [
+		metadata.provider
+			? `${metadata.model} on ${metadata.provider}`
+			: metadata.model,
+	];
 	if (metadata.inputTokens) {
 		const cached = metadata.cachedTokens
 			? ` (${count.format(metadata.cachedTokens)} cached)`

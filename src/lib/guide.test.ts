@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { APICallError } from "ai";
-import { guideModel, outageOf } from "./guideModel";
+import { guideCallOptions, guideModel, outageOf, servedBy } from "./guideModel";
 import { starterPrompts } from "./guidePrompts";
 import {
 	buildSystemPrompt,
@@ -426,6 +426,28 @@ describe("model outages", () => {
 	test("the model client takes the resolved host", () => {
 		const model = guideModel(resolved);
 		expect(typeof model === "object" && model.modelId).toBe("m");
+	});
+
+	test("the gateway gets shared reasoning effort and an optional host order", () => {
+		const gateway = {
+			...resolved,
+			baseUrl: "https://ai-gateway.vercel.sh/v1",
+			model: "openai/gpt-oss-120b",
+		};
+		expect(guideCallOptions(gateway, {})).toEqual({ reasoning: "low" });
+		expect(
+			guideCallOptions(gateway, { MODEL_GATEWAY_ORDER: "groq, cerebras" }),
+		).toEqual({
+			reasoning: "low",
+			providerOptions: { gateway: { order: ["groq", "cerebras"] } },
+		});
+		expect(guideCallOptions(resolved, {})).toEqual({
+			providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
+		});
+		expect(servedBy({ gateway: { routing: { finalProvider: "groq" } } })).toBe(
+			"groq",
+		);
+		expect(servedBy(undefined)).toBeUndefined();
 	});
 });
 
