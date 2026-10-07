@@ -24,8 +24,10 @@ import {
 	pageSections,
 } from "../../lib/guideContent";
 import {
-	guideCallOptions,
+	GUIDE_REASONING,
 	guideModel,
+	guideModelId,
+	type Outage,
 	outageOf,
 	servedBy,
 } from "../../lib/guideModel";
@@ -37,12 +39,6 @@ import {
 } from "../../lib/guideReply";
 import type { SearchHit } from "../../lib/guideSearch";
 import { guideTools } from "../../lib/guideTools";
-import {
-	currentInference,
-	type Outage,
-	readInferenceEnv,
-} from "../../lib/inference";
-import { guideModelEnabled } from "../../lib/inferenceConfig";
 import {
 	isBannerQuestion,
 	isSmallTalk,
@@ -105,11 +101,10 @@ export const POST: APIRoute = async ({ request }) => {
 	const stream = createUIMessageStream<GuideUIMessage>({
 		execute: async ({ writer }) => {
 			writer.write({ type: "start" });
-			const resolved = currentInference();
-			if (
-				!guideModelEnabled(readInferenceEnv()) ||
-				resolved.kind === "unconfigured"
-			) {
+			const modelId = guideModelId();
+			// A greeting needs no model: given no tools, gpt-oss printed a tool
+			// name into its hello, and given tools, it handed out banner controls.
+			if (!modelId || isSmallTalk(message)) {
 				writeNotesTurn(writer, message);
 			} else {
 				const notes = guideNotes();
@@ -130,9 +125,8 @@ export const POST: APIRoute = async ({ request }) => {
 						data: { posts: passages.map(postRef) },
 					});
 				await streamModelTurn(writer, {
-					model: guideModel(resolved),
-					callOptions: guideCallOptions(resolved),
-					modelId: resolved.model,
+					model: guideModel(modelId),
+					modelId,
 					viewing: viewing?.href,
 					system: buildSystemPrompt({
 						notes,
@@ -157,12 +151,6 @@ export const POST: APIRoute = async ({ request }) => {
 
 type GuideTools = ReturnType<typeof guideTools>;
 
-/** A greeting needs no tool, and gpt-oss called one anyway. Every other
- *  turn gets every tool and the model chooses. */
-function activeToolsFor(message: string): Array<keyof GuideTools> | undefined {
-	return isSmallTalk(message) ? [] : undefined;
-}
-
 /** open_page is the last thing a turn does. Once it is called and a reply
  *  exists, another model step would only echo the tool result. */
 const openedAfterReply: StopCondition<GuideTools> = ({ steps }) =>
@@ -173,7 +161,6 @@ async function streamModelTurn(
 	writer: Writer,
 	turn: {
 		model: ReturnType<typeof guideModel>;
-		callOptions: ReturnType<typeof guideCallOptions>;
 		modelId: string;
 		/** The path the visitor is on, when it is a known route. */
 		viewing: string | undefined;
@@ -195,12 +182,11 @@ async function streamModelTurn(
 			content: item.text,
 		})),
 		tools: guideTools(),
-		activeTools: activeToolsFor(turn.message),
 		// Read, hand out scene controls, open a page, reply: the longest turn.
 		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
 		maxOutputTokens: 1000,
-		...turn.callOptions,
+		reasoning: GUIDE_REASONING,
 		// A retry on 402 or 429 only delays the notes answer.
 		maxRetries: 0,
 		abortSignal: AbortSignal.any([turn.signal, AbortSignal.timeout(30_000)]),

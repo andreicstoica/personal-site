@@ -1,6 +1,6 @@
 import type { OpenPageOutput } from "./chatTypes";
+import type { Outage } from "./guideModel";
 import type { GuideDoc, SearchHit } from "./guideSearch";
-import type { Outage } from "./inference";
 import {
 	isNavigationIntent,
 	isSmallTalk,
@@ -141,7 +141,9 @@ export function notesText(
 	results: readonly SearchHit[],
 ): string {
 	if (isSmallTalk(message)) {
-		return "Hey. Ask about Andrei's writing, the people he looks up to, or how this site was built.";
+		return /^(hi|hello|hey|yo|sup|howdy)\b/i.test(message.trim())
+			? "Hello. Ask about Andrei's writing, the people he looks up to, or how this site was built."
+			: "Ask about anything else: his writing, the people he looks up to, or how this site was built.";
 	}
 	const best = results[0];
 	if (!best?.text) {

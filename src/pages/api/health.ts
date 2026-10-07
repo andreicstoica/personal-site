@@ -1,10 +1,11 @@
+import { generateText } from "ai";
 import type { APIRoute } from "astro";
 import {
-	completeChat,
-	currentInference,
-	readInferenceEnv,
-} from "../../lib/inference";
-import { guideModelEnabled } from "../../lib/inferenceConfig";
+	GUIDE_REASONING,
+	guideModel,
+	guideModelId,
+	outageOf,
+} from "../../lib/guideModel";
 
 function json(body: unknown, status: number): Response {
 	return new Response(JSON.stringify(body), {
@@ -16,57 +17,38 @@ function json(body: unknown, status: number): Response {
 export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
-	const resolved = currentInference();
-	if (!guideModelEnabled(readInferenceEnv())) {
+	const model = guideModelId();
+	if (!model) {
 		return json(
 			{
 				status: "off",
-				provider: "notes",
 				live: false,
-				message: "Guide model calls are off",
+				message: "MODEL_ID is not set, so the guide answers from notes",
 			},
 			200,
-		);
-	}
-
-	if (resolved.kind === "unconfigured") {
-		return json(
-			{
-				status: "unconfigured",
-				provider: resolved.provider,
-				message: resolved.reason,
-			},
-			503,
 		);
 	}
 
 	// A live generation costs tokens. Default is config-only.
 	if (url.searchParams.get("probe") !== "1") {
-		return json(
-			{ status: "ok", provider: resolved.provider, live: false },
-			200,
-		);
+		return json({ status: "ok", model, live: false }, 200);
 	}
 
 	// Reasoning models spend the first tokens thinking; 1 token returns no text.
-	const completion = await completeChat({
-		resolved,
-		temperature: 0,
-		maxTokens: 64,
-		messages: [{ role: "user", content: "hi" }],
-	});
-
-	if (completion.kind === "ok") {
-		return json({ status: "ok", provider: resolved.provider, live: true }, 200);
+	try {
+		const { text } = await generateText({
+			model: guideModel(model),
+			prompt: "hi",
+			reasoning: GUIDE_REASONING,
+			maxOutputTokens: 64,
+			maxRetries: 0,
+			abortSignal: AbortSignal.timeout(20_000),
+		});
+		return json({ status: "ok", model, live: text.length > 0 }, 200);
+	} catch (error) {
+		return json(
+			{ status: "down", outage: outageOf(error), model, live: false },
+			503,
+		);
 	}
-
-	return json(
-		{
-			status: completion.kind,
-			outage: completion.outage,
-			provider: resolved.provider,
-			live: false,
-		},
-		503,
-	);
 };

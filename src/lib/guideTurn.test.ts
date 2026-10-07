@@ -159,12 +159,12 @@ describe("reply view", () => {
 		]);
 	});
 
-	test("a notes answer says it came from the notes", () => {
+	test("a reply with no model call says so", () => {
 		const view = replyView(
 			reply([{ type: "text", text: "From his notes.", state: "done" }]),
 		);
 		expect(view.trace.map((step) => step.label)).toEqual([
-			"Answered from his notes by keyword match",
+			"Answered without the model",
 		]);
 	});
 

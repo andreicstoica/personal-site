@@ -16,7 +16,6 @@
 		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build && bun scripts/check-build.ts"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.63",
 		"@ai-sdk/svelte": "^5.0.128",
 		"@astrojs/svelte": "9.0.1",
 		"@astrojs/vercel": "11.0.3",
