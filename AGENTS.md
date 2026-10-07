@@ -42,7 +42,7 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Configuration & Environment Tips
 
 - Run everything through Bun; avoid destructive git commands unless explicitly requested.
-- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234/v1`, or `MODEL_PROVIDER=hosted` with `MODEL_BASE_URL` (OpenAI-compatible, including `/v1`), `MODEL_API_KEY`, and `MODEL_ID`. Any OpenAI-compatible host works, so changing provider is an env change. OpenCode Zen's free models (Big Pickle and others) return 403 outside the OpenCode client, so they cannot back the site. The guide does not call any model unless `GUIDE_MODEL=on`. The guide's notes live in `src/content/memory`; they, the site map, and the blog post list from `rag/data` ride in its system prompt, and its two tools (`read_post`, `open_page`) run through the Vercel AI SDK (`docs/components.md`, FloatingChat). `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
+- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234/v1`, or `MODEL_PROVIDER=hosted` with `MODEL_BASE_URL` (OpenAI-compatible, including `/v1`), `MODEL_API_KEY`, and `MODEL_ID`. Any OpenAI-compatible host works, so changing provider is an env change. Production and Preview use the Vercel AI Gateway free tier (`MODEL_ID=openai/gpt-oss-120b`). Do not buy gateway credits on this team: a purchase ends the monthly free credit. The guide does not call any model unless `GUIDE_MODEL=on`. The guide's notes live in `src/content/memory`; they, the site map, and the blog post list from `rag/data` ride in its system prompt, and its two tools (`read_post`, `open_page`) run through the Vercel AI SDK (`docs/components.md`, FloatingChat). The guide speaks about Andrei in the third person, never as him: no "I", "me", or "my" in the prompt or any copy it shows. `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
 - Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
 
 # User Instructions
@@ -68,7 +68,7 @@ Available <tech>: svelte, tailwindcss, Effect, FastAPI, NextJS, opencode
 | Astro dev | `bun run dev` | http://localhost:4321 |
 | Production preview | `bun run build` then `bun run preview` | http://localhost:4321 |
 | Local LLM (optional, for model replies) | LM Studio or compatible OpenAI API | http://localhost:1234/v1 (`MODEL_PROVIDER=local`) |
-| Hosted model (guide in production) | OpenAI-compatible API | `MODEL_PROVIDER=hosted` |
+| Hosted model (guide in production) | Vercel AI Gateway free tier (OpenAI-compatible) | `MODEL_PROVIDER=hosted` |
 
 Only the Astro dev server is required for browsing the portfolio, project pages, and static content. The floating guide answers from `src/content/memory` when no model is reachable. Full model replies need an inference endpoint (`MODEL_PROVIDER=local` or `MODEL_PROVIDER=hosted`). `GET /api/health` returns **503** when the selected provider is missing configuration. It does not call the model unless `?probe=1` is set.
 

@@ -252,6 +252,8 @@ The message metadata carries the model, the turn's duration, and its token count
 
 ### Agent structure
 
+The guide is not Andrei. Every string it shows speaks about him in the third person (Andrei, he), never as him (I, me, my): the system prompt, the outage notices, the notes answers, and the composer placeholder. A visitor's "you" means Andrei, so the starter prompts keep it. Posts are in his first person, so the model retells them, and the notes answer names a matching post instead of quoting it.
+
 Everything the guide knows fits in about 5,000 tokens, so it rides in the system prompt instead of behind a search tool: every `src/content/memory` note, the site map with each page's section ids, and one line per blog post (slug, title, date, URL, tags) from `rag/data`, newest first. The page the visitor is on comes last, so the rest is one fixed prefix a provider can cache. Two tools remain:
 
 - `read_post` loads a post body (up to 10,000 characters) when a question needs more than its title.
@@ -268,7 +270,7 @@ A plain answer takes one model call; a turn that opens a page takes two (the cal
 - `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
 - `src/lib/guideSearch.ts` — post parsing and the keyword search behind the notes answer
 - `src/lib/memorySelect.ts` — parses `src/content/memory` and matches routes
-- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible)
+- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible; production uses the Vercel AI Gateway free tier)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
 Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).
