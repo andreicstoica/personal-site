@@ -18,12 +18,15 @@
     { "id": "austin-robbs", "kind": "post-body", "q": "Why do you admire Austin Robbs?", "facts": [["Patagonia"]] },
     { "id": "boulder", "kind": "post-body", "q": "Who did you visit in Boulder?", "facts": [["Connor"]] },
     { "id": "gpt5", "kind": "post-body", "q": "What did you think of GPT-5?", "facts": [["good", "great", "right direction"]] },
+    { "id": "college-friend", "kind": "post-body", "q": "Which college friend did he go visit, and where?", "facts": [["Connor"]] },
     { "id": "diy-camera", "kind": "post-body", "q": "Have you written about someone building a camera from scratch?", "facts": [["Small Town America", "DIY", "scratch"]] },
 
     { "id": "banner-cool", "kind": "banner", "q": "woah this banner is cool!", "scene": true },
     { "id": "banner-rain", "kind": "banner", "q": "can I make it rain up there?", "scene": true },
     { "id": "banner-made", "kind": "banner", "q": "how was this banner made? looks awesome", "scene": true, "facts": [["WebGL", "pixel"]] },
     { "id": "banner-mountain", "kind": "banner", "q": "what is that mountain at the top of the page?", "bannerScene": { "place": "cascade-forest", "weather": "clear", "time": "night" }, "scene": true, "facts": [["Mt. Hood", "Mount Hood"]] },
+
+    { "id": "banner-drawing", "kind": "banner", "q": "what's that drawing at the top?", "scene": true },
 
     { "id": "nav-canon", "kind": "nav", "q": "show me the canon", "page": "/canon" },
     { "id": "nav-fitness", "kind": "nav", "q": "take me to the fitness page", "page": "/fitness" },

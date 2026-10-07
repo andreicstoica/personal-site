@@ -40,7 +40,6 @@ import { guideModelEnabled } from "../../lib/inferenceConfig";
 import {
 	isBannerQuestion,
 	isSmallTalk,
-	mayConcernBanner,
 	routeByHref,
 } from "../../lib/memorySelect";
 import { linkedPage, namedPage } from "../../lib/siteSections";
@@ -148,18 +147,10 @@ export const POST: APIRoute = async ({ request }) => {
 
 type GuideTools = ReturnType<typeof guideTools>;
 
-/** Code narrows the tools each turn; the model chooses among the rest. A
- *  greeting needs none, and the scene tool is offered only when the message
- *  might be about the banner. */
-function activeToolsFor(message: string): Array<keyof GuideTools> {
-	if (isSmallTalk(message)) return [];
-	const tools: Array<keyof GuideTools> = [
-		"search_posts",
-		"read_post",
-		"open_page",
-	];
-	if (mayConcernBanner(message)) tools.push("show_scene_controls");
-	return tools;
+/** A greeting needs no tool, and gpt-oss called one anyway. Every other
+ *  turn gets every tool and the model chooses. */
+function activeToolsFor(message: string): Array<keyof GuideTools> | undefined {
+	return isSmallTalk(message) ? [] : undefined;
 }
 
 /** open_page is the last thing a turn does. Once it is called and a reply

@@ -263,7 +263,7 @@ Everything the guide knows fits in about 5,000 tokens, so it rides in the system
 
 There is no embedding step and no prebuilt index. `guideContent.ts` reads `rag/data` at build time: a `.txt` body and a `.json` metadata file per post. A post joins the list only when its metadata has a title, type `blog` or `essay`, and a `https://blog.andrei.bio/` URL. To change what the guide knows, edit the files and rebuild.
 
-Code also narrows the tools each turn (`activeToolsFor` in the route, through the SDK's `activeTools`): a greeting gets none, and `show_scene_controls` is offered only when the message might be about the banner (`mayConcernBanner`). A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The longest turn is four steps: search, read, open a page, reply. The loop stops at four, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
+A greeting runs with no tools (`activeToolsFor` in the route, through the SDK's `activeTools`); every other turn offers every tool and the model chooses. A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The longest turn is four steps: search, read, open a page, reply. The loop stops at four, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
 
 ### Supporting modules
 

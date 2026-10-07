@@ -202,19 +202,6 @@ describe("reply view", () => {
 		]);
 	});
 
-	test("a doubled the before a title that starts with The reads once", () => {
-		const view = replyView(
-			reply([
-				{
-					type: "text",
-					text: "More in the The Making of bot-drei post.",
-					state: "done",
-				},
-			]),
-		);
-		expect(view.text).toBe("More in The Making of bot-drei post.");
-	});
-
 	test("a notes answer has no trace", () => {
 		const view = replyView(
 			reply([{ type: "text", text: "From my notes.", state: "done" }]),

@@ -106,16 +106,6 @@ export function isBannerQuestion(message: string): boolean {
 	return BANNER_TOPIC.test(message);
 }
 
-/** Wider than isBannerQuestion: anything that might be about the banner, its
- *  place, sky, or light. Only these turns offer the model the scene tool, so
- *  it cannot hand out controls for an unrelated question. */
-const BANNER_HINT =
-	/\b(banner|header|landscape|scenery|scene|pixel|graphic|picture|image|art|weather|rain\w*|fog\w*|cloud\w*|sky|sun\w*|moon|night|mountain|rock|beach|hills?|gorge|lightning|up there|up top|top of)\b/i;
-
-export function mayConcernBanner(message: string): boolean {
-	return BANNER_HINT.test(message);
-}
-
 export function isSmallTalk(message: string): boolean {
 	const trimmed = message.trim();
 	return /^(hi|hello|hey|thanks|thank you|yo|sup|howdy|what'?s up|how are you|ok|okay|cool|nice|wow)[!.?\s]*$/i.test(

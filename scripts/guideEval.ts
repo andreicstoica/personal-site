@@ -12,7 +12,8 @@ export type EvalCase = {
 	facts?: string[][];
 	/** The page the reply should open or point to. */
 	page?: string;
-	/** Whether the reply should carry the banner's scene controls. */
+	/** Whether the reply should carry the banner's scene controls; false
+	 *  when left out. */
 	scene?: boolean;
 	noTools?: string[];
 };
@@ -110,8 +111,11 @@ export function scoreTurn(test: EvalCase, turn: Turn): Score {
 	}
 	if (test.page && !turn.pages.includes(test.page))
 		failures.push(`no page ${test.page}`);
-	if (test.scene !== undefined && turn.scene !== test.scene)
-		failures.push(test.scene ? "no scene controls" : "unwanted scene controls");
+	// Controls belong only under a banner reply, so every other case checks
+	// that the model did not hand them out.
+	const wantScene = test.scene ?? false;
+	if (turn.scene !== wantScene)
+		failures.push(wantScene ? "no scene controls" : "unwanted scene controls");
 	for (const tool of test.noTools ?? []) {
 		if (turn.tools.includes(tool)) failures.push(`called ${tool}`);
 	}

@@ -27,7 +27,6 @@ import {
 	isBannerQuestion,
 	isNavigationIntent,
 	matchRoute,
-	mayConcernBanner,
 	parseMemoryMarkdown,
 	routeByHref,
 } from "./memorySelect";
@@ -216,11 +215,6 @@ describe("routes", () => {
 		);
 		expect(isBannerQuestion("Do you do graphic design?")).toBe(false);
 		expect(isBannerQuestion("What is the NYC tech scene like?")).toBe(false);
-		expect(
-			mayConcernBanner("what is that mountain at the top of the page?"),
-		).toBe(true);
-		expect(mayConcernBanner("Why do you admire Austin Robbs?")).toBe(false);
-		expect(mayConcernBanner("What do you do at Liftoff?")).toBe(false);
 	});
 });
 
