@@ -77,10 +77,6 @@ Only the Astro dev server is required for browsing the portfolio, project pages,
 - Lint: `bun run lint` (Biome on `src/`; Svelte/CSS excluded). Typecheck: `bun run check` (`astro check` + `svelte-check`). Tests: `bun test`. Full gate: `bun run verify`.
 - Production build: `bun run build` (also runs at the end of `verify`).
 
-### RAG index (content changes only)
-
-- Rebuild indexes after editing `rag/data/`: `bun run rag:build` or `bun run rag:rebuild`. Not needed for normal UI work when committed indexes are present.
-
 ### Dev server process
 
 - Use a persistent session (e.g. tmux) for `bun run dev`; it does not exit on its own. Hot reload may not pick up all dependency installs—restart dev if packages change.
