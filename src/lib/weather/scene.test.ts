@@ -113,9 +113,9 @@ describe("layered terrain", () => {
 			["columbia-gorge", 1],
 		] as const) {
 			for (const x of place === "bend-plateau"
-				? [48, 67, 77, 85, 97, 107, 116]
+				? [62, 74.7, 90, 94.5, 101.35, 112, 126]
 				: place === "oregon-coast"
-					? [74.8, 79.3, 87, 93, 101, 107, 116, 124, 132.5]
+					? [58.7, 74.9, 79.96, 85.2, 90.4, 93, 97.8, 107, 114, 116.5]
 					: [8, 25, 40, 137, 140, 141, 142, 150, 164]) {
 				let entered = false;
 				for (let y = 0.125; y < 48; y += 0.25) {
@@ -126,19 +126,41 @@ describe("layered terrain", () => {
 				}
 			}
 		}
-		for (const x of [100, 101, 102]) {
-			expect(material("oregon-coast", 0, x, 5.25)).toBeNull();
-			expect(material("oregon-coast", 0, x, 6)).not.toBeNull();
+		// Haystack: a narrow summit, a near-vertical left face, the jutting corner
+		// where that face meets the summit ridge, and a straight right slope.
+		for (const x of [97.4, 97.8, 98.2]) {
+			expect(material("oregon-coast", 0, x, 2.25)).toBeNull();
+			expect(material("oregon-coast", 0, x, 3.25)).not.toBeNull();
 		}
-		expect(material("oregon-coast", 0, 90, 18)).toBeNull();
-		expect(material("oregon-coast", 0, 115, 18)).not.toBeNull();
-		for (const x of [74.8, 79.3, 132.5]) {
-			const sea = material("oregon-coast", 0, x, 22.5);
-			const basalt = material("oregon-coast", 0, x, 24);
-			expect(sea?.[2] ?? 0).toBeGreaterThan(120);
+		expect(material("oregon-coast", 0, 88, 18)).toBeNull();
+		expect(material("oregon-coast", 0, 90.4, 18)).not.toBeNull();
+		expect(material("oregon-coast", 0, 91.2, 7.5)).toBeNull();
+		expect(material("oregon-coast", 0, 92.4, 7.2)).not.toBeNull();
+		expect(material("oregon-coast", 0, 92.4, 6)).toBeNull();
+		expect(material("oregon-coast", 0, 104, 6.8)).toBeNull();
+		expect(material("oregon-coast", 0, 104, 7.5)).not.toBeNull();
+		expect(material("oregon-coast", 0, 112, 18)).not.toBeNull();
+		// The stack and the Needles' two peaks stand dark above the horizon.
+		for (const [x, peak] of [
+			[58.71, 20.71],
+			[74.9, 21.24],
+			[79.96, 20.01],
+		] as const) {
+			expect(material("oregon-coast", 0, x, peak - 0.75)).toBeNull();
+			const basalt = material("oregon-coast", 0, x, peak + 1.5);
 			expect(basalt?.[2] ?? 255).toBeLessThan(90);
 			expect(material("oregon-coast", 1, x, 27)).toBeNull();
 		}
+		expect(material("oregon-coast", 0, 65, 22.5)?.[2] ?? 0).toBeGreaterThan(
+			120,
+		);
+		// Smith Rock: two spires to y 5 with the cleft's flat notch between them.
+		for (const x of [90.07, 101.35]) {
+			expect(material("bend-plateau", 0, x, 4.5)).toBeNull();
+			expect(material("bend-plateau", 0, x, 5.5)).not.toBeNull();
+		}
+		expect(material("bend-plateau", 0, 94.5, 8.2)).toBeNull();
+		expect(material("bend-plateau", 0, 94.5, 9.2)).not.toBeNull();
 	});
 	test("Gorge foreground contains the river at every phase", () => {
 		for (const t of [0, 7.5, 15, 22.5])
