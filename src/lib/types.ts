@@ -1,3 +1,4 @@
+import type { StitchCorner } from "./crossStitch";
 export const EXPERIENCE_TYPES = [
 	"personal",
 	"work",
@@ -56,6 +57,8 @@ export type GalleryMedia =
 			alt: string;
 			width?: number;
 			height?: number;
+			/** The corner that carries a cross-stitched colțar, if any. */
+			stitch?: StitchCorner;
 	  }
 	| {
 			kind: "video";
