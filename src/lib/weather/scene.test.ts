@@ -18,12 +18,12 @@ import {
 	rapidMotion,
 } from "./placeMotion";
 import {
+	captionWords,
 	classifyWeather,
 	fallbackReading,
 	PLACES,
 	type StoredReading,
 	sceneLabel,
-	sceneSentence,
 	timeFromClock,
 	timeOfDay,
 	WEATHERS,
@@ -67,15 +67,19 @@ describe("weather lighting clock", () => {
 				weather: "clear",
 				colorMode: "light",
 			}),
-		).toBe("Mount Hood, golden hour, clear");
+		).toBe("Mt. Hood, OR, golden hour, clear");
 		expect(
-			sceneSentence({
+			captionWords({
 				place: "oregon-coast",
 				time: "golden-hour",
 				weather: "fog",
 				colorMode: "dark",
 			}),
-		).toBe("A foggy golden hour at Cannon Beach.");
+		).toEqual({
+			weather: "foggy",
+			time: "golden hour",
+			place: "Cannon Beach, OR",
+		});
 	});
 });
 

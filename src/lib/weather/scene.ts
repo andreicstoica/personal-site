@@ -32,11 +32,11 @@ export type Scene = {
 };
 
 export const PLACE_LABEL: Record<Place, string> = {
-	"painted-hills": "Painted Hills",
-	"bend-plateau": "Smith Rock",
-	"cascade-forest": "Mount Hood",
-	"columbia-gorge": "Columbia Gorge",
-	"oregon-coast": "Cannon Beach",
+	"painted-hills": "Painted Hills, OR",
+	"bend-plateau": "Smith Rock, OR",
+	"cascade-forest": "Mt. Hood, OR",
+	"columbia-gorge": "The Gorge, OR",
+	"oregon-coast": "Cannon Beach, OR",
 };
 
 export const readingSchema = z.object({
@@ -75,10 +75,17 @@ const WEATHER_ADJECTIVE: Record<Weather, string> = {
 	fog: "foggy",
 };
 
-/** The banner's caption: "A rainy night at Smith Rock." */
-export function sceneSentence(scene: Scene): string {
-	const time = scene.time === "golden-hour" ? "golden hour" : scene.time;
-	return `A ${WEATHER_ADJECTIVE[scene.weather]} ${time} at ${PLACE_LABEL[scene.place]}.`;
+/** The caption's words, as in "A rainy night at Smith Rock, OR." */
+export function captionWords(scene: Scene): {
+	weather: string;
+	time: string;
+	place: string;
+} {
+	return {
+		weather: WEATHER_ADJECTIVE[scene.weather],
+		time: scene.time === "golden-hour" ? "golden hour" : scene.time,
+		place: PLACE_LABEL[scene.place],
+	};
 }
 
 export function classifyWeather(code: number): Weather {

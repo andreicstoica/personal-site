@@ -3,7 +3,11 @@
   import { mountBanner, whenBannerReady } from "../../lib/weather/bannerSurface";
   import { BANNER_HEIGHT, BANNER_WIDTH } from "../../lib/weather/buffer";
   import { playClick } from "../../lib/weather/clickSound";
-  import { advanceScene, bannerTarget } from "../../lib/weather/interact";
+  import {
+    advanceScene,
+    type BannerTarget,
+    bannerTarget,
+  } from "../../lib/weather/interact";
   import {
     loadOrCreatePlace,
     loadReading,
@@ -16,7 +20,7 @@
     fallbackReading,
     type Place,
     sceneLabel,
-    sceneSentence,
+    captionWords,
     type StoredReading,
     type TimeOfDay,
     timeOfDay,
@@ -159,7 +163,7 @@
     colorMode: colorOverride === "system" ? systemMode : colorOverride,
   });
   const label = $derived(sceneLabel(scene));
-  const caption = $derived(sceneSentence(scene));
+  const caption = $derived(captionWords(scene));
 
   /** Lab: clear every override, roll a fresh backdrop, refetch live weather. */
   function localize(): void {
@@ -317,9 +321,18 @@
     };
   });
 
-  // Hidden toy: sky cycles weather, land cycles place, the sun or moon cycles
-  // time. Pointer only and unannounced on purpose; the lab and a reload cover
-  // every state, and overrides never persist past this page.
+  // Sky cycles weather, land cycles place, the sun or moon cycles time.
+  // Overrides never persist past this page.
+  function advance(target: BannerTarget): void {
+    const next = advanceScene(untrack(() => scene), target);
+    if (target === "sky") weatherOverride = next.weather;
+    if (target === "land") placeOverride = next.place;
+    if (target === "sun") timeOverride = next.time;
+    playClick(target);
+  }
+
+  // Clicks on the canvas are pointer only; the caption's words are the
+  // keyboard and screen reader way to do the same.
   $effect(() => {
     const slot = slotEl;
     if (!slot) return;
@@ -337,11 +350,7 @@
         // A 44 CSS px target on small screens, about the glow on large ones.
         Math.max(7, 22 / cssPerPixel),
       );
-      const next = advanceScene(current, target);
-      if (target === "sky") weatherOverride = next.weather;
-      if (target === "land") placeOverride = next.place;
-      if (target === "sun") timeOverride = next.time;
-      playClick(target);
+      advance(target);
     };
     slot.addEventListener("click", onClick);
     return () => slot.removeEventListener("click", onClick);
@@ -370,8 +379,28 @@
     style="width: 100%;"
   ></canvas>
 </div>
-<!-- The slot's label already reads the scene, so the caption is for sight only. -->
-<p class="banner-caption" aria-hidden="true">{caption}</p>
+<!-- Each word cycles its part of the scene, the same as a click on the sky,
+     sun, or land, and is the keyboard and screen reader way to do it. -->
+<p class="banner-caption">
+  A <button
+    type="button"
+    class="banner-caption-word"
+    aria-label="{caption.weather}, next weather"
+    onclick={() => advance("sky")}>{caption.weather}</button
+  >
+  <button
+    type="button"
+    class="banner-caption-word"
+    aria-label="{caption.time}, next time of day"
+    onclick={() => advance("sun")}>{caption.time}</button
+  >
+  at <button
+    type="button"
+    class="banner-caption-word"
+    aria-label="{caption.place}, next place"
+    onclick={() => advance("land")}>{caption.place}</button
+  >.
+</p>
 </div>
 
 {#if labVisible}
@@ -404,13 +433,44 @@
     user-select: none;
   }
 
-  /* The page's own background, over the frame's sunken placeholder. */
+  /* The page's own background, over the frame's sunken placeholder. The end
+     padding keeps the underline inside the frame, which clips. */
   .banner-caption {
-    padding-block-start: 0.375rem;
+    padding-block: 0.375rem 0.25rem;
     background: var(--color-bg-primary);
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
+    font-style: italic;
     line-height: 1rem;
+    text-align: center;
+    user-select: none;
+  }
+
+  /* The site's link mark: dotted, solid on hover. */
+  .banner-caption-word {
+    position: relative;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
+    touch-action: manipulation;
+    transition: color var(--duration-ui) var(--ease-out);
+  }
+
+  /* A 32px target on a 16px line, short of the banner above. */
+  .banner-caption-word::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.125rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .banner-caption-word:hover {
+      color: var(--color-text-primary);
+      text-decoration-style: solid;
+      text-decoration-color: currentColor;
+    }
   }
 
   .banner-canvas {
