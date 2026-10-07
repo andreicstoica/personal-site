@@ -13,6 +13,7 @@
   import { explorePrompts, starterPrompts } from "../../lib/guidePrompts";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
+    failureNotice,
     groupTurns,
     pageCard,
     postCard,
@@ -793,7 +794,7 @@
             </div>
           {/if}
           {#if isLast && status === "error"}
-            <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
+            <p class="text-xs text-[var(--color-text-secondary)]">{failureNotice(chat?.error)}</p>
           {/if}
           {#if isLast && exploreTurn === turn.id && !sending && explore.length > 0}
             <GuidePrompts

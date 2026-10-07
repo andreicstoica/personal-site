@@ -141,15 +141,17 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 				href: section ? `${href}#${section.id}` : href,
 			});
 		} else if (part.type === "data-passages" && part.data.posts.length > 0) {
-			const titles = part.data.posts.map((post) => post.title);
+			const { posts } = part.data;
+			const only = posts.length === 1 ? posts[0] : undefined;
 			steps.push({
 				icon: "search",
-				label:
-					titles.length === 1
-						? `Found a passage in ${titles[0]}`
-						: `Found passages in ${titles.length} posts`,
+				label: only
+					? `Found a passage in ${only.title}`
+					: `Found passages in ${posts.length} posts`,
 				status: "complete",
-				...(titles.length > 1 ? { detail: titles.join("\n") } : {}),
+				...(only
+					? { href: only.url }
+					: { detail: posts.map((post) => post.title).join("\n") }),
 			});
 		} else if (part.type === "data-scene") {
 			steps.push({
@@ -195,8 +197,14 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 }
 
 export function replyView(message: GuideUIMessage): ReplyView {
+	const trace = traceSteps(message);
 	const view: ReplyView = {
-		trace: traceSteps(message),
+		// A reply with no model call (the notes answer) has nothing to trace
+		// but its own text.
+		trace:
+			!message.metadata && trace.length === 1 && trace[0]?.icon === "cpu"
+				? []
+				: trace,
 		text: "",
 		notices: [],
 		page: null,
@@ -345,4 +353,19 @@ export function groupTurns(messages: readonly GuideUIMessage[]): Turn[] {
 		}
 	}
 	return turns;
+}
+
+/** What the panel says when a request fails before any reply: the route's
+ *  bot check (403) and the firewall's rate limit (429) each get advice that
+ *  fits; anything else gets a retry. */
+export function failureNotice(error: unknown): string {
+	const status =
+		typeof error === "object" && error !== null && "statusCode" in error
+			? error.statusCode
+			: undefined;
+	if (status === 429)
+		return "Lots of questions from this connection. Try again in a few minutes.";
+	if (status === 403)
+		return "The guide couldn't confirm this is a browser. Reload the page and try again.";
+	return "The guide couldn't answer. Try again.";
 }
