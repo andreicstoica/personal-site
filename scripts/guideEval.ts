@@ -122,6 +122,9 @@ export function scoreTurn(test: EvalCase, turn: Turn): Score {
 	if (FIRST_PERSON.test(text.replace(QUOTED_TITLES, "")))
 		failures.push("first person");
 	if (LEAK.test(text)) failures.push("leaked reasoning");
+	// The prompt asks for under 100 words; markdown and a pointer line add a few.
+	if (text.split(/\s+/).length > 130) failures.push("too long");
+	if (/\bhis [\w ]{1,20} page\b/i.test(text)) failures.push("his page");
 	if (URL_OR_PATH.test(text)) failures.push("printed a URL or path");
 	return { pass: failures.length === 0, failures };
 }
