@@ -159,11 +159,13 @@ describe("reply view", () => {
 		]);
 	});
 
-	test("a notes answer has no trace", () => {
+	test("a notes answer says it came from the notes", () => {
 		const view = replyView(
 			reply([{ type: "text", text: "From his notes.", state: "done" }]),
 		);
-		expect(view.trace).toEqual([]);
+		expect(view.trace.map((step) => step.label)).toEqual([
+			"Answered from his notes by keyword match",
+		]);
 	});
 
 	test("one passage links its post; several list their titles", () => {
