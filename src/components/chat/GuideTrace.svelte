@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { GuideStep } from "../../lib/guideTurn";
+  import { activeStep, type GuideStep } from "../../lib/guideTurn";
   import Icon from "../ui/Icon.svelte";
-  import GuideSpinner from "./GuideSpinner.svelte";
   import GuideSteps from "./GuideSteps.svelte";
 
-  /** How a reply was made, in one line. While the guide works, a spinner
-   *  sits where the caret goes and the line names the step in progress,
-   *  changing in place; the steps never unfold on their own, so nothing
-   *  above the reply grows while it streams. Done, the line reads "Worked
-   *  for 2.1s" and the caret opens the steps. */
+  /** How a reply was made, in one line. While the guide works, the line
+   *  shows the step in progress with that step's own icon and shimmering
+   *  text, changing in place; the steps never unfold on their own, so
+   *  nothing above the reply grows while it streams. Done, the line reads
+   *  "Worked for 2.1s" and the caret opens the steps. */
   let {
     steps,
     summary,
@@ -21,6 +20,7 @@
 
   let open = $state(false);
   const id = $props.id();
+  const active = $derived(live ? activeStep(steps) : undefined);
 </script>
 
 <div class="guide-trace" data-open={open}>
@@ -32,13 +32,19 @@
     onclick={() => (open = !open)}
   >
     {#if live}
-      <GuideSpinner />
+      <Icon
+        name={active?.icon ?? "lightbulb"}
+        class="guide-trace-mark w-3 h-3 shrink-0"
+      />
     {:else}
       <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
     {/if}
     <!-- Keyed, so each new step fades in where the last one stood. -->
     {#key summary}
-      <span class="guide-trace-summary">{summary}</span>
+      <span class="guide-trace-summary" class:guide-shimmer={live}>{summary}</span>
+      {#if live && active?.tool}
+        <code class="guide-trace-tool">{active.tool}</code>
+      {/if}
     {/key}
   </button>
   <!-- inert while closed: the collapsed rows leave the tab order and the
@@ -72,12 +78,30 @@
     inset: -0.8125rem -0.25rem;
   }
 
+  .guide-trace-toggle :global(.guide-trace-mark) {
+    opacity: 0.8;
+  }
+
   .guide-trace-summary {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     animation: guide-trace-step 150ms var(--ease-out);
+  }
+
+  /* The step fade and the work-in-progress sweep share this element. */
+  .guide-trace-summary.guide-shimmer {
+    animation:
+      guide-trace-step 150ms var(--ease-out),
+      guide-shimmer 1.6s linear infinite;
+  }
+
+  .guide-trace-tool {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    opacity: 0.7;
   }
 
   @keyframes guide-trace-step {
@@ -129,7 +153,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .guide-trace-summary {
+    .guide-trace-summary,
+    .guide-trace-summary.guide-shimmer {
       animation: none;
     }
 

@@ -86,7 +86,7 @@ const CHUNK_CHARS = 900;
 const HIT_CHARS = 700;
 
 const STOP = new Set(
-	"a an and are as at be but by can did do does for from has have how i in is it its me my of on or so that the their this to was what when where which who why will with you your about tell show hi hey hello thanks".split(
+	"a an and andrei are as at be but by can did do does for from has have how he him his i in is it its me my of on or so that the their this to was what when where which who why will with you your about tell show hi hey hello thanks".split(
 		" ",
 	),
 );

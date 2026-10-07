@@ -4,8 +4,8 @@ export type StarterPrompt = { text: string; icon: PixelarticonName };
 
 /** One per topic the guide's notes cover: inspirations, writing, the site. */
 export const starterPrompts: readonly StarterPrompt[] = [
-	{ text: "Who do you look up to?", icon: "users" },
-	{ text: "What have you written most recently?", icon: "article" },
+	{ text: "Who does Andrei look up to?", icon: "users" },
+	{ text: "What has Andrei written most recently?", icon: "article" },
 	{ text: "How was this site built?", icon: "tools" },
 ];
 
@@ -14,19 +14,22 @@ export const starterPrompts: readonly StarterPrompt[] = [
  *  notes, so a click never lands on "I don't have that". */
 const exploreByTopic: Readonly<Record<string, readonly StarterPrompt[]>> = {
 	"/": [
-		{ text: "What do you do at Liftoff?", icon: "tools" },
-		{ text: "What did you build at the Fractal accelerator?", icon: "tools" },
-		{ text: "Why did you leave product management?", icon: "article" },
+		{ text: "What does Andrei do at Liftoff?", icon: "tools" },
+		{
+			text: "What did Andrei build at the Fractal accelerator?",
+			icon: "tools",
+		},
+		{ text: "Why did Andrei leave product management?", icon: "article" },
 	],
 	"/about": [
-		{ text: "What camera do you shoot with?", icon: "camera" },
-		{ text: "How do you make coffee?", icon: "coffee" },
-		{ text: "What are you building on the side?", icon: "tools" },
+		{ text: "What camera does Andrei shoot with?", icon: "camera" },
+		{ text: "How does Andrei make coffee?", icon: "coffee" },
+		{ text: "What is Andrei building on the side?", icon: "tools" },
 	],
 	"/canon": [
-		{ text: "Which architects do you like?", icon: "users" },
-		{ text: "What books shaped you?", icon: "book-open" },
-		{ text: "Which photographers do you follow?", icon: "camera" },
+		{ text: "Which architects does Andrei like?", icon: "users" },
+		{ text: "What books shaped Andrei?", icon: "book-open" },
+		{ text: "Which photographers does Andrei follow?", icon: "camera" },
 	],
 	"/colophon": [
 		{ text: "How does this guide work?", icon: "robot" },
@@ -34,18 +37,18 @@ const exploreByTopic: Readonly<Record<string, readonly StarterPrompt[]>> = {
 		{ text: "What fonts does this site use?", icon: "text-cursor" },
 	],
 	"/fitness": [
-		{ text: "Why do you run?", icon: "human" },
-		{ text: "Where do you want to hike?", icon: "map" },
+		{ text: "Why does Andrei run?", icon: "human" },
+		{ text: "Where does Andrei want to hike?", icon: "map" },
 	],
 	projects: [
-		{ text: "What did you build in 2025?", icon: "tools" },
-		{ text: "What other projects have you built?", icon: "tools" },
+		{ text: "What did Andrei build in 2025?", icon: "tools" },
+		{ text: "What other projects has Andrei built?", icon: "tools" },
 		{ text: "How was this site built?", icon: "tools" },
 	],
 	writing: [
-		{ text: "What have you written about AI?", icon: "article" },
-		{ text: "Why did you quit your job?", icon: "article" },
-		{ text: "What media did you love in 2025?", icon: "article" },
+		{ text: "What has Andrei written about AI?", icon: "article" },
+		{ text: "Why did Andrei quit his job?", icon: "article" },
+		{ text: "What media did Andrei love in 2025?", icon: "article" },
 	],
 };
 

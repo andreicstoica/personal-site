@@ -250,6 +250,11 @@ export function replyView(message: GuideUIMessage): ReplyView {
 	return view;
 }
 
+/** The step the live line is naming. The latest active one, when several overlap. */
+export function activeStep(steps: readonly GuideStep[]): GuideStep | undefined {
+	return [...steps].reverse().find((step) => step.status === "active");
+}
+
 /** The trace's one-line header: the step in progress while live, then how
  *  long the turn took. */
 export function traceSummary(
@@ -257,12 +262,7 @@ export function traceSummary(
 	trace: readonly GuideStep[],
 	live: boolean,
 ): string {
-	if (live) {
-		const active = [...trace]
-			.reverse()
-			.find((step) => step.status === "active");
-		return active?.label ?? "Thinking";
-	}
+	if (live) return activeStep(trace)?.label ?? "Thinking";
 	const ms = message?.metadata?.ms;
 	return ms ? `Worked for ${(ms / 1000).toFixed(1)}s` : "How this was made";
 }

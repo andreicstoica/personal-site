@@ -37,7 +37,13 @@
           <p class="guide-step-detail" title={step.detail}>{step.detail}</p>
         {/if}
         {#if step.data}
-          <p class="guide-step-data">{step.data}</p>
+          <p class="guide-step-data">
+            {#each step.data.split(" · ") as part, partIndex (partIndex)}
+              <span class="guide-step-datum"
+                >{partIndex > 0 ? `· ${part}` : part}</span
+              >
+            {/each}
+          </p>
         {/if}
       </div>
     </li>
@@ -58,43 +64,48 @@
     color: var(--color-text-secondary);
   }
 
+  /* One icon column and one text column, so a wrapped line starts where
+     the label starts and the connector stays on the icon's center. */
   .guide-step {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: 0.75rem minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-items: start;
     min-width: 0;
   }
 
   /* The 0.75rem icon sits centered on the first 1.125rem line. */
   .guide-step :global(.guide-step-icon) {
+    justify-self: center;
     margin-block-start: 0.1875rem;
     opacity: 0.8;
   }
 
   .guide-step-body {
     min-width: 0;
-    flex: 1;
   }
 
   .guide-step-head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 0.375rem;
     min-width: 0;
+    min-height: 1.125rem;
   }
 
   /* A 1px line from below each icon to above the next one, however tall the
      row is: it starts 0.125rem under the icon (which ends 0.9375rem down) and
      stops 0.125rem above the next icon (0.1875rem into the next row, past
-     the 0.25rem gap). */
+     the 0.25rem gap). The icon column is 0.75rem, so the line is its center. */
   .guide-step:not(:last-child)::after {
     content: "";
     position: absolute;
     top: 1.0625rem;
     bottom: -0.3125rem;
-    left: calc(0.375rem - 0.5px);
+    left: 0.375rem;
     width: 1px;
+    translate: -0.5px 0;
     background: var(--color-text-muted);
     opacity: 0.5;
     transform-origin: top;
@@ -138,19 +149,32 @@
     -webkit-line-clamp: 3;
     line-clamp: 3;
     overflow: hidden;
-    margin-block-start: 0.0625rem;
+    margin: 0;
     opacity: 0.85;
     white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    text-wrap: pretty;
+    overflow-wrap: break-word;
   }
 
+  /* Each figure stays whole. The line breaks at a dot, never inside
+     "(13.4K cached)". */
   .guide-step-data {
-    margin-block-start: 0.0625rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.375rem;
+    margin: 0;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
+    line-height: 1.125rem;
     font-variant-numeric: tabular-nums;
     opacity: 0.85;
-    overflow-wrap: anywhere;
+  }
+
+  .guide-step-datum {
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
   }
 
   .guide-step-link {

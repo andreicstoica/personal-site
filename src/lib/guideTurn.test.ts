@@ -211,15 +211,30 @@ describe("reply view", () => {
 
 describe("continue exploring", () => {
 	test("follows the topic, tops up, and skips what was asked", () => {
-		const picked = explorePrompts("/canon", ["Which architects do you like?"]);
+		const picked = explorePrompts("/canon", [
+			"Which architects does Andrei like?",
+		]);
 		expect(picked.map((prompt) => prompt.text)).toEqual([
-			"What books shaped you?",
-			"Which photographers do you follow?",
-			"Who do you look up to?",
+			"What books shaped Andrei?",
+			"Which photographers does Andrei follow?",
+			"Who does Andrei look up to?",
 		]);
 		expect(
 			explorePrompts("/projects/refract", []).map((prompt) => prompt.text),
-		).toContain("What other projects have you built?");
+		).toContain("What other projects has Andrei built?");
+		const topics = [
+			"/",
+			"/about",
+			"/canon",
+			"/colophon",
+			"/fitness",
+			"/projects/refract",
+			"writing",
+		];
+		for (const topic of topics) {
+			for (const prompt of explorePrompts(topic, [], 20))
+				expect(prompt.text).not.toMatch(/\byou\b/i);
+		}
 	});
 });
 

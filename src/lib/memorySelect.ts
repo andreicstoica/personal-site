@@ -108,11 +108,40 @@ export function isBannerQuestion(message: string): boolean {
 	return BANNER_TOPIC.test(message);
 }
 
-export function isSmallTalk(message: string): boolean {
+const QUESTION_WORD = /\b(what|who|where|when|why|how|which|whose)\b/i;
+
+/** Reactions and continuations, matched anywhere, as the pre-rewrite
+ *  chat route did. A long message that only contains one of these still
+ *  asks something, so it stays with the agent. */
+const CONVERSATIONAL_PHRASE =
+	/\b(tell me more|go on|continue|what else|interesting|cool|nice|thanks|thank you|really|seriously|wow|amazing|fascinating)\b/i;
+
+const GREETING =
+	/^(?:hi|hello|hey|yo|sup|howdy|how are you|what'?s up|good morning|good evening|good afternoon)\b/i;
+
+const ACK =
+	/^(?:ok|okay|alright|got it|understood|sure|yes|no|yep|nope|yeah|nah|lol|haha|bye|goodbye|cheers)[!.?\s]*$/i;
+
+/** A hello. The fixed reply greets; other conversational messages invite
+ *  another question. */
+export function isGreeting(message: string): boolean {
+	return GREETING.test(message.trim());
+}
+
+/** The pre-rewrite prefilter: a greeting, a reaction, an acknowledgement,
+ *  or a short follow-up that is not a question. Those skip the model,
+ *  which otherwise answers them by handing out banner controls. A banner
+ *  question and a "show me" request stay with the agent. A single word
+ *  that is not itself social ("Contax", "Refract") stays a topic. */
+export function isConversational(message: string): boolean {
 	const trimmed = message.trim();
-	return /^(hi|hello|hey|thanks|thank you|yo|sup|howdy|what'?s up|how are you|ok|okay|cool|nice|wow)[!.?\s]*$/i.test(
-		trimmed,
-	);
+	if (isBannerQuestion(trimmed) || isNavigationIntent(trimmed)) return false;
+	if (isGreeting(trimmed) || ACK.test(trimmed)) return true;
+	const phrase = CONVERSATIONAL_PHRASE.test(trimmed);
+	if (phrase && trimmed.length <= 40) return true;
+	const shortFollowUp =
+		trimmed.length < 20 && /\s/.test(trimmed) && !QUESTION_WORD.test(trimmed);
+	return shortFollowUp;
 }
 
 export function matchRoute(message: string): SiteRoute | null {
