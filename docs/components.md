@@ -257,6 +257,8 @@ Everything the guide knows fits in about 5,000 tokens, so it rides in the system
 - `read_post` loads a post body (up to 10,000 characters) when a question needs more than its title.
 - `open_page` names a page and an optional section; the route checks both against `siteRoutes` and `pageSections`.
 
+There is no search index or embedding step. `guideContent.ts` reads `rag/data` at build time: a `.txt` body and a `.json` metadata file per post. A post joins the list only when its metadata has a title, type `blog` or `essay`, and a `https://blog.andrei.bio/` URL. To change what the guide knows, edit the files and rebuild.
+
 A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The loop stops at three steps, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
 
 ### Supporting modules
