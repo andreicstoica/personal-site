@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parseChatApiSuccess } from "./chatTypes";
+import { starterPrompts } from "./guidePrompts";
 import { resolveGuideTurn } from "./guideReply";
 import { completeChat } from "./inference";
 import {
@@ -38,6 +39,15 @@ describe("memory files", () => {
 			if (section.route)
 				expect(routeByHref(section.route)?.href).toBe(section.route);
 		}
+	});
+
+	test("every starter prompt finds the note that answers it", () => {
+		const sections = corpus();
+		const answering = ["Canon", "Writing", "Colophon"];
+		starterPrompts.forEach((prompt, index) => {
+			const titles = selectMemory(sections, prompt.text).map((s) => s.title);
+			expect(titles).toContain(answering[index] ?? "");
+		});
 	});
 
 	test("project questions hit that project first", () => {
@@ -104,19 +114,33 @@ describe("guide turn", () => {
 		});
 	});
 
-	test("names a project without leaving the page", () => {
+	test("follows the page the model points to for the rest", () => {
 		const turn = resolveGuideTurn({
-			message: "what is refract",
+			message: "who do you look up to",
 			sections: [],
-			modelText: "Refract is a journal. [[navigate:/projects/refract]]",
+			modelText:
+				"Le Guin and Caro. The rest is on my canon.\n[[navigate:/canon]]",
 			notesReason: null,
 		});
 		expect(turn.mode).toBe("model");
-		expect(turn.response).toBe("Refract is a journal.");
+		expect(turn.response).toBe("Le Guin and Caro. The rest is on my canon.");
 		expect(turn.action).toEqual({
 			kind: "navigate",
+			href: "/canon",
+			label: "Canon",
+			follow: true,
+		});
+	});
+
+	test("a page named only in the question stays a link", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: [],
+			modelText: "Refract is a journal.",
+			notesReason: null,
+		});
+		expect(turn.action).toMatchObject({
 			href: "/projects/refract",
-			label: "Refract",
 			follow: false,
 		});
 	});
