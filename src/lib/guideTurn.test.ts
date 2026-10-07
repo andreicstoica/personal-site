@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { type GuideUIMessage, parseStoredMessages } from "./chatTypes";
 import { explorePrompts } from "./guidePrompts";
 import {
+	failureNotice,
 	groupTurns,
 	pageCard,
 	postCard,
@@ -158,11 +159,53 @@ describe("reply view", () => {
 		]);
 	});
 
-	test("a notes answer has no trace", () => {
+	test("a notes answer says it came from the notes", () => {
 		const view = replyView(
-			reply([{ type: "text", text: "From my notes.", state: "done" }]),
+			reply([{ type: "text", text: "From his notes.", state: "done" }]),
 		);
-		expect(view.trace.map((step) => step.label)).toEqual(["Wrote the reply"]);
+		expect(view.trace.map((step) => step.label)).toEqual([
+			"Answered from his notes by keyword match",
+		]);
+	});
+
+	test("one passage links its post; several list their titles", () => {
+		const one = replyView(
+			reply([
+				{
+					type: "data-passages",
+					data: { posts: [{ title: "3 Weeks In", url: "https://x.test/3" }] },
+				},
+			]),
+		);
+		expect(one.trace[0]).toMatchObject({
+			label: "Found a passage in 3 Weeks In",
+			href: "https://x.test/3",
+		});
+		const two = replyView(
+			reply([
+				{
+					type: "data-passages",
+					data: {
+						posts: [
+							{ title: "A", url: "https://x.test/a" },
+							{ title: "B", url: "https://x.test/b" },
+						],
+					},
+				},
+			]),
+		);
+		expect(two.trace[0]).toMatchObject({
+			label: "Found passages in 2 posts",
+			detail: "A\nB",
+		});
+	});
+
+	test("a failed request gets advice that fits its status", () => {
+		expect(failureNotice({ statusCode: 429 })).toContain("few minutes");
+		expect(failureNotice({ statusCode: 403 })).toContain("Reload the page");
+		expect(failureNotice(new Error("network"))).toBe(
+			"The guide couldn't answer. Try again.",
+		);
 	});
 });
 

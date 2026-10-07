@@ -13,6 +13,7 @@
   import { explorePrompts, starterPrompts } from "../../lib/guidePrompts";
   import { GUIDE_STORAGE_KEY } from "../../lib/guideState";
   import {
+    failureNotice,
     groupTurns,
     pageCard,
     postCard,
@@ -542,6 +543,13 @@
 
   onMount(() => {
     let alive = true;
+    // BotID's challenge lets /api/chat tell this browser from a script
+    // (botGuard.ts). It runs in the background long before a first question.
+    // The challenge route exists only on Vercel (vercel.json).
+    if (import.meta.env.PROD)
+      void import("botid/client/core").then(({ initBotId }) =>
+        initBotId({ protect: [{ path: "/api/chat", method: "POST" }] }),
+      );
     // Only hydration restores onto an already-styled element (the drawer is
     // open in the markup), so the slide is suppressed just for that frame.
     // Persisting the island means later navigations keep the same element, and
@@ -786,7 +794,7 @@
             </div>
           {/if}
           {#if isLast && status === "error"}
-            <p class="text-xs text-[var(--color-text-secondary)]">The guide couldn't answer. Try again.</p>
+            <p class="text-xs text-[var(--color-text-secondary)]">{failureNotice(chat?.error)}</p>
           {/if}
           {#if isLast && exploreTurn === turn.id && !sending && explore.length > 0}
             <GuidePrompts
