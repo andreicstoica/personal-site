@@ -440,6 +440,7 @@
     aria-label={`${experienceName} media gallery`}
     class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip"
     class:full-bleed={variant === "mobile"}
+    class:full-bleed-narrow={variant === "desktop"}
   >
     {#each images as image, i}
       <div class="shrink-0 min-w-fit">
