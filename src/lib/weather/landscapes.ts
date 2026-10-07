@@ -116,132 +116,178 @@ function profile(x: number, points: Profile): number {
 	return previous[1];
 }
 
-// One massif, not separate towers: a lower jagged buttress on the left, pointed
-// fins with shallow notches, the tallest spire left of center, a deep V over
-// the shadowed cleft, a second spire pair, then a stepped fall to the talus.
+// Traced from a photo of the massif seen from Misery Ridge, scaled so its two
+// tallest spires reach y 5 over a base at 34: a lower jagged buttress on the
+// left, a big left mass with a notched crest, a narrow spire left of center,
+// a wide recessed cleft under a flat notch, a second spire, then a shelf and
+// a steep face down to a talus slope on the right.
 const SMITH_CREST: Profile = [
-	[59, 34],
-	[60.6, 27.3],
-	[61.8, 20],
-	[62.6, 16],
-	[63.5, 14.9],
-	[64.4, 16.2],
-	[65.4, 15],
-	[66.6, 16.8],
-	[67.6, 16.1],
-	[68.6, 14.4],
-	[69.6, 13.9],
-	[70.8, 15.6],
-	[71.8, 16.6],
-	[72.8, 13.8],
-	[74.2, 11.8],
-	[75.6, 10.2],
-	[76.8, 8.8],
-	[77.8, 7.6],
-	[78.6, 7.2],
-	[79.6, 8.6],
-	[80.6, 11],
-	[81.6, 10.2],
-	[82.8, 9.4],
-	[83.8, 9.6],
-	[85, 11.6],
-	[86.2, 10.4],
-	[87.2, 9.8],
-	[88.2, 10.6],
-	[89.4, 9.4],
-	[90.4, 9.6],
-	[91.6, 10.8],
-	[92.8, 9.2],
-	[94, 8],
-	[95, 5.8],
-	[95.6, 4.8],
-	[96.2, 5.4],
-	[97, 7.6],
-	[98, 10.4],
-	[98.8, 12.6],
-	[99.6, 12.2],
-	[100.6, 9.6],
-	[101.8, 9.4],
-	[103.2, 9.8],
-	[104, 11.4],
-	[105, 9.6],
-	[106.2, 9.2],
-	[106.8, 10.2],
-	[107.6, 6.8],
-	[108.4, 5.6],
-	[109.2, 6.8],
-	[109.8, 7.8],
-	[110.4, 7],
-	[111, 6.8],
-	[111.8, 8.8],
-	[112.8, 10],
-	[113.8, 9.6],
-	[115, 11.6],
-	[116.2, 11],
-	[117.2, 13.4],
-	[118.4, 13],
-	[119.6, 12.6],
-	[120.6, 15.2],
-	[121.8, 14.8],
-	[123, 17.2],
-	[124.2, 16.6],
-	[125.2, 19.4],
-	[126.4, 23],
-	[128.2, 26.6],
-	[130.6, 29.8],
-	[133, 32],
-	[136, 35],
+	[60, 34],
+	[60.31, 24.03],
+	[60.77, 17.89],
+	[61.69, 17.12],
+	[62.84, 15.74],
+	[64.37, 15.97],
+	[65.91, 14.82],
+	[67.06, 13.9],
+	[68.21, 14.21],
+	[69.36, 13.67],
+	[70.89, 14.21],
+	[72.43, 13.9],
+	[73.58, 13.29],
+	[73.81, 11.37],
+	[74.73, 9.45],
+	[75.88, 8.07],
+	[77.03, 7.15],
+	[78.57, 6.92],
+	[80.1, 6.53],
+	[81.25, 6.76],
+	[82.02, 7.22],
+	[83.17, 7.3],
+	[84.7, 6.76],
+	[86.24, 6.76],
+	[87.77, 6.38],
+	[89.15, 6.61],
+	[89.46, 5.46],
+	[90.07, 5],
+	[90.69, 5.23],
+	[91.22, 8.07],
+	[91.76, 8.68],
+	[95.44, 8.68],
+	[96.98, 8.38],
+	[97.75, 7.92],
+	[99.28, 6.38],
+	[100.43, 5.38],
+	[101.35, 5],
+	[102.35, 6.15],
+	[103.12, 6.53],
+	[104.27, 7.69],
+	[104.8, 9.6],
+	[105.8, 9.99],
+	[106.95, 10.37],
+	[108.1, 10.6],
+	[108.49, 11.14],
+	[109.79, 11.44],
+	[110.79, 12.52],
+	[111.56, 14.05],
+	[112.09, 15.59],
+	[113.09, 17.89],
+	[113.86, 19.42],
+	[114.62, 21.34],
+	[115.39, 23.26],
+	[116.16, 24.79],
+	[117.31, 25.56],
+	[118.46, 26.33],
+	[119.99, 27.48],
+	[120.92, 29.01],
+	[121.38, 34],
 ];
-/** Where the shadowed cleft splits the massif, under the crest's deep V. */
-const SMITH_CLEFT = 99.2;
-/** The shallower notches between fins, each with a groove of shadow below. */
-const SMITH_GROOVES = [66.6, 71.8, 80.6, 85, 91.6, 104, 106.8, 112.8, 117.2];
-// A monolith, not a cone: a near-vertical left face over a low shoulder, a
-// narrow summit about 37% across, then one long straight slope that steepens
-// into a near-vertical right face above a flat base on the waterline.
+/** The separate pillar to the massif's right in the same view. */
+const SMITH_PILLAR: Profile = [
+	[120.38, 34],
+	[120.92, 30.16],
+	[121.68, 25.56],
+	[122.45, 24.03],
+	[123.83, 23.03],
+	[125.75, 22.49],
+	[126.59, 21.49],
+	[127.36, 21.57],
+	[128.43, 21.96],
+	[129.2, 22.26],
+	[129.66, 22.72],
+	[130.35, 24.79],
+	[131.12, 29.4],
+	[131.66, 34],
+];
+/** The wide recessed cleft between the two spires, and its half width. */
+const SMITH_CLEFT = 94.5;
+const SMITH_CLEFT_HALF = 2.2;
+/** Narrower shadowed gullies down the faces. */
+const SMITH_GROOVES = [73.7, 82.2, 89.3, 104.6, 111.5];
+// Traced from a sunset silhouette of the real rock and scaled so the summit
+// sits at y 2.5 on the waterline at 27.5. What makes it read as Haystack is
+// the jutting corner where the near-vertical left face meets the summit ridge
+// (about 12% across, 82% up); the right side is one straight slope down to a
+// steep foot with a detached spike.
 const HAYSTACK_CREST: Profile = [
-	[86, 27.5],
-	[86.1, 22.8],
-	[86.5, 21.7],
-	[87.3, 21.3],
-	[88, 21.7],
-	[88.6, 21.3],
-	[89, 18.2],
-	[89.3, 15.8],
-	[90.1, 12.9],
-	[91.5, 10.1],
-	[93.1, 8],
-	[94.9, 6],
-	[96.5, 4.5],
-	[97.8, 3.4],
-	[98.6, 3],
-	[99.4, 3.3],
-	[100.6, 4],
-	[102.8, 5.5],
-	[105.3, 7.3],
-	[107.8, 9.1],
-	[110.5, 11.1],
-	[113.4, 13],
-	[115.6, 15],
-	[116.9, 18],
-	[117.6, 21.6],
-	[118.7, 25.1],
-	[120, 27.5],
+	[88.16, 23.81],
+	[89.04, 21.59],
+	[90.21, 14.68],
+	[90.79, 9.23],
+	[91.61, 7.65],
+	[91.67, 6.95],
+	[93.25, 6.25],
+	[94.01, 5.31],
+	[94.13, 4.43],
+	[94.6, 4.55],
+	[94.95, 4.02],
+	[95.77, 3.67],
+	[96.82, 2.68],
+	[97.82, 2.5],
+	[109.94, 11.63],
+	[110.41, 12.34],
+	[112.57, 14.09],
+	[113.74, 16.38],
+	[114.45, 19.6],
+	[115.85, 23.99],
+	[116.03, 24.16],
+	[116.2, 23.52],
+	[116.85, 23.28],
+	[117.55, 24.57],
+	[117.67, 26.5],
+	[117.84, 26.45],
+	[118.2, 27.5],
 ];
-const HAYSTACK_LEFT = HAYSTACK_CREST[0][0];
-const HAYSTACK_RIGHT = HAYSTACK_CREST[HAYSTACK_CREST.length - 1]?.[0] ?? 120;
+/** The Needles: two low peaks against the rock's left foot. */
 const NEEDLES_CREST: Profile = [
-	[71, 27.3],
-	[73, 26.1],
-	[74.5, 23.1],
-	[75.2, 23],
-	[76.5, 25.5],
-	[78, 25.6],
-	[79, 23.6],
-	[79.6, 23.4],
-	[80.6, 26.2],
-	[82, 27.3],
+	[69.4, 27.5],
+	[69.72, 26.74],
+	[70.36, 26.39],
+	[70.94, 27.32],
+	[71.65, 27.44],
+	[72.41, 27.15],
+	[72.76, 24.75],
+	[73.46, 22.76],
+	[74.75, 21.24],
+	[75.04, 21.24],
+	[75.34, 22],
+	[77.91, 22.7],
+	[78.15, 21.53],
+	[78.44, 21.53],
+	[79.96, 20.01],
+	[80.55, 20.83],
+	[80.72, 22.35],
+	[81.78, 23.81],
+	[83.88, 24.75],
+	[84.53, 25.45],
+	[85.17, 24.34],
+	[86.81, 25.39],
+	[88.04, 24.34],
+	[88.16, 23.81],
 ];
+/** A separate single stack farther left. */
+const STACK_CREST: Profile = [
+	[54, 27.5],
+	[54.26, 27.27],
+	[55.02, 27.38],
+	[55.43, 24.75],
+	[55.96, 24.16],
+	[56.43, 22.46],
+	[57.71, 21.12],
+	[58.71, 20.71],
+	[59.29, 21.12],
+	[60, 22.76],
+	[60.23, 26.8],
+	[60.41, 26.62],
+	[61.05, 27.03],
+	[61.3, 27.5],
+];
+
+/** Below a profile and within its span. */
+function under(points: Profile, x: number, y: number): boolean {
+	const last = points[points.length - 1] ?? points[0];
+	return x >= points[0][0] && x <= last[0] && y >= profile(x, points);
+}
 
 function riverBank(x: number): number {
 	return 33 + 7 * Math.exp(-(((x - 80) / 34) ** 2));
@@ -566,15 +612,8 @@ export function material(
 		}
 		case "bend-plateau": {
 			if (layer === 0) {
-				const monkey = x - 48;
-				const head = (monkey / 2.5) ** 2 + ((y - 12) / 2.8) ** 2 < 1;
-				const stem =
-					y >= 13 &&
-					Math.abs(monkey + 0.3 * Math.sin(y * 0.4)) <
-						1.25 + Math.max(0, y - 25) * 0.3;
 				if (
-					head ||
-					stem ||
+					under(SMITH_PILLAR, x, y) ||
 					y >= profile(x, SMITH_CREST) ||
 					y > ridge(x, 34, 2)
 				) {
@@ -591,12 +630,12 @@ export function material(
 					const cleft =
 						(1 -
 							smoothstep(
-								1.2,
-								2.8,
-								Math.abs(x - SMITH_CLEFT - (y - 10) * 0.06),
+								SMITH_CLEFT_HALF - 0.6,
+								SMITH_CLEFT_HALF + 0.9,
+								Math.abs(x - SMITH_CLEFT - Math.sin(y * 0.45) * 0.3),
 							)) *
 						(1 - smoothstep(29, 33, y));
-					color = mix(color, [40, 36, 52], cleft * 0.9);
+					color = mix(color, [40, 36, 52], cleft * 0.8);
 					for (const groove of SMITH_GROOVES) {
 						const depth = y - profile(groove, SMITH_CREST);
 						if (depth < 0 || depth > 14) continue;
@@ -829,15 +868,12 @@ export function material(
 						);
 				}
 				const crest = profile(x, HAYSTACK_CREST);
-				const rock = x >= HAYSTACK_LEFT && x <= HAYSTACK_RIGHT && y >= crest;
-				const islet = x >= 71 && x <= 82 && y >= profile(x, NEEDLES_CREST);
-				const needle =
-					y >= 23.1 &&
-					Math.abs(x - 132.5 + Math.sin(y * 1.3) * 0.08) <
-						0.2 + (y - 23.1) * 0.2;
-				if ((rock || islet || needle) && y < 27.5) {
+				const rock = under(HAYSTACK_CREST, x, y);
+				const islet = under(NEEDLES_CREST, x, y);
+				const stack = under(STACK_CREST, x, y);
+				if ((rock || islet || stack) && y < 27.5) {
 					const grain = stone(x, y);
-					const face = smoothstep(97.5, 106.5, x + (y - 3) * 0.23);
+					const face = smoothstep(96.5, 105.5, x + (y - 2.5) * 0.23);
 					color = mix(
 						mix([32, 44, 53], [57, 68, 73], grain),
 						mix([76, 75, 60], [128, 115, 83], grain),
@@ -864,9 +900,9 @@ export function material(
 						(0.26 + noise(x, y, 100) * 0.13);
 					color = mix(color, [180, 199, 194], mist);
 					for (const [cx, width] of [
-						[103, 18],
-						[76.5, 6.5],
-						[132.5, 1.9],
+						[103.2, 15.5],
+						[79, 9.5],
+						[57.7, 3.6],
 					] as const) {
 						const flank = Math.abs((x - cx) / width);
 						if (flank >= 1.1) continue;
