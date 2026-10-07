@@ -141,6 +141,21 @@ describe("posts", () => {
 		expect(hit?.url).toContain("dyson");
 		expect(hit?.text?.length).toBeGreaterThan(0);
 	});
+
+	test("search_posts finds a passage only a post body holds", () => {
+		const postSearch = createGuideSearch(postIndex(posts()));
+		const hits = postSearch.search("LoRA adapter matrices", 3);
+		expect(hits[0]).toMatchObject({
+			slug: "bot-drei",
+			title: "The Making of bot-drei",
+			url: "https://blog.andrei.bio/p/the-making-of-bot-drei",
+		});
+		expect(hits[0]?.text).toContain("LoRA");
+		for (const hit of hits) expect(hit.slug).toBeTruthy();
+		expect(
+			postSearch.search("refract journal nudges").every((hit) => hit.url),
+		).toBe(true);
+	});
 });
 
 describe("routes", () => {

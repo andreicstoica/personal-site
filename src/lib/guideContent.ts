@@ -54,6 +54,7 @@ export const pageSections: Readonly<Record<string, readonly PageSection[]>> = {
 
 let posts: GuideDoc[] | undefined;
 let search: GuideSearch | undefined;
+let postSearch: GuideSearch | undefined;
 
 /** Blog posts from `rag/data`, newest first. */
 export function guidePosts(): GuideDoc[] {
@@ -75,4 +76,10 @@ export function guideSearch(): GuideSearch {
 		...guidePosts(),
 	]);
 	return search;
+}
+
+/** Post bodies only: the notes already ride in the model's prompt. */
+export function guidePostSearch(): GuideSearch {
+	postSearch ??= createGuideSearch(guidePosts());
+	return postSearch;
 }
