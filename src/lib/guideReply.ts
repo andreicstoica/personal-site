@@ -1,4 +1,5 @@
 import type { ChatAction, ChatApiSuccess, ChatSource } from "./chatTypes";
+import type { Outage } from "./inference";
 import {
 	extractNavigateHref,
 	isNavigationIntent,
@@ -7,8 +8,6 @@ import {
 	matchRoute,
 	siteRoutes,
 } from "./memorySelect";
-
-const CONTACT = "andrei c stoica (at) icloud (dot) com";
 
 function clip(body: string, max: number): string {
 	const trimmed = body.trim();
@@ -65,17 +64,12 @@ function decideAction(
 function notesText(
 	message: string,
 	sections: readonly MemorySection[],
-	reason: "unconfigured" | "unreachable",
 ): string {
 	if (isSmallTalk(message)) {
 		return "Hey. Ask what I've been building, or say “show me Refract”.";
 	}
 	if (sections.length === 0) {
-		const lead =
-			reason === "unconfigured"
-				? "The guide model isn't connected."
-				: "The model is still waking or unreachable.";
-		return `${lead} I don't have notes on that. Ask about a project, a job, canon, or fitness — or email ${CONTACT}.`;
+		return "I don't have notes on that. Ask about my writing, the canon, or how this site was built.";
 	}
 	const paragraph = sections[0]?.body.trim().split(/\n\s*\n/)[0] ?? "";
 	const sentence = paragraph.split(/(?<=[.!?])\s+/)[0] ?? paragraph;
@@ -110,11 +104,20 @@ Notes:
 ${notes}`;
 }
 
+const OUTAGE_NOTICE: Record<Outage, string> = {
+	budget:
+		"My AI is out of credit this month, so this answer comes straight from my notes.",
+	busy: "Lots of questions at once, so this answer comes straight from my notes. Try again in a minute.",
+	error:
+		"The model didn't answer, so this answer comes straight from my notes.",
+};
+
 export function resolveGuideTurn(args: {
 	message: string;
 	sections: readonly MemorySection[];
 	modelText: string | null;
-	notesReason: "unconfigured" | "unreachable" | null;
+	/** `unconfigured` is a deliberate notes-only site, so it gets no notice. */
+	notesReason: "unconfigured" | Outage | null;
 }): ChatApiSuccess {
 	const decided = decideAction(args.message, args.modelText);
 	if (decided.modelText !== null && args.notesReason === null) {
@@ -128,11 +131,14 @@ export function resolveGuideTurn(args: {
 			mode: "model",
 		};
 	}
-	const reason = args.notesReason ?? "unreachable";
+	const reason = args.notesReason;
 	return {
-		response: notesText(args.message, args.sections, reason),
+		response: notesText(args.message, args.sections),
 		sources: sourcesFrom(args.sections),
 		action: decided.action,
 		mode: "notes",
+		...(reason && reason !== "unconfigured"
+			? { notice: OUTAGE_NOTICE[reason] }
+			: {}),
 	};
 }

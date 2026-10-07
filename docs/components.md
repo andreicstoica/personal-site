@@ -214,7 +214,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - On desktop the drawer header uses the launcher's geometry: padding equals `--guide-launch-inset` (at least the safe-area inset) and the close button is `--guide-launch-size`. From 72rem up the launcher sits in the top-right corner, so the close button lands exactly on it and opening and closing happen in one spot. Below 72rem each gutter beside the 64rem column is too narrow to hold the launcher without covering the banner's top corner, so it stays bottom-right. Phones keep the bottom-right launcher and the sheet's top-right close.
 - Right-clicking the launcher dispatches `weather-lab:toggle`, which shows or hides the weather lab in any build (remembered for the tab session)
 - Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
-- An empty thread shows a centered empty state (max 38ch): a one-line hint, or the offline contact copy when the inference server is down
+- An empty thread shows a centered empty state (max 38ch) with a one-line hint
 
 ### Interaction and accessibility
 
@@ -240,10 +240,10 @@ A `navigate` action renders under the reply as a small "→ Navigating to {href}
 
 - `src/lib/guideReply.ts` — decides mode, action, and route; handles small talk and navigation intent
 - `src/lib/memorySelect.ts` — selects `src/content/memory` sections and matches routes
-- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hf`)
+- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
-The model is not called unless `GUIDE_MODEL=on`. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
+The model is not called unless `GUIDE_MODEL=on`. A failed model call (any HTTP error or timeout) answers from notes; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
 

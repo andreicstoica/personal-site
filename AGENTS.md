@@ -42,7 +42,7 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Configuration & Environment Tips
 
 - Run everything through Bun; avoid destructive git commands unless explicitly requested.
-- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234`, or `MODEL_PROVIDER=hf` with `HF_API_URL`, `HF_API_KEY`, and optional `HF_MODEL_ID`. Hugging Face is the hosted provider. The guide does not call it, or any other model, unless `GUIDE_MODEL=on`. Modal (scale-to-zero GPU, Starter is $0/month with $30 of compute credit) is a possible later alternative and is not wired. The guide's notes live in `src/content/memory`. `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
+- Inference provider toggles: `MODEL_PROVIDER=local` with `LOCAL_MODEL_URL=http://localhost:1234/v1`, or `MODEL_PROVIDER=hosted` with `MODEL_BASE_URL` (OpenAI-compatible, including `/v1`), `MODEL_API_KEY`, and `MODEL_ID`. Any OpenAI-compatible host works, so changing provider is an env change. OpenCode Zen's free models (Big Pickle and others) return 403 outside the OpenCode client, so they cannot back the site. The guide does not call any model unless `GUIDE_MODEL=on`. The guide's notes live in `src/content/memory`. `GET /api/health` checks configuration and does not call the model unless `?probe=1`.
 - Stage large assets or acceptance docs under `public/` and `specs/` to keep diffs focused.
 
 # User Instructions
@@ -67,10 +67,10 @@ Available <tech>: svelte, tailwindcss, Effect, FastAPI, NextJS, opencode
 | --- | --- | --- |
 | Astro dev | `bun run dev` | http://localhost:4321 |
 | Production preview | `bun run build` then `bun run preview` | http://localhost:4321 |
-| Local LLM (optional, for model replies) | LM Studio or compatible OpenAI API | http://localhost:1234 (`MODEL_PROVIDER=local`) |
-| Hugging Face (hosted guide) | Inference endpoint | `MODEL_PROVIDER=hf` |
+| Local LLM (optional, for model replies) | LM Studio or compatible OpenAI API | http://localhost:1234/v1 (`MODEL_PROVIDER=local`) |
+| Hosted model (guide in production) | OpenAI-compatible API | `MODEL_PROVIDER=hosted` |
 
-Only the Astro dev server is required for browsing the portfolio, project pages, and static content. The floating guide answers from `src/content/memory` when no model is reachable. Full model replies need a running inference endpoint (`MODEL_PROVIDER=local` or `MODEL_PROVIDER=hf`). `GET /api/health` returns **503** when the selected provider is missing configuration. It does not call the model unless `?probe=1` is set.
+Only the Astro dev server is required for browsing the portfolio, project pages, and static content. The floating guide answers from `src/content/memory` when no model is reachable. Full model replies need an inference endpoint (`MODEL_PROVIDER=local` or `MODEL_PROVIDER=hosted`). `GET /api/health` returns **503** when the selected provider is missing configuration. It does not call the model unless `?probe=1` is set.
 
 ### Lint / format / build
 

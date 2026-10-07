@@ -3,12 +3,12 @@ export type InferenceEnv = {
 	GUIDE_MODEL?: string;
 	LOCAL_MODEL_URL?: string;
 	LOCAL_MODEL_ID?: string;
-	HF_API_URL?: string;
-	HF_API_KEY?: string;
-	HF_MODEL_ID?: string;
+	MODEL_BASE_URL?: string;
+	MODEL_API_KEY?: string;
+	MODEL_ID?: string;
 };
 
-export type ProviderName = "local" | "hf";
+export type ProviderName = "local" | "hosted";
 
 export type Auth = { kind: "none" } | { kind: "bearer"; token: string };
 
@@ -26,8 +26,8 @@ export type ResolvedInference =
 			reason: string;
 	  };
 
-const DEFAULT_MODEL = "noodlesGS/personal";
-const DEFAULT_LOCAL_URL = "http://localhost:1234";
+const DEFAULT_LOCAL_MODEL = "noodlesGS/personal";
+const DEFAULT_LOCAL_URL = "http://localhost:1234/v1";
 
 function clean(value: string | undefined): string | undefined {
 	const trimmed = value?.trim();
@@ -42,6 +42,8 @@ export function guideModelEnabled(env: InferenceEnv): boolean {
 	return clean(env.GUIDE_MODEL)?.toLowerCase() === "on";
 }
 
+/** Both providers speak the OpenAI chat-completions API. A base URL includes
+ *  the version segment (`…/v1`), so any compatible host is an env change. */
 export function resolveInference(env: InferenceEnv): ResolvedInference {
 	const provider = (clean(env.MODEL_PROVIDER) ?? "local").toLowerCase();
 
@@ -51,24 +53,25 @@ export function resolveInference(env: InferenceEnv): ResolvedInference {
 				kind: "ready",
 				provider: "local",
 				baseUrl: stripSlash(clean(env.LOCAL_MODEL_URL) ?? DEFAULT_LOCAL_URL),
-				model: clean(env.LOCAL_MODEL_ID) ?? DEFAULT_MODEL,
+				model: clean(env.LOCAL_MODEL_ID) ?? DEFAULT_LOCAL_MODEL,
 				auth: { kind: "none" },
 			};
-		case "hf": {
-			const baseUrl = clean(env.HF_API_URL);
-			const token = clean(env.HF_API_KEY);
-			if (!baseUrl || !token) {
+		case "hosted": {
+			const baseUrl = clean(env.MODEL_BASE_URL);
+			const token = clean(env.MODEL_API_KEY);
+			const model = clean(env.MODEL_ID);
+			if (!baseUrl || !token || !model) {
 				return {
 					kind: "unconfigured",
-					provider: "hf",
-					reason: "Hugging Face needs HF_API_URL and HF_API_KEY",
+					provider: "hosted",
+					reason: "Hosted needs MODEL_BASE_URL, MODEL_API_KEY, and MODEL_ID",
 				};
 			}
 			return {
 				kind: "ready",
-				provider: "hf",
+				provider: "hosted",
 				baseUrl: stripSlash(baseUrl),
-				model: clean(env.HF_MODEL_ID) ?? DEFAULT_MODEL,
+				model,
 				auth: { kind: "bearer", token },
 			};
 		}

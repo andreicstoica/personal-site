@@ -16,6 +16,8 @@ export type ChatApiSuccess = {
 	sources: ChatSource[];
 	action: ChatAction;
 	mode: ChatMode;
+	/** Why a notes answer stands in for the model, in the visitor's terms. */
+	notice?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -56,9 +58,13 @@ export function parseChatApiSuccess(value: unknown): ChatApiSuccess | null {
 		if (!parsed) return null;
 		sources.push(parsed);
 	}
-	return { response: value.response, sources, action, mode: value.mode };
-}
-
-export function isColdStart(value: unknown): boolean {
-	return isRecord(value) && value.retryable === true;
+	if (value.notice !== undefined && typeof value.notice !== "string")
+		return null;
+	return {
+		response: value.response,
+		sources,
+		action,
+		mode: value.mode,
+		...(value.notice ? { notice: value.notice } : {}),
+	};
 }

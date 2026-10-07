@@ -1,8 +1,9 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parseChatApiSuccess } from "./chatTypes";
 import { resolveGuideTurn } from "./guideReply";
+import { completeChat } from "./inference";
 import {
 	authHeaders,
 	guideModelEnabled,
@@ -135,45 +136,114 @@ describe("guide turn", () => {
 });
 
 describe("inference config", () => {
-	test("hugging face sends a bearer token", () => {
+	test("hosted sends a bearer token to an OpenAI-compatible base", () => {
 		const resolved = resolveInference({
-			MODEL_PROVIDER: "hf",
-			HF_API_URL: "https://hf.example/",
-			HF_API_KEY: "hf_test",
+			MODEL_PROVIDER: "hosted",
+			MODEL_BASE_URL: "https://api.example/v1/",
+			MODEL_API_KEY: "sk_test",
+			MODEL_ID: "flash",
 		});
-		expect(resolved.kind).toBe("ready");
+		expect(resolved).toMatchObject({
+			kind: "ready",
+			provider: "hosted",
+			baseUrl: "https://api.example/v1",
+			model: "flash",
+		});
 		if (resolved.kind !== "ready") return;
-		expect(resolved.provider).toBe("hf");
 		expect(authHeaders(resolved.auth)).toEqual({
-			Authorization: "Bearer hf_test",
+			Authorization: "Bearer sk_test",
 		});
 	});
 
 	test("model calls stay off unless GUIDE_MODEL=on", () => {
 		expect(guideModelEnabled({})).toBe(false);
-		expect(guideModelEnabled({ GUIDE_MODEL: "hf" })).toBe(false);
-		expect(guideModelEnabled({ MODEL_PROVIDER: "hf" })).toBe(false);
+		expect(guideModelEnabled({ GUIDE_MODEL: "hosted" })).toBe(false);
+		expect(guideModelEnabled({ MODEL_PROVIDER: "hosted" })).toBe(false);
 		expect(guideModelEnabled({ GUIDE_MODEL: "on" })).toBe(true);
 	});
 
-	test("modal is only a comment, not a provider", () => {
-		expect(resolveInference({ MODEL_PROVIDER: "modal" }).kind).toBe(
-			"unconfigured",
-		);
+	test("hosted without a key or model stays unconfigured", () => {
+		const base = { MODEL_PROVIDER: "hosted", MODEL_BASE_URL: "https://x/v1" };
+		expect(resolveInference({ ...base, MODEL_ID: "flash" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "hosted",
+		});
+		expect(resolveInference({ ...base, MODEL_API_KEY: "k" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "hosted",
+		});
 	});
 
-	test("hugging face without a key stays unconfigured", () => {
-		const resolved = resolveInference({
-			MODEL_PROVIDER: "hf",
-			HF_API_URL: "https://hf.example",
+	test("the retired hf provider is unknown, not a silent fallback", () => {
+		expect(resolveInference({ MODEL_PROVIDER: "hf" })).toMatchObject({
+			kind: "unconfigured",
+			provider: "unknown",
 		});
-		expect(resolved).toMatchObject({ kind: "unconfigured", provider: "hf" });
 	});
 
 	test("unknown providers do not fall through to local", () => {
 		expect(resolveInference({ MODEL_PROVIDER: "together" }).kind).toBe(
 			"unconfigured",
 		);
+	});
+});
+
+describe("model outages", () => {
+	const realFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = realFetch;
+	});
+
+	const resolved = {
+		kind: "ready",
+		provider: "hosted",
+		baseUrl: "https://api.example/v1",
+		model: "m",
+		auth: { kind: "none" },
+	} as const;
+
+	async function outageFor(status: number) {
+		globalThis.fetch = Object.assign(
+			async () => new Response("{}", { status }),
+			{ preconnect: realFetch.preconnect },
+		);
+		const completion = await completeChat({
+			resolved,
+			messages: [{ role: "user", content: "hi" }],
+			temperature: 0,
+			maxTokens: 8,
+		});
+		return completion.kind === "down" ? completion.outage : null;
+	}
+
+	test("402 is out of credit, 429 is busy, anything else is an error", async () => {
+		expect(await outageFor(402)).toBe("budget");
+		expect(await outageFor(429)).toBe("busy");
+		expect(await outageFor(500)).toBe("error");
+	});
+
+	test("an out-of-credit turn still answers from notes and says why", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: selectMemory(corpus(), "what is refract"),
+			modelText: null,
+			notesReason: "budget",
+		});
+		expect(turn.mode).toBe("notes");
+		expect(turn.response).toBe(
+			"The journal that collaborates with you to go deeper.",
+		);
+		expect(turn.notice).toContain("out of credit");
+	});
+
+	test("a notes-only site shows no outage notice", () => {
+		const turn = resolveGuideTurn({
+			message: "what is refract",
+			sections: [],
+			modelText: null,
+			notesReason: "unconfigured",
+		});
+		expect(turn.notice).toBeUndefined();
 	});
 });
 
@@ -187,6 +257,15 @@ describe("chat payload", () => {
 				action: { kind: "navigate", href: "/", label: "Home" },
 			}),
 		).toBeNull();
+	});
+
+	test("keeps a notice and rejects a non-string one", () => {
+		const base = { response: "hi", mode: "notes", sources: [] };
+		const action = { kind: "none" };
+		expect(
+			parseChatApiSuccess({ ...base, action, notice: "out" })?.notice,
+		).toBe("out");
+		expect(parseChatApiSuccess({ ...base, action, notice: 1 })).toBeNull();
 	});
 });
 

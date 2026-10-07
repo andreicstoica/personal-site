@@ -11,17 +11,26 @@ const completionSchema = z.object({
 		.array(
 			z.object({
 				message: z.object({
-					content: z.string(),
+					content: z.string().nullable(),
 				}),
 			}),
 		)
 		.min(1),
 });
 
+/** Why a model call failed, as far as the visitor needs to know. */
+export type Outage = "budget" | "busy" | "error";
+
 export type Completion =
 	| { kind: "ok"; content: string }
-	| { kind: "cold" }
-	| { kind: "down"; detail: string };
+	| { kind: "down"; outage: Outage; detail: string };
+
+function outageFor(status: number): Outage {
+	// 402: spend cap or credit exhausted. 429: rate limit, retry later.
+	if (status === 402) return "budget";
+	if (status === 429) return "busy";
+	return "error";
+}
 
 function envValue(name: keyof InferenceEnv): string | undefined {
 	if (typeof process !== "undefined") {
@@ -42,9 +51,9 @@ export function readInferenceEnv(): InferenceEnv {
 		GUIDE_MODEL: envValue("GUIDE_MODEL"),
 		LOCAL_MODEL_URL: envValue("LOCAL_MODEL_URL"),
 		LOCAL_MODEL_ID: envValue("LOCAL_MODEL_ID"),
-		HF_API_URL: envValue("HF_API_URL"),
-		HF_API_KEY: envValue("HF_API_KEY"),
-		HF_MODEL_ID: envValue("HF_MODEL_ID"),
+		MODEL_BASE_URL: envValue("MODEL_BASE_URL"),
+		MODEL_API_KEY: envValue("MODEL_API_KEY"),
+		MODEL_ID: envValue("MODEL_ID"),
 	};
 }
 
@@ -58,7 +67,7 @@ export async function completeChat(args: {
 	temperature: number;
 	maxTokens: number;
 }): Promise<Completion> {
-	const url = `${args.resolved.baseUrl}/v1/chat/completions`;
+	const url = `${args.resolved.baseUrl}/chat/completions`;
 	try {
 		const response = await fetch(url, {
 			method: "POST",
@@ -72,28 +81,29 @@ export async function completeChat(args: {
 				temperature: args.temperature,
 				max_tokens: args.maxTokens,
 			}),
-			signal: AbortSignal.timeout(22_000),
+			signal: AbortSignal.timeout(20_000),
 		});
-		if (response.status === 502 || response.status === 503)
-			return { kind: "cold" };
 		if (!response.ok) {
-			return { kind: "down", detail: `Model API HTTP ${response.status}` };
+			return {
+				kind: "down",
+				outage: outageFor(response.status),
+				detail: `Model API HTTP ${response.status}`,
+			};
 		}
 		const parsed = completionSchema.safeParse(await response.json());
 		if (!parsed.success)
-			return { kind: "down", detail: "Unexpected model payload" };
+			return {
+				kind: "down",
+				outage: "error",
+				detail: "Unexpected model payload",
+			};
 		const content = parsed.data.choices[0]?.message.content;
-		if (!content) return { kind: "down", detail: "Empty model response" };
+		if (!content)
+			return { kind: "down", outage: "error", detail: "Empty model response" };
 		return { kind: "ok", content };
 	} catch (error) {
-		if (
-			error instanceof Error &&
-			(error.name === "TimeoutError" || error.name === "AbortError")
-		) {
-			return { kind: "cold" };
-		}
 		const detail =
 			error instanceof Error ? error.message : "Model request failed";
-		return { kind: "down", detail };
+		return { kind: "down", outage: "error", detail };
 	}
 }

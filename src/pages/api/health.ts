@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ url }) => {
 		);
 	}
 
-	// A live generation wakes a scale-to-zero GPU. Default is config-only.
+	// A live generation costs tokens. Default is config-only.
 	if (url.searchParams.get("probe") !== "1") {
 		return json(
 			{ status: "ok", provider: resolved.provider, live: false },
@@ -48,10 +48,11 @@ export const GET: APIRoute = async ({ url }) => {
 		);
 	}
 
+	// Reasoning models spend the first tokens thinking; 1 token returns no text.
 	const completion = await completeChat({
 		resolved,
 		temperature: 0,
-		maxTokens: 1,
+		maxTokens: 64,
 		messages: [{ role: "user", content: "hi" }],
 	});
 
@@ -62,6 +63,7 @@ export const GET: APIRoute = async ({ url }) => {
 	return json(
 		{
 			status: completion.kind,
+			outage: completion.outage,
 			provider: resolved.provider,
 			live: false,
 		},
