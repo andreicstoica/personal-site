@@ -4,19 +4,14 @@ import type {
 	OpenPageOutput,
 	ReadPostOutput,
 	SceneControlsOutput,
-	SearchPostsOutput,
 } from "./chatTypes";
-import { guidePostSearch, guidePosts, pageSections } from "./guideContent";
+import { guidePosts, pageSections } from "./guideContent";
 import { siteRoutes } from "./memorySelect";
 import { resolveOpenPage } from "./siteSections";
 
 /** About 2,500 tokens: enough for the argument of a post, and a cap on what
  *  one call adds to the next model step. */
 const POST_CHARS = 10_000;
-
-/** Three passages of up to 700 characters: enough to answer from, or to
- *  pick the one post worth reading in full. */
-const SEARCH_HITS = 3;
 
 export function guideTools() {
 	const [firstPath, ...otherPaths] = siteRoutes.map((route) => route.href);
@@ -45,30 +40,6 @@ export function guideTools() {
 					text: post.text.slice(0, POST_CHARS),
 				};
 			},
-		}),
-		search_posts: tool({
-			description:
-				"Search the text of Andrei's blog posts by keywords, for a topic the post titles and tags do not show.",
-			inputSchema: z.object({
-				query: z.string().max(200).describe("A few keywords"),
-			}),
-			execute: async ({ query }): Promise<SearchPostsOutput> => ({
-				hits: guidePostSearch()
-					.search(query, SEARCH_HITS)
-					.flatMap((hit) =>
-						hit.slug && hit.url
-							? [
-									{
-										slug: hit.slug,
-										title: hit.title,
-										url: hit.url,
-										...(hit.date ? { date: hit.date } : {}),
-										excerpt: hit.text,
-									},
-								]
-							: [],
-					),
-			}),
 		}),
 		open_page: tool({
 			description:

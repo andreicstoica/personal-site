@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { APICallError } from "ai";
-import { guideModel, outageOf } from "./guideModel";
+import { guideCallOptions, guideModel, outageOf, servedBy } from "./guideModel";
 import { starterPrompts } from "./guidePrompts";
 import {
 	buildSystemPrompt,
@@ -186,7 +186,7 @@ describe("posts", () => {
 		expect(hit?.text?.length).toBeGreaterThan(0);
 	});
 
-	test("search_posts finds a passage only a post body holds", () => {
+	test("keyword search finds a passage only a post body holds", () => {
 		const postSearch = createGuideSearch(postIndex(posts()));
 		const hits = postSearch.search("LoRA adapter matrices", 3);
 		expect(hits[0]).toMatchObject({
@@ -426,6 +426,22 @@ describe("model outages", () => {
 	test("the model client takes the resolved host", () => {
 		const model = guideModel(resolved);
 		expect(typeof model === "object" && model.modelId).toBe("m");
+	});
+
+	test("the gateway gets shared reasoning effort and reports its host", () => {
+		const gateway = {
+			...resolved,
+			baseUrl: "https://ai-gateway.vercel.sh/v1",
+			model: "openai/gpt-oss-120b",
+		};
+		expect(guideCallOptions(gateway)).toEqual({ reasoning: "low" });
+		expect(guideCallOptions(resolved)).toEqual({
+			providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
+		});
+		expect(servedBy({ gateway: { routing: { finalProvider: "groq" } } })).toBe(
+			"groq",
+		);
+		expect(servedBy(undefined)).toBeUndefined();
 	});
 });
 

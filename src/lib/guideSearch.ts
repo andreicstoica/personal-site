@@ -198,8 +198,8 @@ export function createPassageFinder(
 	};
 }
 
-/** Keyword search: over notes and posts for the answer the guide gives
- *  when no model is reachable, and over post bodies for search_posts. */
+/** Keyword search over notes and posts, for the answer the guide gives
+ *  when no model is reachable. */
 export type GuideSearch = {
 	search(query: string, limit?: number): SearchHit[];
 };

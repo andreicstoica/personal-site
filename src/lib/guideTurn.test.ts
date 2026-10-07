@@ -96,50 +96,6 @@ describe("reply view", () => {
 		expect(traceSummary(null, reading.trace, true)).toBe("Reading a post");
 	});
 
-	test("a post search is a trace step, not a source card", () => {
-		const searched = replyView(
-			reply([
-				{
-					type: "tool-search_posts",
-					toolCallId: "s1",
-					state: "output-available",
-					input: { query: "LoRA adapters" },
-					output: {
-						hits: [
-							{
-								slug: "bot-drei",
-								title: "The Making of bot-drei",
-								url: "https://blog.andrei.bio/p/the-making-of-bot-drei",
-								excerpt: "LoRA freezes most weights.",
-							},
-						],
-					},
-				},
-			]),
-		);
-		expect(searched.trace).toEqual([
-			{
-				icon: "search",
-				label: "Searched posts for “LoRA adapters”",
-				status: "complete",
-				tool: "search_posts",
-				detail: "The Making of bot-drei",
-			},
-		]);
-		expect(searched.posts).toEqual([]);
-		const searching = replyView(
-			reply([
-				{
-					type: "tool-search_posts",
-					toolCallId: "s1",
-					state: "input-available",
-					input: { query: "LoRA" },
-				},
-			]),
-		);
-		expect(traceSummary(null, searching.trace, true)).toBe("Searching posts");
-	});
-
 	test("scene controls come from the tool or the route's fallback", () => {
 		const offered = replyView(
 			reply([
@@ -313,7 +269,7 @@ describe("stored thread", () => {
 		expect(message && replyView(message).scene).toBe(true);
 	});
 
-	test("keeps finished parts and reasoning, drops cut-off calls, post bodies, and excerpts", () => {
+	test("keeps finished parts and reasoning, drops cut-off calls, retired tools, and post bodies", () => {
 		const restored = parseStoredMessages([
 			{
 				id: "a1",
@@ -361,17 +317,6 @@ describe("stored thread", () => {
 				state: "output-available",
 				input: { slug: "dyson" },
 				output: { title: "Dyson", url: "https://x.test" },
-			},
-			{
-				type: "tool-search_posts",
-				toolCallId: "s1",
-				state: "output-available",
-				input: { query: "lora" },
-				output: {
-					hits: [
-						{ slug: "bot-drei", title: "bot-drei", url: "https://x.test/b" },
-					],
-				},
 			},
 			{ type: "text", text: "Hi.", state: "done" },
 		]);

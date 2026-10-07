@@ -140,6 +140,15 @@ by kind: ${[...new Set(results.map((r) => r.kind))]
 	.join(", ")}
 post-body: search_posts fired on ${postBody.filter((r) => r.turn.tools.includes("search_posts")).length}/${postBody.length}, route passages on ${postBody.filter((r) => (r.turn.passages ?? []).length > 0).length}/${postBody.length}; passages on other kinds ${results.filter((r) => r.kind !== "post-body" && (r.turn.passages ?? []).length > 0).length}
 first person ${count("first person")}, leaked reasoning ${count("leaked reasoning")}, notes fallback ${count("fell back")}
+served by: ${
+	[...new Set(results.map((r) => r.turn.provider ?? "unknown"))]
+		.map((host) => {
+			const ofHost = results.filter((r) => (r.turn.provider ?? "unknown") === host);
+			const failed = ofHost.filter((r) => r.failures.length > 0).length;
+			return `${host} ${ofHost.length}${failed ? ` (${failed} failed)` : ""}`;
+		})
+		.join(", ")
+}
 average ${average(results.map((r) => r.ms))}ms per turn, ${average(results.map((r) => r.turn.inputTokens ?? 0))} input tokens (${average(results.map((r) => r.turn.cachedTokens ?? 0))} cached), ${average(results.map((r) => r.turn.outputTokens ?? 0))} output, ${average(results.map((r) => r.turn.tools.length))} tool calls`);
 
 if (out && !rescore) {

@@ -8,17 +8,6 @@ export type ReadPostOutput = {
 	text?: string;
 };
 
-export type PostHit = {
-	slug: string;
-	title: string;
-	url: string;
-	date?: string;
-	/** The matched passage. The model reads it; the panel does not show it. */
-	excerpt?: string;
-};
-
-export type SearchPostsOutput = { hits: PostHit[] };
-
 /** The panel draws the controls; the route has nothing to return. */
 export type SceneControlsOutput = { shown: true };
 
@@ -32,7 +21,6 @@ export type OpenPageOutput = {
  *  panel (which renders them as steps). Only the route imports the tools. */
 export type GuideUITools = {
 	read_post: { input: { slug: string }; output: ReadPostOutput };
-	search_posts: { input: { query: string }; output: SearchPostsOutput };
 	open_page: {
 		input: { path: string; section?: string };
 		output: OpenPageOutput;
@@ -72,6 +60,8 @@ export type GuideDataParts = {
 /** Sent once a model turn ends, for the last line of the trace. */
 export type GuideMetadata = {
 	model?: string;
+	/** The host that served the model, when the gateway reports it. */
+	provider?: string;
 	ms?: number;
 	inputTokens?: number;
 	/** Input tokens the provider served from its prompt cache. */
@@ -122,19 +112,6 @@ function parseOpenPage(value: unknown): OpenPageOutput | null {
 		label: value.label,
 		section: { id: section.id, label: section.label },
 	};
-}
-
-function parsePostHit(value: unknown): PostHit | null {
-	if (!isRecord(value)) return null;
-	const { slug, title, url, date } = value;
-	if (
-		typeof slug !== "string" ||
-		typeof title !== "string" ||
-		typeof url !== "string" ||
-		!optionalString(date)
-	)
-		return null;
-	return { slug, title, url, ...(date ? { date } : {}) };
 }
 
 /** Restores one stored part, or drops it. Only finished tool calls survive:
@@ -225,22 +202,6 @@ function parsePart(value: unknown): GuidePart | null {
 			},
 		};
 	}
-	if (value.type === "tool-search_posts") {
-		if (!Array.isArray(output.hits)) return null;
-		const hits: PostHit[] = [];
-		for (const item of output.hits) {
-			const hit = parsePostHit(item);
-			if (!hit) return null;
-			hits.push(hit);
-		}
-		return {
-			type: "tool-search_posts",
-			toolCallId,
-			state: "output-available",
-			input: { query: typeof input.query === "string" ? input.query : "" },
-			output: { hits },
-		};
-	}
 	if (value.type === "tool-show_scene_controls") {
 		return {
 			type: "tool-show_scene_controls",
@@ -281,6 +242,7 @@ function parseMetadata(value: unknown): GuideMetadata | null {
 	if (!isRecord(value)) return null;
 	const metadata: GuideMetadata = {};
 	if (typeof value.model === "string") metadata.model = value.model;
+	if (typeof value.provider === "string") metadata.provider = value.provider;
 	for (const key of [
 		"ms",
 		"inputTokens",
