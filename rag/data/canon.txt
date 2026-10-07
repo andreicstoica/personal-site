@@ -77,7 +77,7 @@ description: "People, things, and ideas that inspire me and shape how I think ab
 - william eggleston
 - ernst haas
 - luigi ghirri
-- willem verbeck
+- willem verbeeck
 
 # sculpture
 
