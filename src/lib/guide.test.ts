@@ -27,6 +27,7 @@ import {
 	isBannerQuestion,
 	isNavigationIntent,
 	matchRoute,
+	mayConcernBanner,
 	parseMemoryMarkdown,
 	routeByHref,
 } from "./memorySelect";
@@ -170,6 +171,10 @@ describe("posts", () => {
 		expect(find("Who did you visit in Boulder?")[0]?.slug).toBe(
 			"small-town-america",
 		);
+		// The rare word sits a paragraph away from the answer.
+		expect(
+			find("Where did you try hosting your fine-tuned model?")[0]?.text,
+		).toContain("RunPod");
 		expect(find("Who do you look up to?")).toEqual([]);
 		expect(find("can I make it rain up there?")).toEqual([]);
 	});
@@ -211,6 +216,11 @@ describe("routes", () => {
 		);
 		expect(isBannerQuestion("Do you do graphic design?")).toBe(false);
 		expect(isBannerQuestion("What is the NYC tech scene like?")).toBe(false);
+		expect(
+			mayConcernBanner("what is that mountain at the top of the page?"),
+		).toBe(true);
+		expect(mayConcernBanner("Why do you admire Austin Robbs?")).toBe(false);
+		expect(mayConcernBanner("What do you do at Liftoff?")).toBe(false);
 	});
 });
 

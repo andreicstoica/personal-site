@@ -254,7 +254,9 @@ export function replyView(message: GuideUIMessage): ReplyView {
 			view.posts.push(part.data);
 		}
 	}
-	view.text = view.text.trim();
+	// The pointer line puts "the" before a post title; some titles start with
+	// "The" already, and the model doubles it despite the prompt.
+	view.text = view.text.trim().replace(/\bthe (The )/g, "$1");
 	return view;
 }
 

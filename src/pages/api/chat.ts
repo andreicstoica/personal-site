@@ -40,6 +40,7 @@ import { guideModelEnabled } from "../../lib/inferenceConfig";
 import {
 	isBannerQuestion,
 	isSmallTalk,
+	mayConcernBanner,
 	routeByHref,
 } from "../../lib/memorySelect";
 import { linkedPage, namedPage } from "../../lib/siteSections";
@@ -147,6 +148,20 @@ export const POST: APIRoute = async ({ request }) => {
 
 type GuideTools = ReturnType<typeof guideTools>;
 
+/** Code narrows the tools each turn; the model chooses among the rest. A
+ *  greeting needs none, and the scene tool is offered only when the message
+ *  might be about the banner. */
+function activeToolsFor(message: string): Array<keyof GuideTools> {
+	if (isSmallTalk(message)) return [];
+	const tools: Array<keyof GuideTools> = [
+		"search_posts",
+		"read_post",
+		"open_page",
+	];
+	if (mayConcernBanner(message)) tools.push("show_scene_controls");
+	return tools;
+}
+
 /** open_page is the last thing a turn does. Once it is called and a reply
  *  exists, another model step would only echo the tool result. */
 const openedAfterReply: StopCondition<GuideTools> = ({ steps }) =>
@@ -178,6 +193,7 @@ async function streamModelTurn(
 			content: item.text,
 		})),
 		tools: guideTools(),
+		activeTools: activeToolsFor(turn.message),
 		// Search, read, open a page, reply: the longest turn the tools allow.
 		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
