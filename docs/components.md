@@ -273,6 +273,7 @@ A greeting runs with no tools (`activeToolsFor` in the route, through the SDK's 
 - `src/lib/knowledge.ts` — reads a library file's frontmatter and body
 - `src/lib/memorySelect.ts` — parses notes into sections and matches routes
 - `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible; production uses the Vercel AI Gateway free tier)
+- `src/lib/botGuard.ts` — the BotID check the route runs first: a request without the island's challenge answer gets 403, the eval passes with its secret header, and a failed check lets the request through to the firewall's rate limit
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
 Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).

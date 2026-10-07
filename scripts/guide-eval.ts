@@ -38,6 +38,14 @@ const cases = spec.cases.filter(
 	(test) => !only || only.includes(test.id) || only.includes(test.kind),
 );
 
+// BotID turns away requests that do not come from the site's pages; this
+// secret header lets the eval through (src/lib/botGuard.ts). Bun reads it
+// from .env, which git ignores.
+const evalToken = process.env.GUIDE_EVAL_TOKEN;
+const evalHeader: Record<string, string> = evalToken
+	? { "x-guide-eval": evalToken }
+	: {};
+
 async function ask(target: URL, test: EvalCase): Promise<string> {
 	const body = JSON.stringify({
 		messages: [...(test.turns ?? []), { role: "user", text: test.q }],
@@ -47,7 +55,7 @@ async function ask(target: URL, test: EvalCase): Promise<string> {
 	if (!target.hostname.endsWith(".vercel.app")) {
 		const response = await fetch(new URL("/api/chat", target), {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+			headers: { "Content-Type": "application/json", ...evalHeader },
 			body,
 		});
 		return response.text();
@@ -66,6 +74,10 @@ async function ask(target: URL, test: EvalCase): Promise<string> {
 			"POST",
 			"-H",
 			"Content-Type: application/json",
+			...Object.entries(evalHeader).flatMap(([key, value]) => [
+				"-H",
+				`${key}: ${value}`,
+			]),
 			"-d",
 			body,
 		],

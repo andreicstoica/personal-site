@@ -10,6 +10,7 @@ import {
 } from "ai";
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
+import { isAutomated } from "../../lib/botGuard";
 import type {
 	ChatTurn,
 	GuideMetadata,
@@ -81,6 +82,9 @@ function json(body: unknown, status: number): Response {
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+	if (await isAutomated(request, process.env.GUIDE_EVAL_TOKEN))
+		return json({ error: "Automated requests are not allowed" }, 403);
+
 	let raw: unknown;
 	try {
 		raw = await request.json();
