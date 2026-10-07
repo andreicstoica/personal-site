@@ -118,6 +118,86 @@ function clip(text: string, max: number): string {
 	return `${text.slice(0, max).trimEnd()}…`;
 }
 
+/** A word in at most this many posts is rare: a name, a place, a product.
+ *  Common words match most posts and point nowhere. */
+const RARE_IN_POSTS = 2;
+const RARE_MIN_LENGTH = 4;
+const PASSAGES = 2;
+/** A matched chunk plus its neighbors: the answer often sits a paragraph
+ *  away from the rare word ("tuned" in one, "RunPod" in the next). */
+const PASSAGE_CHARS = 1800;
+
+function words(text: string): Set<string> {
+	return new Set(text.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+}
+
+type PostChunk = { id: string; slug: string; index: number; text: string };
+
+/** Post passages for one question, chosen by code rather than by the model
+ *  deciding to search. Only a rare word in the question counts, so broad
+ *  questions, which the notes and post titles answer, get no passages. */
+export function createPassageFinder(
+	posts: readonly GuideDoc[],
+): (question: string) => SearchHit[] {
+	const bySlug = new Map<string, { post: GuideDoc; chunks: PostChunk[] }>();
+	for (const post of posts) {
+		if (!post.slug) continue;
+		const slug = post.slug;
+		bySlug.set(slug, {
+			post,
+			chunks: chunkText(post.text).map((text, index) => ({
+				id: `${slug}#${index}`,
+				slug,
+				index,
+				text,
+			})),
+		});
+	}
+	const vocabulary = posts.map((post) => ({
+		slug: post.slug,
+		words: words(`${post.title} ${post.text}`),
+	}));
+	// Exact words only: fuzzy matching would reach a post without the word.
+	const index = new MiniSearch<PostChunk>({
+		fields: ["text"],
+		storeFields: ["slug", "index"],
+		processTerm: (term) => term.toLowerCase(),
+	});
+	index.addAll([...bySlug.values()].flatMap((entry) => entry.chunks));
+
+	return (question) => {
+		const rare: string[] = [];
+		for (const term of words(question)) {
+			if (term.length < RARE_MIN_LENGTH) continue;
+			const having = vocabulary.filter((post) => post.words.has(term)).length;
+			if (having > 0 && having <= RARE_IN_POSTS) rare.push(term);
+		}
+		if (rare.length === 0) return [];
+		const hits: SearchHit[] = [];
+		const seen = new Set<string>();
+		for (const result of index.search(rare.join(" "))) {
+			const slug = String(result.slug);
+			const entry = bySlug.get(slug);
+			if (!entry || seen.has(slug)) continue;
+			seen.add(slug);
+			const at = Number(result.index);
+			const window = entry.chunks
+				.slice(Math.max(0, at - 1), at + 2)
+				.map((chunk) => chunk.text)
+				.join("\n\n");
+			hits.push({
+				title: entry.post.title,
+				slug,
+				...(entry.post.url ? { url: entry.post.url } : {}),
+				...(entry.post.date ? { date: entry.post.date } : {}),
+				text: clip(window, PASSAGE_CHARS),
+			});
+			if (hits.length >= PASSAGES) break;
+		}
+		return hits;
+	};
+}
+
 /** Keyword search: over notes and posts for the answer the guide gives
  *  when no model is reachable, and over post bodies for search_posts. */
 export type GuideSearch = {

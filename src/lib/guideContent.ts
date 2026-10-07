@@ -1,10 +1,12 @@
 import {
 	createGuideSearch,
+	createPassageFinder,
 	type GuideDoc,
 	type GuideSearch,
 	noteDocs,
 	postDocs,
 	postIndex,
+	type SearchHit,
 } from "./guideSearch";
 import { loadMemorySections } from "./memory";
 
@@ -82,4 +84,12 @@ export function guideSearch(): GuideSearch {
 export function guidePostSearch(): GuideSearch {
 	postSearch ??= createGuideSearch(guidePosts());
 	return postSearch;
+}
+
+let passages: ((question: string) => SearchHit[]) | undefined;
+
+/** The post passages the route adds to one turn's prompt. */
+export function guidePassages(question: string): SearchHit[] {
+	passages ??= createPassageFinder(guidePosts());
+	return passages(question);
 }

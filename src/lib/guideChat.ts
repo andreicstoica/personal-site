@@ -1,6 +1,7 @@
 import { Chat } from "@ai-sdk/svelte";
 import { DefaultChatTransport } from "ai";
 import type { ChatTurn, GuideUIMessage } from "./chatTypes";
+import type { SceneParts } from "./weather/scene";
 
 export type GuideChat = Chat<GuideUIMessage>;
 
@@ -9,7 +10,11 @@ export type GuideChat = Chat<GuideUIMessage>;
  *  "ai" itself would pull in the whole package. */
 export function createGuideChat(options: {
 	messages: GuideUIMessage[];
-	body: (messages: GuideUIMessage[]) => { messages: ChatTurn[]; page: string };
+	body: (messages: GuideUIMessage[]) => {
+		messages: ChatTurn[];
+		page: string;
+		scene?: SceneParts;
+	};
 	onFinish: (message: GuideUIMessage, completed: boolean) => void;
 }): GuideChat {
 	return new Chat<GuideUIMessage>({

@@ -172,6 +172,36 @@ describe("reply view", () => {
 		).toBe(false);
 	});
 
+	test("passages show in the trace, and a cited one gets a card", () => {
+		const post = {
+			title: "3 Weeks In",
+			url: "https://blog.andrei.bio/p/3-weeks-in",
+		};
+		const view = replyView(
+			reply([
+				{ type: "data-passages", data: { posts: [post] } },
+				{ type: "text", text: "Bevel is a fitness app.", state: "done" },
+				{ type: "data-post", id: "p1", data: post },
+			]),
+		);
+		expect(view.trace[0]?.label).toBe("Found a passage in 3 Weeks In");
+		expect(view.posts).toEqual([post]);
+		const stored = parseStoredMessages([
+			{
+				id: "a1",
+				role: "assistant",
+				parts: [
+					{ type: "data-passages", data: { posts: [post] } },
+					{ type: "data-post", id: "p1", data: { ...post, text: "body" } },
+				],
+			},
+		]);
+		expect(stored?.[0]?.parts).toEqual([
+			{ type: "data-passages", data: { posts: [post] } },
+			{ type: "data-post", id: "p1", data: post },
+		]);
+	});
+
 	test("a notes answer has no trace", () => {
 		const view = replyView(
 			reply([{ type: "text", text: "From my notes.", state: "done" }]),

@@ -12,6 +12,7 @@ import {
 } from "./guideReply";
 import {
 	createGuideSearch,
+	createPassageFinder,
 	noteDocs,
 	postDocs,
 	postIndex,
@@ -133,6 +134,48 @@ describe("posts", () => {
 		expect(prompt.trimEnd().endsWith('"This page" means that page.')).toBe(
 			true,
 		);
+	});
+
+	test("the scene and passages come last, after an unchanged prefix", () => {
+		const base = {
+			notes: corpus(),
+			posts: postIndex(posts()),
+			sectionsByPath: {},
+		};
+		const plain = buildSystemPrompt(base);
+		const passage = {
+			title: "3 Weeks In",
+			slug: "3-weeks-in",
+			url: "https://blog.andrei.bio/p/3-weeks-in",
+			date: "2025-06-21",
+			text: "Bevel quantified self, built on Apple Watch",
+		};
+		const full = buildSystemPrompt({
+			...base,
+			scene: { place: "cascade-forest", weather: "rainy", time: "night" },
+			passages: [passage],
+		});
+		expect(full.startsWith(plain)).toBe(true);
+		expect(full.slice(plain.length)).toContain(
+			"The banner at the top of the page shows a rainy night at Mt. Hood, OR.",
+		);
+		expect(full.trimEnd().endsWith(`"${passage.text}"`)).toBe(true);
+	});
+
+	test("passages come only for a word that is rare in the posts", () => {
+		const find = createPassageFinder(postIndex(posts()));
+		const bevel = find("What is Bevel?");
+		expect(bevel.map((hit) => hit.slug)).toEqual(["3-weeks-in"]);
+		expect(bevel[0]?.text).toContain("Bevel");
+		expect(find("Who did you visit in Boulder?")[0]?.slug).toBe(
+			"small-town-america",
+		);
+		// The rare word sits a paragraph away from the answer.
+		expect(
+			find("Where did you try hosting your fine-tuned model?")[0]?.text,
+		).toContain("RunPod");
+		expect(find("Who do you look up to?")).toEqual([]);
+		expect(find("can I make it rain up there?")).toEqual([]);
 	});
 
 	test("a post body is searchable and cites its URL", () => {
