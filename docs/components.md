@@ -213,42 +213,58 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 - The launcher (`--guide-launch-size` 2.25rem at a `--guide-launch-inset` corner inset) hides while the guide is open; the panel's close button replaces it. On desktop it hides only after the drawer has arrived, so no bare corner shows mid-slide.
 - On desktop the drawer header uses the launcher's geometry: padding equals `--guide-launch-inset` (at least the safe-area inset) and the close button is `--guide-launch-size`. From 72rem up the launcher sits in the top-right corner, so the close button lands exactly on it and opening and closing happen in one spot. Below 72rem each gutter beside the 64rem column is too narrow to hold the launcher without covering the banner's top corner, so it stays bottom-right. Phones keep the bottom-right launcher and the sheet's top-right close.
 - Right-clicking the launcher dispatches `weather-lab:toggle`, which shows or hides the weather lab in any build (remembered for the tab session)
-- Thread persists to `sessionStorage` under `andrei-guide-v1` (per-tab; cleared when the tab closes)
+- Thread persists to `sessionStorage` under `andrei-guide-v2` (per-tab; cleared when the tab closes): the last 30 AI SDK `UIMessage`s and which page calls ran. It is written when a turn settles, not per streamed token, and `parseStoredMessages` (`src/lib/chatTypes.ts`) validates it on restore
 - An empty thread shows three starter prompts (`src/lib/guidePrompts.ts`) as icon rows above the composer; a click sends the prompt and keeps focus in the composer
-- The header shows "New chat" (reload icon) left of close once a thread exists; it aborts any turn in flight and returns to the starter prompts
+- The header shows "New chat" (reload icon) left of close once a thread exists; it stops any turn in flight and returns to the starter prompts
 - The composer is one card: the input, then a row with "Viewing {page}" (from the route table) and an icon send button
 
 ### Interaction and accessibility
 
-- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it cancels an in-flight turn (AbortController) and returns focus to `.guide-launch` only when focus was inside the panel, after a tick so the launcher is visible and focusable again on desktop
+- One close path (`closeGuide`) handles Escape, the close button, and outside clicks: it returns focus to `.guide-launch` only when focus was inside the panel, after a tick so the launcher is visible and focusable again on desktop. A turn in flight keeps streaming, so the reply is there on reopen; a closed panel never moves the page
 - On open, focus goes to the input on fine pointers, or to the panel itself on touch (the panel is `tabindex="-1"`, so assistive tech lands inside without raising the keyboard)
-- The thread is `aria-live="polite"` and the "Thinking…" indicator is `role="status"`
+- The thread is `role="log"` with `aria-busy` while a turn streams, so assistive tech announces the finished reply, not each token
 - Surfaces use `--color-bg-primary`, never `bg-white`; reply text is `break-words`, and only the message text is `whitespace-pre-wrap` (on the whole bubble it rendered the template's own newlines as a blank last line); linked sources use `--color-primary-text`, unlinked ones `--color-text-secondary`
 - The close control is a quiet glyph button: 32px and pulled flush with the header padding on phones, 36px (`--guide-launch-size`) with no pull on desktop; a `::before` keeps its tap area at 44px on both. Send is 44px tall on touch and 36px on fine pointers, matching the input. Interactive elements in the panel set `touch-action: manipulation`
 
 ### Reply shape
 
-`POST /api/chat` streams NDJSON `ChatEvent`s (`src/lib/chatTypes.ts`): `searched` (the notes found), `writing` (only when the model is called), then `reply`, a `ChatApiSuccess`. The client reveals them as steps at least 300 ms apart. The request may carry `page`, the visitor's path; only a known route reaches the prompt. The reply:
+The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.ts`). The SDK is about 34 KB gzipped, so that module loads when the panel opens or a message is sent; a restored thread renders without it, and the island that loads on every page stays at about 18 KB. It posts `{ messages, page }` to `POST /api/chat`: the last nine messages as text only (`ChatTurn`), and the visitor's path. Tool results from the client are never replayed to the model, and only a known route reaches the prompt. The route streams a UI message stream (`createUIMessageStream`) of `GuideUIMessage` parts:
 
-| Field | Meaning |
+| Part | Meaning |
 | --- | --- |
-| `mode` | `notes` — answered from `src/content/memory` with no model involved; `model` — real inference |
-| `sources` | `ChatSource[]`, rendered as "Read …" step lines above the reply |
-| `notice` | Optional. Why a notes answer stands in for the model (out of credit, busy, error) |
-| `action` | `none`, or `navigate { href, label, follow }` |
+| `text` | The reply, streamed. Rendered as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links |
+| `tool-read_post` | The model read a post. A "Read {title}" step above the reply |
+| `tool-open_page` | The model pointed at a page, and maybe a section. A step under the reply |
+| `data-notice` | Why a notes answer stands in for the model (out of credit, busy, error) |
 
-A `navigate` action renders under the reply as a step with a map icon: "Opening {label}" (shimmer) while the follow waits, "Opened {label}" once the page moved, or an "Open {label}" link when the visitor cancelled it or the action does not follow. On the page it names, an unfollowed action shows nothing. The "opened" state is saved with the thread. `follow` is `true` when the visitor asked to open a page or the model pointed to one for the rest. The guide then navigates after 900 ms, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press); the link stays either way. Replies render as Markdown through `src/lib/chatMarkdown.ts`, which escapes raw HTML and keeps only site, https, and mailto links.
+Reasoning is never sent to the client. `src/lib/guideTurn.ts` maps parts to what the panel draws (`replyView`, `pageStep`, `groupTurns`). Until the first part arrives, the turn shows one "Thinking" step.
+
+An `open_page` call renders under the reply as a step with a map icon: "Opening {label}" or "Scrolling to {section}" (shimmer) while the reply streams and the follow waits, then "Opened {label} at {section}" or "Scrolled to {section}" once it ran, or a "Go to …" link when the visitor cancelled it. The guide acts 900 ms after the reply ends, unless the visitor shows intent first (a draft, a selection, a pointer down, a scroll, or a key press). On another page it navigates with the ClientRouter, then reveals the section; on the same page it only scrolls. A call with no section on the current page shows nothing. Without a model, only an explicit request ("show me the colophon") opens a page.
+
+`revealSection` (`src/lib/guidePage.ts`) scrolls the section into view and sets `data-guide-highlight`, a tint that holds and fades (`global.css`). Section ids come from `src/lib/siteSections.ts`: markdown pages (`MarkdownSections`) use `sectionId(title)`, experience rows use `row-{name}`, and fitness uses Astro's own heading ids. A hidden section (a filtered row) is skipped.
+
+### Agent structure
+
+Everything the guide knows fits in about 5,000 tokens, so it rides in the system prompt instead of behind a search tool: every `src/content/memory` note, the site map with each page's section ids, and one line per blog post (slug, title, date, URL, tags) from `rag/data`, newest first. The page the visitor is on comes last, so the rest is one fixed prefix a provider can cache. Two tools remain:
+
+- `read_post` loads a post body (up to 10,000 characters) when a question needs more than its title.
+- `open_page` names a page and an optional section; the route checks both against `siteRoutes` and `pageSections`.
+
+A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The loop stops at three steps, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
 
 ### Supporting modules
 
-- `src/lib/guideReply.ts` — decides mode, action, and route; handles small talk and navigation intent
-- `src/lib/memorySelect.ts` — selects `src/content/memory` sections and matches routes
+- `src/lib/guideReply.ts` — the system prompt, outage notices, and the notes answer
+- `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools and the OpenAI-compatible model client
+- `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
+- `src/lib/guideSearch.ts` — post parsing and the keyword search behind the notes answer
+- `src/lib/memorySelect.ts` — parses `src/content/memory` and matches routes
 - `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
 Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).
 
-The model is not called unless `GUIDE_MODEL=on`. A failed model call (any HTTP error or timeout) answers from notes; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
+The model is not called unless `GUIDE_MODEL=on`. A failed model call (any HTTP error or timeout) answers from notes: the first sentence of the best keyword match, with a notice; there is no retry or wake-up state. `/chat` now redirects to `/?chat=1` to deep-link the guide open; the Chat nav link is gone.
 
 ## CursorTrail
 

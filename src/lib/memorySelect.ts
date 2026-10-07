@@ -74,60 +74,8 @@ export const siteRoutes: readonly SiteRoute[] = [
 	},
 ];
 
-const STOP = new Set([
-	"the",
-	"and",
-	"for",
-	"with",
-	"you",
-	"your",
-	"about",
-	"what",
-	"who",
-	"how",
-	"can",
-	"are",
-	"was",
-	"did",
-	"does",
-	"have",
-	"has",
-	"this",
-	"that",
-	"from",
-	"tell",
-	"please",
-	"me",
-	"my",
-	"his",
-	"her",
-	"their",
-	"just",
-	"like",
-	"into",
-	"show",
-	"open",
-	"take",
-	"want",
-	"know",
-	"any",
-	"some",
-	"been",
-]);
-
 const NAV_INTENT =
 	/\b(show|open|take me|go to|navigate|visit|pull up|bring me|where (?:is|can i (?:find|see)))\b/i;
-
-function tokens(value: string): string[] {
-	const raw = value.toLowerCase().match(/[a-z0-9][a-z0-9'+-]*/g) ?? [];
-	const out: string[] = [];
-	for (const token of raw) {
-		for (const part of token.split(/[+-]/)) {
-			if (part.length > 2 && !STOP.has(part)) out.push(part);
-		}
-	}
-	return out;
-}
 
 function slug(value: string): string {
 	const normalized = value
@@ -237,68 +185,4 @@ export function parseMemoryMarkdown(raw: string): MemorySection[] {
 		if (section) sections.push(section);
 	}
 	return sections;
-}
-
-function hits(token: string, bag: Set<string>): boolean {
-	if (bag.has(token)) return true;
-	if (token.length < 3) return false;
-	for (const item of bag) {
-		if (item.startsWith(token) || (item.length >= 3 && token.startsWith(item)))
-			return true;
-	}
-	return false;
-}
-
-function scoreSection(queryTokens: string[], section: MemorySection): number {
-	const titleTokens = new Set(tokens(section.title));
-	const bodyTokens = new Set(tokens(section.body));
-	let score = 0;
-	for (const token of queryTokens) {
-		if (hits(token, titleTokens)) score += 4;
-		else if (hits(token, bodyTokens)) score += 1;
-	}
-	return score;
-}
-
-export function selectMemory(
-	sections: readonly MemorySection[],
-	message: string,
-	limit = 3,
-	budget = 3800,
-): MemorySection[] {
-	if (isSmallTalk(message)) return [];
-	const queryTokens = tokens(message);
-	if (queryTokens.length === 0) return [];
-	const ranked = sections
-		.map((section) => ({ section, score: scoreSection(queryTokens, section) }))
-		.filter((row) => row.score > 0)
-		.sort((a, b) => b.score - a.score);
-	const best = ranked[0];
-	if (!best) return [];
-	const picked: MemorySection[] = [];
-	let chars = 0;
-	for (const row of ranked) {
-		if (picked.length >= limit) break;
-		if (row.score < best.score && row.score < 2) continue;
-		if (chars + row.section.body.length > budget && picked.length > 0) continue;
-		picked.push(row.section);
-		chars += row.section.body.length;
-	}
-	return picked;
-}
-
-export function extractNavigateHref(text: string): {
-	text: string;
-	href: string | null;
-} {
-	const pattern = /\[\[navigate:(\/(?:[a-z0-9-]+(?:\/[a-z0-9-]+)*)?)\]\]/gi;
-	let href: string | null = null;
-	const stripped = text
-		.replace(pattern, (_match, candidate: string) => {
-			if (routeByHref(candidate)) href = candidate;
-			return "";
-		})
-		.replace(/\n{3,}/g, "\n\n")
-		.trim();
-	return { text: stripped, href };
 }

@@ -19,10 +19,13 @@
 		"rag:rebuild": "rm -rf rag/.cache rag/index.json rag/keyword-index.json && bun run rag:build"
 	},
 	"dependencies": {
+		"@ai-sdk/openai-compatible": "^3.0.63",
+		"@ai-sdk/svelte": "^5.0.128",
 		"@astrojs/svelte": "9.0.1",
 		"@astrojs/vercel": "11.0.3",
 		"@tailwindcss/vite": "4.3.2",
 		"@vercel/analytics": "^2.0.1",
+		"ai": "^7.0.128",
 		"astro": "7.0.9",
 		"marked": "^16.1.1",
 		"minisearch": "^7.2.0",

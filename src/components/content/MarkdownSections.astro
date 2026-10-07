@@ -3,6 +3,7 @@ import {
 	parseMarkdownContent,
 	styleMarkdownContent,
 } from "../../lib/markdownUtils";
+import { sectionId } from "../../lib/siteSections";
 
 interface Props {
 	body: string;
@@ -24,7 +25,7 @@ const sectionsClass =
 	<div class={sectionsClass}>
 		{
 			parsedContent.map((section) => (
-				<section>
+				<section id={sectionId(section.title)} class="self-start">
 					<h2 class="text-xl font-medium mb-3 capitalize">
 						{section.title}
 					</h2>

@@ -25,7 +25,7 @@ export type Completion =
 	| { kind: "ok"; content: string }
 	| { kind: "down"; outage: Outage; detail: string };
 
-function outageFor(status: number): Outage {
+export function outageFor(status: number): Outage {
 	// 402: spend cap or credit exhausted. 429: rate limit, retry later.
 	if (status === 402) return "budget";
 	if (status === 429) return "busy";

@@ -6,9 +6,9 @@ One principle: never move the reader against their intent. The guide can move tw
 
 ## Thread movement
 
-1. Do not auto-scroll by default. Follow the tail only while the reader is at the live edge (within 60px of the bottom). When they scroll away, leave them where they are.
+1. Do not auto-scroll to follow a reply. The question anchors near the top (rule 2) and the reply grows below it. When the reader scrolls, leave them where they are.
 2. When the visitor sends, scroll the new turn so the question sits near the top of the thread, with about two lines of the previous turn still visible above it. The reply renders below the question and is read from its first line. The last turn gets a `min-height` equal to the thread's height, so a short thread can still put the question at the top.
-3. A reply that lands while the reader is away from the live edge renders off screen. A "New reply" pill at the bottom of the thread scrolls to the start of that reply and resumes following.
+3. A reply that lands while the reader is away from the live edge renders off screen. A "New reply" pill at the bottom of the thread scrolls to the start of that reply.
 4. Reopen a restored thread at the last question, not at the bottom.
 5. While a turn is pending, show one status row. Replace it with the reply in place. Never insert content above the reader's position.
 6. Reserve space for content that loads late. A card image gets a fixed `aspect-ratio` box before it loads.
@@ -46,13 +46,10 @@ The server returns data, and the client maps it to parts. `src/lib/chatTypes.ts`
 
 | Rule | Where | Gap |
 | --- | --- | --- |
-| 1, 2 | `FloatingChat.svelte:409-414` | Scrolls to the bottom when the reader is within 60px of it, and also when `scrollTop` is 0. A reader who scrolls to the top is pulled down by the next message, and a long reply shows its end, not its start. |
-| 3 | none | No "New reply" pill. |
-| 4 | `FloatingChat.svelte:347`, `:409` | A restored thread starts at `scrollTop` 0, so the same effect jumps it to the bottom. |
+| 3 | none | No "New reply" pill. A reply renders under its question in the space the last turn reserves, so it starts in view unless the reader scrolled away. |
 
-Fixed: a pending navigation now cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn is pending, and no live region is nested in it; the composer keeps focus on send.
+Fixed: a new question scrolls near the top of the thread with 40px of the previous turn above it, and the last turn reserves one thread of height in CSS, so a restore lands on the last question on its first frame. The thread no longer follows the tail or jumps to the bottom. A pending navigation cancels on every intent signal in rule 9; the thread is `role="log"` with `aria-busy` while a turn streams, and no live region is nested in it; the composer keeps focus on send.
 
 ## Not adopted
 
 - Message links, search, and unread markers: the thread holds at most 30 messages per tab session.
-- Streaming: replies arrive whole. Revisit rules 2 and 5 if the guide starts to stream.

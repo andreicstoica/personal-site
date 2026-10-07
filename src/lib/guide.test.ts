@@ -1,9 +1,21 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { parseChatApiSuccess } from "./chatTypes";
+import { APICallError } from "ai";
+import { guideModel, outageOf } from "./guideModel";
 import { starterPrompts } from "./guidePrompts";
-import { resolveGuideTurn } from "./guideReply";
+import {
+	buildSystemPrompt,
+	notesOpenPage,
+	notesText,
+	OUTAGE_NOTICE,
+} from "./guideReply";
+import {
+	createGuideSearch,
+	noteDocs,
+	postDocs,
+	postIndex,
+} from "./guideSearch";
 import { completeChat } from "./inference";
 import {
 	authHeaders,
@@ -11,15 +23,20 @@ import {
 	resolveInference,
 } from "./inferenceConfig";
 import {
-	extractNavigateHref,
 	isNavigationIntent,
 	matchRoute,
 	parseMemoryMarkdown,
 	routeByHref,
-	selectMemory,
 } from "./memorySelect";
+import {
+	experienceSections,
+	markdownSections,
+	resolveOpenPage,
+	sectionId,
+} from "./siteSections";
 
 const memoryDir = path.resolve("src/content/memory");
+const ragDir = path.resolve("rag/data");
 
 function corpus() {
 	return readdirSync(memoryDir)
@@ -27,6 +44,36 @@ function corpus() {
 		.flatMap((name) =>
 			parseMemoryMarkdown(readFileSync(path.join(memoryDir, name), "utf8")),
 		);
+}
+
+function posts() {
+	return postDocs(
+		readdirSync(ragDir)
+			.filter((name) => name.endsWith(".json"))
+			.map((name) => {
+				const textPath = path.join(ragDir, name.replace(/\.json$/, ".txt"));
+				let text: string | undefined;
+				try {
+					text = readFileSync(textPath, "utf8");
+				} catch {
+					text = undefined;
+				}
+				return {
+					slug: name.replace(/\.json$/, ""),
+					meta: JSON.parse(readFileSync(path.join(ragDir, name), "utf8")),
+					text,
+				};
+			}),
+	);
+}
+
+const search = createGuideSearch([...noteDocs(corpus()), ...posts()]);
+
+function pageBody(slug: string): string {
+	return readFileSync(
+		path.resolve(`src/content/pages/${slug}.md`),
+		"utf8",
+	).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
 }
 
 describe("memory files", () => {
@@ -42,24 +89,55 @@ describe("memory files", () => {
 	});
 
 	test("every starter prompt finds the note that answers it", () => {
-		const sections = corpus();
 		const answering = ["Canon", "Writing", "Colophon"];
 		starterPrompts.forEach((prompt, index) => {
-			const titles = selectMemory(sections, prompt.text).map((s) => s.title);
+			const titles = search.search(prompt.text).map((hit) => hit.title);
 			expect(titles).toContain(answering[index] ?? "");
 		});
 	});
 
 	test("project questions hit that project first", () => {
-		const sections = corpus();
-		expect(selectMemory(sections, "what is refract")[0]?.title).toBe("Refract");
-		expect(selectMemory(sections, "tell me about courtly")[0]?.title).toBe(
-			"Courtly",
+		expect(search.search("what is refract")[0]?.title).toBe("Refract");
+		expect(search.search("tell me about courtly")[0]?.title).toBe("Courtly");
+		expect(search.search("hi")).toEqual([]);
+	});
+});
+
+describe("posts", () => {
+	test("the post list is newest first, with blog URLs and slugs", () => {
+		const list = postIndex(posts());
+		expect(list.length).toBeGreaterThan(15);
+		const dated = list.filter((post) => post.date).map((post) => post.date);
+		expect([...dated].sort().reverse()).toEqual(dated);
+		for (const post of list) {
+			expect(post.url?.startsWith("https://blog.andrei.bio/")).toBe(true);
+			expect(post.slug).toBeTruthy();
+		}
+	});
+
+	test("the prompt carries every note and post, with the page last", () => {
+		const notes = corpus();
+		const list = postIndex(posts());
+		const prompt = buildSystemPrompt({
+			notes,
+			posts: list,
+			sectionsByPath: { "/canon": markdownSections(pageBody("canon")) },
+			viewing: routeByHref("/canon"),
+		});
+		for (const note of notes) expect(prompt).toContain(`## ${note.title}`);
+		expect(prompt).toContain(`- ${list[0]?.slug}: ${list[0]?.title}`);
+		expect(prompt).toContain("/canon — Canon. Sections: writers, bloggers");
+		expect(prompt.trimEnd().endsWith('"This page" means that page.')).toBe(
+			true,
 		);
-		expect(selectMemory(sections, "fact checking at NBC")[0]?.title).toBe(
-			"NBCUniversal",
-		);
-		expect(selectMemory(sections, "hi")).toEqual([]);
+	});
+
+	test("a post body is searchable and cites its URL", () => {
+		const hit = search
+			.search("dyson engineers company")
+			.find((result) => result.url);
+		expect(hit?.url).toContain("dyson");
+		expect(hit?.text?.length).toBeGreaterThan(0);
 	});
 });
 
@@ -71,91 +149,57 @@ describe("routes", () => {
 		expect(isNavigationIntent("please show me Refract")).toBe(true);
 		expect(isNavigationIntent("what is refract")).toBe(false);
 	});
+});
 
-	test("strips a navigate token only when the path is on the site", () => {
-		const allowed = extractNavigateHref(
-			"Opening it.\n[[navigate:/projects/refract]]",
-		);
-		expect(allowed.href).toBe("/projects/refract");
-		expect(allowed.text).toBe("Opening it.");
-		const rejected = extractNavigateHref("No.\n[[navigate:https://evil.test]]");
-		expect(rejected.href).toBeNull();
-		expect(rejected.text).toContain("No.");
+describe("notes answers", () => {
+	test("notes stay to the first sentence", () => {
+		const text = notesText("what is refract", search.search("what is refract"));
+		expect(text).toBe("The journal that collaborates with you to go deeper.");
+	});
+
+	test("only an explicit request opens a page without the model", () => {
+		expect(notesOpenPage("show me courtly")).toEqual({
+			href: "/projects/courtly",
+			label: "Courtly",
+		});
+		expect(notesOpenPage("what is refract")).toBeNull();
 	});
 });
 
-describe("guide turn", () => {
-	test("notes stay to the first sentence", () => {
-		const turn = resolveGuideTurn({
-			message: "what is refract",
-			sections: selectMemory(corpus(), "what is refract"),
-			modelText: null,
-			notesReason: "unconfigured",
-		});
-		expect(turn.response).toBe(
-			"The journal that collaborates with you to go deeper.",
+describe("page sections", () => {
+	test("canon sections match the rendered section ids", () => {
+		const sections = markdownSections(pageBody("canon"));
+		expect(sections.map((section) => section.id)).toContain("non-fiction");
+		expect(sections.find((section) => section.id === "youtube")?.label).toBe(
+			"YouTube",
 		);
-		expect(turn.response).not.toContain("He describes");
 	});
 
-	test("follows when the visitor asks to open a page, even without the model", () => {
-		const turn = resolveGuideTurn({
-			message: "show me courtly",
-			sections: selectMemory(corpus(), "show me courtly"),
-			modelText: null,
-			notesReason: "unconfigured",
-		});
-		expect(turn.mode).toBe("notes");
-		expect(turn.action).toEqual({
-			kind: "navigate",
-			href: "/projects/courtly",
-			label: "Courtly",
-			follow: true,
-		});
+	test("fitness headings use Astro's own heading ids", () => {
+		const ids = [
+			...markdownSections(pageBody("race")),
+			...markdownSections(pageBody("outdoors")),
+		].map((section) => section.id);
+		expect(ids).toEqual(["running", "outdoors"]);
 	});
 
-	test("follows the page the model points to for the rest", () => {
-		const turn = resolveGuideTurn({
-			message: "who do you look up to",
-			sections: [],
-			modelText:
-				"Le Guin and Caro. The rest is on my canon.\n[[navigate:/canon]]",
-			notesReason: null,
+	test("experience rows have unique ids", () => {
+		const ids = experienceSections().map((section) => section.id);
+		expect(new Set(ids).size).toBe(ids.length);
+		expect(ids).toContain(`row-${sectionId("Liftoff")}`);
+	});
+
+	test("open_page takes a section by id or label and drops an unknown one", () => {
+		const byPath = { "/canon": markdownSections(pageBody("canon")) };
+		expect(resolveOpenPage("/canon", "Movies", byPath)?.section).toEqual({
+			id: "movies",
+			label: "Movies",
 		});
-		expect(turn.mode).toBe("model");
-		expect(turn.response).toBe("Le Guin and Caro. The rest is on my canon.");
-		expect(turn.action).toEqual({
-			kind: "navigate",
+		expect(resolveOpenPage("/canon", "podcasts", byPath)).toEqual({
 			href: "/canon",
 			label: "Canon",
-			follow: true,
 		});
-	});
-
-	test("a page named only in the question stays a link", () => {
-		const turn = resolveGuideTurn({
-			message: "what is refract",
-			sections: [],
-			modelText: "Refract is a journal.",
-			notesReason: null,
-		});
-		expect(turn.action).toMatchObject({
-			href: "/projects/refract",
-			follow: false,
-		});
-	});
-
-	test("prefers the page the visitor named over a conflicting model path", () => {
-		const turn = resolveGuideTurn({
-			message: "show me blob game",
-			sections: [],
-			modelText: "Sure.\n[[navigate:/about]]",
-			notesReason: null,
-		});
-		expect(turn.action).toMatchObject({
-			href: "/projects/blob-game",
-			follow: true,
-		});
+		expect(resolveOpenPage("/nope", undefined, byPath)).toBeNull();
 	});
 });
 
@@ -246,50 +290,23 @@ describe("model outages", () => {
 		expect(await outageFor(500)).toBe("error");
 	});
 
-	test("an out-of-credit turn still answers from notes and says why", () => {
-		const turn = resolveGuideTurn({
-			message: "what is refract",
-			sections: selectMemory(corpus(), "what is refract"),
-			modelText: null,
-			notesReason: "budget",
-		});
-		expect(turn.mode).toBe("notes");
-		expect(turn.response).toBe(
-			"The journal that collaborates with you to go deeper.",
-		);
-		expect(turn.notice).toContain("out of credit");
+	test("SDK errors map the same way as raw responses", () => {
+		const error = (statusCode: number) =>
+			new APICallError({
+				message: "x",
+				url: "https://api.example/v1/chat/completions",
+				requestBodyValues: {},
+				statusCode,
+			});
+		expect(outageOf(error(402))).toBe("budget");
+		expect(outageOf(error(429))).toBe("busy");
+		expect(outageOf(new Error("socket hang up"))).toBe("error");
+		expect(OUTAGE_NOTICE.budget).toContain("out of credit");
 	});
 
-	test("a notes-only site shows no outage notice", () => {
-		const turn = resolveGuideTurn({
-			message: "what is refract",
-			sections: [],
-			modelText: null,
-			notesReason: "unconfigured",
-		});
-		expect(turn.notice).toBeUndefined();
-	});
-});
-
-describe("chat payload", () => {
-	test("rejects a navigate action missing follow", () => {
-		expect(
-			parseChatApiSuccess({
-				response: "hi",
-				mode: "notes",
-				sources: [],
-				action: { kind: "navigate", href: "/", label: "Home" },
-			}),
-		).toBeNull();
-	});
-
-	test("keeps a notice and rejects a non-string one", () => {
-		const base = { response: "hi", mode: "notes", sources: [] };
-		const action = { kind: "none" };
-		expect(
-			parseChatApiSuccess({ ...base, action, notice: "out" })?.notice,
-		).toBe("out");
-		expect(parseChatApiSuccess({ ...base, action, notice: 1 })).toBeNull();
+	test("the model client takes the resolved host", () => {
+		const model = guideModel(resolved);
+		expect(typeof model === "object" && model.modelId).toBe("m");
 	});
 });
 

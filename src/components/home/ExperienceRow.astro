@@ -7,6 +7,7 @@ import {
 	rowEasterEgg,
 	usesDisplayFont,
 } from "../../lib/experienceUi";
+import { experienceRowId } from "../../lib/siteSections";
 import type { Experience } from "../../lib/types";
 import MediaGallery from "../gallery/MediaGallery.astro";
 import ProjectEnhancedDescription from "../projects/ProjectEnhancedDescription.astro";
@@ -30,6 +31,7 @@ const egg = rowEasterEgg(experience.name);
 ---
 
 <div
+  id={experienceRowId(experience.name)}
   class="experience-row border-t"
   data-type={experience.type}
   data-display-font={usesDisplayFont(experience.name) ? "" : undefined}
