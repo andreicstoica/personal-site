@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
   import { mountBanner, whenBannerReady } from "../../lib/weather/bannerSurface";
+  import { bannerLink } from "../../lib/weather/bannerLink.svelte";
   import { BANNER_HEIGHT, BANNER_WIDTH } from "../../lib/weather/buffer";
   import { playClick } from "../../lib/weather/clickSound";
   import {
@@ -330,6 +331,18 @@
     if (target === "sun") timeOverride = next.time;
     playClick(target);
   }
+
+  // The guide's scene controls read and change the banner through this link.
+  $effect(() => {
+    bannerLink.scene = scene;
+  });
+  $effect(() => {
+    bannerLink.advance = advance;
+    return () => {
+      bannerLink.advance = null;
+      bannerLink.scene = null;
+    };
+  });
 
   // Clicks on the canvas are pointer only; the caption's words are the
   // keyboard and screen reader way to do the same.

@@ -19,6 +19,9 @@ export type PostHit = {
 
 export type SearchPostsOutput = { hits: PostHit[] };
 
+/** The panel draws the controls; the route has nothing to return. */
+export type SceneControlsOutput = { shown: true };
+
 export type OpenPageOutput = {
 	href: string;
 	label: string;
@@ -33,6 +36,10 @@ export type GuideUITools = {
 	open_page: {
 		input: { path: string; section?: string };
 		output: OpenPageOutput;
+	};
+	show_scene_controls: {
+		input: Record<string, never>;
+		output: SceneControlsOutput;
 	};
 };
 
@@ -53,6 +60,9 @@ export type GuideDataParts = {
 	/** A page the reply linked without calling open_page. The route sends it
 	 *  so the guide still opens the page the reply points to. */
 	page: OpenPageOutput;
+	/** Scene controls for a banner question the model did not hand them to,
+	 *  or that the notes answered. */
+	scene: SceneControlsOutput;
 };
 
 /** Sent once a model turn ends, for the last line of the trace. */
@@ -167,6 +177,11 @@ function parsePart(value: unknown): GuidePart | null {
 			? { type: "data-notice", data: { text: data.text } }
 			: null;
 	}
+	if (value.type === "data-scene") {
+		return typeof value.id === "string"
+			? { type: "data-scene", id: value.id, data: { shown: true } }
+			: null;
+	}
 	if (value.state !== "output-available") return null;
 	if (typeof value.toolCallId !== "string") return null;
 	const toolCallId = value.toolCallId;
@@ -204,6 +219,15 @@ function parsePart(value: unknown): GuidePart | null {
 			state: "output-available",
 			input: { query: typeof input.query === "string" ? input.query : "" },
 			output: { hits },
+		};
+	}
+	if (value.type === "tool-show_scene_controls") {
+		return {
+			type: "tool-show_scene_controls",
+			toolCallId,
+			state: "output-available",
+			input: {},
+			output: { shown: true },
 		};
 	}
 	if (value.type === "tool-open_page") {

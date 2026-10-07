@@ -12,7 +12,9 @@ import camera from "pixelarticons/svg/camera.svg?raw";
 import chevronDown from "pixelarticons/svg/chevron-down.svg?raw";
 import chevronRight from "pixelarticons/svg/chevron-right.svg?raw";
 import chevronUp from "pixelarticons/svg/chevron-up.svg?raw";
+import clock from "pixelarticons/svg/clock.svg?raw";
 import close from "pixelarticons/svg/close.svg?raw";
+import cloud from "pixelarticons/svg/cloud.svg?raw";
 import coffee from "pixelarticons/svg/coffee.svg?raw";
 import cpu from "pixelarticons/svg/cpu.svg?raw";
 import directions from "pixelarticons/svg/directions.svg?raw";
@@ -24,10 +26,14 @@ import human from "pixelarticons/svg/human.svg?raw";
 import lightbulb from "pixelarticons/svg/lightbulb.svg?raw";
 import link from "pixelarticons/svg/link.svg?raw";
 import map from "pixelarticons/svg/map.svg?raw";
+import mapPin from "pixelarticons/svg/map-pin.svg?raw";
 import message from "pixelarticons/svg/message.svg?raw";
+import moon from "pixelarticons/svg/moon.svg?raw";
 import penSquare from "pixelarticons/svg/pen-square.svg?raw";
+import repeat from "pixelarticons/svg/repeat.svg?raw";
 import robot from "pixelarticons/svg/robot.svg?raw";
 import search from "pixelarticons/svg/search.svg?raw";
+import sun from "pixelarticons/svg/sun.svg?raw";
 import textCursor from "pixelarticons/svg/text-cursor.svg?raw";
 import tools from "pixelarticons/svg/tools.svg?raw";
 import users from "pixelarticons/svg/users.svg?raw";
@@ -50,7 +56,9 @@ export const pixelarticons = {
 	"chevron-down": inner(chevronDown),
 	"chevron-right": inner(chevronRight),
 	"chevron-up": inner(chevronUp),
+	clock: inner(clock),
 	close: inner(close),
+	cloud: inner(cloud),
 	coffee: inner(coffee),
 	cpu: inner(cpu),
 	directions: inner(directions),
@@ -62,10 +70,14 @@ export const pixelarticons = {
 	lightbulb: inner(lightbulb),
 	link: inner(link),
 	map: inner(map),
+	"map-pin": inner(mapPin),
 	message: inner(message),
+	moon: inner(moon),
 	"pen-square": inner(penSquare),
+	repeat: inner(repeat),
 	robot: inner(robot),
 	search: inner(search),
+	sun: inner(sun),
 	"text-cursor": inner(textCursor),
 	tools: inner(tools),
 	users: inner(users),

@@ -27,6 +27,7 @@
   import Icon from "../ui/Icon.svelte";
   import GuidePrompts from "./GuidePrompts.svelte";
   import GuideCard from "./GuideCard.svelte";
+  import GuideScene from "./GuideScene.svelte";
   import GuideTrace from "./GuideTrace.svelte";
 
   const storageKey = GUIDE_STORAGE_KEY;
@@ -41,7 +42,14 @@
   const THREAD_PAD = 12;
   const EDGE = 8;
   const THINKING: GuideStep = { icon: "lightbulb", label: "Thinking", status: "active" };
-  const EMPTY_VIEW: ReplyView = { trace: [], text: "", notices: [], page: null, posts: [] };
+  const EMPTY_VIEW: ReplyView = {
+    trace: [],
+    text: "",
+    notices: [],
+    page: null,
+    posts: [],
+    scene: false,
+  };
   /** "Continue exploring" waits until the visitor has had a moment with the
    *  reply, so it reads as an offer, not part of the answer. */
   const EXPLORE_DELAY = 5000;
@@ -155,6 +163,17 @@
   function expand(): void {
     minimized = false;
     void tick().then(focusComposer);
+  }
+
+  /** On a phone the sheet covers the banner, so a change from the scene
+   *  controls slides the sheet down and scrolls the page up to show it. */
+  function showBanner(): void {
+    if (!isPhone()) return;
+    minimize();
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document
+      .querySelector("[data-page-scroll]")
+      ?.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   }
 
   /** The bar's status line: where the latest page move stands. */
@@ -723,6 +742,9 @@
               {/if}
               {#if view.text}
                 <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
+              {/if}
+              {#if view.scene}
+                <GuideScene onchange={showBanner} />
               {/if}
               {#if view.page || view.posts.length > 0}
                 {@const page = view.page
