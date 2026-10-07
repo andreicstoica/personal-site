@@ -68,6 +68,19 @@ export function sceneLabel(scene: Scene): string {
 	return `${place}, ${scene.time === "golden-hour" ? "golden hour" : scene.time}, ${scene.weather}`;
 }
 
+const WEATHER_ADJECTIVE: Record<Weather, string> = {
+	clear: "clear",
+	cloudy: "cloudy",
+	rainy: "rainy",
+	fog: "foggy",
+};
+
+/** The banner's caption: "A rainy night at Smith Rock." */
+export function sceneSentence(scene: Scene): string {
+	const time = scene.time === "golden-hour" ? "golden hour" : scene.time;
+	return `A ${WEATHER_ADJECTIVE[scene.weather]} ${time} at ${PLACE_LABEL[scene.place]}.`;
+}
+
 export function classifyWeather(code: number): Weather {
 	if (code === 45 || code === 48) return "fog";
 	if (isPrecipitation(code)) return "rainy";

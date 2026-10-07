@@ -16,6 +16,7 @@
     fallbackReading,
     type Place,
     sceneLabel,
+    sceneSentence,
     type StoredReading,
     type TimeOfDay,
     timeOfDay,
@@ -158,6 +159,7 @@
     colorMode: colorOverride === "system" ? systemMode : colorOverride,
   });
   const label = $derived(sceneLabel(scene));
+  const caption = $derived(sceneSentence(scene));
 
   /** Lab: clear every override, roll a fresh backdrop, refetch live weather. */
   function localize(): void {
@@ -346,6 +348,8 @@
   });
 </script>
 
+<!-- The layout measures this body, caption included, to open the frame. -->
+<div class="banner-body" data-banner-body>
 <div
   bind:this={slotEl}
   class="banner-slot"
@@ -365,6 +369,9 @@
     data-renderer="webgl"
     style="width: 100%;"
   ></canvas>
+</div>
+<!-- The slot's label already reads the scene, so the caption is for sight only. -->
+<p class="banner-caption" aria-hidden="true">{caption}</p>
 </div>
 
 {#if labVisible}
@@ -395,6 +402,15 @@
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+  }
+
+  /* The page's own background, over the frame's sunken placeholder. */
+  .banner-caption {
+    padding-block-start: 0.375rem;
+    background: var(--color-bg-primary);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    line-height: 1rem;
   }
 
   .banner-canvas {

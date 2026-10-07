@@ -190,13 +190,13 @@ const isHome = Astro.url.pathname === "/";
     );
 
     const open = (slide: boolean): void => {
-      // The client-only island may not have rendered its slot when this script
+      // The client-only island may not have rendered its body when this script
       // binds, so measure at open time. Without a length here the open height
       // is `auto`, which cannot transition, and the banner snaps in.
-      const slot = frame.querySelector<HTMLElement>("[data-banner-slot]");
-      if (!slot) return;
-      frame.style.setProperty("--banner-height", `${slot.offsetHeight}px`);
-      observer.observe(slot);
+      const body = frame.querySelector<HTMLElement>("[data-banner-body]");
+      if (!body) return;
+      frame.style.setProperty("--banner-height", `${body.offsetHeight}px`);
+      observer.observe(body);
       if (!slide) {
         document.documentElement.dataset.weatherBanner = "open";
         return;

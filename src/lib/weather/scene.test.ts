@@ -23,6 +23,7 @@ import {
 	PLACES,
 	type StoredReading,
 	sceneLabel,
+	sceneSentence,
 	timeFromClock,
 	timeOfDay,
 	WEATHERS,
@@ -67,6 +68,14 @@ describe("weather lighting clock", () => {
 				colorMode: "light",
 			}),
 		).toBe("Mount Hood, golden hour, clear");
+		expect(
+			sceneSentence({
+				place: "oregon-coast",
+				time: "golden-hour",
+				weather: "fog",
+				colorMode: "dark",
+			}),
+		).toBe("A foggy golden hour at Cannon Beach.");
 	});
 });
 
