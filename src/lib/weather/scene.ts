@@ -75,8 +75,11 @@ const WEATHER_ADJECTIVE: Record<Weather, string> = {
 	fog: "foggy",
 };
 
+/** The parts of a scene a visitor can change. */
+export type SceneParts = Pick<Scene, "place" | "weather" | "time">;
+
 /** The caption's words, as in "A rainy night at Smith Rock, OR." */
-export function captionWords(scene: Scene): {
+export function captionWords(scene: SceneParts): {
 	weather: string;
 	time: string;
 	place: string;

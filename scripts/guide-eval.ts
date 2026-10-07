@@ -35,6 +35,7 @@ async function ask(test: EvalCase): Promise<string> {
 	const body = JSON.stringify({
 		messages: [...(test.turns ?? []), { role: "user", text: test.q }],
 		page: "/",
+		...(test.bannerScene ? { scene: test.bannerScene } : {}),
 	});
 	if (!target.hostname.endsWith(".vercel.app")) {
 		const response = await fetch(new URL("/api/chat", target), {

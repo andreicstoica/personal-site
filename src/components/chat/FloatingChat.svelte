@@ -28,6 +28,7 @@
   import GuidePrompts from "./GuidePrompts.svelte";
   import GuideCard from "./GuideCard.svelte";
   import GuideScene from "./GuideScene.svelte";
+  import { bannerLink } from "../../lib/weather/bannerLink.svelte";
   import GuideTrace from "./GuideTrace.svelte";
 
   const storageKey = GUIDE_STORAGE_KEY;
@@ -103,7 +104,11 @@
     chatLoad ??= import("../../lib/guideChat").then(({ createGuideChat }) => {
       const instance = createGuideChat({
         messages: stored,
-        body: (messages) => ({ messages: toTurns(messages), page: pagePath }),
+        body: (messages) => ({
+          messages: toTurns(messages),
+          page: pagePath,
+          ...bannerSceneParts(),
+        }),
         onFinish: (message, completed) => {
           if (instance.messages.length > KEEP) {
             instance.messages = instance.messages.slice(-KEEP);
@@ -163,6 +168,14 @@
   function expand(): void {
     minimized = false;
     void tick().then(focusComposer);
+  }
+
+  /** What the banner shows, so the guide can name it when asked. */
+  function bannerSceneParts() {
+    const scene = bannerLink.scene;
+    return scene
+      ? { scene: { place: scene.place, weather: scene.weather, time: scene.time } }
+      : {};
   }
 
   /** On a phone the sheet covers the banner, so a change from the scene

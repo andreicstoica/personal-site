@@ -118,6 +118,46 @@ function clip(text: string, max: number): string {
 	return `${text.slice(0, max).trimEnd()}…`;
 }
 
+/** A word in at most this many posts is rare: a name, a place, a product.
+ *  Common words match most posts and point nowhere. */
+const RARE_IN_POSTS = 2;
+const RARE_MIN_LENGTH = 4;
+const PASSAGES = 2;
+
+function words(text: string): Set<string> {
+	return new Set(text.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+}
+
+/** Post passages for one question, chosen by code rather than by the model
+ *  deciding to search. Only a rare word in the question counts, so broad
+ *  questions, which the notes and post titles answer, get no passages. */
+export function createPassageFinder(
+	posts: readonly GuideDoc[],
+): (question: string) => SearchHit[] {
+	const search = createGuideSearch(posts);
+	const vocabulary = posts.map((post) => ({
+		slug: post.slug,
+		words: words(`${post.title} ${post.text}`),
+	}));
+	return (question) => {
+		const rare: string[] = [];
+		const holders = new Set<string>();
+		for (const term of words(question)) {
+			if (term.length < RARE_MIN_LENGTH) continue;
+			const having = vocabulary.filter((post) => post.words.has(term));
+			if (having.length === 0 || having.length > RARE_IN_POSTS) continue;
+			rare.push(term);
+			for (const post of having) if (post.slug) holders.add(post.slug);
+		}
+		if (rare.length === 0) return [];
+		// Fuzzy matching can reach a post without the word ("bevel", "level").
+		return search
+			.search(rare.join(" "), PASSAGES * 2)
+			.filter((hit) => hit.slug && holders.has(hit.slug))
+			.slice(0, PASSAGES);
+	};
+}
+
 /** Keyword search: over notes and posts for the answer the guide gives
  *  when no model is reachable, and over post bodies for search_posts. */
 export type GuideSearch = {

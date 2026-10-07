@@ -162,6 +162,17 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 				status: "complete",
 				href: section ? `${href}#${section.id}` : href,
 			});
+		} else if (part.type === "data-passages" && part.data.posts.length > 0) {
+			const titles = part.data.posts.map((post) => post.title);
+			steps.push({
+				icon: "search",
+				label:
+					titles.length === 1
+						? `Found a passage in ${titles[0]}`
+						: `Found passages in ${titles.length} posts`,
+				status: "complete",
+				...(titles.length > 1 ? { detail: titles.join("\n") } : {}),
+			});
 		} else if (part.type === "data-scene") {
 			steps.push({
 				icon: "cloud",
@@ -236,6 +247,11 @@ export function replyView(message: GuideUIMessage): ReplyView {
 			!view.posts.some((post) => post.url === part.output.url)
 		) {
 			view.posts.push(part.output);
+		} else if (
+			part.type === "data-post" &&
+			!view.posts.some((post) => post.url === part.data.url)
+		) {
+			view.posts.push(part.data);
 		}
 	}
 	view.text = view.text.trim();

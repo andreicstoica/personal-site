@@ -63,6 +63,10 @@ export type GuideDataParts = {
 	/** Scene controls for a banner question the model did not hand them to,
 	 *  or that the notes answered. */
 	scene: SceneControlsOutput;
+	/** Posts whose passages the route put in the prompt, for the trace. */
+	passages: { posts: ReadPostOutput[] };
+	/** A post the reply cites from a passage, for its source card. */
+	post: ReadPostOutput;
 };
 
 /** Sent once a model turn ends, for the last line of the trace. */
@@ -177,6 +181,22 @@ function parsePart(value: unknown): GuidePart | null {
 			? { type: "data-notice", data: { text: data.text } }
 			: null;
 	}
+	if (value.type === "data-passages") {
+		const data = value.data;
+		if (!isRecord(data) || !Array.isArray(data.posts)) return null;
+		const posts: ReadPostOutput[] = [];
+		for (const item of data.posts) {
+			const post = parsePostRef(item);
+			if (post) posts.push(post);
+		}
+		return { type: "data-passages", data: { posts } };
+	}
+	if (value.type === "data-post") {
+		const post = parsePostRef(value.data);
+		return post && typeof value.id === "string"
+			? { type: "data-post", id: value.id, data: post }
+			: null;
+	}
 	if (value.type === "data-scene") {
 		return typeof value.id === "string"
 			? { type: "data-scene", id: value.id, data: { shown: true } }
@@ -242,6 +262,19 @@ function parsePart(value: unknown): GuidePart | null {
 		};
 	}
 	return null;
+}
+
+/** A post's title, URL, and date; never its body. */
+function parsePostRef(value: unknown): ReadPostOutput | null {
+	if (!isRecord(value)) return null;
+	if (typeof value.title !== "string" || typeof value.url !== "string")
+		return null;
+	if (!optionalString(value.date)) return null;
+	return {
+		title: value.title,
+		url: value.url,
+		...(value.date ? { date: value.date } : {}),
+	};
 }
 
 function parseMetadata(value: unknown): GuideMetadata | null {

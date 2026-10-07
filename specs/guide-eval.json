@@ -23,7 +23,7 @@
     { "id": "banner-cool", "kind": "banner", "q": "woah this banner is cool!", "scene": true },
     { "id": "banner-rain", "kind": "banner", "q": "can I make it rain up there?", "scene": true },
     { "id": "banner-made", "kind": "banner", "q": "how was this banner made? looks awesome", "scene": true, "facts": [["WebGL", "pixel"]] },
-    { "id": "banner-mountain", "kind": "banner", "q": "what is that mountain at the top of the page?", "scene": true },
+    { "id": "banner-mountain", "kind": "banner", "q": "what is that mountain at the top of the page?", "bannerScene": { "place": "cascade-forest", "weather": "clear", "time": "night" }, "scene": true, "facts": [["Mt. Hood", "Mount Hood"]] },
 
     { "id": "nav-canon", "kind": "nav", "q": "show me the canon", "page": "/canon" },
     { "id": "nav-fitness", "kind": "nav", "q": "take me to the fitness page", "page": "/fitness" },

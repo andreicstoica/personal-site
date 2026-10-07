@@ -17,6 +17,7 @@ import type {
 } from "../../lib/chatTypes";
 import {
 	guideNotes,
+	guidePassages,
 	guidePosts,
 	guideSearch,
 	pageSections,
@@ -28,6 +29,7 @@ import {
 	notesText,
 	OUTAGE_NOTICE,
 } from "../../lib/guideReply";
+import type { SearchHit } from "../../lib/guideSearch";
 import { guideTools } from "../../lib/guideTools";
 import {
 	currentInference,
@@ -41,6 +43,7 @@ import {
 	routeByHref,
 } from "../../lib/memorySelect";
 import { linkedPage, namedPage } from "../../lib/siteSections";
+import { PLACES, TIMES, WEATHERS } from "../../lib/weather/scene";
 
 const turnSchema = z.object({
 	role: z.enum(["user", "assistant"]),
@@ -51,6 +54,14 @@ const chatRequestSchema = z.object({
 	messages: z.array(turnSchema).min(1).max(12),
 	/** The path the visitor is on. Only a known site route is used. */
 	page: z.string().max(200).optional(),
+	/** What the visitor's banner shows, so the guide can name it. */
+	scene: z
+		.object({
+			place: z.enum(PLACES),
+			weather: z.enum(WEATHERS),
+			time: z.enum(TIMES),
+		})
+		.optional(),
 });
 
 type Writer = UIMessageStreamWriter<GuideUIMessage>;
@@ -94,6 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
 			} else {
 				const notes = guideNotes();
 				const posts = guidePosts();
+				const passages = guidePassages(message);
 				writer.write({
 					type: "data-context",
 					data: {
@@ -103,6 +115,11 @@ export const POST: APIRoute = async ({ request }) => {
 						...(viewing ? { page: viewing.label } : {}),
 					},
 				});
+				if (passages.length > 0)
+					writer.write({
+						type: "data-passages",
+						data: { posts: passages.map(postRef) },
+					});
 				await streamModelTurn(writer, {
 					model: guideModel(resolved),
 					modelId: resolved.model,
@@ -112,7 +129,10 @@ export const POST: APIRoute = async ({ request }) => {
 						posts,
 						sectionsByPath: pageSections,
 						viewing,
+						scene: parsed.data.scene,
+						passages,
 					}),
+					passages,
 					turns: turns.slice(-8),
 					message,
 					signal: request.signal,
@@ -141,6 +161,8 @@ async function streamModelTurn(
 		/** The path the visitor is on, when it is a known route. */
 		viewing: string | undefined;
 		system: string;
+		/** Post passages in the prompt, for the cards of the ones it cites. */
+		passages: readonly SearchHit[];
 		turns: ChatTurn[];
 		message: string;
 		signal: AbortSignal;
@@ -225,6 +247,20 @@ async function streamModelTurn(
 	if (!outage && !sceneCalled && isBannerQuestion(turn.message))
 		writeScene(writer);
 
+	// A reply that answers from a passage names its post but never calls
+	// read_post, so the route adds the post's card.
+	if (!outage) {
+		const cited = text.toLowerCase();
+		for (const passage of turn.passages) {
+			if (!cited.includes(passage.title.toLowerCase())) continue;
+			writer.write({
+				type: "data-post",
+				id: `post-${crypto.randomUUID()}`,
+				data: postRef(passage),
+			});
+		}
+	}
+
 	if (!outage) {
 		writer.write({
 			type: "message-metadata",
@@ -277,6 +313,19 @@ function writeText(writer: Writer, text: string): void {
 
 /** The answer without a model: a sentence from the best keyword match,
  *  and a page only when the visitor asked to open one. */
+/** A post's title, URL, and date for a card; the passage text stays out. */
+function postRef(hit: SearchHit): {
+	title: string;
+	url: string;
+	date?: string;
+} {
+	return {
+		title: hit.title,
+		url: hit.url ?? "",
+		...(hit.date ? { date: hit.date } : {}),
+	};
+}
+
 /** The banner's scene controls, for a reply the model did not give them to. */
 function writeScene(writer: Writer): void {
 	writer.write({

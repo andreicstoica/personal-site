@@ -6,6 +6,8 @@ export type EvalCase = {
 	kind: string;
 	q: string;
 	turns?: { role: "user" | "assistant"; text: string }[];
+	/** What the visitor's banner shows, sent with the question. */
+	bannerScene?: { place: string; weather: string; time: string };
 	/** Every group must appear in the reply; a group is a list of alternatives. */
 	facts?: string[][];
 	/** The page the reply should open or point to. */

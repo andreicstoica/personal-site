@@ -73,7 +73,6 @@ describe("weather lighting clock", () => {
 				place: "oregon-coast",
 				time: "golden-hour",
 				weather: "fog",
-				colorMode: "dark",
 			}),
 		).toEqual({
 			weather: "foggy",
