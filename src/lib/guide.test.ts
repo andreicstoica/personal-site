@@ -428,20 +428,14 @@ describe("model outages", () => {
 		expect(typeof model === "object" && model.modelId).toBe("m");
 	});
 
-	test("the gateway gets shared reasoning effort and an optional host order", () => {
+	test("the gateway gets shared reasoning effort and reports its host", () => {
 		const gateway = {
 			...resolved,
 			baseUrl: "https://ai-gateway.vercel.sh/v1",
 			model: "openai/gpt-oss-120b",
 		};
-		expect(guideCallOptions(gateway, {})).toEqual({ reasoning: "low" });
-		expect(
-			guideCallOptions(gateway, { MODEL_GATEWAY_ORDER: "groq, cerebras" }),
-		).toEqual({
-			reasoning: "low",
-			providerOptions: { gateway: { order: ["groq", "cerebras"] } },
-		});
-		expect(guideCallOptions(resolved, {})).toEqual({
+		expect(guideCallOptions(gateway)).toEqual({ reasoning: "low" });
+		expect(guideCallOptions(resolved)).toEqual({
 			providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
 		});
 		expect(servedBy({ gateway: { routing: { finalProvider: "groq" } } })).toBe(

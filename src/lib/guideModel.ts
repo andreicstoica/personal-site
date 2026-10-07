@@ -1,13 +1,14 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { APICallError, createGateway, type LanguageModel } from "ai";
 import { type Outage, outageFor } from "./inference";
-import type { InferenceEnv, ResolvedInference } from "./inferenceConfig";
+import type { ResolvedInference } from "./inferenceConfig";
 
 type Ready = Extract<ResolvedInference, { kind: "ready" }>;
 
 /** The AI Gateway gets its own provider rather than its OpenAI-compatible
  *  endpoint: it routes gpt-oss across several hosts, reports which one
- *  served a call, and takes an order of hosts to try. */
+ *  served a call. The free tier routes each call to whichever host is
+ *  available; the guide does not pin one. */
 function onGateway(resolved: Ready): boolean {
 	try {
 		return new URL(resolved.baseUrl).hostname === "ai-gateway.vercel.sh";
@@ -32,24 +33,14 @@ export function guideModel(resolved: Ready): LanguageModel {
  *  seconds from each turn; hosts that ignore it are fine. */
 type CallOptions = {
 	reasoning?: "low";
-	providerOptions?: Record<string, Record<string, string | string[]>>;
+	providerOptions?: Record<string, Record<string, string>>;
 };
 
-export function guideCallOptions(
-	resolved: Ready,
-	env: Pick<InferenceEnv, "MODEL_GATEWAY_ORDER">,
-): CallOptions {
-	if (!onGateway(resolved))
-		return {
-			providerOptions: { openaiCompatible: { reasoningEffort: "low" } },
-		};
-	const order = env.MODEL_GATEWAY_ORDER?.split(",")
-		.map((host) => host.trim())
-		.filter(Boolean);
-	return {
-		reasoning: "low",
-		...(order?.length ? { providerOptions: { gateway: { order } } } : {}),
-	};
+/** The gateway maps the shared effort for whichever host it routes to. */
+export function guideCallOptions(resolved: Ready): CallOptions {
+	return onGateway(resolved)
+		? { reasoning: "low" }
+		: { providerOptions: { openaiCompatible: { reasoningEffort: "low" } } };
 }
 
 /** The host that served a gateway call, from its routing metadata. */

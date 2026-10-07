@@ -267,7 +267,7 @@ A greeting runs with no tools (`activeToolsFor` in the route, through the SDK's 
 ### Supporting modules
 
 - `src/lib/guideReply.ts` — the system prompt, outage notices, and the notes answer
-- `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools and the OpenAI-compatible model client
+- `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools and the model client: the AI Gateway's own provider (shared `reasoning: "low"`, and the serving host from its routing metadata for the trace), or an OpenAI-compatible client for any other host
 - `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
 - `src/lib/guideSearch.ts` — post parsing, the keyword search behind the notes answer, and the passage finder
 - `src/lib/memorySelect.ts` — parses `src/content/memory` and matches routes

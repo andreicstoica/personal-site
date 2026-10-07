@@ -54,7 +54,6 @@ export function readInferenceEnv(): InferenceEnv {
 		MODEL_BASE_URL: envValue("MODEL_BASE_URL"),
 		MODEL_API_KEY: envValue("MODEL_API_KEY"),
 		MODEL_ID: envValue("MODEL_ID"),
-		MODEL_GATEWAY_ORDER: envValue("MODEL_GATEWAY_ORDER"),
 	};
 }
 

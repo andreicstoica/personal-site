@@ -6,8 +6,6 @@ export type InferenceEnv = {
 	MODEL_BASE_URL?: string;
 	MODEL_API_KEY?: string;
 	MODEL_ID?: string;
-	/** AI Gateway only: providers to try first, comma separated. */
-	MODEL_GATEWAY_ORDER?: string;
 };
 
 export type ProviderName = "local" | "hosted";

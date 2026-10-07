@@ -127,7 +127,7 @@ export const POST: APIRoute = async ({ request }) => {
 					});
 				await streamModelTurn(writer, {
 					model: guideModel(resolved),
-					callOptions: guideCallOptions(resolved, readInferenceEnv()),
+					callOptions: guideCallOptions(resolved),
 					modelId: resolved.model,
 					viewing: viewing?.href,
 					system: buildSystemPrompt({
