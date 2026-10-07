@@ -13,6 +13,7 @@
 
 - `bun run lint` / `bun run check` / `bun run test` / `bun run verify`: Biome on `src/`, `astro check`, `svelte-check`, `bun test`, then production build. `verify` is the CI gate (`/.github/workflows/check.yml`).
 - `bun run lint:ui`: `@shadcn/lint` via ESLint on Svelte templates and `src/**/*.ts`. No design-system rules are enabled yet; add them in `eslint.config.mjs`. This does not replace Biome.
+- `bun run guide:eval <url>`: score the guide against `specs/guide-eval.json` on a running server or a preview (protected previews go through `vercel curl`). It calls the model, so it costs credit and is not in CI. Run it before and after any prompt, tool, or provider change.
 - `bun run dev`: start Astro locally at `http://localhost:4321` with hot reload.
 - `bun run build`: production build to `dist`.
 - `bun run preview`: serve the built output for final verification.
