@@ -55,6 +55,7 @@ const processedImages = await Promise.all(
 			return {
 				kind: "video",
 				src: `/images/${imageName}`,
+				poster: `/images/${imageName.replace(/\.webm$/i, ".poster.webp")}`,
 				alt: experienceName,
 			};
 		}

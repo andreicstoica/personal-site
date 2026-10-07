@@ -16,15 +16,28 @@ export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
 		};
 	}
 
-	if (node.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+	const { ready, event } = videoReveal(node);
+	if (node.readyState >= ready) {
 		requestAnimationFrame(() => markLoaded());
 	}
-	node.addEventListener("loadeddata", markLoaded);
+	node.addEventListener(event, markLoaded);
 	return {
 		destroy() {
-			node.removeEventListener("loadeddata", markLoaded);
+			node.removeEventListener(event, markLoaded);
 		},
 	};
+}
+
+/** A video with a poster can show as soon as its size is known: the poster
+ *  fills the frame. Without one it waits for a first frame, which a browser
+ *  holding autoplay back may never load. */
+function videoReveal(video: HTMLVideoElement): {
+	ready: number;
+	event: "loadedmetadata" | "loadeddata";
+} {
+	return video.poster
+		? { ready: HTMLMediaElement.HAVE_METADATA, event: "loadedmetadata" }
+		: { ready: HTMLMediaElement.HAVE_CURRENT_DATA, event: "loadeddata" };
 }
 
 const REVEAL_SELECTOR = ".media-reveal";
@@ -45,7 +58,7 @@ function scanRevealables(root: ParentNode = document): void {
 		}
 		if (
 			element instanceof HTMLVideoElement &&
-			element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+			element.readyState >= videoReveal(element).ready
 		) {
 			revealElement(element);
 		}
@@ -61,13 +74,19 @@ function scanRevealables(root: ParentNode = document): void {
 export function installMediaReveal(): void {
 	document.addEventListener("load", handleMediaEvent, true);
 	document.addEventListener("loadeddata", handleMediaEvent, true);
+	document.addEventListener("loadedmetadata", handleMediaEvent, true);
 	document.addEventListener("astro:page-load", () => scanRevealables());
 	scanRevealables();
 }
 
 function handleMediaEvent(event: Event): void {
 	const target = event.target;
-	if (target instanceof Element && target.matches(REVEAL_SELECTOR)) {
-		revealElement(target);
-	}
+	if (!(target instanceof Element) || !target.matches(REVEAL_SELECTOR)) return;
+	// Metadata alone reveals only a video that has a poster to show.
+	if (
+		event.type === "loadedmetadata" &&
+		!(target instanceof HTMLVideoElement && target.poster)
+	)
+		return;
+	revealElement(target);
 }

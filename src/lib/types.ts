@@ -63,5 +63,8 @@ export type GalleryMedia =
 	| {
 			kind: "video";
 			src: string;
+			/** A still of an early frame, so the tile is never blank while the
+			 *  video loads or when the browser holds autoplay back. */
+			poster: string;
 			alt: string;
 	  };

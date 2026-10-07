@@ -6,10 +6,12 @@ description: "Site design system and inspiration"
 # Website design system
 
 - IBM Plex Font Family (sans, serif, and mono)
-- Astro framework
+- Built on Astro, with Svelte for the interactive parts
+- Weather banner drawn live in WebGL 2
+- Ask Andrei runs on the Vercel AI SDK and AI Gateway
 - Hosted on Vercel
 - Designed in Figma (view WIP [here](https://www.figma.com/design/xWTp3sBNWIideHNi4UeQ0T/Personal-Site-v3--2025-?node-id=25-41&t=xoAPWl4EK625CsrC-1))
-- Icons from [Thiings](https://www.thiings.co/things)
+- Icons from [Pixelarticons](https://pixelarticons.com)
 
 # Inspiration
 
