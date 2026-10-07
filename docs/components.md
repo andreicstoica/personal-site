@@ -270,7 +270,7 @@ A plain answer takes one model call; a turn that opens a page takes two (the cal
 - `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
 - `src/lib/guideSearch.ts` — post parsing and the keyword search behind the notes answer
 - `src/lib/memorySelect.ts` — parses `src/content/memory` and matches routes
-- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible)
+- `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible; production uses the Vercel AI Gateway free tier)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model
 
 Scroll, navigation, and focus rules for the guide live in [agent-chat.md](./agent-chat.md).
