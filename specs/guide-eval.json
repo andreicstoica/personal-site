@@ -1,0 +1,34 @@
+{
+  "about": "Questions for the Ask Andrei guide, scored by scripts/guide-eval.ts. Each fact group is a list of alternatives; every group must appear in the reply (case-insensitive). Facts come from src/content/memory and rag/data.",
+  "cases": [
+    { "id": "canon", "kind": "notes", "q": "Who do you look up to?", "facts": [["Le Guin", "Caro", "Wallace", "Hesse"]], "page": "/canon" },
+    { "id": "liftoff", "kind": "notes", "q": "What do you do at Liftoff?", "facts": [["founding", "product engineer"]] },
+    { "id": "school", "kind": "notes", "q": "Where did you go to school?", "facts": [["NYU", "New York University"]] },
+    { "id": "camera", "kind": "notes", "q": "What camera do you shoot with?", "facts": [["Contax"]] },
+    { "id": "training", "kind": "notes", "q": "What are you training for?", "facts": [["run", "tennis"]] },
+    { "id": "refract", "kind": "notes", "q": "What is Refract?", "facts": [["journal"]] },
+    { "id": "site-built", "kind": "notes", "q": "How was this site built?", "facts": [["Astro"]] },
+    { "id": "fractal", "kind": "notes", "q": "What did you build at the Fractal accelerator?", "facts": [["Refract", "Courtly", "Blob", "Algos", "Tarot"]] },
+    { "id": "recent-post", "kind": "notes", "q": "What have you written most recently?", "facts": [["2025 Project Highlights", "Project Highlights"]] },
+    { "id": "refract-stack", "kind": "notes", "turns": [{ "role": "user", "text": "Tell me about Refract" }, { "role": "assistant", "text": "Refract is a journal that asks questions while you write, then highlights themes afterward." }], "q": "What is it built with?", "facts": [["Next.js", "Next", "AI SDK", "React"]] },
+
+    { "id": "model-hosting", "kind": "post-body", "q": "Where did you try hosting your fine-tuned model?", "facts": [["RunPod", "Hugging Face"]] },
+    { "id": "bevel", "kind": "post-body", "q": "What is Bevel?", "facts": [["Apple Watch", "quantified", "Whoop"]] },
+    { "id": "hypomnemata", "kind": "post-body", "q": "What does he say about hypomnemata?", "facts": [["Greek", "Roman", "note"]] },
+    { "id": "austin-robbs", "kind": "post-body", "q": "Why do you admire Austin Robbs?", "facts": [["Patagonia"]] },
+    { "id": "boulder", "kind": "post-body", "q": "Who did you visit in Boulder?", "facts": [["Connor"]] },
+    { "id": "gpt5", "kind": "post-body", "q": "What did you think of GPT-5?", "facts": [["good", "great", "right direction"]] },
+    { "id": "diy-camera", "kind": "post-body", "q": "Have you written about someone building a camera from scratch?", "facts": [["Small Town America", "DIY", "scratch"]] },
+
+    { "id": "banner-cool", "kind": "banner", "q": "woah this banner is cool!", "scene": true },
+    { "id": "banner-rain", "kind": "banner", "q": "can I make it rain up there?", "scene": true },
+    { "id": "banner-made", "kind": "banner", "q": "how was this banner made? looks awesome", "scene": true, "facts": [["WebGL", "pixel"]] },
+    { "id": "banner-mountain", "kind": "banner", "q": "what is that mountain at the top of the page?", "scene": true },
+
+    { "id": "nav-canon", "kind": "nav", "q": "show me the canon", "page": "/canon" },
+    { "id": "nav-fitness", "kind": "nav", "q": "take me to the fitness page", "page": "/fitness" },
+
+    { "id": "unknown", "kind": "edge", "q": "What is your favorite color?", "facts": [["don't", "doesn't", "not ", "no "]] },
+    { "id": "hi", "kind": "edge", "q": "hi", "noTools": ["search_posts", "read_post", "open_page", "show_scene_controls"], "scene": false }
+  ]
+}
