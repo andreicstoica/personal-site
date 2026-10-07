@@ -757,17 +757,18 @@
                 <GuideTrace
                   steps={trace}
                   {live}
-                  folded={view.text.length > 0}
                   summary={traceSummary(turn.reply, trace, live)}
                 />
               {/if}
               {#if view.text}
                 <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
               {/if}
-              {#if view.scene}
+              <!-- Controls and sources wait for the finished reply: shown while it
+                   streams, the text would push them down as it grows. -->
+              {#if view.scene && !live}
                 <GuideScene onchange={showBanner} />
               {/if}
-              {#if view.page || view.posts.length > 0}
+              {#if !live && (view.page || view.posts.length > 0)}
                 {@const page = view.page
                   ? pageCard(view.page.output, {
                       pending:
