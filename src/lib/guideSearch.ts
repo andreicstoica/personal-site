@@ -19,6 +19,8 @@ export type GuideDoc = {
 
 export type SearchHit = {
 	title: string;
+	/** For posts: the id read_post takes. */
+	slug?: string;
 	href?: string;
 	url?: string;
 	date?: string;
@@ -116,8 +118,8 @@ function clip(text: string, max: number): string {
 	return `${text.slice(0, max).trimEnd()}…`;
 }
 
-/** Keyword search, for the answer the guide gives when no model is
- *  reachable. The model reads the notes and post list from its prompt. */
+/** Keyword search: over notes and posts for the answer the guide gives
+ *  when no model is reachable, and over post bodies for search_posts. */
 export type GuideSearch = {
 	search(query: string, limit?: number): SearchHit[];
 };
@@ -161,6 +163,7 @@ export function createGuideSearch(docs: readonly GuideDoc[]): GuideSearch {
 				seen.add(doc.id);
 				hits.push({
 					title: doc.title,
+					...(doc.slug ? { slug: doc.slug } : {}),
 					...(doc.href ? { href: doc.href } : {}),
 					...(doc.url ? { url: doc.url } : {}),
 					...(doc.date ? { date: doc.date } : {}),

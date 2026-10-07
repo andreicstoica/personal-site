@@ -173,13 +173,16 @@
   /** The turn whose reply shows "Continue exploring", once its delay ends. */
   let exploreTurn = $state<string | null>(null);
   let exploreTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Follow-ups for the last reply: about the post it read, the page it
-   *  opened, or the page the visitor is on, minus what was already asked. */
+  /** Follow-ups for the last reply: about writing when it read or searched
+   *  posts, else the page it opened or the page the visitor is on, minus
+   *  what was already asked. */
   const explore = $derived.by(() => {
     const last = turns.at(-1);
     const view = last?.reply ? replyView(last.reply) : null;
-    const readPost = last?.reply?.parts.some((part) => part.type === "tool-read_post");
-    const topic = readPost ? "writing" : (view?.page?.output.href ?? pagePath);
+    const usedPosts = last?.reply?.parts.some(
+      (part) => part.type === "tool-read_post" || part.type === "tool-search_posts",
+    );
+    const topic = usedPosts ? "writing" : (view?.page?.output.href ?? pagePath);
     const asked = turns.flatMap((turn) => (turn.question ? [turnText(turn.question)] : []));
     return explorePrompts(topic, asked);
   });

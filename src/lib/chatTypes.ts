@@ -8,6 +8,17 @@ export type ReadPostOutput = {
 	text?: string;
 };
 
+export type PostHit = {
+	slug: string;
+	title: string;
+	url: string;
+	date?: string;
+	/** The matched passage. The model reads it; the panel does not show it. */
+	excerpt?: string;
+};
+
+export type SearchPostsOutput = { hits: PostHit[] };
+
 export type OpenPageOutput = {
 	href: string;
 	label: string;
@@ -18,6 +29,7 @@ export type OpenPageOutput = {
  *  panel (which renders them as steps). Only the route imports the tools. */
 export type GuideUITools = {
 	read_post: { input: { slug: string }; output: ReadPostOutput };
+	search_posts: { input: { query: string }; output: SearchPostsOutput };
 	open_page: {
 		input: { path: string; section?: string };
 		output: OpenPageOutput;
@@ -98,9 +110,22 @@ function parseOpenPage(value: unknown): OpenPageOutput | null {
 	};
 }
 
+function parsePostHit(value: unknown): PostHit | null {
+	if (!isRecord(value)) return null;
+	const { slug, title, url, date } = value;
+	if (
+		typeof slug !== "string" ||
+		typeof title !== "string" ||
+		typeof url !== "string" ||
+		!optionalString(date)
+	)
+		return null;
+	return { slug, title, url, ...(date ? { date } : {}) };
+}
+
 /** Restores one stored part, or drops it. Only finished tool calls survive:
- *  a call cut off by a reload has nothing left to show. Post bodies are
- *  dropped to keep storage small. */
+ *  a call cut off by a reload has nothing left to show. Post bodies and
+ *  search excerpts are dropped to keep storage small. */
 function parsePart(value: unknown): GuidePart | null {
 	if (!isRecord(value)) return null;
 	if (value.type === "step-start") return { type: "step-start" };
@@ -163,6 +188,22 @@ function parsePart(value: unknown): GuidePart | null {
 				url: output.url,
 				...(output.date ? { date: output.date } : {}),
 			},
+		};
+	}
+	if (value.type === "tool-search_posts") {
+		if (!Array.isArray(output.hits)) return null;
+		const hits: PostHit[] = [];
+		for (const item of output.hits) {
+			const hit = parsePostHit(item);
+			if (!hit) return null;
+			hits.push(hit);
+		}
+		return {
+			type: "tool-search_posts",
+			toolCallId,
+			state: "output-available",
+			input: { query: typeof input.query === "string" ? input.query : "" },
+			output: { hits },
 		};
 	}
 	if (value.type === "tool-open_page") {

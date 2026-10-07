@@ -254,21 +254,22 @@ The message metadata carries the model, the turn's duration, and its token count
 
 The guide is not Andrei. Every string it shows speaks about him in the third person (Andrei, he), never as him (I, me, my): the system prompt, the outage notices, the notes answers, and the composer placeholder. A visitor's "you" means Andrei, so the starter prompts keep it. Posts are in his first person, so the model retells them, and the notes answer names a matching post instead of quoting it.
 
-Everything the guide knows fits in about 5,000 tokens, so it rides in the system prompt instead of behind a search tool: every `src/content/memory` note, the site map with each page's section ids, and one line per blog post (slug, title, date, URL, tags) from `rag/data`, newest first. The page the visitor is on comes last, so the rest is one fixed prefix a provider can cache. Two tools remain:
+Everything the guide knows fits in about 5,000 tokens, so it rides in the system prompt: every `src/content/memory` note, the site map with each page's section ids, and one line per blog post (slug, title, date, URL, tags) from `rag/data`, newest first. The page the visitor is on comes last, so the rest is one fixed prefix a provider can cache. Post bodies are the one thing too large for the prompt, so three tools remain:
 
-- `read_post` loads a post body (up to 10,000 characters) when a question needs more than its title.
+- `search_posts` runs a keyword search over post bodies only (MiniSearch, built in memory on first use) and returns up to three passages with each post's slug, title, date, and URL. It is for a topic the post titles and tags do not show. The trace shows the query and the posts it found; a search alone adds no source card.
+- `read_post` loads a post body (up to 10,000 characters) when a question needs more than its title or a search passage.
 - `open_page` names a page and an optional section; the route checks both against `siteRoutes` and `pageSections`.
 
-There is no search index or embedding step. `guideContent.ts` reads `rag/data` at build time: a `.txt` body and a `.json` metadata file per post. A post joins the list only when its metadata has a title, type `blog` or `essay`, and a `https://blog.andrei.bio/` URL. To change what the guide knows, edit the files and rebuild.
+There is no embedding step and no prebuilt index. `guideContent.ts` reads `rag/data` at build time: a `.txt` body and a `.json` metadata file per post. A post joins the list only when its metadata has a title, type `blog` or `essay`, and a `https://blog.andrei.bio/` URL. To change what the guide knows, edit the files and rebuild.
 
-A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The loop stops at three steps, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
+A plain answer takes one model call; a turn that opens a page takes two (the call, then the reply). The longest turn is four steps: search, read, open a page, reply. The loop stops at four, or after `open_page` once a reply exists. `maxRetries` is 0: a 402 or 429 falls back to notes at once.
 
 ### Supporting modules
 
 - `src/lib/guideReply.ts` — the system prompt, outage notices, and the notes answer
 - `src/lib/guideTools.ts` / `guideModel.ts` — the AI SDK tools and the OpenAI-compatible model client
 - `src/lib/guideContent.ts` — notes, posts, and page sections, loaded with `import.meta.glob`
-- `src/lib/guideSearch.ts` — post parsing and the keyword search behind the notes answer
+- `src/lib/guideSearch.ts` — post parsing and the keyword search behind the notes answer and `search_posts`
 - `src/lib/memorySelect.ts` — parses `src/content/memory` and matches routes
 - `src/lib/inference.ts` / `inferenceConfig.ts` — provider config (`MODEL_PROVIDER=local|hosted`, both OpenAI-compatible; production uses the Vercel AI Gateway free tier)
 - `src/pages/api/health.ts` — reports configuration only; call with `?probe=1` to reach the model

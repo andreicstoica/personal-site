@@ -27,6 +27,7 @@ import map from "pixelarticons/svg/map.svg?raw";
 import message from "pixelarticons/svg/message.svg?raw";
 import penSquare from "pixelarticons/svg/pen-square.svg?raw";
 import robot from "pixelarticons/svg/robot.svg?raw";
+import search from "pixelarticons/svg/search.svg?raw";
 import textCursor from "pixelarticons/svg/text-cursor.svg?raw";
 import tools from "pixelarticons/svg/tools.svg?raw";
 import users from "pixelarticons/svg/users.svg?raw";
@@ -64,6 +65,7 @@ export const pixelarticons = {
 	message: inner(message),
 	"pen-square": inner(penSquare),
 	robot: inner(robot),
+	search: inner(search),
 	"text-cursor": inner(textCursor),
 	tools: inner(tools),
 	users: inner(users),

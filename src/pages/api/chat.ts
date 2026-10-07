@@ -152,7 +152,8 @@ async function streamModelTurn(
 			content: item.text,
 		})),
 		tools: guideTools(),
-		stopWhen: [isStepCount(3), openedAfterReply],
+		// Search, read, open a page, reply: the longest turn the tools allow.
+		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
 		maxOutputTokens: 1000,
 		// The answers are short lookups over notes already in the prompt. Low
