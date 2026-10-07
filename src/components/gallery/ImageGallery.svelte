@@ -455,6 +455,7 @@
           {#if image.kind === "video"}
             <video
               src={image.src}
+              poster={image.poster}
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal
               use:viewportPlay
@@ -519,6 +520,7 @@
             <video
               bind:this={mediaRef}
               src={current.src}
+              poster={current.poster}
               class="image-inspect-media"
               autoplay
               loop

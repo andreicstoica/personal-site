@@ -96,17 +96,27 @@ const { crumb, parent } = Astro.props;
     align-items: baseline;
   }
 
-  /* A flex item is a block, so its line box already holds the underline. */
+  /* A parent crumb is a way back, so it recedes to the secondary color and
+     keeps the site's dotted link mark; the page the visitor is on reads
+     strongest. A flex item is a block, so its line box already holds the
+     underline. */
   .trail-link {
     padding-block-end: 0;
+    color: var(--color-text-secondary);
+    transition: color var(--duration-ui) var(--ease-out);
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .trail-link:hover {
+      color: var(--color-text-primary);
+    }
+  }
 
   .trail-current {
     display: flex;
     align-items: baseline;
     min-width: 0;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
   }
 
   .trail-sep {
