@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { activeStep, type GuideStep } from "../../lib/guideTurn";
+  import { currentStep, type GuideStep } from "../../lib/guideTurn";
   import Icon from "../ui/Icon.svelte";
   import GuideSteps from "./GuideSteps.svelte";
 
   /** How a reply was made, in one line. While the guide works, the line
    *  shows the step in progress with that step's own icon and shimmering
-   *  text, changing in place; the steps never unfold on their own, so
+   *  text; the steps never unfold on their own, so
    *  nothing above the reply grows while it streams. Done, the line reads
    *  "Worked for 2.1s" and the caret opens the steps. */
   let {
@@ -20,7 +20,7 @@
 
   let open = $state(false);
   const id = $props.id();
-  const active = $derived(live ? activeStep(steps) : undefined);
+  const active = $derived(live ? currentStep(steps) : undefined);
 </script>
 
 <div class="guide-trace" data-open={open}>
@@ -39,13 +39,10 @@
     {:else}
       <Icon name="chevron-right" class="guide-trace-caret w-3 h-3 shrink-0" />
     {/if}
-    <!-- Keyed, so each new step fades in where the last one stood. -->
-    {#key summary}
-      <span class="guide-trace-summary" class:guide-shimmer={live}>{summary}</span>
-      {#if live && active?.tool}
-        <code class="guide-trace-tool">{active.tool}</code>
-      {/if}
-    {/key}
+    <span class="guide-trace-summary" class:guide-shimmer={live}>{summary}</span>
+    {#if live && active?.tool}
+      <code class="guide-trace-tool">{active.tool}</code>
+    {/if}
   </button>
   <!-- inert while closed: the collapsed rows leave the tab order and the
        accessibility tree, not just the screen. -->
@@ -87,14 +84,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    animation: guide-trace-step 150ms var(--ease-out);
-  }
-
-  /* The step fade and the work-in-progress sweep share this element. */
-  .guide-trace-summary.guide-shimmer {
-    animation:
-      guide-trace-step 150ms var(--ease-out),
-      guide-shimmer 1.6s linear infinite;
   }
 
   .guide-trace-tool {
@@ -102,12 +91,6 @@
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     opacity: 0.7;
-  }
-
-  @keyframes guide-trace-step {
-    from {
-      opacity: 0;
-    }
   }
 
   .guide-trace-toggle :global(.guide-trace-caret) {

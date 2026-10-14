@@ -100,6 +100,7 @@
   let stored = $state.raw<GuideUIMessage[]>([]);
   /** True from a send until the SDK has loaded and taken the message. */
   let starting = $state(false);
+  let loadFailed = $state(false);
 
   function loadChat(): Promise<GuideChat> {
     chatLoad ??= import("../../lib/guideChat").then(({ createGuideChat }) => {
@@ -419,6 +420,7 @@
     }
     moved = {};
     input = "";
+    loadFailed = false;
     minimized = false;
     // The restart button unmounts with the thread; keep focus in the panel.
     focusComposer();
@@ -436,6 +438,7 @@
     cancelFollow();
     clearExplore();
     input = "";
+    loadFailed = false;
     starting = true;
     void loadChat()
       .then((instance) => {
@@ -454,6 +457,7 @@
       .catch(() => {
         // The SDK chunk failed to load (offline, or a stale deploy).
         input = message;
+        loadFailed = true;
       })
       .finally(() => {
         starting = false;
@@ -820,8 +824,15 @@
             </div>
           {/if}
           {#if turn.reply || live}
-            {@const view = turn.reply ? replyView(turn.reply) : EMPTY_VIEW}
+            {@const view = turn.reply ? replyView(turn.reply, live, moved) : EMPTY_VIEW}
             {@const trace = view.trace.length > 0 ? view.trace : [THINKING]}
+            {@const page = !live && view.page && !moved[view.page.toolCallId]
+              ? pageCard(view.page.output, {
+                  pending: followingId === view.page.toolCallId || openingId === view.page.toolCallId,
+                  moved: moved[view.page.toolCallId],
+                  pagePath,
+                })
+              : null}
             <div class="space-y-3 text-sm break-words text-[var(--color-text-primary)]">
               {#if view.trace.length > 0 || live}
                 <GuideTrace
@@ -838,17 +849,7 @@
               {#if view.scene && !live}
                 <GuideScene onchange={showBanner} />
               {/if}
-              {#if !live && (view.page || view.posts.length > 0)}
-                {@const page = view.page
-                  ? pageCard(view.page.output, {
-                      pending:
-                        live ||
-                        followingId === view.page.toolCallId ||
-                        openingId === view.page.toolCallId,
-                      moved: moved[view.page.toolCallId],
-                      pagePath,
-                    })
-                  : null}
+              {#if !live && (page || view.posts.length > 0)}
                 <ul class="guide-cards" aria-label="Sources">
                   {#if page && view.page}
                     {@const call = view.page}
@@ -937,6 +938,11 @@
         </button>
       </div>
     </form>
+    {#if loadFailed}
+      <p role="alert" class="px-4 pb-3 text-xs text-[var(--color-text-secondary)]">
+        The guide couldn't load. Reload the page and try again.
+      </p>
+    {/if}
     </div>
   </div>
 
@@ -985,6 +991,8 @@
      duration in both directions, matching the page shift (global.css), and
      hide with visibility once the slide ends. */
   .guide-panel {
+    --guide-text-size: var(--text-sm);
+    --guide-text-leading: 1.6;
     position: fixed;
     right: 0;
     bottom: 0;
@@ -1190,7 +1198,8 @@
      text runs at 1.6 so a reply reads as prose, not a log line; blocks sit
      about one line apart. */
   .guide-md {
-    line-height: 1.6;
+    font-size: var(--guide-text-size);
+    line-height: var(--guide-text-leading);
   }
 
   .guide-md :global(:where(p, ul, ol, h1, h2, h3, h4, pre, blockquote) + *) {

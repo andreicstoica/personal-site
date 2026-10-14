@@ -64,7 +64,7 @@ describe("reply view", () => {
 			["Wrote the reply", null],
 		]);
 		expect(view.trace[1]?.detail).toBe("Movies are on the canon.");
-		expect(view.trace[2]?.href).toBe("/canon#movies");
+		expect(view.trace[2]?.href).toBeUndefined();
 		expect(view.trace[3]?.href).toBe("https://blog.andrei.bio/p/dyson");
 		expect(view.trace.at(-1)?.data).toBe(
 			"gpt-oss-120b · 10.5K tokens in (10.4K cached) · 204 out",
@@ -80,7 +80,7 @@ describe("reply view", () => {
 		const message = reply([
 			{ type: "reasoning", text: "", state: "streaming" },
 		]);
-		const view = replyView(message);
+		const view = replyView(message, true);
 		expect(view.trace).toEqual([
 			{ icon: "lightbulb", label: "Thinking", status: "active" },
 		]);
@@ -93,8 +93,94 @@ describe("reply view", () => {
 					input: { slug: "dyson" },
 				},
 			]),
+			true,
 		);
 		expect(traceSummary(null, reading.trace, true)).toBe("Reading a post");
+		const read = replyView(
+			reply([
+				{
+					type: "tool-read_post",
+					toolCallId: "r1",
+					state: "output-available",
+					input: { slug: "dyson" },
+					output: { title: "Dyson", url: "https://blog.andrei.bio/p/dyson" },
+				},
+			]),
+			true,
+		);
+		expect(traceSummary(null, read.trace, true)).toBe("Reading a post");
+		const written = replyView(
+			{
+				...reply([{ type: "text", text: "Done.", state: "done" }]),
+				metadata: { model: "fixture" },
+			},
+			true,
+		);
+		expect(traceSummary(null, written.trace, true)).toBe("Writing the reply");
+	});
+
+	test.each([
+		["tool-read_post", "Couldn't read that post"],
+		["tool-open_page", "Couldn't choose a page"],
+		["tool-show_scene_controls", "Couldn't add the banner controls"],
+	] as const)(
+		"%s reports failure without a source or controls",
+		(type, label) => {
+			const message = reply([
+				{
+					type,
+					input: undefined,
+					toolCallId: "failed",
+					state: "output-error",
+					errorText: "Internal error",
+				},
+			]);
+			for (const live of [true, false]) {
+				const view = replyView(message, live);
+				expect(view.trace[0]).toMatchObject({ label, status: "error" });
+				expect(view.trace[0]?.href).toBeUndefined();
+				expect(view.page).toBeNull();
+				expect(view.posts).toEqual([]);
+				expect(view.scene).toBe(false);
+			}
+			expect(traceSummary(message, replyView(message).trace, false)).toBe(
+				"1 step failed",
+			);
+		},
+	);
+
+	test("stopping a turn ends its active steps without claiming success", () => {
+		const message = reply([
+			{ type: "reasoning", text: "Looking for a post.", state: "streaming" },
+			{
+				type: "tool-read_post",
+				toolCallId: "r1",
+				state: "input-available",
+				input: { slug: "dyson" },
+			},
+			{ type: "text", text: "A partial answer", state: "streaming" },
+		]);
+		expect(replyView(message, true).trace.map((step) => step.status)).toEqual([
+			"active",
+			"active",
+			"active",
+		]);
+		const stopped = replyView(message);
+		expect(stopped.trace.map((step) => step.status)).toEqual([
+			"interrupted",
+			"interrupted",
+			"interrupted",
+		]);
+		expect(stopped.trace[1]?.label).toBe("Reading a post (interrupted)");
+		expect(stopped.text).toBe("A partial answer");
+		expect(traceSummary(message, stopped.trace, false)).toBe("Interrupted");
+		expect(
+			replyView(reply([{ type: "text", text: "Partial", state: "streaming" }]))
+				.trace[0],
+		).toMatchObject({
+			label: "Writing the reply (interrupted)",
+			status: "interrupted",
+		});
 	});
 
 	test("scene controls come from the tool or the route's fallback", () => {
@@ -166,6 +252,34 @@ describe("reply view", () => {
 		expect(view.trace.map((step) => step.label)).toEqual([
 			"Answered without the model",
 		]);
+	});
+
+	test("the trace records completed page moves instead of only a choice", () => {
+		const message = reply([
+			{
+				type: "tool-open_page",
+				toolCallId: "p1",
+				state: "output-available",
+				input: { path: "/canon" },
+				output: canon,
+			},
+		]);
+		expect(replyView(message, false, { p1: "opened" }).trace[0]?.label).toBe(
+			"Opened Canon at Movies",
+		);
+		expect(replyView(message, false, { p1: "scrolled" }).trace[0]?.label).toBe(
+			"Scrolled to Canon at Movies",
+		);
+		expect(
+			replyView(message, false, { p1: "opened" }).trace[0]?.href,
+		).toBeUndefined();
+		const fallback = reply([{ type: "data-page", id: "p2", data: canon }]);
+		expect(replyView(fallback, false, { p2: "opened" }).trace[0]?.label).toBe(
+			"Opened Canon at Movies",
+		);
+		expect(
+			replyView(fallback, false, { p2: "opened" }).trace[0]?.href,
+		).toBeUndefined();
 	});
 
 	test("one passage links its post; several list their titles", () => {

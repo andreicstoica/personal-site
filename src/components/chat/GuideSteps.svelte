@@ -11,39 +11,58 @@
 
 <ol class="guide-steps" aria-label="Steps" data-live={live}>
   {#each steps as step, index (index)}
-    <li class="guide-step" data-status={step.status}>
+    <li
+      class="guide-step"
+      data-status={step.status}
+      data-expandable={Boolean(step.detail || step.data || step.icon === "lightbulb" || step.icon === "cpu")}
+    >
       <Icon name={step.icon} class="guide-step-icon w-3 h-3 shrink-0" />
       <div class="guide-step-body">
-        <div class="guide-step-head">
-          {#if step.href}
-            <a
-              href={step.href}
-              class="guide-step-label guide-step-link"
-              class:guide-shimmer={step.status === "active"}
-              target={external(step.href) ? "_blank" : undefined}
-              rel={external(step.href) ? "noopener noreferrer" : undefined}
-              >{step.label}</a
-            >
-          {:else}
-            <span class="guide-step-label" class:guide-shimmer={step.status === "active"}
-              >{step.label}</span
-            >
-          {/if}
-          {#if step.tool}
-            <code class="guide-step-tool">{step.tool}</code>
-          {/if}
-        </div>
-        {#if step.detail}
-          <p class="guide-step-detail" title={step.detail}>{step.detail}</p>
-        {/if}
-        {#if step.data}
-          <p class="guide-step-data">
-            {#each step.data.split(" · ") as part, partIndex (partIndex)}
-              <span class="guide-step-datum"
-                >{partIndex > 0 ? `· ${part}` : part}</span
+        {#snippet heading()}
+          <span class="guide-step-head">
+            {#if step.href}
+              <a
+                href={step.href}
+                class="guide-step-label guide-step-link"
+                class:guide-shimmer={step.status === "active"}
+                target={external(step.href) ? "_blank" : undefined}
+                rel={external(step.href) ? "noopener noreferrer" : undefined}
+                >{step.label}</a
               >
-            {/each}
-          </p>
+            {:else}
+              <span class="guide-step-label" class:guide-shimmer={step.status === "active"}
+                >{step.label}</span
+              >
+            {/if}
+            {#if step.tool}
+              <code class="guide-step-tool">{step.tool}</code>
+            {/if}
+            {#if step.status === "error"}
+              <span class="guide-step-outcome">Failed</span>
+            {/if}
+          </span>
+        {/snippet}
+        {#if step.detail || step.data}
+          <details class="guide-step-details">
+            <summary>
+              {@render heading()}
+              <Icon name="chevron-right" class="guide-detail-caret w-3 h-3 shrink-0" />
+            </summary>
+            {#if step.detail}
+              <p class="guide-step-detail">{step.detail}</p>
+            {/if}
+            {#if step.data}
+              <p class="guide-step-data">
+                {#each step.data.split(" · ") as part, partIndex (partIndex)}
+                  <span class="guide-step-datum"
+                    >{partIndex > 0 ? `· ${part}` : part}</span
+                  >
+                {/each}
+              </p>
+            {/if}
+          </details>
+        {:else}
+          {@render heading()}
         {/if}
       </div>
     </li>
@@ -75,10 +94,10 @@
     min-width: 0;
   }
 
-  /* The 0.75rem icon sits centered on the first 1.125rem line. */
+  /* Keep the icon centered on the 24px heading, including before details arrive. */
   .guide-step :global(.guide-step-icon) {
     justify-self: center;
-    margin-block-start: 0.1875rem;
+    margin-block-start: 0.375rem;
     opacity: 0.8;
   }
 
@@ -88,21 +107,18 @@
 
   .guide-step-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.375rem;
     min-width: 0;
-    min-height: 1.125rem;
+    height: 1.5rem;
   }
 
-  /* A 1px line from below each icon to above the next one, however tall the
-     row is: it starts 0.125rem under the icon (which ends 0.9375rem down) and
-     stops 0.125rem above the next icon (0.1875rem into the next row, past
-     the 0.25rem gap). The icon column is 0.75rem, so the line is its center. */
+  /* Leave 2px around each icon, independent of the detail height. */
   .guide-step:not(:last-child)::after {
     content: "";
     position: absolute;
-    top: 1.0625rem;
-    bottom: -0.3125rem;
+    top: 1.25rem;
+    bottom: -0.5rem;
     left: 0.375rem;
     width: 1px;
     translate: -0.5px 0;
@@ -138,18 +154,75 @@
   .guide-step-tool {
     flex-shrink: 0;
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: inherit;
     opacity: 0.7;
   }
 
-  /* Reasoning keeps its paragraph breaks, up to three lines. */
+  .guide-step-details summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 1.5rem;
+    cursor: pointer;
+    list-style: none;
+    touch-action: manipulation;
+  }
+
+  .guide-step-details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .guide-step-details .guide-step-head {
+    flex: 0 1 auto;
+  }
+
+  .guide-step-details :global(.guide-detail-caret) {
+    margin-block-start: 0.375rem;
+    transition: transform 150ms var(--ease-out);
+  }
+
+  .guide-step-details[open] :global(.guide-detail-caret) {
+    transform: rotate(90deg);
+  }
+
+  @supports (interpolate-size: allow-keywords) {
+    .guide-step-details::details-content {
+      interpolate-size: allow-keywords;
+      height: 0;
+      opacity: 0;
+      overflow: clip;
+      transition:
+        height 150ms var(--ease-out),
+        opacity 150ms var(--ease-out),
+        content-visibility 150ms allow-discrete;
+    }
+
+    .guide-step-details[open]::details-content {
+      height: auto;
+      opacity: 1;
+      transition-duration: 200ms;
+    }
+  }
+
+  .guide-step-outcome {
+    font-weight: 600;
+  }
+
+  @media (pointer: coarse) {
+    .guide-step[data-expandable="true"] .guide-step-body {
+      min-height: 2.75rem;
+    }
+
+    .guide-step-details summary {
+      min-height: 2.75rem;
+    }
+  }
+
   .guide-step-detail {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    overflow: hidden;
     margin: 0;
+    padding-block: 0.25rem;
     opacity: 0.85;
     white-space: pre-wrap;
     text-wrap: pretty;
@@ -164,6 +237,7 @@
     align-items: baseline;
     column-gap: 0.375rem;
     margin: 0;
+    padding-block: 0.25rem;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     line-height: 1.125rem;
@@ -178,6 +252,7 @@
   }
 
   .guide-step-link {
+    padding-block-end: 0;
     color: inherit;
     text-decoration: underline;
     text-decoration-color: var(--color-divider);
@@ -193,6 +268,10 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .guide-step-details summary:hover {
+      color: var(--color-text-primary);
+    }
+
     .guide-step-link:hover {
       color: var(--color-text-primary);
     }
@@ -212,6 +291,11 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .guide-step-details::details-content,
+    .guide-step-details :global(.guide-detail-caret) {
+      transition: none;
+    }
+
     [data-live="true"] .guide-step,
     [data-live="true"] .guide-step:not(:last-child)::after {
       animation: none;
