@@ -11,7 +11,7 @@ import type {
 export type GuideStep = {
 	icon: PixelarticonName;
 	label: string;
-	status: "active" | "complete";
+	status: "active" | "complete" | "error" | "interrupted";
 	/** Makes the label a link, for a step the visitor can repeat. */
 	href?: string;
 	/** The tool behind the step, shown as code in the trace. */
@@ -69,7 +69,24 @@ function contextStep(data: ContextSummary): GuideStep {
 	};
 }
 
-function toolStep(part: GuidePart): GuideStep | null {
+function pageLabel(
+	output: OpenPageOutput,
+	move: PageMove | undefined,
+	fallback: string,
+): string {
+	const action =
+		move === "opened"
+			? "Opened"
+			: move === "scrolled"
+				? "Scrolled to"
+				: fallback;
+	return `${action} ${output.label}${output.section ? ` at ${output.section.label}` : ""}`;
+}
+
+function toolStep(
+	part: GuidePart,
+	moves: Readonly<Record<string, PageMove>>,
+): GuideStep | null {
 	if (part.type === "tool-read_post") {
 		if (part.state === "output-available")
 			return {
@@ -83,7 +100,7 @@ function toolStep(part: GuidePart): GuideStep | null {
 			return {
 				icon: "book-open",
 				label: "Couldn't read that post",
-				status: "complete",
+				status: "error",
 				tool: "read_post",
 			};
 		return {
@@ -94,6 +111,13 @@ function toolStep(part: GuidePart): GuideStep | null {
 		};
 	}
 	if (part.type === "tool-show_scene_controls") {
+		if (part.state === "output-error")
+			return {
+				icon: "cloud",
+				label: "Couldn't add the banner controls",
+				status: "error",
+				tool: "show_scene_controls",
+			};
 		const done = part.state === "output-available";
 		return {
 			icon: "cloud",
@@ -103,6 +127,13 @@ function toolStep(part: GuidePart): GuideStep | null {
 		};
 	}
 	if (part.type === "tool-open_page") {
+		if (part.state === "output-error")
+			return {
+				icon: "directions",
+				label: "Couldn't choose a page",
+				status: "error",
+				tool: "open_page",
+			};
 		if (part.state !== "output-available")
 			return {
 				icon: "directions",
@@ -110,13 +141,11 @@ function toolStep(part: GuidePart): GuideStep | null {
 				status: "active",
 				tool: "open_page",
 			};
-		const { href, label, section } = part.output;
 		return {
 			icon: "directions",
-			label: section ? `Chose ${label} at ${section.label}` : `Chose ${label}`,
+			label: pageLabel(part.output, moves[part.toolCallId], "Chose"),
 			status: "complete",
 			tool: "open_page",
-			href: section ? `${href}#${section.id}` : href,
 		};
 	}
 	return null;
@@ -124,21 +153,24 @@ function toolStep(part: GuidePart): GuideStep | null {
 
 /** The trace, in the order the turn ran. Consecutive reasoning parts merge
  *  into one row; the reply is one row that carries the model and tokens. */
-function traceSteps(message: GuideUIMessage): GuideStep[] {
+function traceSteps(
+	message: GuideUIMessage,
+	moves: Readonly<Record<string, PageMove>>,
+): GuideStep[] {
 	const steps: GuideStep[] = [];
 	let reply: GuideStep | null = null;
 	for (const part of message.parts) {
 		if (part.type === "data-context") {
 			steps.push(contextStep(part.data));
 		} else if (part.type === "data-page") {
-			const { href, label, section } = part.data;
 			steps.push({
 				icon: "directions",
-				label: section
-					? `Pointed to ${label} at ${section.label}`
-					: `Pointed to ${label}`,
+				label: pageLabel(
+					part.data,
+					part.id ? moves[part.id] : undefined,
+					"Pointed to",
+				),
 				status: "complete",
-				href: section ? `${href}#${section.id}` : href,
 			});
 		} else if (part.type === "data-passages" && part.data.posts.length > 0) {
 			const { posts } = part.data;
@@ -187,7 +219,7 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 				reply.status = "complete";
 			}
 		} else {
-			const step = toolStep(part);
+			const step = toolStep(part, moves);
 			if (step) steps.push(step);
 		}
 	}
@@ -196,13 +228,27 @@ function traceSteps(message: GuideUIMessage): GuideStep[] {
 	return steps;
 }
 
-export function replyView(message: GuideUIMessage): ReplyView {
-	const trace = traceSteps(message);
+export function replyView(
+	message: GuideUIMessage,
+	live = false,
+	moves: Readonly<Record<string, PageMove>> = {},
+): ReplyView {
+	const trace = traceSteps(message, moves);
+	if (!live) {
+		for (const step of trace) {
+			if (step.status !== "active") continue;
+			step.status = "interrupted";
+			step.label += " (interrupted)";
+		}
+	}
 	const view: ReplyView = {
 		// A reply with no model call (a greeting, or the notes answer) says so,
 		// rather than claim the model wrote it.
 		trace:
-			!message.metadata && trace.length === 1 && trace[0]?.icon === "cpu"
+			!message.metadata &&
+			trace.length === 1 &&
+			trace[0]?.icon === "cpu" &&
+			trace[0].status === "complete"
 				? [
 						{
 							icon: "files",
@@ -250,9 +296,27 @@ export function replyView(message: GuideUIMessage): ReplyView {
 	return view;
 }
 
-/** The step the live line is naming. The latest active one, when several overlap. */
-export function activeStep(steps: readonly GuideStep[]): GuideStep | undefined {
-	return [...steps].reverse().find((step) => step.status === "active");
+/** Keep the current phase through gaps between stream parts. */
+export function currentStep(
+	steps: readonly GuideStep[],
+): GuideStep | undefined {
+	const active = [...steps].reverse().find((step) => step.status === "active");
+	if (active) return active;
+	const last = steps.at(-1);
+	if (!last || last.status !== "complete") return undefined;
+	const label =
+		last.tool === "read_post"
+			? "Reading a post"
+			: last.tool === "open_page"
+				? "Choosing a page"
+				: last.tool === "show_scene_controls"
+					? "Adding the banner controls"
+					: last.icon === "lightbulb"
+						? "Thinking"
+						: last.icon === "cpu"
+							? "Writing the reply"
+							: undefined;
+	return label ? { ...last, label } : undefined;
 }
 
 /** The trace's one-line header: the step in progress while live, then how
@@ -262,9 +326,20 @@ export function traceSummary(
 	trace: readonly GuideStep[],
 	live: boolean,
 ): string {
-	if (live) return activeStep(trace)?.label ?? "Thinking";
+	if (live) return currentStep(trace)?.label ?? "Thinking";
 	const ms = message?.metadata?.ms;
-	return ms ? `Worked for ${(ms / 1000).toFixed(1)}s` : "How this was made";
+	const failed = trace.filter((step) => step.status === "error").length;
+	const outcomes = [
+		...(failed ? [`${failed} step${failed === 1 ? "" : "s"} failed`] : []),
+		...(trace.some((step) => step.status === "interrupted")
+			? ["Interrupted"]
+			: []),
+	];
+	return (
+		[ms ? `Worked for ${(ms / 1000).toFixed(1)}s` : "", ...outcomes]
+			.filter(Boolean)
+			.join(" · ") || "How this was made"
+	);
 }
 
 /** How a page call ended: the page changed, or the current page scrolled. */

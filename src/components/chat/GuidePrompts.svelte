@@ -55,7 +55,8 @@
     min-height: 44px;
     padding-inline: 0.75rem;
     color: var(--color-text-secondary);
-    font-size: var(--text-sm);
+    font-size: var(--guide-text-size, var(--text-sm));
+    line-height: var(--guide-text-leading, 1.6);
     text-align: start;
     touch-action: manipulation;
     transition: color var(--duration-ui) var(--ease-out);
@@ -96,8 +97,6 @@
     gap: 0.625rem;
     min-height: 2.5rem;
     padding-block: 0.25rem;
-    font-size: var(--text-sm);
-    line-height: 1.25rem;
     transition:
       color var(--duration-ui) var(--ease-out),
       background-color var(--duration-ui) var(--ease-out);
