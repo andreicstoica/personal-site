@@ -436,7 +436,7 @@
 
 <svelte:window bind:innerWidth={viewportW} bind:innerHeight={viewportH} />
 
-<div class={wrapperClass}>
+<div class="gallery-wrapper {wrapperClass}">
   <div
     aria-label={`${experienceName} media gallery`}
     class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip"

@@ -604,6 +604,31 @@ a {
 	.experience-grid {
 		grid-template-columns: 1.25fr repeat(9, minmax(0, 1fr));
 	}
+
+	.experience-grid .gallery-wrapper {
+		position: relative;
+		align-self: stretch;
+		min-height: 12.5rem;
+	}
+
+	/* Keep media out of track sizing so the description can set the row height. */
+	.experience-grid .gallery-strip {
+		position: absolute;
+		inset: 0;
+	}
+
+	.experience-grid .gallery-strip > div,
+	.experience-grid .gallery-strip button {
+		height: 100%;
+	}
+
+	.experience-grid .gallery-strip button {
+		display: block;
+	}
+
+	.experience-grid .gallery-strip :is(img, video) {
+		height: 100%;
+	}
 }
 
 /* Intro links (about/canon/blog) never break across lines, so the lead reads as
