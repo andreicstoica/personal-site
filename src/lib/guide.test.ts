@@ -236,6 +236,12 @@ describe("notes answers", () => {
 		expect(text).toBe("Andrei wrote about this in his post Dyson.");
 	});
 
+	test("social replies acknowledge the visitor without restarting the topic prompt", () => {
+		expect(notesText("cool!", [])).toBe("Glad you like the site!");
+		expect(notesText("thanks", [])).toBe("You're welcome!");
+		expect(notesText("got it", [])).toBe("Got it.");
+	});
+
 	test("fixed replies speak about Andrei, never as him", () => {
 		const firstPerson = /\b(I|I'm|me|my|we|our)\b/;
 		const replies = [

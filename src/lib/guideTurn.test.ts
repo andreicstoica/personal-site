@@ -551,3 +551,12 @@ test("history keeps cited PR source cards and merge dates after restoring a thre
 		view.trace.find((step) => step.tool === "query_site_history")?.detail,
 	).toBe("Merged from 2026-04-30 to 2026-10-30");
 });
+
+test("acknowledgements end without explore suggestions, and a new topic resumes them", () => {
+	expect(explorePrompts("/", ["How was this site built?", "cool!"])).toEqual(
+		[],
+	);
+	expect(
+		explorePrompts("/", ["cool!", "What does Andrei do at Liftoff?"]),
+	).toHaveLength(3);
+});

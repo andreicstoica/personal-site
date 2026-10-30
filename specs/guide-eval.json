@@ -34,6 +34,7 @@
     { "id": "unknown", "kind": "edge", "q": "What is your favorite color?", "facts": [["don't", "doesn't", "not ", "no "]] },
     { "id": "site-history", "kind": "history", "q": "What has Andrei added to this site in the last six months?", "facts": [["from"], ["today"]], "tools": ["query_site_history"], "noPagePointer": true },
     { "id": "site-history-fonts", "kind": "history", "q": "What font optimizations has Andrei merged into this site recently?", "facts": [["subset", "font"]], "tools": ["query_site_history"], "noPagePointer": true },
+    { "id": "cool", "kind": "edge", "q": "cool!", "facts": [["Glad you like the site"]], "noTools": ["read_post", "open_page", "show_scene_controls", "query_site_history"], "scene": false },
     { "id": "hi", "kind": "edge", "q": "hi", "noTools": ["read_post", "open_page", "show_scene_controls", "query_site_history"], "scene": false }
   ]
 }

@@ -60,6 +60,7 @@
 	--leading-normal: 1.5;
 	--leading-relaxed: 1.58;
 	--tracking-tight: -0.015em;
+	--list-indent: 1.25em;
 
 	/* Spacing */
 	--spacing-xs: 0.5rem;
@@ -642,15 +643,24 @@ a {
 	margin-top: 1rem;
 }
 
+.content-list,
+.markdown-body :where(ul, ol),
+.guide-md :where(ul, ol) {
+    padding-inline-start: var(--list-indent);
+    list-style-position: outside;
+}
+
 .markdown-list-item {
+    position: relative;
+    padding-inline-start: var(--list-indent);
 	color: var(--color-text-primary);
 	margin-bottom: 0.35rem;
 	line-height: var(--leading-normal);
 }
 
 .markdown-bullet {
-	display: inline-block;
-	position: relative;
+	position: absolute;
+    inset-inline-start: 0;
 	top: 0.25rem;
 }
 
@@ -689,15 +699,20 @@ a {
 	gap: 0.5rem;
 }
 
+.markdown-body :where(ol) {
+    list-style-type: decimal;
+}
+
 .markdown-body :where(li) {
+    position: relative;
 	color: var(--color-text-primary);
 	margin-bottom: 0.25rem;
 }
 
-.markdown-body :where(li::before) {
-	content: "* ";
-	display: inline-block;
-	position: relative;
+.markdown-body :where(ul > li)::before {
+	content: "*";
+	position: absolute;
+    inset-inline-start: calc(-1 * var(--list-indent));
 	top: 0.25rem;
 }
 

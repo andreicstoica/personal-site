@@ -1,4 +1,5 @@
 import type { PixelarticonName } from "../icons/pixelarticons";
+import { isConversational } from "./memorySelect";
 
 export type StarterPrompt = { text: string; icon: PixelarticonName };
 
@@ -69,6 +70,7 @@ export function explorePrompts(
 	asked: readonly string[],
 	limit = 3,
 ): StarterPrompt[] {
+	if (isConversational(asked.at(-1) ?? "")) return [];
 	const seen = new Set(asked.map((text) => text.trim().toLowerCase()));
 	const picked: StarterPrompt[] = [];
 	for (const prompt of [...topicPrompts(topic), ...exploreFallback]) {

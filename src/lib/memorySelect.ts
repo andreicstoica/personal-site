@@ -122,8 +122,10 @@ const GREETING =
 const ACK =
 	/^(?:ok|okay|alright|got it|understood|sure|yes|no|yep|nope|yeah|nah|lol|haha|bye|goodbye|cheers)[!.?\s]*$/i;
 
-/** A hello. The fixed reply greets; other conversational messages invite
- *  another question. */
+export function isAcknowledgement(message: string): boolean {
+	return ACK.test(message.trim());
+}
+
 export function isGreeting(message: string): boolean {
 	return GREETING.test(message.trim());
 }
@@ -136,7 +138,7 @@ export function isGreeting(message: string): boolean {
 export function isConversational(message: string): boolean {
 	const trimmed = message.trim();
 	if (isBannerQuestion(trimmed) || isNavigationIntent(trimmed)) return false;
-	if (isGreeting(trimmed) || ACK.test(trimmed)) return true;
+	if (isGreeting(trimmed) || isAcknowledgement(trimmed)) return true;
 	const phrase = CONVERSATIONAL_PHRASE.test(trimmed);
 	if (phrase && trimmed.length <= 40) return true;
 	const shortFollowUp =

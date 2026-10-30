@@ -2,6 +2,7 @@ import type { OpenPageOutput } from "./chatTypes";
 import type { Outage } from "./guideModel";
 import type { GuideDoc, SearchHit } from "./guideSearch";
 import {
+	isAcknowledgement,
 	isConversational,
 	isGreeting,
 	isNavigationIntent,
@@ -148,9 +149,13 @@ export function notesText(
 	results: readonly SearchHit[],
 ): string {
 	if (isConversational(message)) {
-		return isGreeting(message)
-			? "Hello. Ask about Andrei's writing, the people he looks up to, or how this site was built."
-			: "Ask about anything else: his writing, the people he looks up to, or how this site was built.";
+		if (isGreeting(message))
+			return "Hello. Ask about Andrei's writing, the people he looks up to, or how this site was built.";
+		if (/\b(?:thanks|thank you)\b/i.test(message)) return "You're welcome!";
+		if (/\b(?:cool|nice|amazing|love)\b/i.test(message))
+			return "Glad you like the site!";
+		if (isAcknowledgement(message)) return "Got it.";
+		return "Ask about anything else: his writing, the people he looks up to, or how this site was built.";
 	}
 	const best = results[0];
 	if (!best?.text) {
