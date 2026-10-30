@@ -13,6 +13,7 @@
 		"check": "astro check && svelte-check --tsconfig ./tsconfig.json",
 		"test": "bun test",
 		"guide:eval": "bun scripts/guide-eval.ts",
+		"fonts": "uv run scripts/fonts/subset.py",
 		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build && bun scripts/check-build.ts"
 	},
 	"dependencies": {

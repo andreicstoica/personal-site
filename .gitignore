@@ -29,3 +29,6 @@ pnpm-debug.log*
 # AI
 CLAUDE.md
 .env*.local
+
+# font subsetting downloads (scripts/fonts/subset.py)
+scripts/fonts/.cache/
