@@ -501,3 +501,53 @@ describe("stored thread", () => {
 		expect(parseStoredMessages({ messages: [] })).toBeNull();
 	});
 });
+
+test("history keeps cited PR source cards and merge dates after restoring a thread", () => {
+	const message = reply([
+		{
+			type: "text",
+			text: "Font subsets improved loading. #96\n\nMerged changes from 2026-04-30 to 2026-10-30.",
+		},
+		{
+			type: "tool-query_site_history",
+			toolCallId: "history-1",
+			state: "output-available",
+			input: { months: 6 },
+			output: {
+				repository: "andreicstoica/personal-site",
+				from: "2026-04-30",
+				through: "2026-10-30",
+				totalMerged: 2,
+				matching: 2,
+				truncated: false,
+				changes: [
+					{
+						number: 99,
+						title: "Update home intro",
+						url: "https://github.com/andreicstoica/personal-site/pull/99",
+						date: "2026-10-30",
+						summary: "Intro details",
+					},
+					{
+						number: 96,
+						title: "Subset fonts",
+						url: "https://github.com/andreicstoica/personal-site/pull/96",
+						date: "2026-10-29",
+						summary: "Font details",
+					},
+				],
+			},
+		},
+	]);
+	const restored = parseStoredMessages(
+		JSON.parse(JSON.stringify([message])),
+	)?.[0];
+	expect(restored).toBeDefined();
+	if (!restored) throw new Error("History message was not restored");
+	const view = replyView(restored);
+	expect(view.changes.map((change) => change.title)).toEqual(["Subset fonts"]);
+	expect(view.changes[0]?.date).toBe("2026-10-29");
+	expect(
+		view.trace.find((step) => step.tool === "query_site_history")?.detail,
+	).toBe("Merged from 2026-04-30 to 2026-10-30");
+});

@@ -15,7 +15,7 @@ description: "Site design system and inspiration"
 
 # Inspiration
 
-## Really my entire [cool site](https://sublime.app/collection/cool-sites-46ce) collection. In particular:
+Really my entire [cool site](https://sublime.app/collection/cool-sites-46ce) collection. In particular:
 
 - [Adam Ho](https://www.adamho.com/)
 - [Conor Davidson](https://www.conordavidson.com/)

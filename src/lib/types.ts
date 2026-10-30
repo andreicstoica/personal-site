@@ -54,6 +54,7 @@ export type GalleryMedia =
 	| {
 			kind: "image";
 			src: string;
+			thumbnailSrc?: string;
 			alt: string;
 			width?: number;
 			height?: number;

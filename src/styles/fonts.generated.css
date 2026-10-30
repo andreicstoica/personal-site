@@ -149,3 +149,143 @@
   src: url("/fonts/lumber-ext.c1574bb038.woff2") format("woff2");
   unicode-range: U+C0-C5, U+C7-CF, U+D1-D6, U+D8-DD, U+E0, U+E3-E5, U+E7-EF, U+F1-F2, U+F4-FD, U+FF, U+178;
 }
+
+/* geist-sans-core */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-sans-core.dc009fd1cb.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-sans-ext */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-sans-ext.34f7aba26e.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}
+
+/* geist-italic-core */
+@font-face {
+  font-family: "Geist";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-italic-core.f41e2858ba.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-italic-ext */
+@font-face {
+  font-family: "Geist";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-italic-ext.804fb09153.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}
+
+/* geist-mono-core */
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-mono-core.9c15631101.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-mono-ext */
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-mono-ext.b325ff9335.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-131, U+134-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}
+
+/* geist-serif-core */
+@font-face {
+  font-family: "Geist Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-serif-core.b73d8febe1.woff2") format("woff2");
+  unicode-range: U+20-5D, U+5F-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026;
+}
+
+/* geist-serif-ext */
+@font-face {
+  font-family: "Geist Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/geist-serif-ext.67809cd443.woff2") format("woff2");
+  unicode-range: U+A1, U+A5-AB, U+AE-B0, U+B4, U+B6, U+B8, U+BA-BB, U+BF-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14C-14D, U+150-165, U+168-17E;
+}
+
+/* geist-sans-500-core */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/geist-sans-500-core.3c349c6b67.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-sans-500-ext */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/geist-sans-500-ext.d7d34a256d.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}
+
+/* geist-sans-600-core */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/geist-sans-600-core.b2811b811c.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-sans-600-ext */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/geist-sans-600-ext.540645190b.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}
+
+/* geist-sans-700-core */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/geist-sans-700-core.b2c2537690.woff2") format("woff2");
+  unicode-range: U+20-7E, U+A0, U+B7, U+E1-E2, U+F3, U+219, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2197;
+}
+
+/* geist-sans-700-ext */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/geist-sans-700-ext.6cf434ce00.woff2") format("woff2");
+  unicode-range: U+A1-AC, U+AE-B6, U+B8-E0, U+E3-F2, U+F4-113, U+116-12B, U+12E-137, U+139-13E, U+141-148, U+14A-14D, U+150-17E;
+}

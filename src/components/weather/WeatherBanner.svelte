@@ -30,7 +30,6 @@
   } from "../../lib/weather/scene";
   import WeatherLab from "./WeatherLab.svelte";
   import {
-    GEIST_STYLESHEET,
     parseTypeface,
     TYPEFACE_KEY,
     type Typeface,
@@ -92,13 +91,6 @@
   // root attributes and drops head nodes the new page lacks, so apply again.
   $effect(() => {
     const apply = () => {
-      if (typeface === "geist" && !document.getElementById("typeface-geist")) {
-        const link = document.createElement("link");
-        link.id = "typeface-geist";
-        link.rel = "stylesheet";
-        link.href = GEIST_STYLESHEET;
-        document.head.append(link);
-      }
       if (typeface === "plex") delete document.documentElement.dataset.typeface;
       else document.documentElement.dataset.typeface = typeface;
     };

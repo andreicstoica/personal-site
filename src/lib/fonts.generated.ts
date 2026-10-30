@@ -6,4 +6,11 @@ export const FONT_PRELOADS = {
 	sansItalic: "/fonts/sans-italic-core.624a4783ee.woff2",
 	mono: "/fonts/mono-core.7fdbbc8f0c.woff2",
 	lumber: "/fonts/lumber-core.4c6d43c9a9.woff2",
+	geistSans: "/fonts/geist-sans-core.dc009fd1cb.woff2",
+	geistItalic: "/fonts/geist-italic-core.f41e2858ba.woff2",
+	geistMono: "/fonts/geist-mono-core.9c15631101.woff2",
+	geistSerif: "/fonts/geist-serif-core.b73d8febe1.woff2",
+	geistSans500: "/fonts/geist-sans-500-core.3c349c6b67.woff2",
+	geistSans600: "/fonts/geist-sans-600-core.b2811b811c.woff2",
+	geistSans700: "/fonts/geist-sans-700-core.b2c2537690.woff2",
 } as const;

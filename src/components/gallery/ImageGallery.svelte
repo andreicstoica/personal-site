@@ -372,13 +372,17 @@
 
   /** Strip previews only move while visible; hidden duplicates stay parked. */
   function viewportPlay(node: HTMLVideoElement) {
-    if (typeof IntersectionObserver === `undefined`) {
+    const play = () => {
+      if (!node.hasAttribute("src") && node.dataset.src) node.src = node.dataset.src;
       node.play().catch(() => {});
+    };
+    if (typeof IntersectionObserver === `undefined`) {
+      play();
       return {};
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) node.play().catch(() => {});
+        if (entry?.isIntersecting) play();
         else node.pause();
       },
       { threshold: 0.1 },
@@ -454,22 +458,21 @@
         >
           {#if image.kind === "video"}
             <video
-              src={image.src}
+              data-src={image.src}
               poster={image.poster}
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal
               use:viewportPlay
               width={image.width}
               height={image.height}
-              autoplay
               loop
               muted
               playsinline
-              preload="metadata"
+              preload="none"
             ></video>
           {:else}
             <img
-              src={image.src}
+              src={image.thumbnailSrc ?? image.src}
               alt={image.alt}
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal

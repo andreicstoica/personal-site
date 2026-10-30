@@ -10,7 +10,10 @@ function formatMarkdownLink(
 		? ' target="_blank" rel="noopener noreferrer"'
 		: "";
 
-	return `<a href="${href}" class="markdown-link"${externalAttrs}>${text}</a>`;
+	const label = isExternal
+		? text.replace(/(\S+)$/, '<span class="markdown-link-tail">$1</span>')
+		: text;
+	return `<a href="${href}" class="markdown-link"${externalAttrs}>${label}</a>`;
 }
 export function parseMarkdownContent(
 	content: string,

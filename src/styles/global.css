@@ -267,11 +267,18 @@ figcaption {
 :root[data-typeface="geist"] {
 	--font-sans: "Geist", "IBM Plex Sans", system-ui, sans-serif;
 	--font-mono: "Geist Mono", "IBM Plex Mono", monospace;
+	--font-serif: "Geist Serif", serif;
 	/* Geist sets wider and more open than Plex at the same size, so the same
 	   leading reads airier and lines wrap sooner. Tighten both a step. */
 	--leading-normal: 1.5;
 	--leading-relaxed: 1.58;
 	letter-spacing: -0.01em;
+}
+
+:root[data-typeface="geist"] .experience-row:not([data-display-font]) .row-chip.type-label {
+    font-family: var(--font-serif);
+    font-variation-settings: normal;
+    letter-spacing: normal;
 }
 
 /* Role titles run about 3% wider in Geist; this closes it to Plex's width. */
@@ -281,7 +288,6 @@ figcaption {
 
 html {
 	font-family: var(--font-sans);
-	/* Geist ships no italic, so its <em> renders upright rather than faked. */
 	font-synthesis: none;
 	font-size: 16px;
 	color: var(--color-text-primary);
@@ -647,9 +653,13 @@ a {
 	white-space: nowrap;
 }
 
-/* Link-out mark for links that open another site. The no-break space keeps
-   the arrow on the last word's line; the empty alt text keeps it silent. */
-.markdown-link[target="_blank"]::after,
+.markdown-link-tail {
+    white-space: nowrap;
+}
+
+/* Keep the arrow with the last linked word without preventing long labels
+   from wrapping. The empty alt text keeps the mark silent. */
+.markdown-link[target="_blank"] .markdown-link-tail::after,
 .lead-link[target="_blank"]::after {
 	content: "↗";
 	content: "↗" / "";
@@ -740,6 +750,10 @@ a {
 	color: var(--color-text-primary);
 	line-height: 1.625;
 	margin-bottom: 1rem;
+}
+
+.markdown-body > :last-child {
+    margin-bottom: 0;
 }
 
 .btn-secondary-custom {

@@ -23,6 +23,7 @@ import {
 	guideSearch,
 	pageSections,
 } from "../../lib/guideContent";
+import { historyDateRange } from "../../lib/guideHistory";
 import {
 	GUIDE_REASONING,
 	guideModel,
@@ -33,6 +34,7 @@ import {
 } from "../../lib/guideModel";
 import {
 	buildSystemPrompt,
+	HISTORY_REPLY_INSTRUCTIONS,
 	notesOpenPage,
 	notesText,
 	OUTAGE_NOTICE,
@@ -184,6 +186,29 @@ async function streamModelTurn(
 			content: item.text,
 		})),
 		tools: guideTools(),
+		prepareStep: ({ steps, initialMessages }) => {
+			const calledHistory = steps.some((step) =>
+				step.toolCalls.some((call) => call.toolName === "query_site_history"),
+			);
+			if (!calledHistory) return undefined;
+			const history = steps
+				.flatMap((step) => step.toolResults)
+				.find((result) => result.toolName === "query_site_history");
+			return {
+				instructions: HISTORY_REPLY_INSTRUCTIONS,
+				toolChoice: "none",
+				activeTools: [],
+				messages: [
+					...initialMessages
+						.filter((message) => message.role === "user")
+						.slice(-1),
+					{
+						role: "user",
+						content: `Public merged PR evidence, for the summary only:\n${history ? JSON.stringify(history.output) : "GitHub history is unavailable."}`,
+					},
+				],
+			};
+		},
 		// Read, hand out scene controls, open a page, reply: the longest turn.
 		stopWhen: [isStepCount(4), openedAfterReply],
 		temperature: 0.3,
@@ -202,6 +227,7 @@ async function streamModelTurn(
 	let text = "";
 	let pageCalled = false;
 	let sceneCalled = false;
+	let historyRange: { from: string; through: string } | undefined;
 	const reader = toUIMessageStream<GuideTools, GuideUIMessage>({
 		stream: result.stream,
 		sendStart: false,
@@ -229,14 +255,34 @@ async function streamModelTurn(
 			chunk.toolName === "show_scene_controls"
 		)
 			sceneCalled = true;
+		if (
+			chunk.type === "tool-output-available" &&
+			typeof chunk.output === "object" &&
+			chunk.output !== null &&
+			"repository" in chunk.output &&
+			chunk.output.repository === "andreicstoica/personal-site" &&
+			"from" in chunk.output &&
+			typeof chunk.output.from === "string" &&
+			"through" in chunk.output &&
+			typeof chunk.output.through === "string"
+		) {
+			historyRange = { from: chunk.output.from, through: chunk.output.through };
+		}
 		writer.write(chunk);
+	}
+
+	if (historyRange && wroteText && !outage) {
+		writeText(
+			writer,
+			`\n\n${historyDateRange(historyRange.from, historyRange.through)}`,
+		);
 	}
 
 	// The model names the page it points to, but does not always call
 	// open_page for it. Its pointer line (or a link) still opens the page;
 	// the trace marks it "Pointed to", not as a tool call.
 	const linked =
-		!outage && !pageCalled
+		!outage && !pageCalled && !historyRange
 			? (linkedPage(text, pageSections) ?? namedPage(text))
 			: null;
 	if (linked && (linked.href !== turn.viewing || linked.section)) {

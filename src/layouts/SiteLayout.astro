@@ -59,6 +59,8 @@ const isHome = Astro.url.pathname === "/";
         // the instant flag would never be needed again, only left behind to
         // silence the next real open.
         delete next.dataset.guideInstant;
+        if (live.dataset.typeface) next.dataset.typeface = live.dataset.typeface;
+        else delete next.dataset.typeface;
         // Same for the banner frame, whose height is 0 without this attribute.
         if (live.dataset.weatherBanner === "open") next.dataset.weatherBanner = "open";
         else delete next.dataset.weatherBanner;
@@ -79,7 +81,7 @@ const isHome = Astro.url.pathname === "/";
       </div>
       <div class="site-column flex flex-1 flex-col">
         <div
-          class:list={["page-island flex w-full flex-1 flex-col", { "page-island-sub": !isHome }]}
+          class:list={["page-island flex w-full flex-1 flex-col", { "page-island-sub experience-inset mx-auto max-w-[46rem]": !isHome }]}
           data-page-island
         >
           <slot />
