@@ -1,10 +1,10 @@
 # Design System
 
-A builder's portfolio with intentional rough edges: a dithered WebGL weather banner, pixel cursor, horizontal-scroll image galleries, and IBM Plex typography with a custom hand-carved display face (Lumber Sans). The aesthetic is deliberate, not unfinished.
+A builder's portfolio with intentional rough edges: a dithered WebGL weather banner, pixel cursor, horizontal-scroll image galleries, and Geist typography with a custom hand-carved display face (Lumber Sans). The aesthetic is deliberate, not unfinished.
 
 ## Design character
 
-Technical but warm. The weather banner and pixel cursor signal craft; the Plex family and green accent keep it readable. The experience table is the dense core: a spreadsheet-like layout that scrolls horizontally through project media. The site should feel like a well-organized workshop, not a polished marketing page.
+Technical but warm. The weather banner and pixel cursor signal craft; the Geist family and green accent keep it readable. The experience table is the dense core: a spreadsheet-like layout that scrolls horizontally through project media. The site should feel like a well-organized workshop, not a polished marketing page.
 
 ## Tokens
 

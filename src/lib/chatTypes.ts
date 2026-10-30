@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import type { SiteHistoryOutput } from "./guideHistory";
 
 export type ReadPostOutput = {
 	title: string;
@@ -20,6 +21,10 @@ export type OpenPageOutput = {
 /** Tool names and shapes, shared by the route (which runs them) and the
  *  panel (which renders them as steps). Only the route imports the tools. */
 export type GuideUITools = {
+	query_site_history: {
+		input: { months: number; query?: string };
+		output: SiteHistoryOutput;
+	};
 	read_post: { input: { slug: string }; output: ReadPostOutput };
 	open_page: {
 		input: { path: string; section?: string };
@@ -186,6 +191,49 @@ function parsePart(value: unknown): GuidePart | null {
 	const output = value.output;
 	if (!isRecord(output)) return null;
 
+	if (value.type === "tool-query_site_history") {
+		if (
+			!Array.isArray(output.changes) ||
+			typeof output.from !== "string" ||
+			typeof output.through !== "string" ||
+			typeof output.totalMerged !== "number" ||
+			typeof output.matching !== "number" ||
+			typeof output.truncated !== "boolean"
+		)
+			return null;
+		const changes = output.changes
+			.filter(isRecord)
+			.filter(
+				(item) =>
+					typeof item.number === "number" &&
+					typeof item.title === "string" &&
+					typeof item.date === "string" &&
+					item.url ===
+						`https://github.com/andreicstoica/personal-site/pull/${item.number}`,
+			)
+			.map((item) => ({
+				number: item.number as number,
+				title: item.title as string,
+				url: item.url as string,
+				date: item.date as string,
+				summary: "",
+			}));
+		return {
+			type: "tool-query_site_history",
+			toolCallId,
+			state: "output-available",
+			input: { months: typeof input.months === "number" ? input.months : 6 },
+			output: {
+				repository: "andreicstoica/personal-site",
+				from: output.from,
+				through: output.through,
+				totalMerged: output.totalMerged,
+				matching: output.matching,
+				truncated: output.truncated,
+				changes,
+			},
+		};
+	}
 	if (value.type === "tool-read_post") {
 		if (typeof output.title !== "string" || typeof output.url !== "string")
 			return null;

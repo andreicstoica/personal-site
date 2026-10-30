@@ -6,6 +6,7 @@ import type {
 	SceneControlsOutput,
 } from "./chatTypes";
 import { guidePosts, pageSections } from "./guideContent";
+import { querySiteHistory } from "./guideHistory";
 import { siteRoutes } from "./memorySelect";
 import { resolveOpenPage } from "./siteSections";
 
@@ -17,6 +18,21 @@ export function guideTools() {
 	const [firstPath, ...otherPaths] = siteRoutes.map((route) => route.href);
 	if (!firstPath) throw new Error("siteRoutes is empty");
 	return {
+		query_site_history: tool({
+			description:
+				"Query merged pull requests in this site's public GitHub repository from the last six months. Use for recent changes, additions, and how the site evolved. Merged changes do not prove deployment.",
+			inputSchema: z.object({
+				months: z.number().int().min(1).max(6).default(6),
+				query: z
+					.string()
+					.max(100)
+					.optional()
+					.describe(
+						"Optional keywords, such as weather or font. Omit for an overview.",
+					),
+			}),
+			execute: async (input) => querySiteHistory(input),
+		}),
 		read_post: tool({
 			description:
 				"Read one of Andrei's blog posts in full, by its slug from the post list.",

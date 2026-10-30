@@ -34,6 +34,7 @@ export type ReplyView = {
 	page: PageCall | null;
 	/** Posts the reply read, once each, in the order it read them. */
 	posts: ReadPostOutput[];
+	changes: ReadPostOutput[];
 	/** Whether the reply carries the banner's scene controls. */
 	scene: boolean;
 };
@@ -87,6 +88,25 @@ function toolStep(
 	part: GuidePart,
 	moves: Readonly<Record<string, PageMove>>,
 ): GuideStep | null {
+	if (part.type === "tool-query_site_history") {
+		const done = part.state === "output-available";
+		const error = part.state === "output-error";
+		return {
+			icon: "files",
+			label: error
+				? "Couldn't read the site history"
+				: done
+					? `Read ${part.output.totalMerged} merged site changes`
+					: "Reading the site history",
+			status: error ? "error" : done ? "complete" : "active",
+			tool: "query_site_history",
+			...(done
+				? {
+						detail: `Merged from ${part.output.from} to ${part.output.through}`,
+					}
+				: {}),
+		};
+	}
 	if (part.type === "tool-read_post") {
 		if (part.state === "output-available")
 			return {
@@ -261,9 +281,22 @@ export function replyView(
 		notices: [],
 		page: null,
 		posts: [],
+		changes: [],
 		scene: false,
 	};
 	for (const part of message.parts) {
+		if (
+			part.type === "tool-query_site_history" &&
+			part.state === "output-available"
+		) {
+			view.changes.push(
+				...part.output.changes.map(({ title, url, date }) => ({
+					title,
+					url,
+					date,
+				})),
+			);
+		}
 		if (part.type === "text") view.text += part.text;
 		else if (part.type === "data-notice") view.notices.push(part.data.text);
 		else if (
@@ -293,6 +326,17 @@ export function replyView(
 		}
 	}
 	view.text = view.text.trim();
+	const citedPRs = new Set(
+		[...view.text.matchAll(/#(\d+)\b|【(\d+)】/g)].map(
+			(match) => match[1] ?? match[2],
+		),
+	);
+	view.changes = view.changes
+		.filter(
+			(change) =>
+				citedPRs.size === 0 || citedPRs.has(change.url.split("/").pop() ?? ""),
+		)
+		.slice(0, 3);
 	return view;
 }
 
@@ -305,17 +349,19 @@ export function currentStep(
 	const last = steps.at(-1);
 	if (!last || last.status !== "complete") return undefined;
 	const label =
-		last.tool === "read_post"
-			? "Reading a post"
-			: last.tool === "open_page"
-				? "Choosing a page"
-				: last.tool === "show_scene_controls"
-					? "Adding the banner controls"
-					: last.icon === "lightbulb"
-						? "Thinking"
-						: last.icon === "cpu"
-							? "Writing the reply"
-							: undefined;
+		last.tool === "query_site_history"
+			? "Reading the site history"
+			: last.tool === "read_post"
+				? "Reading a post"
+				: last.tool === "open_page"
+					? "Choosing a page"
+					: last.tool === "show_scene_controls"
+						? "Adding the banner controls"
+						: last.icon === "lightbulb"
+							? "Thinking"
+							: last.icon === "cpu"
+								? "Writing the reply"
+								: undefined;
 	return label ? { ...last, label } : undefined;
 }
 

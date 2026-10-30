@@ -19,9 +19,10 @@ const {
 } = Astro.props;
 
 const preloads = [
-	FONT_PRELOADS.sans,
-	FONT_PRELOADS.sansItalic,
-	FONT_PRELOADS.mono,
+	FONT_PRELOADS.geistSans,
+	FONT_PRELOADS.geistSans700,
+	FONT_PRELOADS.geistItalic,
+	FONT_PRELOADS.geistMono,
 	...(preloadDisplayFont ? [FONT_PRELOADS.lumber] : []),
 ];
 

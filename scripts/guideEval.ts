@@ -16,6 +16,8 @@ export type EvalCase = {
 	 *  when left out. */
 	scene?: boolean;
 	noTools?: string[];
+	tools?: string[];
+	noPagePointer?: boolean;
 };
 
 export type Turn = {
@@ -111,6 +113,7 @@ export function scoreTurn(test: EvalCase, turn: Turn): Score {
 		if (!group.some((fact) => lower.includes(fact.toLowerCase())))
 			failures.push(`missing ${group.join(" | ")}`);
 	}
+    if (test.noPagePointer && /\b(?:the rest is on|more on|more in the post|more details (?:are )?(?:on|in))\b/i.test(text)) failures.push("unrelated page pointer");
 	if (test.page && !turn.pages.includes(test.page))
 		failures.push(`no page ${test.page}`);
 	// Controls belong only under a banner reply, so every other case checks
@@ -118,6 +121,9 @@ export function scoreTurn(test: EvalCase, turn: Turn): Score {
 	const wantScene = test.scene ?? false;
 	if (turn.scene !== wantScene)
 		failures.push(wantScene ? "no scene controls" : "unwanted scene controls");
+    for (const tool of test.tools ?? []) {
+        if (!turn.tools.includes(tool)) failures.push(`missing tool: ${tool}`);
+    }
 	for (const tool of test.noTools ?? []) {
 		if (turn.tools.includes(tool)) failures.push(`called ${tool}`);
 	}

@@ -22,7 +22,7 @@ if (!entry) throw new Error(`${slug} entry not found`);
   description={entry.data.description}
   parent={parent}
 >
-  <div class={innerClass}>
+  <div class:list={["mx-auto w-full", innerClass]}>
     <ContentDocument title={entry.data.title}>
       <MarkdownSections
         body={entry.body ?? ""}

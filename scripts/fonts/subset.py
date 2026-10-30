@@ -52,18 +52,6 @@ def ranges(spec: str) -> set[int]:
     return out
 
 
-# Google Fonts' unicode-range slices for Plex, as served on 2026-10-29. A code
-# point in none of them renders in a system font today (the ↗ link mark is
-# one), so it stays out. Kerning never crosses files, and today ASCII shares
-# the latin slice, so only used characters from that slice may join the core.
-SLICES = {
-    "latin": ranges("U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"),
-    "latin-ext": ranges("U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF"),
-    "cyrillic-ext": ranges("U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F"),
-    "cyrillic": ranges("U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116"),
-    "greek": ranges("U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF"),
-    "vietnamese": ranges("U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB"),
-}
 ASCII = set(range(0x20, 0x7F))
 # No-break space, curly quotes, en and em dashes, ellipsis, and the bullet,
 # which Chrome draws for `list-style: disc` markers from the list's own font.
@@ -75,53 +63,38 @@ DEFAULT_IGNORABLE = {0xAD, 0x34F, *range(0x200B, 0x2010), *range(0x2060, 0x2065)
 # rule today; add a tag here when CSS turns one on.
 FEATURES = ["ccmp", "kern", "liga", "mark", "mkmk", "rvrn", "calt", "clig", "rlig", "rclt", "curs"]
 
-GOOGLE_FONTS = "https://raw.githubusercontent.com/google/fonts"
 FACES = [
-    {
-        "key": "sans", "family": "IBM Plex Sans", "style": "normal", "weights": [400, 500, 600, 700],
-        "url": f"{GOOGLE_FONTS}/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/ibmplexsans/IBMPlexSans%5Bwdth,wght%5D.ttf",
-        "sha256": "3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3",
-        # Google pins width before weight; pinning both at once rounds a few
-        # ring glyphs (° å ů) half a unit differently at 500 and up.
-        "steps": [{"wdth": 100}, {"wght": (400, 700)}],
-        "slices": set(SLICES), "rename": "Site Sans", "stretch": True,
-        "bounds": {"core": (-203, -212, 990, 1061), "ext": (-168, -245, 915, 1119)},
-    },
-    {
-        "key": "sans-italic", "family": "IBM Plex Sans", "style": "italic", "weights": [400],
-        "url": f"{GOOGLE_FONTS}/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/ibmplexsans/IBMPlexSans-Italic%5Bwdth,wght%5D.ttf",
-        "sha256": "0b94c5e981993764db32bf9c610ecc60cbd34ad77ec2f10ba03c64ab75124d8e",
-        # Only italic 400 is loaded and font-synthesis is off, so bold inside
-        # italics already renders at 400.
-        "steps": [{"wdth": 100}, {"wght": 400}],
-        "slices": set(SLICES), "rename": "Site Sans", "stretch": True,
-        "bounds": {"core": (-245, -212, 990, 1062), "ext": (-137, -245, 935, 1120)},
-    },
-    {
-        "key": "mono", "family": "IBM Plex Mono", "style": "normal", "weights": [400],
-        "url": f"{GOOGLE_FONTS}/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
-        "sha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
-        "steps": [], "slices": set(SLICES) - {"greek"}, "rename": "Site Mono", "stretch": False,
-        "bounds": {"core": (-260, -350, 648, 1119), "ext": (-260, -350, 648, 1119)},
-    },
     {
         "key": "lumber", "family": "LumberSans", "style": "normal", "weights": ["normal"],
         "path": Path(__file__).parent / "src/LumberSans.ttf",
         "sha256": "4e051338ed9951677fabfc15165aa892cffeebfbf206cd4dc72c76bf162805cb",
-        "steps": [], "slices": None, "rename": None, "stretch": False, "bounds": None,
+        "steps": [],
     },
 ]
-# Chrome on macOS rasterizes 1x text against the head bounds, so any change to
-# them shifts anti-aliasing. These are the bounds of Google's served latin
-# (core: ASCII lives there today) and latin-ext (ext: ș, the one extended
-# character in use, comes from there) files, read on 2026-10-29. Google
-# computes them its own way; subsetting the source does not reproduce them.
-# LumberSans keeps the bounds of its original file.
-# The OFL reserves "Plex", so a subset must not carry it in its font names.
-# The copyright (0), trademark (7), license (13), and license URL (14)
-# records keep it.
-RESERVED = re.compile(r"IBM ?Plex ?(Sans|Mono)")
-KEEP_NAMES = {0, 7, 13, 14}
+GEIST_REV = "2e554ff2ea3979b63afe770af6424eb8b9490a74"
+for key, family, filename, style, weights, steps, digest in [
+    ("geist-sans", "Geist", "Geist/variable/Geist%5Bwght%5D.ttf", "normal", [400], [{"wght": 400}], "73894e0448cae90a92b6c2f8732b7bb9acb7b94c418bff559dad4a18e1de9659"),
+    ("geist-italic", "Geist", "Geist/variable/Geist-Italic%5Bwght%5D.ttf", "italic", [400], [{"wght": 400}], "a464348abe41a6392f18d04c0ac2ad3c26619357ff5fdd76aff3059116f45e62"),
+    ("geist-mono", "Geist Mono", "GeistMono/variable/GeistMono%5Bwght%5D.ttf", "normal", [400], [{"wght": 400}], "87c2aff9723544a9adaea19d92e42a33705c9723624801b6e0224c2206a6af0d"),
+    ("geist-serif", "Geist Serif", "GeistSerif/ttf/GeistSerif-Square.ttf", "normal", [400], [], "80b24a90ce54cc81230c0e77de358fc21f89e49ee87d6fc5889704d373d46702"),
+]:
+    FACES.append({
+        "key": key, "family": family, "style": style, "weights": weights,
+        "url": f"https://raw.githubusercontent.com/vercel/geist-font/{GEIST_REV}/fonts/{filename}",
+        "sha256": digest, "steps": steps,
+    })
+# Official static cuts avoid rounding drift in variable-font instancing.
+geist_sans = next(face for face in FACES if face["key"] == "geist-sans")
+for weight, filename, digest in [
+    (500, "Medium", "3a3b36f0d0b981f4857f7f00eeef4a5ee123605575d362ab31ee7c19e3d11f2f"),
+    (600, "SemiBold", "b9f52322d6d20a7ff1e7fe1310ff12ec851aebb83d24f8b4f1d4149298f489b2"),
+    (700, "Bold", "3f21f02b827228c3f0c5fb230d027b5a1a263013618e8052bc1b3c5692812c88"),
+]:
+    FACES.append({
+        **geist_sans, "key": f"geist-sans-{weight}", "weights": [weight], "steps": [],
+        "url": f"https://raw.githubusercontent.com/vercel/geist-font/{GEIST_REV}/fonts/Geist/ttf/Geist-{filename}.ttf",
+        "sha256": digest,
+    })
 
 
 def source(face: dict) -> TTFont:
@@ -176,13 +149,9 @@ def site_usage() -> tuple[set[int], bool]:
     return used, hyphenates
 
 
-def plan(face: dict, font: TTFont, used: set[int], hyphenates: bool) -> tuple[set[int], set[int], set[int]]:
+def plan(font: TTFont, used: set[int], hyphenates: bool) -> tuple[set[int], set[int], set[int]]:
     cmap = set(font.getBestCmap())
-    if face["slices"] is None:
-        served, core_pool = cmap, cmap
-    else:
-        served = set().union(*(SLICES[s] for s in face["slices"])) & cmap
-        core_pool = SLICES["latin"]
+    served, core_pool = cmap, cmap
     wanted_core = ASCII | PUNCTUATION | (used & core_pool) | ({HYPHEN} if hyphenates else set())
     core = wanted_core & served
     extended = ((LATIN_1_AND_EXT_A | used) & served) - core
@@ -199,16 +168,15 @@ def instance(face: dict, font: TTFont, weight: int | None = None) -> TTFont:
     return font
 
 
-def subset(font: TTFont, codepoints: set[int], keep_hinting: bool, bounds: tuple | None) -> TTFont:
+def subset(font: TTFont, codepoints: set[int], keep_hinting: bool) -> TTFont:
     options = Options()
     options.layout_features = FEATURES
     options.hinting = keep_hinting
     # fvar and STAT point at name records past 255, so keep every ID.
     options.name_IDs = ["*"]
     options.name_languages = [0x409]
-    # Chrome on macOS rasterizes 1x text differently without glyph names (post
-    # format 3), with an empty .notdef, and against other head bounds (see
-    # the bounds note at FACES). Google's files keep the first two.
+    # Glyph names, .notdef outlines, and source head bounds affect macOS
+    # rasterization. Preserve them so subsetting does not change the ink.
     options.glyph_names = True
     options.notdef_outline = True
     subsetter = Subsetter(options)
@@ -216,23 +184,7 @@ def subset(font: TTFont, codepoints: set[int], keep_hinting: bool, bounds: tuple
     font = TTFont(BytesIO(serialize(font, None)))
     subsetter.subset(font)
     font.recalcBBoxes = False
-    if bounds:
-        head = font["head"]
-        head.xMin, head.yMin, head.xMax, head.yMax = bounds
     return font
-
-
-def rename(font: TTFont, name: str) -> None:
-    for record in font["name"].names:
-        if record.nameID in KEEP_NAMES:
-            continue
-        old = record.toUnicode()
-        new = RESERVED.sub(lambda m: name if " " in m.group(0) else name.replace(" ", ""), old)
-        if new != old:
-            record.string = new
-    leftover = [r.toUnicode() for r in font["name"].names if r.nameID not in KEEP_NAMES and "Plex" in r.toUnicode()]
-    if leftover:
-        sys.exit(f"reserved name left in {leftover}")
 
 
 def serialize(font: TTFont, flavor: str | None) -> bytes:
@@ -240,8 +192,8 @@ def serialize(font: TTFont, flavor: str | None) -> bytes:
     # same bytes and the same hashed file names.
     font.recalcTimestamp = False
     font.flavor = flavor
-    # The optional hmtx transform sets head.flags bit 1, which Google's files
-    # and the sources leave clear.
+    # The optional hmtx transform sets head.flags bit 1, which the pinned source files
+    # leave clear.
     font.flavorData = WOFF2FlavorData(transformedTables={"glyf", "loca"}) if flavor else None
     out = BytesIO()
     font.save(out)
@@ -280,18 +232,17 @@ def shaping(data: bytes, codepoints: list[int], weight: int | None) -> list[tupl
 
 
 def verify(face: dict, base: TTFont, part: str, data: bytes, codepoints: set[int], keep_hinting: bool) -> None:
-    """Fail on any drift from the source pinned at each used weight, the way
-    Google instances it; font tools have quirks."""
+    """Fail on any drift from the pinned source at each used weight."""
     label = f"{face['key']}-{part}"
     font = TTFont(BytesIO(data))
     cmap = set(font.getBestCmap())
     if cmap != codepoints:
         sys.exit(f"{label}: cmap differs from plan by {sorted(map(hex, cmap ^ codepoints))[:12]}")
-    if ("fpgm" in font or "prep" in font) != keep_hinting:
+    if ("fpgm" in font or "prep" in font) != (keep_hinting and ("fpgm" in base or "prep" in base)):
         sys.exit(f"{label}: hinting tables do not match --drop-hinting")
     full = TTFont(BytesIO(serialize(instance(face, base), None)))
     head = font["head"]
-    want = face["bounds"][part] if face["bounds"] else (full["head"].xMin, full["head"].yMin, full["head"].xMax, full["head"].yMax)
+    want = (full["head"].xMin, full["head"].yMin, full["head"].xMax, full["head"].yMax)
     if font["head"].flags != full["head"].flags | 0x800:  # bit 11: WOFF2-encoded
         sys.exit(f"{label}: head flags drifted")
     notdef = [f["glyf"][".notdef"].numberOfContours for f in (full, font)]
@@ -339,7 +290,7 @@ def main() -> None:
     rules, preloads, written, stale = [], {}, set(), []
     for face in FACES:
         base = source(face)
-        core, extended, skipped = plan(face, base, used, hyphenates)
+        core, extended, skipped = plan(base, used, hyphenates)
         if skipped:
             print(f"{face['key']}: left to system fonts as today: {describe(skipped)}")
         reference = instance(face, base)
@@ -350,9 +301,7 @@ def main() -> None:
                 if not match or ranges(match.group(1)) != codepoints:
                     stale.append(f"{face['key']}-{part}")
                 continue
-            font = subset(reference, codepoints, keep_hinting, face["bounds"] and face["bounds"][part])
-            if face["rename"]:
-                rename(font, face["rename"])
+            font = subset(reference, codepoints, keep_hinting)
             data = serialize(font, "woff2")
             verify(face, base, part, data, codepoints, keep_hinting)
             name = f"{face['key']}-{part}.{hashlib.sha256(data).hexdigest()[:10]}.woff2"
@@ -369,7 +318,6 @@ def main() -> None:
                         f'  font-family: "{face["family"]}";',
                         f"  font-style: {face['style']};",
                         f"  font-weight: {weight};",
-                        *(["  font-stretch: 100%;"] if face["stretch"] else []),
                         "  font-display: swap;",
                         f'  src: url("/fonts/{name}") format("woff2");',
                         f"  unicode-range: {unicode_range(codepoints)};",
@@ -384,7 +332,7 @@ def main() -> None:
         return
 
     for old in FONTS_DIR.glob("*.woff2"):
-        if old.name not in written and re.match(r"(sans|sans-italic|mono|lumber)-(core|ext)\.[0-9a-f]{10}\.woff2$", old.name):
+        if old.name not in written and re.match(r"(sans|sans-italic|mono|lumber|geist-sans(?:-500|-600|-700)?|geist-italic|geist-mono|geist-serif)-(core|ext)\.[0-9a-f]{10}\.woff2$", old.name):
             old.unlink()
     header = "Generated by scripts/fonts/subset.py. Do not edit; rerun `bun run fonts`."
     CSS_OUT.write_text(f"/* {header} */\n\n" + "\n\n".join(rules) + "\n", "utf-8")

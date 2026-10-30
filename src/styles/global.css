@@ -1,16 +1,5 @@
 @import "./fonts.generated.css";
 
-/* ABC Areal's license forbids hosting the file on a public server, so this
-   resolves only where it is installed. Everyone else falls back to Plex. */
-@font-face {
-  font-family: "Areal Local";
-  src:
-    local("ABC Areal Superfamily Variable Regular"),
-    local("ABCArealSuperfamilyVariable-Regular");
-  font-weight: 400 700;
-  font-style: oblique 0deg 12deg;
-}
-
 @import "tailwindcss";
 
 /* CSS Custom Properties for global theming */
@@ -55,8 +44,10 @@
 	--color-ascii-bright: #3848ff;
 
 	/* Fonts */
-	--font-sans: "IBM Plex Sans", system-ui, sans-serif;
-	--font-mono: "IBM Plex Mono", monospace;
+	--font-sans: "Geist", system-ui, sans-serif;
+	--font-mono: "Geist Mono", monospace;
+	--font-serif: "Geist Serif", serif;
+	letter-spacing: -0.01em;
 
 	/* Type scale */
 	--text-xs: 0.75rem;
@@ -66,8 +57,8 @@
 	--text-xl: 1.25rem;
 	--text-2xl: 1.5rem;
 	--leading-tight: 1.25;
-	--leading-normal: 1.55;
-	--leading-relaxed: 1.65;
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.58;
 	--tracking-tight: -0.015em;
 
 	/* Spacing */
@@ -230,58 +221,28 @@ figcaption {
 }
 
 :root {
-	--font-label: var(--font-sans);
-	--font-label-axes: normal;
-}
-
-:root[data-typeface="areal"],
-:root[data-typeface="geist"] {
-	--font-label: var(--font-mono);
-	--font-label-axes: var(--font-mono-axes, normal);
+    --font-label: var(--font-mono);
 }
 
 .type-label {
-	font-family: var(--font-label);
-	font-variation-settings: var(--font-label-axes);
+    font-family: var(--font-label);
 }
 
-/* Monos run about 17% wider than Plex Sans. A full match (about -0.09em) jams
-   the glyphs, so this closes half the gap. Small uppercase labels keep their
-   positive tracking, or the capitals clump. */
-:root[data-typeface="areal"] .type-label:not(.uppercase) {
-	letter-spacing: -0.05em;
+.type-label:not(.uppercase) {
+    letter-spacing: -0.045em;
 }
 
-:root[data-typeface="geist"] .type-label:not(.uppercase) {
-	letter-spacing: -0.045em;
+.experience-row:not([data-display-font]) .row-chip.type-label {
+    font-family: var(--font-serif);
+    letter-spacing: normal;
 }
 
-/* Areal's mono is the same file on its MONO axis, which `--font-mono-axes` sets
-   wherever `--font-mono` is used. */
-:root[data-typeface="areal"] {
-	--font-sans: "Areal Local", "IBM Plex Sans", system-ui, sans-serif;
-	--font-mono: "Areal Local", "IBM Plex Mono", monospace;
-	--font-mono-axes: "MONO" 100;
-}
-
-:root[data-typeface="geist"] {
-	--font-sans: "Geist", "IBM Plex Sans", system-ui, sans-serif;
-	--font-mono: "Geist Mono", "IBM Plex Mono", monospace;
-	/* Geist sets wider and more open than Plex at the same size, so the same
-	   leading reads airier and lines wrap sooner. Tighten both a step. */
-	--leading-normal: 1.5;
-	--leading-relaxed: 1.58;
-	letter-spacing: -0.01em;
-}
-
-/* Role titles run about 3% wider in Geist; this closes it to Plex's width. */
-:root[data-typeface="geist"] .row-role {
-	letter-spacing: -0.02em;
+.row-role {
+    letter-spacing: -0.02em;
 }
 
 html {
 	font-family: var(--font-sans);
-	/* Geist ships no italic, so its <em> renders upright rather than faked. */
 	font-synthesis: none;
 	font-size: 16px;
 	color: var(--color-text-primary);
@@ -576,7 +537,7 @@ a {
 	text-decoration-line: underline;
 	text-decoration-style: dotted;
 	text-decoration-thickness: 1px;
-	/* Clears Plex descenders, so skip-ink never breaks the dots around g, y, p. */
+	/* Clears descenders, so skip-ink never breaks the dots around g, y, p. */
 	text-underline-offset: 0.3em;
 	text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
 }
@@ -647,9 +608,13 @@ a {
 	white-space: nowrap;
 }
 
-/* Link-out mark for links that open another site. The no-break space keeps
-   the arrow on the last word's line; the empty alt text keeps it silent. */
-.markdown-link[target="_blank"]::after,
+.markdown-link-tail {
+    white-space: nowrap;
+}
+
+/* Keep the arrow with the last linked word without preventing long labels
+   from wrapping. The empty alt text keeps the mark silent. */
+.markdown-link[target="_blank"] .markdown-link-tail::after,
 .lead-link[target="_blank"]::after {
 	content: "↗";
 	content: "↗" / "";
@@ -740,6 +705,10 @@ a {
 	color: var(--color-text-primary);
 	line-height: 1.625;
 	margin-bottom: 1rem;
+}
+
+.markdown-body > :last-child {
+    margin-bottom: 0;
 }
 
 .btn-secondary-custom {

@@ -41,6 +41,7 @@ export default defineConfig({
   site: "https://www.andrei.bio",
   output: "static",
   compressHTML: true,
+  prefetch: false,
   image: {
     service: {
       entrypoint: "astro/assets/services/sharp",

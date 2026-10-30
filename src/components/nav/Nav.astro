@@ -15,7 +15,7 @@ const { crumb, parent } = Astro.props;
       <nav aria-label="Breadcrumb">
         <ol class="trail">
           <li class="trail-home">
-            <a href="/" class="nav-name">
+            <a href="/" class="nav-name" transition:name="site-name">
               Andrei Stoica
             </a>
           </li>
@@ -41,22 +41,35 @@ const { crumb, parent } = Astro.props;
       </nav>
     ) : (
       <h1 class="nav-heading">
-        <a href="/" class="nav-name">
-          Andrei Stoica
-        </a>
+        <span class="nav-name" transition:name="site-name">Andrei Stoica</span>
       </h1>
     )
   }
 </header>
 
 <style>
-  .site-nav {
-    padding-block: 0.5rem;
+  :global(::view-transition-group(site-name)) {
+    animation-duration: var(--duration-drawer);
+    animation-timing-function: var(--ease-in-out);
   }
 
-  /* The name heads the intro, so it sits nearer the intro than the banner
-     caption above it. */
-  .site-nav-home {
+  :global(::view-transition-old(site-name)) {
+    display: none;
+  }
+
+  :global(::view-transition-new(site-name)) {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(::view-transition-group(site-name)),
+    :global(::view-transition-old(site-name)),
+    :global(::view-transition-new(site-name)) {
+      animation: none;
+    }
+  }
+
+  .site-nav {
     padding-block: 0.75rem 0.25rem;
     text-align: center;
   }
@@ -71,7 +84,7 @@ const { crumb, parent } = Astro.props;
     align-items: center;
     min-height: 44px;
     padding-block-end: 0;
-    font-size: 1.5rem;
+    font-size: 1.875rem;
     font-weight: 700;
     line-height: var(--leading-tight);
     letter-spacing: -0.02em;
@@ -82,24 +95,21 @@ const { crumb, parent } = Astro.props;
     transition: text-decoration-color var(--duration-ui) var(--ease-out);
   }
 
-  .site-nav-home .nav-name {
-    font-size: 1.875rem;
-  }
-
   @media (hover: hover) and (pointer: fine) {
-    .site-nav .nav-name:hover {
+    .site-nav a.nav-name:hover {
       text-decoration-color: currentColor;
     }
   }
 
   .trail {
     display: flex;
+    justify-content: center;
     align-items: baseline;
     min-width: 0;
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 1.5rem;
+    font-size: 1.875rem;
     letter-spacing: -0.02em;
     line-height: var(--leading-tight);
   }
@@ -152,13 +162,8 @@ const { crumb, parent } = Astro.props;
     text-overflow: ellipsis;
   }
 
-  /* Phones keep the trail on one line: the name holds its size and the
-     crumbs after it step down a size. On the shared baseline the lighter,
-     smaller crumbs read as sitting low beside the bold name, so they rise
-     0.06em, about a pixel, to look level. */
   @media (width < 40rem) {
-    .trail-parent,
-    .trail-current {
+    .trail-parent {
       position: relative;
       top: -0.06em;
       font-size: 1.125rem;

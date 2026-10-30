@@ -78,7 +78,6 @@
     padding-inline: 0.75rem;
     padding-block-end: 0.25rem;
     font-family: var(--font-label);
-    font-variation-settings: var(--font-label-axes);
     font-size: 0.75rem;
     line-height: 1.125rem;
     letter-spacing: 0.05em;

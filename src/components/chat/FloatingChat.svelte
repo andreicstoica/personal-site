@@ -50,6 +50,7 @@
     notices: [],
     page: null,
     posts: [],
+    changes: [],
     scene: false,
   };
   /** "Continue exploring" waits until the visitor has had a moment with the
@@ -849,12 +850,15 @@
               {#if view.scene && !live}
                 <GuideScene onchange={showBanner} />
               {/if}
-              {#if !live && (page || view.posts.length > 0)}
+              {#if !live && (page || view.posts.length > 0 || view.changes.length > 0)}
                 <ul class="guide-cards" aria-label="Sources">
                   {#if page && view.page}
                     {@const call = view.page}
                     <li><GuideCard card={page} onclick={(event) => openCard(event, call)} /></li>
                   {/if}
+                  {#each view.changes as change (change.url)}
+                    <li><GuideCard card={postCard(change)} /></li>
+                  {/each}
                   {#each view.posts as post (post.url)}
                     <li><GuideCard card={postCard(post)} /></li>
                   {/each}
@@ -917,9 +921,9 @@
         placeholder="Ask anything…"
         class="guide-input pt-2 pb-0.5 bg-transparent text-[var(--color-text-primary)] rounded-none"
       />
-      <div class="flex items-center justify-between gap-2 pl-3 pr-1.5 pb-1.5">
+      <div class="flex items-end justify-between gap-2 pl-3 pr-1.5 pb-1.5">
         {#if viewing}
-          <p id="guide-context" class="guide-context">
+          <p id="guide-context" class="guide-context pb-1">
             <Icon name="eye" class="w-3.5 h-3.5 shrink-0" />
             <span class="truncate">Viewing <span class="text-[var(--color-text-primary)]">{viewing.label}</span></span>
           </p>

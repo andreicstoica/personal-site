@@ -6,7 +6,7 @@ export type StarterPrompt = { text: string; icon: PixelarticonName };
 export const starterPrompts: readonly StarterPrompt[] = [
 	{ text: "Who does Andrei look up to?", icon: "users" },
 	{ text: "What has Andrei written most recently?", icon: "article" },
-	{ text: "How was this site built?", icon: "tools" },
+	{ text: "What has Andrei added to this site recently?", icon: "tools" },
 ];
 
 /** Follow-ups by topic: a page the reply opened, the page the visitor is on,

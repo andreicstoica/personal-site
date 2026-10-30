@@ -5,9 +5,9 @@ export default {
 		extend: {
 			fontFamily: {
 				// Add your custom fonts here
-				sans: ["IBM Plex Sans", "Inter", "system-ui", "sans-serif"],
-				serif: ["IBM Plex Serif", "serif"],
-				mono: ["IBM Plex Mono", "monospace"],
+				sans: ["Geist", "system-ui", "sans-serif"],
+				serif: ["Geist Serif", "serif"],
+				mono: ["Geist Mono", "monospace"],
 				"lumber-sans": ["LumberSans", "sans-serif"],
 			},
 			colors: {
