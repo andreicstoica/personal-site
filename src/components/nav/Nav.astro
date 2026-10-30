@@ -9,7 +9,7 @@ interface Props {
 const { crumb, parent } = Astro.props;
 ---
 
-<header class="site-nav">
+<header class:list={["site-nav", { "site-nav-home": !crumb }]}>
   {
     crumb ? (
       <nav aria-label="Breadcrumb">
@@ -40,9 +40,11 @@ const { crumb, parent } = Astro.props;
         </ol>
       </nav>
     ) : (
-      <a href="/" class="nav-name">
-        Andrei Stoica
-      </a>
+      <h1 class="nav-heading">
+        <a href="/" class="nav-name">
+          Andrei Stoica
+        </a>
+      </h1>
     )
   }
 </header>
@@ -50,6 +52,15 @@ const { crumb, parent } = Astro.props;
 <style>
   .site-nav {
     padding-block: 0.5rem;
+  }
+
+  .site-nav-home {
+    text-align: center;
+  }
+
+  .nav-heading {
+    line-height: inherit;
+    letter-spacing: inherit;
   }
 
   .site-nav .nav-name {

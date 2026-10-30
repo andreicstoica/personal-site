@@ -621,6 +621,24 @@ a {
 	.experience-grid .gallery-strip :is(img, video) {
 		height: 100%;
 	}
+
+	/* Insets a block on both sides to the Role column's left edge: the name
+	   track (1.25 of 10.25 fr after nine gaps) plus one gap. The gap matches
+	   the table's gap-x-4 xl:gap-x-6. */
+	.experience-inset {
+		--experience-gap: 1rem;
+		max-width: none;
+		padding-inline: calc(
+			(100% - 9 * var(--experience-gap)) * 1.25 / 10.25 +
+				var(--experience-gap)
+		);
+	}
+}
+
+@media (width >= 80rem) {
+	.experience-inset {
+		--experience-gap: 1.5rem;
+	}
 }
 
 /* Intro links (about/canon/blog) never break across lines, so the lead reads as
