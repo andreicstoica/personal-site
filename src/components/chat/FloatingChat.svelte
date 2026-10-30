@@ -1212,12 +1212,10 @@
 
   .guide-md :global(ul) {
     list-style: disc;
-    padding-inline-start: 1.25rem;
   }
 
   .guide-md :global(ol) {
     list-style: decimal;
-    padding-inline-start: 1.25rem;
   }
 
   .guide-md :global(li + li) {

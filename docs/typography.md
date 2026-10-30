@@ -45,3 +45,9 @@ Defined once in `global.css` — compose, don't re-style:
 - Markdown body styles (`.markdown-*`, `.markdown-body`) own all rich-text sizing inside content — never inline font utilities into markdown-rendered HTML.
 
 Rule: if a page needs text that matches one of these, use the class. A new text style needs a token change here first.
+
+## Lists
+
+Bulleted and numbered content uses a hanging indent. Wrapped lines align with the first line of text, not the marker. `--list-indent: 1.25em` sets the marker column for Markdown content, guide replies, and `.content-list`.
+
+Use `.content-list` for native content lists outside the Markdown renderers. Use outside markers. Do not use `list-inside` or put a marker in normal text flow. Navigation, source cards, and other unbulleted UI lists keep their own layout.

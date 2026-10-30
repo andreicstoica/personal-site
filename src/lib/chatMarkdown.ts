@@ -30,6 +30,11 @@ function safeHref(href: string): string | null {
 const chatMarked = new Marked({
 	gfm: true,
 	breaks: true,
+	walkTokens(token) {
+		if (token.type === "text") {
+			token.text = token.text.replace(/[\u2007\u2009\u202f](?=#\d)/g, " ");
+		}
+	},
 	renderer: {
 		html({ text }) {
 			return escapeHtml(text);

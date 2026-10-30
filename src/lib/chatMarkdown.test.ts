@@ -9,6 +9,15 @@ describe("chat markdown", () => {
 		expect(html).toContain("<li>one</li>");
 	});
 
+	test("PR references use a visible space without changing code or URLs", () => {
+		const html = renderChatMarkdown(
+			"Open\u202fGraph tags\u202f#53,\u2009#64. `tags\u202f#53` [source](https://example.com/a%20b)",
+		);
+		expect(html).toContain("Open\u202fGraph tags #53, #64.");
+		expect(html).toContain("<code>tags\u202f#53</code>");
+		expect(html).toContain('href="https://example.com/a%20b"');
+	});
+
 	test("raw HTML from the model renders as text", () => {
 		const html = renderChatMarkdown('<img src=x onerror="alert(1)"> hi');
 		expect(html).not.toContain("<img");

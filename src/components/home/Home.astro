@@ -5,12 +5,9 @@ import ExperienceTable from "./ExperienceTable.astro";
 // experience.ts holds the copy as one string; split it into its two paragraphs.
 const [intro = "", focus = ""] = personalStatement.split("<br><br>");
 
-// The closing CTA is rewritten here because experience.ts is never staged.
-// If that sentence ever changes upstream, replace() no-ops and the original
-// copy renders — no breakage, just the old wording.
 const introCta = intro.replace(
 	"There's a short <a href='/about'>about</a>, mostly outside of work.",
-	"Learn more <a class='lead-link' href='/about'>about</a> me outside of work, and my <a class='lead-link' href='/canon'>canon</a> of people and ideas that inspire me.",
+	"Get to know me <a class='lead-link' href='/about'>outside work</a>, or explore the <a class='lead-link' href='/canon'>people and ideas</a> that inspire me.",
 );
 
 // The second paragraph leads with the shorter AI line.

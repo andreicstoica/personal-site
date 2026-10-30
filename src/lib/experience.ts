@@ -1,7 +1,7 @@
 import type { Experience } from "./types";
 
 export const personalStatement =
-	"I'm a builder with a background in product, VC, design, and full-stack development. I work best when I can take a strong idea kernel and shape it by iterating quickly with others. There's a short <a href='/about'>about</a>, mostly outside of work.<br><br>Lately I've been exploring reflective AI tools with a focus on simple interfaces that feel intuitive and well considered, and have been writing about it on my <a target='_blank' href='https://blog.andrei.bio/'>blog</a>. I care about how things feel and the side effects systems create, not just how they function.";
+	"I'm a builder with a background in product, VC, design, and full-stack development. I work best shaping early ideas through quick iteration with others, especially when exploring new technologies. There's a short <a href='/about'>about</a>, mostly outside of work.<br><br>Lately I've been exploring reflective AI tools with a focus on simple interfaces that feel intuitive and well considered, and have been writing about it on my <a target='_blank' href='https://blog.andrei.bio/'>blog</a>. I care about how things feel and the side effects systems create, not just how they function.";
 
 export const experiences: Experience[] = [
 	{
