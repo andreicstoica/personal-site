@@ -2,17 +2,28 @@
 import { ClientRouter } from "astro:transitions";
 import Analytics from "@vercel/analytics/astro";
 import CursorTrail from "../components/chrome/CursorTrail.svelte";
+import { FONT_PRELOADS } from "../lib/fonts.generated";
 import "../styles/global.css";
 
 interface Props {
 	title: string;
 	description?: string;
+	/** Preload LumberSans, which only the experience table uses. */
+	preloadDisplayFont?: boolean;
 }
 
 const {
 	title,
 	description = "Product minded software engineer based in New York City.",
+	preloadDisplayFont = false,
 } = Astro.props;
+
+const preloads = [
+	FONT_PRELOADS.sans,
+	FONT_PRELOADS.sansItalic,
+	FONT_PRELOADS.mono,
+	...(preloadDisplayFont ? [FONT_PRELOADS.lumber] : []),
+];
 
 // Unfurlers need absolute URLs. `site` is set in astro.config.
 const pageUrl = new URL(Astro.url.pathname, Astro.site);
@@ -46,8 +57,11 @@ const ogImage = new URL("/og.png", Astro.site);
       name="viewport"
       content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    {
+      preloads.map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+      ))
+    }
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <ClientRouter />

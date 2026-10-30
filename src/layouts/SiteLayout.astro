@@ -18,7 +18,7 @@ const showLab = import.meta.env.DEV;
 const isHome = Astro.url.pathname === "/";
 ---
 
-<RootLayout title={title} description={description}>
+<RootLayout title={title} description={description} preloadDisplayFont={isHome}>
   <script is:inline define:vars={{ guideKey: GUIDE_STORAGE_KEY }}>
     // Reserve room for an open chat drawer before paint, so the page does not
     // flash full width on load (FloatingChat.svelte).

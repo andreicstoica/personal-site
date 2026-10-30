@@ -1,12 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
-
-@font-face {
-  font-family: "LumberSans";
-  src: url("/fonts/LumberSans.ttf") format("truetype");
-  font-display: swap;
-  font-weight: normal;
-  font-style: normal;
-}
+@import "./fonts.generated.css";
 
 /* ABC Areal's license forbids hosting the file on a public server, so this
    resolves only where it is installed. Everyone else falls back to Plex. */
