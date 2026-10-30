@@ -17,7 +17,7 @@ export function displayFontStyle(name: string): string {
 
 /**
  * LumberSans only ships all-caps, so at the shared 0.875rem its cap-height
- * dwarfs the mixed-case Plex rows. Step its role and tags down to 0.8rem so
+ * dwarfs the mixed-case Geist rows. Step its role and tags down to 0.8rem so
  * the name chip stays primary, as on every other row.
  */
 export function displayRowStyle(name: string): string {

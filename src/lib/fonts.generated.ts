@@ -2,9 +2,6 @@
 
 /** Core font files, which the layout preloads. */
 export const FONT_PRELOADS = {
-	sans: "/fonts/sans-core.4dfb3fc482.woff2",
-	sansItalic: "/fonts/sans-italic-core.624a4783ee.woff2",
-	mono: "/fonts/mono-core.7fdbbc8f0c.woff2",
 	lumber: "/fonts/lumber-core.4c6d43c9a9.woff2",
 	geistSans: "/fonts/geist-sans-core.dc009fd1cb.woff2",
 	geistItalic: "/fonts/geist-italic-core.f41e2858ba.woff2",

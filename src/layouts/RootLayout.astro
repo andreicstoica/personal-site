@@ -18,14 +18,13 @@ const {
 	preloadDisplayFont = false,
 } = Astro.props;
 
-const preloads = import.meta.env.DEV
-	? []
-	: [
-			FONT_PRELOADS.sans,
-			FONT_PRELOADS.sansItalic,
-			FONT_PRELOADS.mono,
-			...(preloadDisplayFont ? [FONT_PRELOADS.lumber] : []),
-		];
+const preloads = [
+	FONT_PRELOADS.geistSans,
+	FONT_PRELOADS.geistSans700,
+	FONT_PRELOADS.geistItalic,
+	FONT_PRELOADS.geistMono,
+	...(preloadDisplayFont ? [FONT_PRELOADS.lumber] : []),
+];
 
 // Unfurlers need absolute URLs. `site` is set in astro.config.
 const pageUrl = new URL(Astro.url.pathname, Astro.site);
@@ -64,30 +63,6 @@ const ogImage = new URL("/og.png", Astro.site);
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
       ))
     }
-    <script is:inline define:vars={{ dev: import.meta.env.DEV, fonts: FONT_PRELOADS, preloadDisplayFont }}>
-      if (dev) {
-        let selected = new URLSearchParams(location.search).get("type");
-        try {
-          if (selected === "geist" || selected === "areal" || selected === "plex") localStorage.setItem("site-typeface-v1", selected);
-          selected ??= localStorage.getItem("site-typeface-v1");
-        } catch {}
-        if (selected === "geist" || selected === "areal") document.documentElement.dataset.typeface = selected;
-        const core = selected === "geist"
-          ? [fonts.geistSans, fonts.geistSans700, fonts.geistItalic, fonts.geistMono]
-          : [fonts.sans, fonts.sansItalic, fonts.mono];
-        if (preloadDisplayFont) core.push(fonts.lumber);
-        for (const href of core) {
-          if (!href || document.querySelector(`link[rel="preload"][href="${href}"]`)) continue;
-          const link = document.createElement("link");
-          link.rel = "preload";
-          link.as = "font";
-          link.type = "font/woff2";
-          link.crossOrigin = "anonymous";
-          link.href = href;
-          document.head.append(link);
-        }
-      }
-    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <ClientRouter />

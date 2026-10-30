@@ -29,12 +29,6 @@
     weatherApiSchema,
   } from "../../lib/weather/scene";
   import WeatherLab from "./WeatherLab.svelte";
-  import {
-    parseTypeface,
-    TYPEFACE_KEY,
-    type Typeface,
-  } from "../../lib/typeface";
-
   let { showLab }: { showLab: boolean } = $props();
 
   // Past this, a cold lookup opens on the fallback scene. The slide pushes the
@@ -77,37 +71,6 @@
     window.addEventListener("weather-lab:toggle", onToggle);
     return () => window.removeEventListener("weather-lab:toggle", onToggle);
   });
-  // `?type=areal` works in any build, because `local()` only resolves where the
-  // font is installed.
-  const typeParam = new URLSearchParams(location.search).get("type");
-  let typeface = $state<Typeface>(
-    parseTypeface(
-      typeParam ??
-        (import.meta.env.DEV ? storage?.getItem(TYPEFACE_KEY) : null),
-    ),
-  );
-
-  // The island persists across ClientRouter swaps, but each swap replaces the
-  // root attributes and drops head nodes the new page lacks, so apply again.
-  $effect(() => {
-    const apply = () => {
-      if (typeface === "plex") delete document.documentElement.dataset.typeface;
-      else document.documentElement.dataset.typeface = typeface;
-    };
-    apply();
-    document.addEventListener("astro:after-swap", apply);
-    return () => document.removeEventListener("astro:after-swap", apply);
-  });
-
-  function chooseTypeface(next: Typeface): void {
-    typeface = next;
-    try {
-      storage?.setItem(TYPEFACE_KEY, next);
-    } catch {
-      // Blocked storage: the choice still lasts for this page.
-    }
-  }
-
   const cachedReading = storage ? loadReading(storage) : null;
   let place = $state<Place>(
     storage ? loadOrCreatePlace(storage) : randomPlace(),
@@ -414,12 +377,10 @@
     weather={scene.weather}
     time={scene.time}
     colorMode={colorOverride}
-    {typeface}
     onPlace={(next) => (placeOverride = next)}
     onWeather={(next) => (weatherOverride = next)}
     onTime={(next) => (timeOverride = next)}
     onColorMode={(next) => (colorOverride = next)}
-    onTypeface={chooseTypeface}
     onLocalize={localize}
   />
 {/if}

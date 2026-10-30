@@ -27,7 +27,7 @@ const egg = rowEasterEgg(experience.name);
 // struts short. Description text uses the secondary tone.
 // Exception: the Lumber Sans row renders all-caps at 0.8rem (displayRowStyle)
 // — at the shared sizes its cap-height presence dwarfs
-// the mixed-case Plex rows.
+// the mixed-case Geist rows.
 ---
 
 <div
@@ -188,7 +188,7 @@ const egg = rowEasterEgg(experience.name);
     border-top-color: var(--color-divider);
   }
 
-  /* LumberSans ships taller ascent metrics than Plex, so its chips paint
+  /* LumberSans ships taller ascent metrics than the body face, so its chips paint
      2px below the rule instead of clipping flush under it like every other
      row. Lift them to match. */
   .experience-row[data-display-font] .row-chip {

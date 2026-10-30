@@ -5,7 +5,7 @@ description: "Site design system and inspiration"
 
 # Website design system
 
-- IBM Plex Font Family (sans, serif, and mono)
+- Geist Font Family (sans, serif, and mono)
 - Built on Astro, with Svelte for the interactive parts
 - Weather banner drawn live in WebGL 2
 - "[Ask Andrei](#ask-andrei)" runs on the Vercel AI SDK and AI Gateway

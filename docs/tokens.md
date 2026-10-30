@@ -21,7 +21,7 @@ Nothing else. Raw hex, Tailwind palette colors, and bare-name shapes (`text-[--c
 
 ### Why tokens beat Tailwind's defaults
 
-`global.css` writes its tokens in an unlayered `:root`; Tailwind v4 ships its defaults inside `@layer theme`. Unlayered CSS beats any layer, so same-named site tokens silently replace Tailwind's: `rounded-lg` resolves to `var(--radius-lg)` = **0.75rem** (not Tailwind's 0.5rem), `text-lg` = **17px** (not 18px), `font-mono` = **IBM Plex Mono**. Consequence: never tune a utility assuming Tailwind's documented value — read the site token first.
+`global.css` writes its tokens in an unlayered `:root`; Tailwind v4 ships its defaults inside `@layer theme`. Unlayered CSS beats any layer, so same-named site tokens silently replace Tailwind's: `rounded-lg` resolves to `var(--radius-lg)` = **0.75rem** (not Tailwind's 0.5rem), `text-lg` = **17px** (not 18px), `font-mono` = **Geist Mono**. Consequence: never tune a utility assuming Tailwind's documented value — read the site token first.
 
 ## Backgrounds
 

@@ -4,14 +4,14 @@
 
 | Token / face | Value | Where it's allowed |
 | --- | --- | --- |
-| `--font-sans` | IBM Plex Sans, system-ui | Everything. `html` sets it (`global.css:166`). |
-| `--font-mono` | IBM Plex Mono | Timestamps (`SiteFooter.astro:56`). Never body copy. Experience dates use `tabular-nums` in the sans face. |
-| `--font-serif` | IBM Plex Serif | The `src/proto` scratch pages only. |
-| LumberSans | `/fonts/LumberSans.ttf` (local `@font-face`, `swap`) | Experience names, and only through `experienceNameStyle()` / `displayFontStyle()` (`experienceUi.ts:8-10`). Never body text or UI labels — it's an all-caps carved display face; a paragraph in it is unreadable. |
+| `--font-sans` | Geist, system-ui | Body text, headings, and breadcrumbs. |
+| `--font-mono` | Geist Mono | Table labels and dates, footer timestamps, and guide trace data. |
+| `--font-serif` | Geist Serif Square, regular 400 | Table tags. |
+| LumberSans | Generated WOFF2 subset | The existing Lumber Sans project sample, through `experienceNameStyle()` / `displayFontStyle()`. |
 
-Because the unlayered `:root` overrides Tailwind's theme (see [tokens.md](./tokens.md)), the utilities `font-sans` / `font-mono` / `font-serif` all resolve to these Plex faces, not Tailwind's defaults.
+The site uses the Geist family with no font switcher. The unlayered `:root` tokens override Tailwind's theme (see [tokens.md](./tokens.md)).
 
-Google Fonts is loaded once in `global.css:1` (weights 400/500/600/700 sans, 400 mono/serif) — don't add a second font import.
+Fonts are self-hosted. `scripts/fonts/subset.py` reads the built site's characters and produces hashed WOFF2 core and extended files, generated CSS, and preload URLs. The layout preloads regular and bold Sans, Sans italic, and Mono cores. Other weights and extended characters load on demand; LumberSans is preloaded only on Home. Serif Square is the published static cut. Source hashes, outlines, advances, pair shaping, glyph names, `.notdef`, hinting, and head metrics are checked against the pinned upstream files. Run `bun run build`, `bun run fonts`, then `bun run fonts --check` after changing font usage.
 
 ## Type scale
 
@@ -32,15 +32,15 @@ Rules:
 
 ## Leading and tracking
 
-- `--leading-tight` 1.25 — headings. `--leading-normal` 1.55 — body (`html` default). `--leading-relaxed` 1.65 — lead paragraphs and markdown content.
+- `--leading-tight` 1.25 — headings. `--leading-normal` 1.5 — body (`html` default). `--leading-relaxed` 1.58 — lead paragraphs and markdown content.
 - `--tracking-tight` −0.015em — applied to body and headings globally (`global.css:187`). It overrides Tailwind's `tracking-tight` (−0.025em) via the same `:root` mechanism; don't re-add tracking utilities to headings. The `em` resolves against the 16px body and is inherited as a length, so 14px text carries −0.24px. That crowds small text: the experience table resets it with `tracking-normal`, and any new dense small-text surface should do the same.
 
 ## Page-chrome text classes
 
 Defined once in `global.css` — compose, don't re-style:
 
-- `.text-lead` — the one lead paragraph per page: 17px / 1.65 (16px below 768px), `text-wrap: pretty`. Where the measure needs capping, the call site adds `max-w-2xl` itself (`MarkdownSections.astro:22`, `fitness.astro:19`) — the class carries no width. The home hero (`Home.astro:28,29`) deliberately omits it: its two columns each set their own measure inside `.site-column`. The cap is the measure, not a second container — don't narrow the container instead.
-- `.page-title` — 24px / 700 page heading (`ContentDocument.astro:10`).
+- `.text-lead` is the intro paragraph: 17px with relaxed leading, or 16px below 768px. It fills the centered subpage content width.
+- Subpages use centered 30px breadcrumbs. Their main heading remains available to screen readers without a duplicate visible title.
 - `.text-muted` — **maps to `--color-text-secondary` (5.7:1), not the `--color-text-muted` token (2.8:1)** (`global.css:214`). The name collision is deliberate history; the class is safe for text, the token is not.
 - Markdown body styles (`.markdown-*`, `.markdown-body`) own all rich-text sizing inside content — never inline font utilities into markdown-rendered HTML.
 
