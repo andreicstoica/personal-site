@@ -29,7 +29,10 @@ export function renderLayers(place: Place): BannerImage {
 				);
 				if (!color) continue;
 				const offset = ((layer * height + y) * width + x) * 4;
-				data.set([...color, 255], offset);
+				data[offset] = color[0];
+				data[offset + 1] = color[1];
+				data[offset + 2] = color[2];
+				data[offset + 3] = 255;
 			}
 		}
 	}
@@ -173,7 +176,13 @@ export function renderMotionPatches(place: Place, time: number) {
 					top + (y + 0.5) / DETAIL,
 					time,
 				);
-				if (color) data.set([...color, 255], (y * width + x) * 4);
+				if (color) {
+					const offset = (y * width + x) * 4;
+					data[offset] = color[0];
+					data[offset + 1] = color[1];
+					data[offset + 2] = color[2];
+					data[offset + 3] = 255;
+				}
 			}
 		return {
 			x: (left + ATLAS_MARGIN) * DETAIL,

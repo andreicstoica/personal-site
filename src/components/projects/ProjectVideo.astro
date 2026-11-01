@@ -10,7 +10,7 @@ const { project } = Astro.props;
 const video = project.video;
 const isYoutube = Boolean(video?.includes("youtube.com"));
 const embedSrc = video?.includes("youtube.com/shorts/")
-	? `${video.replace("youtube.com/shorts/", "youtube.com/embed/")}?autoplay=1`
+	? video.replace("youtube.com/shorts/", "youtube.com/embed/")
 	: video;
 ---
 
@@ -21,6 +21,8 @@ const embedSrc = video?.includes("youtube.com/shorts/")
         <div class="relative w-full" style="padding-bottom: 56.25%;">
           <iframe
             src={embedSrc}
+            title={`${project.title} video demo`}
+            loading="lazy"
             class="absolute top-0 left-0 w-full h-full"
             allow="autoplay; fullscreen; picture-in-picture"
             allowfullscreen
@@ -32,7 +34,6 @@ const embedSrc = video?.includes("youtube.com/shorts/")
             src={video}
             class="w-full media-reveal"
             controls
-            autoplay
             loop
             muted
             playsinline

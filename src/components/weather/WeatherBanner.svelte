@@ -93,8 +93,7 @@
   // One way: the lab's localize resets readingSettled and must not hide a live banner.
   let revealed = $state(false);
 
-  // Wait for the located weather so the scene does not open on the fallback and
-  // then swap. The frame is collapsed meanwhile, so the wait shows no empty box.
+  // Wait for located weather so the first visible frame does not immediately swap.
   $effect(() => {
     if (revealed || !framePainted || !(readingSettled || revealDeadline)) return;
     revealed = true;
@@ -197,18 +196,21 @@
     let visible = false;
     let surface = mountBanner(canvas);
     let cancelled = false;
+    let width = BANNER_WIDTH * 2;
+    let height = BANNER_HEIGHT * 2;
+    let sizeDirty = true;
+    let lastDpr = 0;
 
     const paint = () => {
       if (!surface) return true;
       const current = untrack(() => scene);
       const still = motionQuery.matches;
-      const rect =
-        canvas.parentElement?.getBoundingClientRect() ?? canvas.getBoundingClientRect();
-      const width = rect.width > 1 ? rect.width : BANNER_WIDTH * 2;
-      const height =
-        rect.height > 1 ? rect.height : width * (BANNER_HEIGHT / BANNER_WIDTH);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      surface.resize(width, height, dpr);
+      if (sizeDirty || dpr !== lastDpr) {
+        surface.resize(width, height, dpr);
+        sizeDirty = false;
+        lastDpr = dpr;
+      }
       paintedSeconds = still ? 0 : elapsed;
       surface.frame(current, paintedSeconds);
       framePainted = true;
@@ -236,7 +238,14 @@
       resume();
     });
     observer.observe(canvas.parentElement ?? canvas);
-    const resize = new ResizeObserver(() => {
+    const resize = new ResizeObserver(([entry]) => {
+      if (entry && entry.contentRect.width > 1) {
+        width = entry.contentRect.width;
+        height = entry.contentRect.height > 1
+          ? entry.contentRect.height
+          : width * (BANNER_HEIGHT / BANNER_WIDTH);
+        sizeDirty = true;
+      }
       if (visible && !document.hidden) paint();
     });
     resize.observe(canvas.parentElement ?? canvas);
@@ -244,6 +253,9 @@
       if (cancelled || !surface) return;
       motionQuery.addEventListener("change", resume);
       document.addEventListener("visibilitychange", resume);
+      // The collapsed frame can be outside the observer's visible area.
+      // Its first paint must not wait for the reveal that this paint unlocks.
+      if (!document.hidden) paint();
       resume();
     };
 
@@ -326,7 +338,7 @@
 </script>
 
 <!-- The layout measures this body, caption included, to open the frame. -->
-<div class="banner-body" data-banner-body>
+<div class="banner-body" data-banner-body inert={!revealed}>
 <div
   bind:this={slotEl}
   class="banner-slot"
@@ -390,8 +402,7 @@
     width: 100%;
     min-width: 0;
     display: block;
-    /* Keeps its height while `.banner-frame` is collapsed, so the renderer
-       measures a real box and the slide clips rather than resizes. */
+    /* Keep the canvas at its full ratio while the outer frame slides open. */
     aspect-ratio: 160 / 48;
     /* Quick repeat taps cycle the scene instead of zooming the page. */
     touch-action: manipulation;

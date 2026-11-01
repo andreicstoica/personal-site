@@ -56,8 +56,9 @@ const ogImage = new URL("/og.png", Astro.site);
     <meta name="twitter:image" content={ogImage} />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
+    <meta name="color-scheme" content="light dark" />
     {
       preloads.map((href) => (
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />

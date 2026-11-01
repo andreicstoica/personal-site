@@ -35,8 +35,8 @@
     aria-label={title ? undefined : label}
     aria-labelledby={title ? `${id}-title` : undefined}
   >
-    {#each prompts as prompt, index (prompt.text)}
-      <li style:--index={index + 1}>
+    {#each prompts as prompt (prompt.text)}
+      <li>
         <button type="button" class="guide-prompt" onclick={() => onselect(prompt.text)}>
           <Icon name={prompt.icon} class="guide-prompt-icon w-4 h-4 shrink-0" />
           <span class="guide-prompt-text">{prompt.text}</span>
@@ -82,7 +82,7 @@
     line-height: 1.125rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
   }
 
   /* Rows touch, so the three read as one list. On touch a row is 40px: above
@@ -105,19 +105,9 @@
     background: color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
   }
 
-  /* A quiet arrival, well after the reply: the title, then each row, fades
-     in over 300ms and rises 2px, 50ms apart. */
   [data-animate="true"] .guide-prompts-title,
   [data-animate="true"] li {
-    animation: guide-prompt-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: calc(var(--index, 0) * 50ms);
-  }
-
-  @keyframes guide-prompt-in {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-    }
+    animation: guide-prompt-fade var(--duration-ui) var(--ease-out) both;
   }
 
   @keyframes guide-prompt-fade {

@@ -4,6 +4,7 @@
 
 /* CSS Custom Properties for global theming */
 :root {
+	color-scheme: light dark;
 	/* Colors */
 	--color-primary: #3848ff;
 	--color-primary-hover: #2a37cc;
@@ -103,15 +104,11 @@
 /* Media load reveal — images, video, gallery thumbs */
 .media-reveal {
 	opacity: 0;
-	filter: blur(4px);
-	transition:
-		opacity var(--duration-ui) var(--ease-out),
-		filter var(--duration-ui) var(--ease-out);
+	transition: opacity var(--duration-ui) var(--ease-out);
 }
 
 .media-reveal.is-loaded {
 	opacity: 1;
-	filter: blur(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -243,6 +240,7 @@ figcaption {
 }
 
 html {
+	-webkit-text-size-adjust: 100%;
 	font-family: var(--font-sans);
 	font-synthesis: none;
 	font-size: 16px;
@@ -269,12 +267,26 @@ body {
 
 .cursor-pixel {
 	position: fixed;
+	top: 0;
+	left: 0;
 	width: 8px;
 	height: 8px;
 	pointer-events: none;
 	z-index: 9999;
 	opacity: 0.5;
-	transition: opacity 0.5s ease-out;
+}
+
+.skip-link {
+	position: fixed;
+	inset: var(--spacing-sm) auto auto var(--spacing-sm);
+	z-index: 1;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	background: var(--color-bg-primary);
+	transform: translateY(calc(-100% - var(--spacing-lg)));
+}
+
+.skip-link:focus-visible {
+	transform: none;
 }
 
 .page-title {

@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import { assertNever } from "../../lib/assertNever";
   import { mediaReveal } from "../../lib/mediaReveal";
+  import { modalFocus } from "../../lib/modalFocus";
   import { portal } from "../../lib/portal";
   import type { GalleryMedia, GalleryVariant } from "../../lib/types";
   import Icon from "../ui/Icon.svelte";
@@ -41,7 +42,8 @@
   let videoRatios = $state<Record<number, number>>({});
   let dialogRef = $state<HTMLDivElement | null>(null);
   let mediaRef = $state<HTMLElement | null>(null);
-  const thumbRefs: HTMLButtonElement[] = [];
+  let thumbRefs = $state<HTMLButtonElement[]>([]);
+  let reducedMotion = $state(false);
 
   let closing = false;
   let pending: Promise<void> | null = null;
@@ -190,7 +192,7 @@
     return run;
   }
 
-  function openImage(i: number) {
+  function openImage(i: number, instant = false) {
     if (index !== null || pending) return;
     const thumb = thumbMediaAt(i);
     videoStartAt = 0;
@@ -201,7 +203,7 @@
       pausedThumb = thumb;
     }
     slideFrom = null;
-    if (!canMorph() || !thumb) {
+    if (instant || !canMorph() || !thumb) {
       index = i;
       return;
     }
@@ -214,7 +216,7 @@
     );
   }
 
-  async function closeModal() {
+  async function closeModal(instant = false) {
     if (index === null || closing) return;
     closing = true;
     if (pending) {
@@ -242,27 +244,27 @@
     };
 
     const from = mediaRef;
-    if (canMorph() && thumb && from && isOnScreen(thumb)) {
+    if (!instant && canMorph() && thumb && from && isOnScreen(thumb)) {
       await track(morph("close", from, unmount));
     } else {
-      fadingOut = true;
-      const delay = prefersReducedMotion() ? 0 : modalCloseMs;
+      fadingOut = !instant;
+      const delay = instant || prefersReducedMotion() ? 0 : modalCloseMs;
       await track(new Promise<void>((resolve) => setTimeout(resolve, delay)).then(async () => {
         await unmount();
       }));
     }
 
-    if (pausedThumb && isOnScreen(pausedThumb)) pausedThumb.play().catch(() => {});
+    if (pausedThumb && !prefersReducedMotion() && !document.hidden && isOnScreen(pausedThumb)) pausedThumb.play().catch(() => {});
     pausedThumb = null;
     trigger?.focus({ preventScroll: true });
     closing = false;
   }
 
-  function go(delta: 1 | -1) {
+  function go(delta: 1 | -1, instant = false) {
     if (index === null || closing || pending) return;
     const next = index + delta;
     if (next < 0 || next >= images.length) return;
-    slideFrom = delta > 0 ? "next" : "prev";
+    slideFrom = instant ? null : delta > 0 ? "next" : "prev";
     videoStartAt = 0;
     index = next;
   }
@@ -348,65 +350,61 @@
     }
   }
 
-  function trapFocus(event: KeyboardEvent) {
-    if (!dialogRef) return;
-    const focusables = [
-      ...dialogRef.querySelectorAll<HTMLElement>("button, video[controls]"),
-    ].filter((el) => el.getClientRects().length > 0);
-    const first = focusables[0];
-    const last = focusables.at(-1);
-    if (!first || !last) {
-      event.preventDefault();
-      dialogRef.focus();
-      return;
-    }
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === dialogRef)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && (active === last || !dialogRef.contains(active))) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-
   /** Strip previews only move while visible; hidden duplicates stay parked. */
   function viewportPlay(node: HTMLVideoElement) {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = false;
     const play = () => {
+      if (!visible || motion.matches || document.hidden || index !== null) {
+        node.pause();
+        return;
+      }
       if (!node.hasAttribute("src") && node.dataset.src) node.src = node.dataset.src;
       node.play().catch(() => {});
     };
     if (typeof IntersectionObserver === `undefined`) {
+      visible = true;
       play();
       return {};
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) play();
-        else node.pause();
+        visible = entry?.isIntersecting ?? false;
+        play();
       },
       { threshold: 0.1 },
     );
     observer.observe(node);
+    motion.addEventListener("change", play);
+    document.addEventListener("visibilitychange", play);
     return {
       destroy() {
         observer.disconnect();
+        motion.removeEventListener("change", play);
+        document.removeEventListener("visibilitychange", play);
+        node.pause();
       },
     };
   }
 
   $effect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => { reducedMotion = motion.matches; };
+    update();
+    motion.addEventListener("change", update);
+    return () => motion.removeEventListener("change", update);
+  });
+
+  $effect(() => {
     if (index === null) return;
     const onKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        void closeModal();
-      } else if (e.key === "Tab") {
-        trapFocus(e);
+        void closeModal(true);
       } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         // Focused video controls use the arrows to seek.
         if (e.target instanceof HTMLVideoElement) return;
         e.preventDefault();
-        go(e.key === "ArrowRight" ? 1 : -1);
+        go(e.key === "ArrowRight" ? 1 : -1, true);
       }
     };
     document.addEventListener("keydown", onKeydown);
@@ -442,6 +440,7 @@
 
 <div class="gallery-wrapper {wrapperClass}">
   <div
+    role="group"
     aria-label={`${experienceName} media gallery`}
     class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip"
     class:full-bleed={variant === "mobile"}
@@ -454,7 +453,7 @@
           type="button"
           class="relative cursor-zoom-in shrink-0 min-w-fit bg-transparent border-0 p-0"
           aria-label={`Open ${experienceName} image`}
-          onclick={() => openImage(i)}
+          onclick={(event) => openImage(i, event.detail === 0)}
         >
           {#if image.kind === "video"}
             <video
@@ -496,6 +495,7 @@
   <div
     bind:this={dialogRef}
     use:portal
+    use:modalFocus
     class="image-inspect modal-backdrop {fadingOut ? 'closing' : ''}"
     data-controls={hasCarousel ? controlsPlacement : "none"}
     role="dialog"
@@ -527,7 +527,7 @@
               src={current.src}
               poster={current.poster}
               class="image-inspect-media"
-              autoplay
+              autoplay={!reducedMotion}
               loop
               muted
               playsinline
@@ -541,7 +541,7 @@
             <button
               type="button"
               class="image-inspect-trigger"
-              onclick={() => void closeModal()}
+              onclick={(event) => void closeModal(event.detail === 0)}
             >
               <img
                 bind:this={mediaRef}
@@ -569,7 +569,7 @@
           data-dir="prev"
           aria-label="Previous image"
           aria-disabled={index === 0}
-          onclick={() => go(-1)}
+          onclick={(event) => go(-1, event.detail === 0)}
         >
           <Icon name="chevron-down" class="w-5 h-5 rotate-90" />
         </button>
@@ -583,7 +583,7 @@
           data-dir="next"
           aria-label="Next image"
           aria-disabled={index === images.length - 1}
-          onclick={() => go(1)}
+          onclick={(event) => go(1, event.detail === 0)}
         >
           <Icon name="chevron-down" class="w-5 h-5 -rotate-90" />
         </button>

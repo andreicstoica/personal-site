@@ -2,6 +2,7 @@
   import { onMount, tick } from "svelte";
   import { navigate } from "astro:transitions/client";
   import { renderChatMarkdown } from "../../lib/chatMarkdown";
+  import { modalFocus } from "../../lib/modalFocus";
   import type { GuideChat } from "../../lib/guideChat";
   import {
     parseStoredMessages,
@@ -63,6 +64,7 @@
   const PHONE_FOLLOW_DELAY = 5000;
 
   let open = $state(false);
+  let phone = $state(false);
   let input = $state("");
   let pagePath = $state("/");
   let hydrated = $state(false);
@@ -580,6 +582,10 @@
 
   onMount(() => {
     let alive = true;
+    const phoneQuery = window.matchMedia("(width < 48rem)");
+    const updatePhone = () => { phone = phoneQuery.matches; };
+    updatePhone();
+    phoneQuery.addEventListener("change", updatePhone);
     // BotID's challenge lets /api/chat tell this browser from a script
     // (botGuard.ts). It runs in the background long before a first question.
     // The challenge route exists only on Vercel (vercel.json).
@@ -622,6 +628,7 @@
     hydrated = true;
     return () => {
       alive = false;
+      phoneQuery.removeEventListener("change", updatePhone);
       cancelFollow();
       void chat?.stop();
       document.removeEventListener("astro:page-load", onPageLoad);
@@ -750,6 +757,8 @@
   <div
     id="guide-panel"
     role="dialog"
+    aria-modal={phone && open && !minimized ? true : undefined}
+    use:modalFocus={phone && open && !minimized}
     aria-label="Ask Andrei"
     tabindex="-1"
     bind:this={panelRef}

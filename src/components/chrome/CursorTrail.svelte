@@ -10,56 +10,69 @@
   const maxPixels = 30;
 
   $effect(() => {
-    const activePixels: HTMLElement[] = [];
+    const preference = window.matchMedia(
+      "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
+    );
+    const pixels = new Map<HTMLElement, Animation>();
+    const easing = getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim();
     let lastTime = 0;
 
-    const createPixel = (x: number, y: number) => {
-      if (activePixels.length >= maxPixels) {
-        const oldest = activePixels.shift();
-        oldest?.remove();
-      }
+    const removePixel = (pixel: HTMLElement) => {
+      pixels.get(pixel)?.cancel();
+      pixels.delete(pixel);
+      pixel.remove();
+    };
+    const clearPixels = () => {
+      for (const pixel of pixels.keys()) removePixel(pixel);
+    };
 
+    const onMove = (event: MouseEvent) => {
+      if (document.hidden) return;
+      const now = performance.now();
+      if (now - lastTime < throttleMs) return;
+      lastTime = now;
+      if (document.elementFromPoint(event.clientX, event.clientY)?.closest("nav")) return;
+
+      if (pixels.size >= maxPixels) {
+        const oldest = pixels.keys().next().value;
+        if (oldest) removePixel(oldest);
+      }
       const pixel = document.createElement("div");
       pixel.className = "cursor-pixel";
-
-      pixel.style.backgroundColor =
-        colors[Math.floor(Math.random() * colors.length)] ?? "var(--tag-work)";
-
+      pixel.setAttribute("aria-hidden", "true");
+      pixel.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)] ?? "var(--tag-work)";
       const size = Math.floor(Math.random() * 7) + 2;
       pixel.style.width = `${size}px`;
       pixel.style.height = `${size}px`;
-      pixel.style.left = `${x - size / 2}px`;
-      pixel.style.top = `${y - size / 2}px`;
-
-      activePixels.push(pixel);
+      pixel.style.transform = `translate(${event.clientX - size / 2}px, ${event.clientY - size / 2}px)`;
       document.body.appendChild(pixel);
-
-      setTimeout(() => {
-        pixel.style.opacity = "0";
-        setTimeout(() => {
-          const index = activePixels.indexOf(pixel);
-          if (index > -1) activePixels.splice(index, 1);
-          pixel.remove();
-        }, 500);
-      }, 300);
+      const animation = pixel.animate(
+        [
+          { opacity: 0.5 },
+          { opacity: 0.5, offset: 0.375, easing },
+          { opacity: 0 },
+        ],
+        { duration: 800 },
+      );
+      pixels.set(pixel, animation);
+      void animation.finished.then(() => removePixel(pixel)).catch(() => {});
     };
-
-    const onMove = (e: MouseEvent) => {
-      const now = Date.now();
-      if (now - lastTime < throttleMs) return;
-      lastTime = now;
-
-      const element = document.elementFromPoint(e.clientX, e.clientY);
-      if (element?.closest("nav")) return;
-
-      createPixel(e.clientX, e.clientY);
+    const update = () => {
+      document.removeEventListener("mousemove", onMove);
+      if (preference.matches) document.addEventListener("mousemove", onMove);
+      else clearPixels();
     };
-
-    document.addEventListener("mousemove", onMove);
-
+    const onVisibility = () => {
+      if (document.hidden) clearPixels();
+    };
+    update();
+    preference.addEventListener("change", update);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       document.removeEventListener("mousemove", onMove);
-      for (const pixel of activePixels) pixel.remove();
+      document.removeEventListener("visibilitychange", onVisibility);
+      preference.removeEventListener("change", update);
+      clearPixels();
     };
   });
 </script>
