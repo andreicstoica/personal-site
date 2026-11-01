@@ -48,7 +48,7 @@ export type Experience = {
 	projects?: ProjectReference[];
 };
 
-export type GalleryVariant = "desktop" | "mobile";
+export type GalleryVariant = "desktop" | "experience";
 
 export type GalleryMedia =
 	| {
@@ -67,6 +67,7 @@ export type GalleryMedia =
 			/** A still of an early frame, so the tile is never blank while the
 			 *  video loads or when the browser holds autoplay back. */
 			poster: string;
+			thumbnailPoster?: string;
 			alt: string;
 			/** Poster pixel size. Gives the tile its box before the video file loads. */
 			width?: number;

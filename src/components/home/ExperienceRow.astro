@@ -32,12 +32,12 @@ const egg = rowEasterEgg(experience.name);
 
 <div
   id={experienceRowId(experience.name)}
-  class="experience-row border-t"
+  class="experience-row experience-grid lg:grid gap-x-4 xl:gap-x-6 items-start border-t"
   data-type={experience.type}
   data-display-font={usesDisplayFont(experience.name) ? "" : undefined}
   data-egg={egg}
 >
-  <div class="experience-grid hidden lg:grid gap-x-4 xl:gap-x-6 items-start">
+  <div class="experience-desktop hidden lg:contents">
     <div class="col-span-1 leading-none">
       <span class="line-clamp-2">
         <span
@@ -132,12 +132,6 @@ const egg = rowEasterEgg(experience.name);
         )
       }
     </div>
-
-    <MediaGallery
-      images={experience.images}
-      experienceName={experience.name}
-      variant="desktop"
-    />
   </div>
 
   <div class="lg:hidden">
@@ -172,13 +166,12 @@ const egg = rowEasterEgg(experience.name);
         </div>
       )
     }
-
-    <MediaGallery
-      images={experience.images}
-      experienceName={experience.name}
-      variant="mobile"
-    />
   </div>
+  <MediaGallery
+    images={experience.images}
+    experienceName={experience.name}
+    variant="experience"
+  />
 </div>
 
 <style>
@@ -291,7 +284,7 @@ const egg = rowEasterEgg(experience.name);
     /* RunChuck: an LED glow beats lub-dub and climbs green to red, like the
        project's heart-rate lights. On the cell, because the chip's own
        line-clamp wrapper would clip a glow drawn on the chip. */
-    .experience-row[data-egg="heartbeat"]:hover .experience-grid > .col-span-1 {
+    .experience-row[data-egg="heartbeat"]:hover .experience-desktop > .col-span-1 {
       filter: drop-shadow(0 0 var(--beat) var(--led))
         drop-shadow(0 0 calc(var(--beat) / 2) var(--led));
       animation:

@@ -8,14 +8,11 @@ import "../styles/global.css";
 interface Props {
 	title: string;
 	description?: string;
-	/** Preload LumberSans, which only the experience table uses. */
-	preloadDisplayFont?: boolean;
 }
 
 const {
 	title,
 	description = "Product minded software engineer based in New York City.",
-	preloadDisplayFont = false,
 } = Astro.props;
 
 const preloads = [
@@ -23,7 +20,6 @@ const preloads = [
 	FONT_PRELOADS.geistSans700,
 	FONT_PRELOADS.geistItalic,
 	FONT_PRELOADS.geistMono,
-	...(preloadDisplayFont ? [FONT_PRELOADS.lumber] : []),
 ];
 
 // Unfurlers need absolute URLs. `site` is set in astro.config.

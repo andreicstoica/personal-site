@@ -1,6 +1,5 @@
 <script lang="ts">
   import { tick } from "svelte";
-  import { assertNever } from "../../lib/assertNever";
   import { mediaReveal } from "../../lib/mediaReveal";
   import { modalFocus } from "../../lib/modalFocus";
   import { portal } from "../../lib/portal";
@@ -74,17 +73,6 @@
     const room = viewportH - 2 * stagePaddingPx - controlsBandPx;
     return mediaHeight - room > mediaHeight * maxShrinkRatio ? "sides" : "bottom";
   });
-
-  const wrapperClass = (() => {
-    switch (variant) {
-      case "desktop":
-        return "col-span-4";
-      case "mobile":
-        return "";
-      default:
-        return assertNever(variant);
-    }
-  })();
 
   function prefersReducedMotion(): boolean {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -438,12 +426,11 @@
 
 <svelte:window bind:innerWidth={viewportW} bind:innerHeight={viewportH} />
 
-<div class="gallery-wrapper {wrapperClass}">
+<div class="gallery-wrapper col-span-4" class:experience-gallery={variant === "experience"}>
   <div
     role="group"
     aria-label={`${experienceName} media gallery`}
     class="flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip"
-    class:full-bleed={variant === "mobile"}
     class:full-bleed-narrow={variant === "desktop"}
   >
     {#each images as image, i}
@@ -458,7 +445,7 @@
           {#if image.kind === "video"}
             <video
               data-src={image.src}
-              poster={image.poster}
+              data-poster={image.thumbnailPoster ?? image.poster}
               class="h-50 w-auto object-contain media-reveal"
               use:mediaReveal
               use:viewportPlay

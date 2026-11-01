@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { navigate } from "astro:transitions/client";
-  import { renderChatMarkdown } from "../../lib/chatMarkdown";
   import { modalFocus } from "../../lib/modalFocus";
   import type { GuideChat } from "../../lib/guideChat";
   import {
@@ -99,6 +98,7 @@
    *  then a restored thread renders from `stored`. */
   let chat = $state.raw<GuideChat | null>(null);
   let chatLoad: Promise<GuideChat> | undefined;
+  let renderChatMarkdown = $state<typeof import("../../lib/chatMarkdown").renderChatMarkdown | null>(null);
   /** Replaced whole, never mutated, so it stays a plain array. */
   let stored = $state.raw<GuideUIMessage[]>([]);
   /** True from a send until the SDK has loaded and taken the message. */
@@ -106,7 +106,12 @@
   let loadFailed = $state(false);
 
   function loadChat(): Promise<GuideChat> {
-    chatLoad ??= import("../../lib/guideChat").then(({ createGuideChat }) => {
+    chatLoad ??= Promise.all([
+      import("../../lib/guideChat"),
+      import("../../lib/chatMarkdown").then((module) => {
+        renderChatMarkdown = module.renderChatMarkdown;
+      }),
+    ]).then(([{ createGuideChat }]) => {
       const instance = createGuideChat({
         messages: stored,
         body: (messages) => ({
@@ -712,6 +717,13 @@
     };
   });
 
+  $effect(() => {
+    if (!open || !hydrated) return;
+    // Warm the SDK while the visitor reads or types.
+    void loadChat().catch(() => {});
+    focusComposer();
+  });
+
   // A reload puts the thread back where the reader left it. A thread saved
   // before scroll was stored shows the end of the latest reply, not the
   // question pinned to the top. Later opens keep the reader's place: the
@@ -719,10 +731,9 @@
   let anchoredOnce = false;
   $effect(() => {
     if (!open || !hydrated) return;
-    // Warm the SDK while the visitor reads or types.
-    void loadChat().catch(() => {});
-    focusComposer();
     if (anchoredOnce) return;
+    // Formatting changes scroll geometry, but must not take focus back.
+    if (!renderChatMarkdown && turns.some((turn) => turn.reply)) return;
     anchoredOnce = true;
     void tick().then(() => {
       requestAnimationFrame(() => {
@@ -852,7 +863,13 @@
                 />
               {/if}
               {#if view.text}
-                <div class="guide-md">{@html renderChatMarkdown(view.text)}</div>
+                <div class="guide-md" class:whitespace-pre-wrap={!renderChatMarkdown}>
+                  {#if renderChatMarkdown}
+                    {@html renderChatMarkdown(view.text)}
+                  {:else}
+                    {view.text}
+                  {/if}
+                </div>
               {/if}
               <!-- Controls and sources wait for the finished reply: shown while it
                    streams, the text would push them down as it grows. -->
