@@ -28,8 +28,8 @@
     type Weather,
     weatherApiSchema,
   } from "../../lib/weather/scene";
-  import WeatherLab from "./WeatherLab.svelte";
   let { showLab }: { showLab: boolean } = $props();
+  let WeatherLab = $state<typeof import("./WeatherLab.svelte").default | null>(null);
 
   // Past this, a cold lookup opens on the fallback scene. The slide pushes the
   // page down, so a late open is worse than a brief weather swap.
@@ -58,6 +58,13 @@
   const LAB_KEY = "oregon-banner-lab-v1";
   let labToggled = $state(storage?.getItem(LAB_KEY) === "on");
   const labVisible = $derived(showLab && labToggled);
+
+  $effect(() => {
+    if (!import.meta.env.DEV || !labVisible || WeatherLab) return;
+    void import("./WeatherLab.svelte").then((module) => {
+      WeatherLab = module.default;
+    });
+  });
 
   $effect(() => {
     const onToggle = () => {
@@ -383,7 +390,7 @@
 </p>
 </div>
 
-{#if labVisible}
+{#if labVisible && WeatherLab}
   <WeatherLab
     place={scene.place}
     weather={scene.weather}

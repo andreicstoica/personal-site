@@ -11,7 +11,7 @@
 
 The site uses the Geist family with no font switcher. The unlayered `:root` tokens override Tailwind's theme (see [tokens.md](./tokens.md)).
 
-Fonts are self-hosted. `scripts/fonts/subset.py` reads the built site's characters and produces hashed WOFF2 core and extended files, generated CSS, and preload URLs. The layout preloads regular and bold Sans, Sans italic, and Mono cores. Other weights and extended characters load on demand; LumberSans is preloaded only on Home. Serif Square is the published static cut. Source hashes, outlines, advances, pair shaping, glyph names, `.notdef`, hinting, and head metrics are checked against the pinned upstream files. Run `bun run build`, `bun run fonts`, then `bun run fonts --check` after changing font usage.
+Fonts are self-hosted. `scripts/fonts/subset.py` reads the built site's characters and produces hashed WOFF2 core and extended files, generated CSS, and preload URLs. The layout preloads regular and bold Sans, Sans italic, and Mono cores. Other weights, extended characters, and LumberSans are discovered from CSS without preload hints. Serif Square is the published static cut. Source hashes, outlines, advances, pair shaping, glyph names, `.notdef`, hinting, and head metrics are checked against the pinned upstream files. Run `bun run build`, `bun run fonts`, then `bun run fonts --check` after changing font usage.
 
 ## Type scale
 

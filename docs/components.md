@@ -55,7 +55,7 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 - `flex gap-2 flex-nowrap overflow-x-auto scrollbar-always-visible gallery-strip`, with no inline padding, so media sits flush with its column edge. Snap-to-start would ignore padding anyway and shift multi-image strips 8px left of single-image ones.
 - `.gallery-strip` adds `scroll-snap-type: x proximity` and `touch-action: pan-x`; thumbnail buttons use an inset focus ring (`outline-offset: -2px`) so the overflow clip never hides it
 - Thumbnails are `h-50 w-auto object-contain` (200px tall, natural width)
-- All thumbnails render on mount; there is no `IntersectionObserver` gate. Offscreen images defer via native `loading="lazy"`
+- Thumbnail markup renders on the server. Offscreen images use native `loading="lazy"`; video posters are assigned from `data-poster` within 200px of the viewport. Videos only start while visible and with no reduced-motion preference.
 - Each thumbnail is a `<button>` with `cursor-zoom-in`
 
 ### Modal inspect
@@ -72,7 +72,7 @@ Horizontal-scroll thumbnail strip with a full-screen modal inspect overlay.
 ### Usage
 
 ```astro
-<MediaGallery images={experience.images} experienceName={experience.name} variant="desktop" />
+<MediaGallery images={experience.images} experienceName={experience.name} variant="experience" />
 ```
 
 `MediaGallery.astro` is the Astro wrapper. It processes image paths and passes `GalleryMedia[]` to the Svelte island. Hydrated with `client:visible`. Public `.webp` files are not processed by Astro, so it reads their real width and height with `sharp`; a wrong `width`/`height` attribute gives a strip thumbnail the wrong box until it loads.
@@ -187,7 +187,7 @@ Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"
 - The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
 - `transition:persist="weather-banner"` keeps it mounted while the page body swaps
 - `src/pages/api/weather.ts` reads `x-vercel-ip-*` headers, calls Open-Meteo with a 4s timeout, and answers **503** when coordinates are missing or upstream fails — the client then paints a clear-sky fallback
-- `WeatherLab.svelte` is a dev/preview-only override panel, gated by `showWeatherLab()` in `src/lib/weather/lab.ts`. Its **localize** button clears every override, rolls a fresh random backdrop (persisted via `savePlace`), and re-fetches the live IP-synced reading — what a real visitor sees, minus the once-per-tab place roll
+- `WeatherLab.svelte` loads dynamically only in development when the panel is opened. Its module is excluded from production bundles. The **localize** button clears overrides, rolls a persisted backdrop, and fetches live IP-synced weather again.
 
 ### Usage
 
@@ -228,7 +228,7 @@ The floating "Ask Andrei" guide. Replaces the old `FullPageChat`. Mounted once i
 
 ### Reply shape
 
-The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.ts`). The SDK is about 34 KB gzipped, so that module loads when the panel opens or a message is sent; a restored thread renders without it, and the island that loads on every page stays at about 18 KB. It posts `{ messages, page }` to `POST /api/chat`: the last nine messages as text only (`ChatTurn`), and the visitor's path. Tool results from the client are never replayed to the model, and only a known route reaches the prompt. The route streams a UI message stream (`createUIMessageStream`) of `GuideUIMessage` parts:
+The panel is an AI SDK `Chat` (`@ai-sdk/svelte`, created in `src/lib/guideChat.ts`). The SDK and Markdown renderer load when the panel opens or a message is sent. A closed restored thread does not load either module. Until the renderer loads, restored replies remain readable as escaped plain text; saved scroll restoration waits for formatted content. It posts `{ messages, page }` to `POST /api/chat`: the last nine messages as text only (`ChatTurn`), and the visitor's path. Tool results from the client are never replayed to the model, and only a known route reaches the prompt. The route streams a UI message stream (`createUIMessageStream`) of `GuideUIMessage` parts:
 
 | Part | Meaning |
 | --- | --- |
@@ -290,7 +290,7 @@ A pixel trail for fine pointers with hover and no reduced-motion preference. Pix
 **File**: `src/components/gallery/MediaGallery.astro`
 
 Processes image paths at build time:
-- `.webm` files: served from `/images/` as video
+- `.webm` files: served from `/images/` as video, with a 400px-high hashed poster for the strip and the original poster for the inspector
 - `.webp` files: served from `/images/` as static images
 - Other formats: processed through Astro's image pipeline via `import.meta.glob`
 

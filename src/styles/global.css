@@ -773,6 +773,16 @@ a {
 	scroll-padding-inline: var(--page-padding-inline);
 }
 
+@media (width < 64rem) {
+	.experience-gallery .gallery-strip {
+		width: calc(100% + var(--page-padding-inline) * 2);
+		margin-inline: calc(var(--page-padding-inline) * -1);
+		padding-inline: var(--page-padding-inline);
+		box-sizing: border-box;
+		scroll-padding-inline: var(--page-padding-inline);
+	}
+}
+
 @media (width < 48rem) {
 	.gallery-strip.full-bleed-narrow {
 		scroll-padding-inline: var(--page-padding-inline);

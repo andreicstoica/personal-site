@@ -13,7 +13,7 @@ Two layers: the thumbnail strip (inline) and the modal inspect (portal).
 - Thumbnails are 200px tall, natural aspect ratio
 - All thumbnails render immediately; there is no `IntersectionObserver` gating. Offscreen images defer via native `loading="lazy"`
 - Images use `loading="lazy"`, `decoding="async"`, explicit `width`/`height`
-- Videos autoplay muted loop inline
+- Videos load and loop muted inline only while visible, with no reduced-motion preference. Their posters load within 200px of the viewport; full-size posters are reserved for the inspector.
 
 ### Modal inspect
 

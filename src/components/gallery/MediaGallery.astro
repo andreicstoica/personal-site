@@ -26,8 +26,7 @@ if (!images || images.length === 0) {
 	return null;
 }
 
-// Public video posters keep their source size. A wrong width/height gives
-// the strip thumbnail the wrong box until it loads.
+// Keep the original ratio even when a strip uses a smaller poster.
 const publicSizes = new Map<string, { width: number; height: number }>();
 
 async function publicImageSize(imageName: string) {
@@ -71,11 +70,13 @@ const processedImages = await Promise.all(
 	images.map(async (imageName): Promise<GalleryMedia | null> => {
 		if (imageName.toLowerCase().endsWith(".webm")) {
 			const posterName = imageName.replace(/\.webm$/i, ".poster.webp");
-			const size = await publicImageSize(posterName);
+			const poster = await publicImages[`/public/images/${posterName}`]?.();
+			const size = poster?.default ?? (await publicImageSize(posterName));
 			return {
 				kind: "video",
 				src: `/images/${imageName}`,
 				poster: `/images/${posterName}`,
+				thumbnailPoster: poster ? await thumbnail(poster.default) : undefined,
 				alt: experienceName,
 				width: size?.width,
 				height: size?.height,

@@ -1,4 +1,5 @@
 export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
+	if (node.classList.contains("is-loaded")) return {};
 	const markLoaded = () => {
 		node.classList.add("is-loaded");
 	};
@@ -18,7 +19,7 @@ export function mediaReveal(node: HTMLImageElement | HTMLVideoElement) {
 
 	// A poster is a separate image. Waiting on the video file leaves the tile
 	// blank whenever that file is slow, deferred, or never fetched.
-	if (node.poster) return revealPoster(node, markLoaded);
+	if (node.poster || node.dataset.poster) return revealPoster(node, markLoaded);
 
 	if (node.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
 		requestAnimationFrame(() => markLoaded());
@@ -36,7 +37,8 @@ function watchPoster(video: HTMLVideoElement): void {
 	if (video.classList.contains("is-loaded") || watchedPosters.has(video))
 		return;
 	watchedPosters.add(video);
-	revealPoster(video, () => revealElement(video));
+	const { destroy } = revealPoster(video, () => revealElement(video));
+	document.addEventListener("astro:before-swap", destroy, { once: true });
 }
 
 function revealPoster(
@@ -46,11 +48,30 @@ function revealPoster(
 	const poster = new Image();
 	poster.addEventListener("load", markLoaded);
 	poster.addEventListener("error", markLoaded);
-	poster.src = video.poster;
-	if (poster.complete && poster.naturalWidth > 0)
-		requestAnimationFrame(markLoaded);
+	const load = () => {
+		if (!video.poster && video.dataset.poster)
+			video.poster = video.dataset.poster;
+		poster.src = video.poster;
+		if (poster.complete && poster.naturalWidth > 0)
+			requestAnimationFrame(markLoaded);
+	};
+	let observer: IntersectionObserver | undefined;
+	if (video.poster || typeof IntersectionObserver === "undefined") {
+		load();
+	} else {
+		observer = new IntersectionObserver(
+			([entry]) => {
+				if (!entry?.isIntersecting) return;
+				observer?.disconnect();
+				load();
+			},
+			{ rootMargin: "200px" },
+		);
+		observer.observe(video);
+	}
 	return {
 		destroy() {
+			observer?.disconnect();
 			poster.removeEventListener("load", markLoaded);
 			poster.removeEventListener("error", markLoaded);
 		},
@@ -75,7 +96,7 @@ function scanRevealables(root: ParentNode = document): void {
 			revealElement(element);
 		}
 		if (element instanceof HTMLVideoElement) {
-			if (element.poster) watchPoster(element);
+			if (element.poster || element.dataset.poster) watchPoster(element);
 			else if (element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
 				revealElement(element);
 			}
