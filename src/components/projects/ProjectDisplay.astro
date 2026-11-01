@@ -13,7 +13,7 @@ interface Props {
 const { project } = Astro.props;
 ---
 
-<div class="w-full py-4 lg:mt-3.5">
+<main id="main-content" class="w-full py-4 lg:mt-3.5">
   <div class="mb-8">
     <h1 class="sr-only">
       {project.title}
@@ -51,4 +51,4 @@ const { project } = Astro.props;
   }
 
   {project.technicalDetails && <ProjectDetails details={project.technicalDetails} />}
-</div>
+</main>

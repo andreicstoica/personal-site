@@ -47,8 +47,18 @@ export function gustMotion(time: number) {
 	return { gust: strength * Math.sin(u * Math.PI) ** 2 * flutter, gustPhase };
 }
 
-/** Analytic motion uses elapsed time only, including backward seeks. */
+let previousTime = Number.NaN;
+let previousMotion: ReturnType<typeof computePlaceMotion> | undefined;
+
+/** Every material sample in a frame shares the same analytic motion. */
 export function placeMotion(time: number) {
+	if (previousMotion && time === previousTime) return previousMotion;
+	previousTime = time;
+	previousMotion = computePlaceMotion(time);
+	return previousMotion;
+}
+
+function computePlaceMotion(time: number) {
 	const { gust, gustPhase } = gustMotion(time);
 	const bale = baleMotion(time);
 	return {

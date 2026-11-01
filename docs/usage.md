@@ -44,12 +44,12 @@ Does it need client JS?
       ├── Must be interactive at first paint on every page (the guide)
       │    → client:load                   (FloatingChat, SiteLayout.astro:41)
       ├── Decorative chrome that can wait a frame
-      │    → client:idle                   (CursorTrail, RootLayout.astro:35)
+      │    → client:idle                   (CursorTrail, RootLayout.astro)
       └── Media below the fold
            → client:visible                (MediaGallery.astro:64)
 ```
 
-- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `cursor-trail`, `site-footer` (`SiteLayout.astro`, `RootLayout.astro`, `SiteFooter.astro`); a fourth key needs a new persistent region, not a duplicate mount. The header is not persisted because its crumb changes per page.
+- Add `transition:persist` only to regions that must survive `ClientRouter` page swaps. Existing keys are exactly `weather-banner`, `guide`, `cursor-trail`, `site-footer` (`SiteLayout.astro`, `RootLayout.astro`, `SiteFooter.astro`); a new key needs a new persistent region, not a duplicate mount. The header is not persisted because its crumb changes per page.
 - Why not `client:load` everywhere: it hydrates on every page view for content most visitors never touch. `client:visible`/`client:idle` defer that work; `client:only` avoids a hydration mismatch, not a perf win — reach for it only when the server markup is meaningless.
 
 ## Icon

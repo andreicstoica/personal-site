@@ -34,7 +34,7 @@ Two layers: the thumbnail strip (inline) and the modal inspect (portal).
 
 ## Media reveal
 
-Images and videos fade in and unblur when loaded: `opacity: 0` with `filter: blur(4px)` transitions to `opacity: 1` with `filter: blur(0)` over 180ms. Implemented via the `mediaReveal` action in `src/lib/mediaReveal.ts`. A video with a poster reveals when that still loads, so the tile shows even if the video file itself has not.
+Images and videos fade in when loaded: `opacity: 0` transitions to `opacity: 1` over 180ms. Implemented via the `mediaReveal` action in `src/lib/mediaReveal.ts`. A video with a poster reveals when that still loads, so the tile shows even if the video file itself has not.
 
 When media is already cached (ready before hydration), the action defers `is-loaded` by one `requestAnimationFrame` so the element paints at `opacity: 0` first. Without the deferral the browser skips the transition entirely.
 
@@ -93,4 +93,4 @@ Used on gallery thumbnail strips.
 
 Custom SVG cursor defined on `html` element. 8x8 pixel square, black fill, white stroke. Falls back to `auto` on touch devices.
 
-`.cursor-pixel` class is used for the cursor trail effect (fixed position, 8x8px, 50% opacity, fades out).
+The cursor trail fades fixed-position pixels with opacity animations. It only runs with a fine pointer, hover, and no reduced-motion preference.

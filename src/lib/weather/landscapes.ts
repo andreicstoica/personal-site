@@ -203,7 +203,10 @@ const SMITH_PILLAR: Profile = [
 const SMITH_CLEFT = 94.5;
 const SMITH_CLEFT_HALF = 2.2;
 /** Narrower shadowed gullies down the faces. */
-const SMITH_GROOVES = [73.7, 82.2, 89.3, 104.6, 111.5];
+const SMITH_GROOVES = [73.7, 82.2, 89.3, 104.6, 111.5].map((x) => ({
+	x,
+	crest: profile(x, SMITH_CREST),
+}));
 // Traced from a sunset silhouette of the real rock and scaled so the summit
 // sits at y 2.5 on the waterline at 27.5. What makes it read as Haystack is
 // the jutting corner where the near-vertical left face meets the summit ridge
@@ -636,8 +639,8 @@ export function material(
 							)) *
 						(1 - smoothstep(29, 33, y));
 					color = mix(color, [40, 36, 52], cleft * 0.8);
-					for (const groove of SMITH_GROOVES) {
-						const depth = y - profile(groove, SMITH_CREST);
+					for (const { x: groove, crest } of SMITH_GROOVES) {
+						const depth = y - crest;
 						if (depth < 0 || depth > 14) continue;
 						const shade =
 							(1 -

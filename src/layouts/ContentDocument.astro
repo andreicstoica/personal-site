@@ -6,7 +6,7 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<main class="w-full py-4 gap-6 flex flex-col pb-8">
+<main id="main-content" class="w-full py-4 gap-6 flex flex-col pb-8">
   <h1 class="sr-only">{title}</h1>
   <div class="w-full text-pretty">
     <slot />

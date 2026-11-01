@@ -182,7 +182,7 @@ Layered Oregon landscape strip. Mounted in `SiteLayout` as `client:only="svelte"
 - Night stars have varied sizes and brightness. Golden-ratio offsets scatter them inside a coarse two-pixel lattice. Hashed phases and speeds drive a gentle bounded sine twinkle on the shared elapsed clock. Each star stays inside its cell; reduced motion holds varied static brightness at time zero. Stars pass through the same final dither at DPR 1 and 2.
 - The sun uses a Gaussian core and wider radial glow. Golden hour has a larger warm bloom and daylight a gentle halo. The moon has an 8.4-logical-pixel disc, about 1.6 times the daylight sun reference diameter, with a stepped uneven limb, four dark maria, and a dim halo. CPU and WebGL share its radius and crater layout. Final quantization preserves the solid disc and crater contrast.
 - `bannerSurface.ts` provides a still CPU fallback with the same terrain and lighting table when WebGL is unavailable. It approximates fog and radial sun or moon light, then uses the same 24-level Bayer quantizer at the displayed size. It uses a separate 2D canvas, including after shader initialization failure, and repaints on scene or size changes. The fallback remains still and does not draw rain, birds, or cloud animation.
-- Enter: `SiteLayout` wraps the island in a static `.banner-frame` (same 160:48 ratio, sunken tint) so the nav does not jump while the island loads. The canvas stays at opacity 0 and blur 4px until it has painted a frame and the weather reading has settled, or 2 seconds have passed. It then fades and unblurs once over `--duration-media` on `--ease-out`, the same values as `.media-reveal`. Reveal is one way, so the lab's localize never hides it, and a `ClientRouter` swap does not replay it. Reduced motion keeps a short opacity fade with no blur.
+- Enter: `SiteLayout` starts the banner frame collapsed. After the first painted frame and the weather reading settle (1.2-second cap), the frame slides open once over `--duration-media` with `--ease-in-out`, pushing the page down. Later route changes open it immediately. Reduced motion skips the slide. The resulting first-load layout shift is intentional.
 - Place and last reading persist in `sessionStorage` (`oregon-banner-place-v1`, `oregon-banner-reading-v1`), so a reload doesn't re-pick the place
 - The canvas carries an `aria-label` from `sceneLabel()`, so the scene reads as text
 - `transition:persist="weather-banner"` keeps it mounted while the page body swaps
@@ -283,7 +283,7 @@ The model is not called unless `MODEL_ID` is set, and never for a conversational
 
 **File**: `src/components/chrome/CursorTrail.svelte`
 
-Pixel-art cursor trail effect. Renders a custom cursor as a small SVG square. Only active on desktop (`hover: hover` and `pointer: fine`).
+A pixel trail for fine pointers with hover and no reduced-motion preference. Pixels hold for 300ms, then fade for 500ms using the Web Animations API. The trail has at most 30 pixels and clears when the tab is hidden or the preference changes.
 
 ## MediaGallery (Astro wrapper)
 
