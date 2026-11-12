@@ -48,9 +48,17 @@ const { crumb, parent } = Astro.props;
 </header>
 
 <style>
+  /* The group moves the name from its old viewport box to the new one.
+     prepareSiteNameTransition() drops the name when that box is not the
+     header slot. `hold` also cancels the group animation, so a one-sided
+     snapshot cannot slide in from the default top-left position. */
   :global(::view-transition-group(site-name)) {
     animation-duration: var(--duration-drawer);
     animation-timing-function: var(--ease-in-out);
+  }
+
+  :global(html[data-site-name-vt="hold"]::view-transition-group(site-name)) {
+    animation: none;
   }
 
   :global(::view-transition-old(site-name)) {
@@ -170,3 +178,74 @@ const { crumb, parent } = Astro.props;
     }
   }
 </style>
+
+<script>
+  import { settledBannerHeight, siteNameShouldMorph } from "../../lib/siteNameTransition";
+
+  const scope = window as Window & {
+    __siteNameVt?: boolean;
+    __weatherBannerSlid?: boolean;
+    __weatherBannerOpened?: boolean;
+  };
+
+  // Once per document. ClientRouter re-runs this module on each swap; a second
+  // listener would stamp the banner again after the snapshot.
+  if (!scope.__siteNameVt) {
+    scope.__siteNameVt = true;
+    document.addEventListener("astro:after-preparation", prepareSiteNameTransition);
+    // The swap replaces html attributes from the incoming document, which does
+    // not know about this flag. Copy it or the hold rule never applies.
+    document.addEventListener("astro:before-swap", (event) => {
+      const next = event.newDocument.documentElement;
+      if (document.documentElement.dataset.siteNameVt === "hold") {
+        next.dataset.siteNameVt = "hold";
+      } else {
+        delete next.dataset.siteNameVt;
+      }
+    });
+  }
+
+  function prepareSiteNameTransition(): void {
+    const frame = document.querySelector("[data-banner-frame]");
+    if (frame instanceof HTMLElement) {
+      const body = frame.querySelector("[data-banner-body]");
+      const height = settledBannerHeight({
+        slid: scope.__weatherBannerSlid === true,
+        opened: scope.__weatherBannerOpened === true,
+        bodyHeight: body instanceof HTMLElement ? body.offsetHeight : 0,
+      });
+      if (height !== null) {
+        // The incoming frame opens to this height inside the swap, before its
+        // snapshot. Commit it here, in the same turn as the old snapshot, and
+        // mark the slide finished so the new frame does not animate shut-to-open.
+        scope.__weatherBannerSlid = true;
+        frame.classList.remove("is-opening");
+        document.querySelector("[data-page-scroll]")?.classList.remove("is-banner-opening");
+        frame.style.setProperty("--banner-height", `${height}px`);
+        document.documentElement.dataset.weatherBanner = "open";
+      }
+    }
+
+    const name = document.querySelector(".nav-name");
+    if (!(name instanceof HTMLElement)) return;
+    const scroller = name.closest("[data-page-scroll]");
+    if (!(scroller instanceof HTMLElement)) {
+      name.style.viewTransitionName = "none";
+      return;
+    }
+    const rect = name.getBoundingClientRect();
+    const bounds = scroller.getBoundingClientRect();
+    const morph = siteNameShouldMorph({
+      scrollTop: scroller.scrollTop,
+      width: rect.width,
+      height: rect.height,
+      top: rect.top,
+      bottom: rect.bottom,
+      scrollerTop: bounds.top,
+      scrollerBottom: bounds.bottom,
+    });
+    if (morph) delete document.documentElement.dataset.siteNameVt;
+    else document.documentElement.dataset.siteNameVt = "hold";
+    name.style.viewTransitionName = morph ? "site-name" : "none";
+  }
+</script>
