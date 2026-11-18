@@ -1,7 +1,27 @@
 import { describe, expect, test } from "bun:test";
-import { renderChatMarkdown } from "./chatMarkdown";
+import { loadStreamingChatMarkdown, renderChatMarkdown } from "./chatMarkdown";
 
 describe("chat markdown", () => {
+	test("formats bold text before the closing marker arrives", async () => {
+		const renderStreaming = await loadStreamingChatMarkdown();
+		const html = renderStreaming("- **Ursula Le Guin");
+		expect(html).toMatch(/<strong(?: [^>]*)?>Ursula Le Guin<\/strong>/);
+	});
+
+	test("keeps the guide's link, image, and HTML rules during streaming", async () => {
+		const renderStreaming = await loadStreamingChatMarkdown();
+		expect(renderStreaming("[Canon](https://andrei.bio/canon)")).toContain(
+			'href="/canon" class="markdown-link"',
+		);
+		expect(renderStreaming("Go to https://example.com")).toContain(
+			'class="markdown-link" target="_blank" rel="noopener noreferrer"',
+		);
+		const image = renderStreaming("![a cat](https://example.com/cat.png)");
+		expect(image).toContain("a cat");
+		expect(image).not.toContain("<img");
+		expect(renderStreaming("<b>text</b>")).toContain("&lt;b&gt;text&lt;/b&gt;");
+	});
+
 	test("renders emphasis, lists, and line breaks", () => {
 		const html = renderChatMarkdown("**Writers**: *Demian*\n\n- one\n- two");
 		expect(html).toContain("<strong>Writers</strong>");

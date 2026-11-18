@@ -20,6 +20,7 @@
 		"@ai-sdk/svelte": "^5.0.128",
 		"@astrojs/svelte": "9.0.1",
 		"@astrojs/vercel": "11.0.3",
+		"@pierre/words": "0.2.2",
 		"@tailwindcss/vite": "4.3.2",
 		"@vercel/analytics": "^2.0.1",
 		"ai": "^7.0.128",

@@ -99,6 +99,7 @@
   let chat = $state.raw<GuideChat | null>(null);
   let chatLoad: Promise<GuideChat> | undefined;
   let renderChatMarkdown = $state<typeof import("../../lib/chatMarkdown").renderChatMarkdown | null>(null);
+  let renderStreamingChatMarkdown = $state<typeof renderChatMarkdown>(null);
   /** Replaced whole, never mutated, so it stays a plain array. */
   let stored = $state.raw<GuideUIMessage[]>([]);
   /** True from a send until the SDK has loaded and taken the message. */
@@ -110,6 +111,11 @@
       import("../../lib/guideChat"),
       import("../../lib/chatMarkdown").then((module) => {
         renderChatMarkdown = module.renderChatMarkdown;
+        void module.loadStreamingChatMarkdown()
+          .then((render) => {
+            renderStreamingChatMarkdown = render;
+          })
+          .catch(() => {});
       }),
     ]).then(([{ createGuideChat }]) => {
       const instance = createGuideChat({
@@ -863,9 +869,10 @@
                 />
               {/if}
               {#if view.text}
-                <div class="guide-md" class:whitespace-pre-wrap={!renderChatMarkdown}>
-                  {#if renderChatMarkdown}
-                    {@html renderChatMarkdown(view.text)}
+                {@const renderReply = (live ? renderStreamingChatMarkdown : null) ?? renderChatMarkdown}
+                <div class="guide-md" class:whitespace-pre-wrap={!renderReply}>
+                  {#if renderReply}
+                    {@html renderReply(view.text)}
                   {:else}
                     {view.text}
                   {/if}
@@ -1223,10 +1230,7 @@
     line-height: 1rem;
   }
 
-  /* Model replies render through renderChatMarkdown; Tailwind's reset strips
-     list and heading styles, so restore the few that markdown needs. Body
-     text runs at 1.6 so a reply reads as prose, not a log line; blocks sit
-     about one line apart. */
+  /* Tailwind resets the list and heading styles that chat Markdown needs. */
   .guide-md {
     font-size: var(--guide-text-size);
     line-height: var(--guide-text-leading);
@@ -1234,6 +1238,10 @@
 
   .guide-md :global(:where(p, ul, ol, h1, h2, h3, h4, pre, blockquote) + *) {
     margin-top: 0.75rem;
+  }
+
+  .guide-md :global(:is(p, li)[data-markdown]) {
+    white-space: pre-line;
   }
 
   .guide-md :global(ul) {
