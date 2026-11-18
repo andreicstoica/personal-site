@@ -13,6 +13,8 @@ function escapeHtml(text: string): string {
 }
 
 const SITE_ORIGIN = /^https:\/\/(?:www\.)?andrei\.bio(?=\/|$)/i;
+const PR_NUMBER_SPACE = /[\u2007\u2009\u202f](?=#\d)/g;
+const LINK_OR_HTML = /<|\[|@|https?:\/\/|www\./i;
 
 /** Site paths, https, and mailto only. `//host` is protocol-relative, so it
  *  counts as external and must not pass as a site path. A full link to this
@@ -32,7 +34,7 @@ const chatMarked = new Marked({
 	breaks: true,
 	walkTokens(token) {
 		if (token.type === "text") {
-			token.text = token.text.replace(/[\u2007\u2009\u202f](?=#\d)/g, " ");
+			token.text = token.text.replace(PR_NUMBER_SPACE, " ");
 		}
 	},
 	renderer: {
@@ -60,4 +62,23 @@ export function renderChatMarkdown(markdown: string): string {
 	if (typeof html !== "string")
 		throw new Error("Expected synchronous markdown");
 	return html;
+}
+
+export async function loadStreamingChatMarkdown(): Promise<
+	typeof renderChatMarkdown
+> {
+	const { createHtmlRenderer } = await import("@pierre/words/html");
+	const renderer = createHtmlRenderer({
+		controls: false,
+		lineNumbers: false,
+		urlTransform: () => null,
+	});
+
+	return (markdown) => {
+		// Marked owns literal HTML, links, image labels, and PR number spacing.
+		if (LINK_OR_HTML.test(markdown) || markdown.search(PR_NUMBER_SPACE) >= 0) {
+			return renderChatMarkdown(markdown);
+		}
+		return renderer.render(markdown, true, true).html;
+	};
 }
