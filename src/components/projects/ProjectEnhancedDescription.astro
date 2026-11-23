@@ -13,24 +13,12 @@ const htmlContent = renderMarkdown(processedDescription);
 ---
 
 <div class="project-enhanced-description">
-  <div class="text-pretty text-sm leading-(--leading-normal) text-(--description-text)">
+  <div class="text-pretty text-sm leading-(--leading-normal) text-(--color-text-description)">
     <div set:html={htmlContent} />
   </div>
 </div>
 
 <style>
-  /* A row's description is its content, so it sits at 6.9:1 instead of the
-     shared secondary grey (5.7:1), which is thin at 14px regular. */
-  .project-enhanced-description {
-    --description-text: oklch(0.464 0 0);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .project-enhanced-description {
-      --description-text: var(--color-text-secondary);
-    }
-  }
-
   /* Project cross-references match the description; the dotted underline carries the affordance. */
   .project-enhanced-description :global(.project-link) {
     color: inherit;

@@ -28,8 +28,6 @@
   const maxShrinkRatio = 0.08;
   const swipeCommitPx = 60;
   const swipeCommitVelocity = 0.11;
-  const mediaShadow =
-    "0 0 50px rgba(0, 0, 0, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 25px -5px rgba(0, 0, 0, 0.1)";
 
   let index = $state<number | null>(null);
   let fadingOut = $state(false);
@@ -522,7 +520,7 @@
               preload="auto"
               draggable={false}
               onloadedmetadata={onVideoMetadata}
-              style="box-shadow: {mediaShadow};"
+              style="box-shadow: var(--elevation-gallery-media);"
             ></video>
           {:else}
             <button
@@ -540,7 +538,7 @@
                 decoding="async"
                 fetchpriority="high"
                 draggable={false}
-                style="box-shadow: {mediaShadow};"
+                style="box-shadow: var(--elevation-gallery-media);"
               />
             </button>
           {/if}

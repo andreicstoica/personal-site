@@ -1172,9 +1172,9 @@
     width: var(--guide-launch-size);
     height: var(--guide-launch-size);
     background: var(--color-primary);
-    color: white;
+    color: var(--color-text-on-primary);
     border: 1px solid var(--color-primary);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+    box-shadow: var(--elevation-guide-launcher);
     transition:
       background-color var(--duration-ui) var(--ease-out);
   }
@@ -1287,7 +1287,7 @@
     width: 2.25rem;
     height: 2.25rem;
     background: var(--color-primary);
-    color: white;
+    color: var(--color-text-on-primary);
   }
 
   .guide-send::before {

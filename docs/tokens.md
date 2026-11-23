@@ -4,6 +4,8 @@ All tokens live in `src/styles/global.css` (TAB-indented, keep it that way). Com
 
 ## The layer rule
 
+Palette primitives hold fixed values in the first `:root` block. Semantic tokens assign those values to UI roles. For example, `--color-text-secondary` uses `--gray-500` in light mode and `--gray-300` in dark mode. Set theme mappings in the shared dark media query. Components use the same role in both themes.
+
 Two accepted ways to reference a token from a Tailwind class:
 
 - **Bracket form** — `border-[var(--color-bg-secondary)]`, `text-[var(--color-text-primary)]`. The house idiom; 14 matching lines in `FloatingChat.svelte` alone.
@@ -43,11 +45,12 @@ The dark background ramp keeps the old neutral greys' lightness (#272727, #33333
 ```
 What text color?
  ├── Body, headings                → --color-text-primary   (14.8:1 both modes)
+ ├── Project row descriptions      → --color-text-description (6.9:1 light, secondary text in dark mode)
  ├── Secondary copy, chips, borders → --color-text-secondary (5.7:1 light / 9.3:1 dark)
  ├── Decorative-only labels        → --color-text-muted     (2.8:1 on light — fails the
  │                                    4.5:1 floor; scrollbars and timestamps only,
  │                                    never chips, links, or anything load-bearing)
- └── On a --color-primary fill     → literal white (5.9:1). NOT --color-text-inverse:
+ └── On a --color-primary fill     → --color-text-on-primary (5.9:1). NOT --color-text-inverse:
                                       it flips to #272727 in dark mode → 2.5:1 on blue.
 ```
 
@@ -63,6 +66,8 @@ What text color?
 3. **Accent/focus border** — `var(--color-primary-text)` (`btn-secondary:hover`).
 
 The experience table's row rules use **#1** (one `color-mix` hairline in `ExperienceRow.astro`'s scoped style) and its filter select uses **#2**. Neither reaches for `border-gray-*` + `dark:` swaps — don't reintroduce that shape.
+
+The horizontal scrollbar uses `--color-scrollbar-thumb` at rest and secondary text color on hover. Its resting color maps to muted text in light mode and secondary text in dark mode.
 
 ## Radius
 
@@ -86,7 +91,7 @@ Two elevation tokens, one per guide geometry:
 - `--elevation-drawer` (desktop drawer) points inward — the drawer never shadows the page, the page's edge shadows it, so it reads as a recess. `--elevation-drawer` is only the 1px hairline; `--drawer-shade` colors an eased 2rem gradient drawn by `.guide-panel::before` in `FloatingChat.svelte`, on the page-facing edge only. A blurred inset box-shadow was rejected because it also darkened the top, bottom, and far edges, where the drawer meets the viewport. Light: black 6% hairline, 10% shade. Dark: white 10% hairline, 40% black shade — a black shadow is invisible on the dark page (L 0.273) from outside, but reads as depth from inside.
 - `--elevation-sheet` (phone bottom sheet) points outward and up, so the sheet reads as a layer on top of the page. Light: a tight plus a soft layered shadow. Dark: a deeper 55% black shadow plus a white 8% top edge, since a shadow alone barely shows on dark ground.
 
-The direction and the dark-mode collapse are the tokens' job; don't re-derive them per component. The guide launcher's `0 8px 24px rgb(0 0 0 / 16%)` is the only other shadow in the system; don't invent another.
+The direction and the dark-mode collapse are the tokens' job; don't re-derive them per component. The launcher uses `--elevation-guide-launcher`. Raised buttons use `--elevation-button-hover`, and expanded gallery media uses `--elevation-gallery-media`. The gallery backdrop, controls, and count use fixed `--color-gallery-*` roles in both themes.
 
 ## Spacing
 

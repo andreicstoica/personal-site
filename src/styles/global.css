@@ -2,47 +2,100 @@
 
 @import "tailwindcss";
 
-/* CSS Custom Properties for global theming */
+/* Palette values stay fixed across themes. */
+:root {
+	--black-rgb: 0 0 0;
+	--white-rgb: 255 255 255;
+	--gray-50: #fefefe;
+	--gray-100: #f5f5f5;
+	--gray-150: oklch(0.93 0 0);
+	--gray-300: #cccccc;
+	--gray-350: #c4c4c4;
+	--gray-400: #999999;
+	--gray-450: #888888;
+	--gray-500: #666666;
+	--gray-550: oklch(0.464 0 0);
+	--gray-700: #333333;
+	--gray-800: #272727;
+	--slate-600: oklch(0.42 0.009 255);
+	--slate-700: oklch(0.372 0.009 255);
+	--slate-800: oklch(0.321 0.009 255);
+	--slate-900: oklch(0.273 0.009 255);
+	--slate-950: oklch(0.239 0.009 255);
+	--blue-300: oklch(0.66 0.18 272);
+	--blue-350: #6666ff;
+	--blue-400: #5a6aff;
+	--blue-500: #3848ff;
+	--blue-600: #2a37cc;
+	--red-300: #ff6666;
+	--red-600: #c23b23;
+	--red-700: #a12f1c;
+	--yellow-200: #ffff66;
+	--yellow-300: #ffe438;
+	--yellow-400: #fcc605;
+	--yellow-500: #e6b003;
+	--green-300: #66ff66;
+	--mint-400: #37ff8b;
+	--magenta-300: #ff66ff;
+	--magenta-600: #e00493;
+}
+
+/* Components consume these roles. */
 :root {
 	color-scheme: light dark;
+	--color-text-description: var(--gray-550);
+	--color-scrollbar-thumb: var(--color-text-muted);
+
 	/* Colors */
-	--color-primary: #3848ff;
-	--color-primary-hover: #2a37cc;
+	--color-primary: var(--blue-500);
+	--color-primary-hover: var(--blue-600);
 	/* Blue as text or a focus ring. Equals the fill in light mode; dark mode
 	   lifts L so it clears 4.5:1 on dark surfaces (the fill keeps white text). */
 	--color-primary-text: var(--color-primary);
-	--color-accent: #c23b23;
-	--color-accent-hover: #a12f1c;
-	--color-warning: #fcc605;
-	--color-warning-hover: #e6b003;
+	--color-accent: var(--red-600);
+	--color-accent-hover: var(--red-700);
+	--color-warning: var(--yellow-400);
+	--color-warning-hover: var(--yellow-500);
 
 	/* Text colors */
-	--color-text-primary: #272727;
-	--color-text-secondary: #666666;
-	--color-text-muted: #999999;
-	--color-text-inverse: #fefefe;
+	--color-text-primary: var(--gray-800);
+	--color-text-secondary: var(--gray-500);
+	--color-text-muted: var(--gray-400);
+	--color-text-inverse: var(--gray-50);
 
 	/* Background colors */
-	--color-bg-primary: #fefefe;
-	--color-bg-secondary: #c4c4c4;
-	--color-bg-sunken: #f5f5f5;
+	--color-bg-primary: var(--gray-50);
+	--color-bg-secondary: var(--gray-350);
+	--color-bg-sunken: var(--gray-100);
 	--color-divider: var(--color-bg-secondary);
 
 	/* Tag Colors */
-	--tag-work: #3848ff;
-	--tag-personal: #37ff8b;
-	--tag-school: #ffe438;
-	--tag-other: #e00493;
+	--tag-work: var(--blue-500);
+	--tag-personal: var(--mint-400);
+	--tag-school: var(--yellow-300);
+	--tag-other: var(--magenta-600);
 
 	/* Text on a tag background. Deliberately absent from the dark block below:
 	   the tag colors never remap, so their text must not either. */
-	--tag-work-text: #fefefe;
-	--tag-personal-text: #272727;
-	--tag-school-text: #272727;
-	--tag-other-text: #fefefe;
+	--tag-work-text: var(--gray-50);
+	--tag-personal-text: var(--gray-800);
+	--tag-school-text: var(--gray-800);
+	--tag-other-text: var(--gray-50);
 
 	/* ASCII Art Colors */
-	--color-ascii-bright: #3848ff;
+	--color-ascii-bright: var(--blue-500);
+
+	--color-gallery-backdrop: rgb(var(--black-rgb) / 0.8);
+	--color-gallery-control-border: rgb(var(--white-rgb) / 0.18);
+	--color-gallery-control-fill: rgb(var(--white-rgb) / 0.12);
+	--color-gallery-control-fill-hover: rgb(var(--white-rgb) / 0.24);
+	--color-gallery-control-text: rgb(var(--white-rgb) / 0.9);
+	--color-gallery-count: rgb(var(--white-rgb) / 0.75);
+	--color-gallery-control-emphasis: rgb(var(--white-rgb));
+	--color-text-on-primary: rgb(var(--white-rgb));
+	--elevation-button-hover: 0 4px 12px rgb(var(--black-rgb) / 0.15);
+	--elevation-guide-launcher: 0 8px 24px rgb(var(--black-rgb) / 16%);
+	--elevation-gallery-media: 0 0 50px rgb(var(--black-rgb) / 0.3), 0 25px 50px -12px rgb(var(--black-rgb) / 0.25), 0 20px 25px -5px rgb(var(--black-rgb) / 0.1);
 
 	/* Fonts */
 	--font-sans: "Geist", system-ui, sans-serif;
@@ -89,12 +142,12 @@
 	   FloatingChat.svelte). A blurred inset box-shadow would also darken the
 	   top, bottom, and far edges, where the drawer meets the viewport and
 	   nothing sits above it. */
-	--elevation-drawer: inset 1px 0 0 rgb(0 0 0 / 0.06);
-	--drawer-shade: rgb(0 0 0 / 0.1);
+	--elevation-drawer: inset 1px 0 0 rgb(var(--black-rgb) / 0.06);
+	--drawer-shade: rgb(var(--black-rgb) / 0.1);
 	/* Phone sheet sits on top of the page: layered shadow cast upward. */
 	--elevation-sheet:
-		0 -1px 3px rgb(0 0 0 / 0.08),
-		0 -10px 28px rgb(0 0 0 / 0.14);
+		0 -1px 3px rgb(var(--black-rgb) / 0.08),
+		0 -10px 28px rgb(var(--black-rgb) / 0.14);
 }
 
 .nav-name {
@@ -136,41 +189,42 @@
 @media (prefers-color-scheme: dark) {
 	:root {
 		/* Pure white on the dark page glares; this still clears 12:1. */
-		--color-text-primary: oklch(0.93 0 0);
-		--color-text-secondary: #cccccc;
-		--color-text-muted: #999999;
-		--color-text-inverse: #272727;
+		--color-text-primary: var(--gray-150);
+		--color-text-secondary: var(--gray-300);
+		--color-text-description: var(--color-text-secondary);
+		--color-scrollbar-thumb: var(--color-text-secondary);
+		--color-text-inverse: var(--gray-800);
 
 		/* A faint cool tint keeps neutral grey from reading warm beside the
 		   mostly blue weather scenes. */
-		--color-bg-primary: oklch(0.273 0.009 255);
-		--color-bg-secondary: oklch(0.321 0.009 255);
-		--color-bg-tertiary: oklch(0.372 0.009 255);
-		--color-bg-sunken: oklch(0.239 0.009 255);
+		--color-bg-primary: var(--slate-900);
+		--color-bg-secondary: var(--slate-800);
+		--color-bg-tertiary: var(--slate-700);
+		--color-bg-sunken: var(--slate-950);
 		/* The chip gray is 1.18:1 on the dark page; rules need about the 1.7:1
 		   they get in light mode. */
-		--color-divider: oklch(0.42 0.009 255);
+		--color-divider: var(--slate-600);
 
 		/* 4.6:1 on the page, 4.7:1 on the sunken drawer (fill blue is 2.5:1). */
-		--color-primary-text: oklch(0.66 0.18 272);
+		--color-primary-text: var(--blue-300);
 
 		/* Depth flattens to a single ring against dark surfaces */
-		--elevation-drawer: inset 1px 0 0 rgb(255 255 255 / 0.1);
-		--drawer-shade: rgb(0 0 0 / 0.4);
+		--elevation-drawer: inset 1px 0 0 rgb(var(--white-rgb) / 0.1);
+		--drawer-shade: rgb(var(--black-rgb) / 0.4);
 		/* Shadows barely read on dark ground; a faint lit edge marks the layer. */
 		--elevation-sheet:
-			inset 0 1px 0 rgb(255 255 255 / 0.08),
-			0 -12px 36px rgb(0 0 0 / 0.55);
+			inset 0 1px 0 rgb(var(--white-rgb) / 0.08),
+			0 -12px 36px rgb(var(--black-rgb) / 0.55);
 
 		/* ASCII Art Colors - Dark Mode */
-		--color-ascii-dark: #333333;
-		--color-ascii-medium: #888888;
-		--color-ascii-bright: #5a6aff;
-		--color-ascii-red: #ff6666;
-		--color-ascii-green: #66ff66;
-		--color-ascii-blue: #6666ff;
-		--color-ascii-yellow: #ffff66;
-		--color-ascii-purple: #ff66ff;
+		--color-ascii-dark: var(--gray-700);
+		--color-ascii-medium: var(--gray-450);
+		--color-ascii-bright: var(--blue-400);
+		--color-ascii-red: var(--red-300);
+		--color-ascii-green: var(--green-300);
+		--color-ascii-blue: var(--blue-350);
+		--color-ascii-yellow: var(--yellow-200);
+		--color-ascii-purple: var(--magenta-300);
 	}
 }
 
@@ -458,7 +512,7 @@ body {
 	overflow-x: auto !important;
 	overflow-y: hidden;
 	scrollbar-width: thin;
-	scrollbar-color: var(--color-text-muted) transparent;
+	scrollbar-color: var(--color-scrollbar-thumb) transparent;
 	white-space: nowrap;
 }
 
@@ -472,22 +526,12 @@ body {
 }
 
 .scrollbar-always-visible::-webkit-scrollbar-thumb {
-	background-color: var(--color-text-muted);
+	background-color: var(--color-scrollbar-thumb);
 	border-radius: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.scrollbar-always-visible::-webkit-scrollbar-thumb:hover {
-		background-color: var(--color-text-secondary);
-	}
-}
-
-@media (prefers-color-scheme: dark) {
-	.scrollbar-always-visible {
-		scrollbar-color: var(--color-text-secondary) transparent;
-	}
-
-	.scrollbar-always-visible::-webkit-scrollbar-thumb {
 		background-color: var(--color-text-secondary);
 	}
 }
@@ -513,7 +557,7 @@ body {
 @media (hover: hover) and (pointer: fine) {
 	.btn-primary:hover {
 		background: var(--color-primary-hover);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		box-shadow: var(--elevation-button-hover);
 	}
 }
 
@@ -753,7 +797,7 @@ a {
 	.btn-secondary-custom:hover {
 		filter: brightness(0.9);
 		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		box-shadow: var(--elevation-button-hover);
 	}
 }
 
@@ -829,7 +873,7 @@ a {
 	min-height: 100dvh;
 	padding: 1rem;
 	padding-bottom: max(1rem, env(safe-area-inset-bottom));
-	background: rgb(0 0 0 / 0.8);
+	background: var(--color-gallery-backdrop);
 	backdrop-filter: blur(4px);
 	overscroll-behavior: none;
 }
@@ -937,10 +981,10 @@ a {
 	width: 2.75rem;
 	height: 2.75rem;
 	padding: 0;
-	border: 1px solid rgb(255 255 255 / 0.18);
+	border: 1px solid var(--color-gallery-control-border);
 	border-radius: 0;
-	background: rgb(255 255 255 / 0.12);
-	color: rgb(255 255 255 / 0.9);
+	background: var(--color-gallery-control-fill);
+	color: var(--color-gallery-control-text);
 	cursor: pointer;
 	touch-action: manipulation;
 	transition:
@@ -969,20 +1013,20 @@ a {
 }
 
 .image-inspect-nav:focus-visible {
-	outline-color: white;
+	outline-color: var(--color-gallery-control-emphasis);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.image-inspect-nav:not([aria-disabled="true"]):hover {
-		background: rgb(255 255 255 / 0.24);
-		color: white;
+		background: var(--color-gallery-control-fill-hover);
+		color: var(--color-gallery-control-emphasis);
 	}
 }
 
 .image-inspect-count {
 	min-width: 4.5rem;
 	margin: 0;
-	color: rgb(255 255 255 / 0.75);
+	color: var(--color-gallery-count);
 	font-size: 0.8125rem;
 	font-variant-numeric: tabular-nums;
 	text-align: center;
