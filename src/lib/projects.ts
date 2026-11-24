@@ -76,7 +76,6 @@ export const projects: Record<string, Project> = {
 		links: {
 			github:
 				"https://github.com/andreicstoica/tennis-coach-mobile?tab=readme-ov-file#readme",
-			demo: "https://courtly-xi.vercel.app/",
 		},
 		images: [
 			"courtly-form.webp",
@@ -150,7 +149,6 @@ export const projects: Record<string, Project> = {
 			],
 		},
 		links: {
-			demo: "https://t3-chat-app-ho6w.vercel.app/",
 			github: "https://github.com/andreicstoica/t3-chat-app",
 		},
 		images: ["tarot-home.webp", "tarot-message.webp", "tarot-response.webm"],
@@ -252,7 +250,6 @@ export const projects: Record<string, Project> = {
 			],
 		},
 		links: {
-			demo: "refract.site",
 			github: "https://github.com/andreicstoica/refract",
 		},
 		images: [

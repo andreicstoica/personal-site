@@ -10,14 +10,14 @@ Selected projects, newest cluster from the Fractal AI accelerator (2025) and fre
 ## Refract
 resource: /projects/refract
 
-The journal that collaborates with you to go deeper. Refract engages with writing in real time, asking questions that spark reflection, then highlights themes afterward. Built with the AI SDK, embeddings, browser text-area APIs, and React/Next.js. Demo: refract.site. GitHub: https://github.com/andreicstoica/refract
+The journal that collaborates with you to go deeper. Refract engages with writing in real time, asking questions that spark reflection, then highlights themes afterward. Built with the AI SDK, embeddings, browser text-area APIs, and React/Next.js. GitHub: https://github.com/andreicstoica/refract
 
 He describes two AI features that don't require prompting, a writing-first UI, and contextual responses. Hard parts were keeping the writer in control, making the conversation feel supportive, and balancing latency so nudges aren't stale. Implementation notes: Next.js App Router, Framer Motion and GSAP, Vercel AI SDK, a custom DOM-mirror over an infinite text area, an engine that watches topic, punctuation, and time before nudging, and clustered embeddings that get labeled into themes.
 
 ## Courtly
 resource: /projects/courtly
 
-A tennis site and app that generates customized AI training routines. Personalized plans, adaptive difficulty, and collectible medals for NYC courts. React Native, Expo, React, tRPC, the AI SDK, and three.js. Demo: https://courtly-xi.vercel.app/. GitHub: https://github.com/andreicstoica/tennis-coach-mobile. Short video: https://youtube.com/shorts/HFRVCUYEce0
+A tennis site and app that generates customized AI training routines. Personalized plans, adaptive difficulty, and collectible medals for NYC courts. React Native, Expo, React, tRPC, the AI SDK, and three.js. GitHub: https://github.com/andreicstoica/tennis-coach-mobile. Short video: https://youtube.com/shorts/HFRVCUYEce0
 
 Workout generation used structured model output. The app shares a web client, uses geolocation for court badges, and renders 3D badges in three.js. Auth is JWT with refresh rotation. Type-safe mobile/web APIs go through tRPC and Zod.
 
@@ -38,7 +38,7 @@ Step-by-step walkthroughs. The hard part was lining animation timelines up with 
 ## Daily Tarot
 resource: /projects/tarot-chat
 
-A daily tarot reading chat for reflecting on a draw. React, Next.js, shadcn, and the Vercel AI SDK. Demo: https://t3-chat-app-ho6w.vercel.app/. GitHub: https://github.com/andreicstoica/t3-chat-app
+A daily tarot reading chat for reflecting on a draw. React, Next.js, shadcn, and the Vercel AI SDK. GitHub: https://github.com/andreicstoica/t3-chat-app
 
 Streaming replies, saved conversations, a profile, image upload, and session cookies. Hard parts were streaming text without layout jump, upload validation, and chat-history queries.
 
