@@ -305,7 +305,12 @@ async function streamModelTurn(
 			writer.write({
 				type: "data-post",
 				id: `post-${crypto.randomUUID()}`,
-				data: postRef(passage),
+				data: {
+					...postRef(passage),
+					...(passage.fragmentText
+						? { fragmentText: passage.fragmentText }
+						: {}),
+				},
 			});
 		}
 	}

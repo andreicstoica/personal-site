@@ -345,7 +345,7 @@
 </script>
 
 <!-- The layout measures this body, caption included, to open the frame. -->
-<div class="banner-body" data-banner-body inert={!revealed}>
+<div data-banner-body inert={!revealed}>
 <div
   bind:this={slotEl}
   class="banner-slot"

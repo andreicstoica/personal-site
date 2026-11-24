@@ -158,6 +158,7 @@ describe("posts", () => {
 		const bevel = find("What is Bevel?");
 		expect(bevel.map((hit) => hit.slug)).toEqual(["3-weeks-in"]);
 		expect(bevel[0]?.text).toContain("Bevel");
+		expect(bevel[0]?.fragmentText).toBe("Bevel quantified self, built on");
 		expect(find("Who did you visit in Boulder?")[0]?.slug).toBe(
 			"small-town-america",
 		);
@@ -191,6 +192,23 @@ describe("posts", () => {
 			postSearch.search("refract journal nudges").every((hit) => hit.url),
 		).toBe(true);
 	});
+});
+
+test("an ambiguous passage keeps the article URL", () => {
+	const url = "https://blog.andrei.bio/p/repeated-phrase";
+	const repeated = "Bevel tracks sleep and activity";
+	const find = createPassageFinder([
+		{
+			id: "post:repeated-phrase",
+			slug: "repeated-phrase",
+			title: "Repeated phrase",
+			url,
+			text: `${repeated}\n\n${repeated.toLowerCase()}`,
+		},
+	]);
+	const [hit] = find("What is Bevel?");
+	expect(hit?.url).toBe(url);
+	expect(hit?.fragmentText).toBeUndefined();
 });
 
 describe("routes", () => {

@@ -9,12 +9,13 @@
 		"astro": "astro",
 		"lint": "biome check --error-on-warnings src/",
 		"lint:fix": "biome check --write src/",
-		"lint:ui": "eslint .",
+		"lint:ui": "eslint 'src/components/**/*.svelte'",
 		"check": "astro check && svelte-check --tsconfig ./tsconfig.json",
 		"test": "bun test",
+		"test:smoke": "playwright test",
 		"guide:eval": "bun scripts/guide-eval.ts",
 		"fonts": "uv run scripts/fonts/subset.py",
-		"verify": "biome check --error-on-warnings src/ && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build && bun scripts/check-build.ts"
+		"verify": "biome check --error-on-warnings src/ && bun run lint:ui && astro check && svelte-check --tsconfig ./tsconfig.json && bun test && astro build && bun scripts/check-build.ts"
 	},
 	"dependencies": {
 		"@ai-sdk/svelte": "^5.0.128",
@@ -37,6 +38,7 @@
 	"devDependencies": {
 		"@astrojs/check": "^0.9.10",
 		"@biomejs/biome": "^2.2.6",
+		"@playwright/test": "1.65.1",
 		"@shadcn/lint": "^0.2.0",
 		"@types/bun": "^1.4.2",
 		"@typescript-eslint/parser": "^8.70.1",

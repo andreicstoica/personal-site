@@ -26,6 +26,7 @@ export type SearchHit = {
 	url?: string;
 	date?: string;
 	text: string;
+	fragmentText?: string;
 };
 
 export function noteDocs(sections: readonly MemorySection[]): GuideDoc[] {
@@ -124,9 +125,37 @@ const PASSAGES = 2;
 /** A matched chunk plus its neighbors: the answer often sits a paragraph
  *  away from the rare word ("tuned" in one, "RunPod" in the next). */
 const PASSAGE_CHARS = 1800;
+const FRAGMENT_WORDS = 5;
 
 function words(text: string): Set<string> {
 	return new Set(text.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+}
+
+function passageFragment(
+	chunk: string,
+	passage: string,
+	post: string,
+	terms: readonly string[],
+): string | undefined {
+	const body = post.toLowerCase();
+	for (const line of chunk.split("\n")) {
+		const tokens = [...line.matchAll(/[\p{L}\p{N}][\p{L}\p{M}\p{N}'’]*/gu)];
+		if (tokens.length < FRAGMENT_WORDS) continue;
+		for (const [index, token] of tokens.entries()) {
+			if (!terms.includes(token[0].toLowerCase())) continue;
+			const start = Math.min(
+				Math.max(0, index - Math.floor(FRAGMENT_WORDS / 2)),
+				tokens.length - FRAGMENT_WORDS,
+			);
+			const first = tokens[start];
+			const last = tokens[start + FRAGMENT_WORDS - 1];
+			if (!first || !last) continue;
+			const phrase = line.slice(first.index, last.index + last[0].length);
+			if (/[\]<>`*_[\\]/.test(phrase) || !passage.includes(phrase)) continue;
+			const match = phrase.toLowerCase();
+			if (body.indexOf(match) === body.lastIndexOf(match)) return phrase;
+		}
+	}
 }
 
 type PostChunk = { id: string; slug: string; index: number; text: string };
@@ -179,16 +208,26 @@ export function createPassageFinder(
 			if (!entry || seen.has(slug)) continue;
 			seen.add(slug);
 			const at = Number(result.index);
+			const chunk = entry.chunks[at];
+			if (!chunk) continue;
 			const window = entry.chunks
 				.slice(Math.max(0, at - 1), at + 2)
 				.map((chunk) => chunk.text)
 				.join("\n\n");
+			const text = clip(window, PASSAGE_CHARS);
+			const fragmentText = passageFragment(
+				chunk.text,
+				text,
+				entry.post.text,
+				rare,
+			);
 			hits.push({
 				title: entry.post.title,
 				slug,
 				...(entry.post.url ? { url: entry.post.url } : {}),
 				...(entry.post.date ? { date: entry.post.date } : {}),
-				text: clip(window, PASSAGE_CHARS),
+				text,
+				...(fragmentText ? { fragmentText } : {}),
 			});
 			if (hits.length >= PASSAGES) break;
 		}
