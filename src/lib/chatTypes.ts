@@ -7,6 +7,8 @@ export type ReadPostOutput = {
 	date?: string;
 	/** The post body. The model reads it; the panel does not show it. */
 	text?: string;
+	/** An exact phrase from the cited passage, when it has a unique match. */
+	fragmentText?: string;
 };
 
 /** The panel draws the controls; the route has nothing to return. */
@@ -273,7 +275,7 @@ function parsePart(value: unknown): GuidePart | null {
 	return null;
 }
 
-/** A post's title, URL, and date; never its body. */
+/** A post reference without its body. */
 function parsePostRef(value: unknown): ReadPostOutput | null {
 	if (!isRecord(value)) return null;
 	if (typeof value.title !== "string" || typeof value.url !== "string")
@@ -283,6 +285,9 @@ function parsePostRef(value: unknown): ReadPostOutput | null {
 		title: value.title,
 		url: value.url,
 		...(value.date ? { date: value.date } : {}),
+		...(typeof value.fragmentText === "string" && value.fragmentText
+			? { fragmentText: value.fragmentText }
+			: {}),
 	};
 }
 

@@ -220,28 +220,35 @@ describe("reply view", () => {
 			title: "3 Weeks In",
 			url: "https://blog.andrei.bio/p/3-weeks-in",
 		};
+		const citation = {
+			...post,
+			fragmentText: "Bevel quantified self, built on",
+		};
 		const view = replyView(
 			reply([
 				{ type: "data-passages", data: { posts: [post] } },
 				{ type: "text", text: "Bevel is a fitness app.", state: "done" },
-				{ type: "data-post", id: "p1", data: post },
+				{ type: "data-post", id: "p1", data: citation },
 			]),
 		);
 		expect(view.trace[0]?.label).toBe("Found a passage in 3 Weeks In");
-		expect(view.posts).toEqual([post]);
+		expect(view.posts).toEqual([citation]);
+		expect(postCard(citation).href).toBe(
+			"https://blog.andrei.bio/p/3-weeks-in#:~:text=Bevel%20quantified%20self%2C%20built%20on",
+		);
 		const stored = parseStoredMessages([
 			{
 				id: "a1",
 				role: "assistant",
 				parts: [
 					{ type: "data-passages", data: { posts: [post] } },
-					{ type: "data-post", id: "p1", data: { ...post, text: "body" } },
+					{ type: "data-post", id: "p1", data: { ...citation, text: "body" } },
 				],
 			},
 		]);
 		expect(stored?.[0]?.parts).toEqual([
 			{ type: "data-passages", data: { posts: [post] } },
-			{ type: "data-post", id: "p1", data: post },
+			{ type: "data-post", id: "p1", data: citation },
 		]);
 	});
 

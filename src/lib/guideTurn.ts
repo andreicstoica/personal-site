@@ -414,10 +414,15 @@ export function postCard(post: ReadPostOutput): SourceCard {
 	const date = post.date
 		? postDate.format(new Date(`${post.date}T00:00:00Z`))
 		: undefined;
+	const url = new URL(post.url);
+	// Hyphens delimit context in text fragments, even inside encoded phrases.
+	const fragment = post.fragmentText
+		? encodeURIComponent(post.fragmentText).replaceAll("-", "%2D")
+		: null;
 	return {
-		href: post.url,
+		href: fragment && !url.hash ? `${post.url}#:~:text=${fragment}` : post.url,
 		title: post.title,
-		meta: [new URL(post.url).host, date].filter(Boolean).join(" · "),
+		meta: [url.host, date].filter(Boolean).join(" · "),
 		active: false,
 		external: true,
 	};

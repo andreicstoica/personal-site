@@ -27,7 +27,7 @@
   const id = $props.id();
 </script>
 
-<div class={["guide-prompts", className]} data-variant={variant} data-animate={animate}>
+<div class={className} data-variant={variant} data-animate={animate}>
   {#if title}
     <p id="{id}-title" class="guide-prompts-title">{title}</p>
   {/if}

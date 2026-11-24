@@ -11,8 +11,8 @@
 
 ## Build, Test, and Development Commands
 
-- `bun run lint` / `bun run check` / `bun run test` / `bun run verify`: Biome on `src/`, `astro check`, `svelte-check`, `bun test`, then production build. `verify` is the CI gate (`/.github/workflows/check.yml`).
-- `bun run lint:ui`: `@shadcn/lint` via ESLint on Svelte templates and `src/**/*.ts`. No design-system rules are enabled yet; add them in `eslint.config.mjs`. This does not replace Biome.
+- `bun run verify`: Biome on `src/`, `bun run lint:ui`, `astro check`, `svelte-check`, `bun test`, then production build and output checks. The required `verify` job also runs `bun run fonts --check` and `bun run test:smoke` on that build (`/.github/workflows/check.yml`).
+- `bun run lint:ui`: `@shadcn/lint` via ESLint on Svelte components in `src/components`. Checks for raw Tailwind palette colors and unknown class names.
 - `bun run guide:eval <url>`: score the guide against `specs/guide-eval.json` on a running server or a preview (protected previews go through `vercel curl`). It calls the model, so it costs credit and is not in CI. It needs `GUIDE_EVAL_TOKEN` in `.env` to pass BotID on a deployment. Run it before and after any prompt, tool, or provider change.
 - `bun run dev`: start Astro locally at `http://localhost:4321` with hot reload.
 - `bun run fonts`: subset the self-hosted fonts (`scripts/fonts/subset.py`, run through `uv`; never part of the build). Run `bun run build` first; it reads `dist/client` for the characters the site renders and writes `public/fonts/*.woff2`, `src/styles/fonts.generated.css`, and `src/lib/fonts.generated.ts`. Commit all three. `bun run fonts --check` exits 1 when they are stale: rerun after content adds a character outside the core, when CSS adds a weight, style, OpenType feature, or `hyphens: auto`, or when a pinned source changes. Each face is a preloaded core plus an extended file behind `unicode-range`. The Geist subsets preserve the pinned upstream files' rendering (glyph names, `.notdef`, `head` bounds and flags, outlines, and pair shaping); `scripts/fonts/subset.py` explains each pin.
@@ -32,6 +32,7 @@ Use Bun for every script. `npm run <script>` happens to execute the same command
 ## Testing Guidelines
 
 - `bun test` runs the unit suite (`*.test.ts`, Bun's built-in runner — no extra config). It is part of `bun run verify`, so CI gates on it.
+- `bun run test:smoke` runs the Chromium smoke tests on the Vercel build output. Run `bun run build` first. Install the browser once with `bunx --no-install playwright install --only-shell chromium`.
 - Existing coverage: `src/lib/guide.test.ts` covers memory note parsing, route matching, guide reply/mode/action decisions, and the model setting. `src/lib/weather/scene.test.ts` covers golden-hour boundaries, terrain ground coverage, and CPU fallback lighting.
 - Add co-located `*.test.ts` files next to the module under test. For UI specs, prefer `src/components/__tests__/` (Vitest/Playwright welcome) and document run steps in the PR.
 
